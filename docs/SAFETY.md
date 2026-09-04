@@ -1,0 +1,49 @@
+# SAMUDRA Safety & Risk Evaluation Model
+
+> **SIH Problem Statement:** PS 26176 — ORCA: Marine EcOsystem Reasoning with Collaborative Agents  
+> **Target Audience:** Fishermen, coastal vessel operators, researchers, disaster authorities  
+> **Classification:** 12-Day SIH Functional Prototype Decision-Support System
+
+---
+
+## 1. Prototype Notice & Mandatory Disclaimer
+
+> [!CAUTION]
+> **PROTOTYPE DECISION-SUPPORT NOTICE**  
+> SAMUDRA is an experimental, functional artificial intelligence prototype developed for the Smart India Hackathon 2026. It is **NOT** a certified marine navigational aid, SOLAS-compliant life-safety system, or official substitute for statutory bulletins issued by the India Meteorological Department (IMD), Indian National Centre for Ocean Information Services (INCOIS), or the Indian Coast Guard. Mariners must always cross-reference official VHF broadcasts, port warning flags, and local harbor master directives before proceeding to sea.
+
+---
+
+## 2. Recommendation State Taxonomy
+
+Every query evaluated by the Risk Engine must resolve into exactly one of the following five standardized states:
+
+| Recommendation State | Definition & Operational Implication | Typical Criteria |
+| :--- | :--- | :--- |
+| **`GO`** | Favorable sea state and weather within craft safety limits. No active warnings or geofence breaches. | SWH < 1.8m, wind speed < 18 kts, no squall alerts, no boundary conflict, all data fresh. |
+| **`CAUTION`** | Marginal conditions. Safe for larger or mechanized craft; elevated risk for non-motorized or small vessels. | SWH 1.8m–2.5m, wind gusts 20–28 kts, or route near restricted buffer zones. |
+| **`NO_GO`** | **Dangerous conditions.** Immediate threat to life or craft integrity. Departure strongly advised against. | SWH > 2.5m (small craft), active IMD Cyclone / Squall Alert, gale warnings, or boundary penetration. |
+| **`UNKNOWN`** | Critical data missing, unresolvable coordinates, or telemetry stale (>24h). Cannot certify safety. | Offline endpoint, no forecast available for target coordinate/timestamp. |
+| **`INFORMATIONAL`** | Non-safety informational queries (e.g. marine species context, general landing center hours). | Educational or general knowledge inquiries where a safety decision is not requested. |
+
+---
+
+## 3. The Five Inviolable Safety Hard-Stops
+
+These deterministic rules run in Python code (`backend/app/domain/risk.py`) and **cannot be overridden by the LLM prompt**:
+
+1. **Official Red Alert / Cyclone Rule**: Any active IMD Cyclone Warning, Depression Alert, or Red Coastal Advisory within 50 nautical miles of the departure or transit polygon immediately triggers an unconditional **`NO_GO`**.
+2. **Maritime Boundary Hard-Stop**: Any route line-string intersecting a prohibited maritime polygon (e.g., naval firing zone, International Maritime Boundary Line) triggers a hard **`NO_GO`** with boundary coordinates highlighted on the map.
+3. **Stale Data Preclusion**: If forecast data is older than 24 hours or completely missing, the engine **must never return `GO`**. It must return **`UNKNOWN`** or **`CAUTION`** with explicit data staleness warnings.
+4. **LLM Non-Contradiction Gate**: The LangGraph response composer is bounded to never downgrade or soften a `NO_GO` issued by the risk engine. If the deterministic engine says `NO_GO`, the text must clearly convey `NO_GO`.
+5. **No Hallucinated Marine Numbers**: Any numeric claim presented in the chat answer (e.g., "waves of 3.4m", "wind gusting to 35 knots") must exist within an attached `EvidenceItem`. If absent from evidence, it is stripped.
+
+---
+
+## 4. Deterministic Confidence Derivation
+
+SAMUDRA rejects arbitrary LLM confidence percentages (e.g., *"I am 94% sure"*). Confidence is computed purely based on **Data Provenance & Freshness**:
+
+- **`HIGH`**: Both primary government sources (INCOIS + IMD) are online, fresh (<6h), and spatially congruent.
+- **`MEDIUM`**: Primary forecast available, but secondary data relied on Open-Meteo fallback or snapshot cache (<12h old).
+- **`LOW`**: Significant temporal gap (>12h old snapshot), degraded offline fixture, or localized cloud cover obscuring satellite SST/Chlorophyll.

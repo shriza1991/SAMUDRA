@@ -1,0 +1,66 @@
+services:
+  # ============================================================================
+  # PostgreSQL + PostGIS Database Service
+  # ============================================================================
+  db:
+    image: postgis/postgis:16-3.4
+    container_name: samudra_postgis
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-samudra_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-samudra_password_placeholder}
+      POSTGRES_DB: ${POSTGRES_DB:-samudra_db}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-samudra_user} -d ${POSTGRES_DB:-samudra_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ============================================================================
+  # Backend API Service (FastAPI + LangGraph)
+  # Uncomment/build when backend code dependencies are ready
+  # ============================================================================
+  # backend:
+  #   build:
+  #     context: ./backend
+  #     dockerfile: Dockerfile
+  #   container_name: samudra_backend
+  #   restart: unless-stopped
+  #   environment:
+  #     - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-samudra_user}:${POSTGRES_PASSWORD:-samudra_password_placeholder}@db:5432/${POSTGRES_DB:-samudra_db}
+  #     - DATA_MODE=${DATA_MODE:-HYBRID}
+  #     - LLM_PROVIDER=${LLM_PROVIDER:-openai}
+  #     - LLM_API_KEY=${LLM_API_KEY}
+  #   ports:
+  #     - "${BACKEND_PORT:-8000}:8000"
+  #   volumes:
+  #     - ./backend:/app
+  #     - ./data/fixtures:/data/fixtures
+  #   depends_on:
+  #     db:
+  #       condition: service_healthy
+
+  # ============================================================================
+  # Frontend Web Service (Vite + React + MapLibre GL JS)
+  # ============================================================================
+  # frontend:
+  #   build:
+  #     context: ./frontend
+  #     dockerfile: Dockerfile
+  #   container_name: samudra_frontend
+  #   restart: unless-stopped
+  #   ports:
+  #     - "${FRONTEND_PORT:-5173}:5173"
+  #   volumes:
+  #     - ./frontend:/app
+  #     - /app/node_modules
+  #   depends_on:
+  #     - backend
+
+volumes:
+  postgres_data:
+    driver: local

@@ -1,0 +1,79 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "version": "1.0.0",
+  "description": "Registry of the 8 canonical benchmark test scenarios for SAMUDRA",
+  "scenarios": [
+    {
+      "id": "S1",
+      "name": "Normal favorable conditions",
+      "fixture_file": "s1_normal_conditions.json",
+      "query": "Is it safe to go fishing off Mumbai coast for the next 6 hours?",
+      "harbor": "Mumbai",
+      "expected_status": "GO",
+      "expected_confidence": "HIGH"
+    },
+    {
+      "id": "S2",
+      "name": "Elevated sea state",
+      "fixture_file": "s2_elevated_sea_state.json",
+      "query": "Leaving Mangalore harbor at 05:00 on motorized fiber boat for 12 hours. Safe?",
+      "harbor": "Mangalore",
+      "expected_status": "CAUTION",
+      "expected_confidence": "HIGH"
+    },
+    {
+      "id": "S3",
+      "name": "Severe marine / cyclone alert",
+      "fixture_file": "s3_cyclone_alert.json",
+      "query": "Can we sail out from Paradip port tonight?",
+      "harbor": "Paradip",
+      "expected_status": "NO_GO",
+      "expected_confidence": "HIGH"
+    },
+    {
+      "id": "S4",
+      "name": "Missing / stale critical forecast",
+      "fixture_file": "s4_stale_forecast.json",
+      "query": "Is it safe to depart Kavaratti right now?",
+      "harbor": "Kavaratti",
+      "expected_status": "UNKNOWN",
+      "expected_confidence": "LOW"
+    },
+    {
+      "id": "S5",
+      "name": "Nearest Potential Fishing Zone",
+      "fixture_file": "s5_nearest_pfz.json",
+      "query": "Where is the nearest Potential Fishing Zone today from Ratnagiri?",
+      "harbor": "Ratnagiri",
+      "expected_status": "INFORMATIONAL",
+      "expected_confidence": "HIGH"
+    },
+    {
+      "id": "S6",
+      "name": "Route crosses restricted maritime polygon",
+      "fixture_file": "s6_geofence_breach.json",
+      "query": "Plan a direct fishing trip from Kochi harbor to Sector Delta.",
+      "harbor": "Kochi",
+      "expected_status": "NO_GO",
+      "expected_confidence": "HIGH"
+    },
+    {
+      "id": "S7",
+      "name": "Safer alternative route comparison",
+      "fixture_file": "s7_safer_routes.json",
+      "query": "Which of these two coastal routes from Veraval to Porbandar has lower wave risk?",
+      "harbor": "Veraval",
+      "expected_status": "INFORMATIONAL",
+      "expected_confidence": "HIGH"
+    },
+    {
+      "id": "S8",
+      "name": "Multi-lingual multi-turn follow-up",
+      "fixture_file": "s8_multilingual_chat.json",
+      "query": "रत्नागिरीवरून उद्या सकाळी मासेमारीला जाणे सुरक्षित आहे का?",
+      "harbor": "Ratnagiri",
+      "expected_status": "NO_GO",
+      "expected_confidence": "HIGH"
+    }
+  ]
+}
