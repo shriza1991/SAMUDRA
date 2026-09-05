@@ -8,9 +8,17 @@ from backend.app.agents.integrations.adapters import ProviderToolAdapter
 from backend.app.agents.integrations.contracts import (
     CAPABILITIES_CATALOG,
     CapabilityDefinition,
+    FallbackSnapshot,
+    ReliabilityPolicy,
     ToolErrorCode,
     ToolInvocationContext,
     ToolOwner,
+)
+from backend.app.agents.integrations.reliability import (
+    ExecutionTelemetry,
+    SnapshotStore,
+    execute_with_reliability,
+    global_snapshot_store,
 )
 from backend.app.agents.integrations.dev2 import (
     HazardBulletinPayload,
@@ -53,6 +61,13 @@ __all__ = [
     "ToolInvocationContext",
     "CapabilityDefinition",
     "CAPABILITIES_CATALOG",
+    # Reliability (M14)
+    "ReliabilityPolicy",
+    "FallbackSnapshot",
+    "SnapshotStore",
+    "global_snapshot_store",
+    "execute_with_reliability",
+    "ExecutionTelemetry",
     # Dev 2 Interfaces & Schemas
     "MarineConditionsPayload",
     "MarineConditionsProvider",

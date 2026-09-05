@@ -28,12 +28,10 @@ Validates:
 """
 
 import json
-import pytest
 from backend.app.contracts.chat import AgentTraceItem, RecommendationStatus
 from backend.app.contracts.tools import ToolResult, ToolStatus
 from backend.app.agents.graph import run_orca_graph
 from backend.app.agents.tools import tool_registry, ToolDefinition, ToolOwner
-from backend.app.agents.integrations.mocks import register_m2_contract_mocks
 from backend.app.agents.memory import memory_manager
 from backend.app.agents.security import PromptInjectionGuard
 

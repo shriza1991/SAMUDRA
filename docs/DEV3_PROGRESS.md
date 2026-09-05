@@ -543,5 +543,27 @@
   - **Documentation**:
     * `docs/M13_TRACE_ACTIVITY.md`: Comprehensive architectural guide, privacy model, event taxonomy, and verification matrix.
 
+---
+
+### M14 — Reliability / Fallback (COMPLETE)
+- **Delivered**:
+  - **M14.1 — Reliability Policy & Snapshot Contracts**:
+    * Implemented `ReliabilityPolicy` (bounded retries, timeout enforcement, snapshot max age) and `FallbackSnapshot` in [contracts.py](file:///c:/Users/dyara/SAMUDRA/backend/app/agents/integrations/contracts.py).
+  - **M14.2 — SnapshotStore & Freshness Validation**:
+    * Implemented `SnapshotStore` and `global_snapshot_store` in [reliability.py](file:///c:/Users/dyara/SAMUDRA/backend/app/agents/integrations/reliability.py) with freshness verification (`is_snapshot_stale()`).
+    * Obsolete snapshots (> 24h) are rejected, forcing deterministic `UNKNOWN` if primary tools are unavailable.
+  - **M14.3 — Reliable Tool Execution Wrapper**:
+    * Implemented `execute_with_reliability()` providing thread-isolated timeout enforcement, bounded transient error retries (with `on_retry` trace callback), and cached snapshot fallback tagging (`FALLBACK_SNAPSHOT`, `DEGRADED_FRESHNESS`).
+  - **M14.4 — Graph & Orchestration Integration**:
+    * Updated `specialist_tools_node` in [graph.py](file:///c:/Users/dyara/SAMUDRA/backend/app/agents/graph.py) to downgrade confidence on fallback/partial data and enforce `RecommendationStatus.UNKNOWN` on critical environmental dependency failures.
+    * Integrated with `ResponseComposer` to ensure downstream LLM synthesis cannot override `UNKNOWN` into `GO`.
+  - **M14.5 — Comprehensive Test Suite** (`tests/agent_eval/test_m14_reliability.py`):
+    * 27 dedicated test cases verifying timeout detection, bounded retries, permanent failure fast-abort, fallback snapshot retrieval, freshness rejection, stale snapshot `UNKNOWN` invariance, partial tool results, confidence degradation, safety invariance, hazard tool failures, M10 evidence grounding, M12 prompt security, M13 trace activity, and clean termination.
+    * Total repository test count: **356/356 passing** in 4.23s.
+    * Linting: **0 ruff errors**.
+  - **Documentation**:
+    * `docs/M14_RELIABILITY_FALLBACK.md`: Comprehensive guide to reliability policies, timeout enforcement, snapshot freshness, and verification matrix.
+
+
 
 

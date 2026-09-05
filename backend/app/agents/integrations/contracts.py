@@ -167,14 +167,6 @@ CAPABILITIES_CATALOG: Dict[str, CapabilityDefinition] = {
         dependencies=["marine_conditions", "hazard_search"],
         requires_evidence=True,
     ),
-    "explanation_context": CapabilityDefinition(
-        name="explanation_context",
-        owner=ToolOwner.DEV3,
-        description="Provides contextual citations and rule violation details for why a status was triggered.",
-        required_context_fields=[],
-        dependencies=[],
-        requires_evidence=True,
-    ),
     "geospatial_hazard": CapabilityDefinition(
         name="geospatial_hazard",
         owner=ToolOwner.DEV4,
@@ -184,3 +176,32 @@ CAPABILITIES_CATALOG: Dict[str, CapabilityDefinition] = {
         requires_evidence=True,
     ),
 }
+
+
+# =============================================================================
+# 5. Reliability & Fallback Contracts (M14)
+# =============================================================================
+
+class ReliabilityPolicy(BaseModel):
+    """Execution reliability and retry parameters for specialist tools and adapters."""
+
+    max_retries: int = Field(2, description="Maximum number of retry attempts for transient errors")
+    timeout_seconds: float = Field(3.0, description="Upper execution threshold before TIMEOUT error")
+    enable_fallback: bool = Field(True, description="Whether to query snapshot store upon failure")
+    max_snapshot_age_hours: float = Field(
+        24.0, description="Maximum permitted age in hours for cached fallback snapshots"
+    )
+    retry_delay_seconds: float = Field(0.0, description="Delay between retry attempts")
+
+
+class FallbackSnapshot(BaseModel):
+    """Cached historical domain observation used when real-time provider is unreachable."""
+
+    snapshot_id: str = Field(..., description="Unique snapshot identifier")
+    tool_name: str = Field(..., description="Target specialist tool name")
+    harbor: str = Field(..., description="Geographic harbor or region associated with data")
+    captured_at: str = Field(..., description="ISO-8601 UTC timestamp of original capture")
+    data: Dict[str, Any] = Field(default_factory=dict, description="Structured observation payload")
+    evidence: List[Any] = Field(default_factory=list, description="Evidence items with citations")
+    warnings: List[str] = Field(default_factory=list, description="Associated warnings")
+    source_name: str = Field("SAMUDRA Offline Snapshot Archive", description="Provider origin")

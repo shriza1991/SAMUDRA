@@ -949,25 +949,48 @@ def specialist_tools_node(state: ORCAState) -> Dict[str, Any]:
             params["origin_harbor"] = harbor
             params["destination"] = destination or "Outer Bank"
 
-        # Execute through typed registry
+        # Execute through typed registry with reliability support
+        def on_retry(attempt: int, exc: Exception):
+            nonlocal trace
+            trace = _append_trace(
+                trace,
+                node_name=f"Specialist Tool: {tool_name}",
+                agent="specialist_tools",
+                tool_name=tool_name,
+                action=f"Retry {attempt} for '{tool_name}' after error: {exc}",
+                status="retrying",
+                duration_ms=0.0,
+            )
+
         start_tool = time.perf_counter()
-        result = tool_registry.execute_tool(tool_name, params)
+        result = tool_registry.execute_tool(tool_name, params, on_retry=on_retry)
         tool_dur = round((time.perf_counter() - start_tool) * 1000, 2)
         if result.status == ToolStatus.FAILED:
             failed_tools.add(tool_name)
             collected_warnings.extend(result.warnings)
-            if tool_name in ["risk_stub", "risk_evaluation"]:
+            if tool_name in ["risk_stub", "risk_evaluation"] or (
+                state.get("intent") == IntentCategory.SAFETY.value
+                and tool_name in ["marine_conditions", "weather_conditions", "marine_stub", "weather_stub"]
+            ):
                 risk_assessment = Recommendation(
                     status=RecommendationStatus.UNKNOWN,
-                    summary="Risk evaluation engine failed or was unavailable.",
-                    decisive_factors=["Risk evaluation error"],
+                    summary=f"Critical tool '{tool_name}' failed; safety assessment cannot be completed.",
+                    decisive_factors=[f"Critical tool failure: {tool_name}"],
                     next_action="Hold departure and verify local port authority advisories.",
                 )
                 derived_confidence = Confidence(
                     level=ConfidenceLevel.LOW,
-                    score=0.1,
-                    reasons=["Risk evaluation failure"],
+                    reasons=[f"Critical tool '{tool_name}' failure"],
                 )
+            else:
+                if derived_confidence is None or derived_confidence.level == ConfidenceLevel.HIGH:
+                    derived_confidence = Confidence(
+                        level=ConfidenceLevel.MEDIUM,
+                        reasons=[f"Non-critical tool '{tool_name}' was unavailable or failed"],
+                    )
+                else:
+                    derived_confidence.reasons.append(f"Non-critical tool '{tool_name}' was unavailable or failed")
+
             trace = _append_trace(
                 trace,
                 node_name=f"Specialist Tool: {tool_name}",
@@ -979,6 +1002,29 @@ def specialist_tools_node(state: ORCAState) -> Dict[str, Any]:
                 error=result.error_code or "Execution failure",
             )
             continue
+
+        is_fallback = any("fallback snapshot" in w.lower() for w in result.warnings) or any(
+            "FALLBACK_SNAPSHOT" in (ev.quality_flags or []) for ev in result.evidence
+        )
+        if is_fallback:
+            snapshot_age = result.data.get("snapshot_age_hours") if result.data else None
+            age_str = f" ({snapshot_age:.1f}h old)" if snapshot_age is not None else ""
+            if derived_confidence is None or derived_confidence.level == ConfidenceLevel.HIGH:
+                derived_confidence = Confidence(
+                    level=ConfidenceLevel.MEDIUM,
+                    reasons=[f"Tool '{tool_name}' used cached fallback snapshot{age_str}"],
+                )
+            else:
+                derived_confidence.reasons.append(f"Tool '{tool_name}' used cached fallback snapshot{age_str}")
+
+        elif result.status == ToolStatus.PARTIAL:
+            if derived_confidence is None or derived_confidence.level in [ConfidenceLevel.HIGH, ConfidenceLevel.MEDIUM]:
+                derived_confidence = Confidence(
+                    level=ConfidenceLevel.LOW,
+                    reasons=[f"Tool '{tool_name}' returned partial data only"],
+                )
+            else:
+                derived_confidence.reasons.append(f"Tool '{tool_name}' returned partial data only")
 
         tool_results[tool_name] = result.data
 
@@ -995,7 +1041,24 @@ def specialist_tools_node(state: ORCAState) -> Dict[str, Any]:
             rec_dict = result.data["recommendation"]
             risk_assessment = Recommendation(**rec_dict)
             if "confidence" in result.data:
-                derived_confidence = Confidence(**result.data["confidence"])
+                engine_conf = Confidence(**result.data["confidence"])
+                if derived_confidence is not None:
+                    merged_reasons = list(derived_confidence.reasons)
+                    for r in engine_conf.reasons:
+                        if r not in merged_reasons:
+                            merged_reasons.append(r)
+                    if derived_confidence.level == ConfidenceLevel.LOW or engine_conf.level == ConfidenceLevel.LOW:
+                        eff_level = ConfidenceLevel.LOW
+                    elif derived_confidence.level == ConfidenceLevel.MEDIUM or engine_conf.level == ConfidenceLevel.MEDIUM:
+                        eff_level = ConfidenceLevel.MEDIUM
+                    else:
+                        eff_level = ConfidenceLevel.HIGH
+                    derived_confidence = Confidence(
+                        level=eff_level,
+                        reasons=merged_reasons,
+                    )
+                else:
+                    derived_confidence = engine_conf
 
         # M7: Preserve candidate route list and build comparison summary
         if tool_name in ["route_analysis", "route_stub"] and result.status != ToolStatus.FAILED:
@@ -1197,7 +1260,7 @@ def response_composer_node(state: ORCAState) -> Dict[str, Any]:
             decisive_factors=["Simulated PFZ coordinates available", "Passage conditions verified"],
             next_action="Verify local harbor weather prior to departure (Simulation only).",
         )
-        confidence = Confidence(
+        confidence = state.get("confidence") or Confidence(
             level=ConfidenceLevel.MEDIUM,
             reasons=["Generated from M1 demonstration dataset"],
         )
@@ -1284,7 +1347,7 @@ def response_composer_node(state: ORCAState) -> Dict[str, Any]:
             decisive_factors=[f"Wave height: {wave}m", f"Swell period: {swell_period}s"],
             next_action="Check live weather reports before sailing.",
         )
-        confidence = Confidence(
+        confidence = state.get("confidence") or Confidence(
             level=ConfidenceLevel.MEDIUM,
             reasons=["Simulated M1 ocean state forecast"],
         )
