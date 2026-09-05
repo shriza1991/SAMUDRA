@@ -1,10 +1,15 @@
-"""LangGraph Agent Pipeline State Definition.
+"""LangGraph Agent Pipeline State Definition (ORCAState).
 
-Owned by Dev 3 (Agent Orchestration).
-Specifies the shared mutable state passed between LangGraph nodes.
+Owned by Dev 3 (Agent Orchestration & Explainability).
+Part of SIH 2026 Problem Statement PS 26176 — ORCA.
+
+Specifies the shared mutable state dictionary traversed and updated by LangGraph nodes.
+Uses TypedDict with total=False to allow sparse/partial node updates per standard
+LangGraph state graph conventions without redundant model duplication.
 """
 
 from typing import Any, Dict, List, Optional, TypedDict
+
 from backend.app.contracts.chat import (
     AgentTraceItem,
     Confidence,
@@ -14,36 +19,115 @@ from backend.app.contracts.chat import (
 )
 
 
-class AgentState(TypedDict, total=False):
-    """Shared state dictionary traversed by LangGraph nodes."""
+class ORCAState(TypedDict, total=False):
+    """Shared state dictionary traversed by SAMUDRA / ORCA LangGraph nodes.
 
-    # Session & User Inputs
-    run_id: str
-    conversation_id: str
+    Lifecycle stages:
+    1. Input & Context (session, request, user inputs)
+    2. Cognitive Extraction (intent, language, entities, clarification)
+    3. Task Planning & Dispatch (tool queue, intermediate results)
+    4. Domain Observations (marine, weather, and geospatial outputs from Dev 4 & Dev 2)
+    5. Deterministic Risk & Evidence (risk assessment, confidence, verified citations)
+    6. Final Synthesis (multilingual user-facing answer, map layers, followups)
+    7. Audit Telemetry (sanitized execution trace, no private chain-of-thought)
+    """
+
+    # -------------------------------------------------------------------------
+    # 1. Input & Session Context
+    # -------------------------------------------------------------------------
+    request_id: str
+    """Unique per-request UUID for request tracking and telemetry."""
+
+    thread_id: str
+    """Persistent session / conversation UUID (maps to conversation_id)."""
+
     user_message: str
-    user_context: Dict[str, Any]
+    """Raw incoming user prompt string."""
 
-    # Cognitive Extraction
-    detected_language: str  # ISO code: en, hi, mr, ta
-    detected_intent: str  # NEAREST_PFZ, GO_NO_GO_SAFETY, HAZARD_BOUNDARY, SAFER_ROUTE, INFORMATIONAL
-    extracted_entities: Dict[str, Any]  # origin, coordinates, craft_type, time_window
+    language: str
+    """Detected or user-preferred ISO language code (e.g., 'en', 'hi', 'mr', 'ta')."""
+
+    user_profile: Dict[str, Any]
+    """Vessel and operator attributes: craft_profile, experience_level, equipment."""
+
+    location: Optional[Dict[str, Any]]
+    """Spatio-temporal origin: harbor name, EPSG:4326 [lon, lat], maritime zone."""
+
+    time_window: Optional[Dict[str, Any]]
+    """Temporal window of voyage: departure_time, duration_hours, valid_until."""
+
+    # -------------------------------------------------------------------------
+    # 2. Cognitive Extraction & Intent
+    # -------------------------------------------------------------------------
+    intent: Optional[str]
+    """Canonical classified user intent category (from IntentCategory enum)."""
+
+    missing_fields: List[str]
+    """Critical operational parameters missing from user input (e.g., origin_harbor)."""
+
     clarification_needed: bool
+    """Flag indicating whether the graph must pause to request user clarification."""
+
     clarification_prompt: Optional[str]
+    """Localized question generated to request missing critical fields."""
 
-    # Planning
-    task_plan: List[str]  # List of specialist tools to execute
-    tool_results: Dict[str, Any]  # Results returned from Dev 4 deterministic tools
+    # -------------------------------------------------------------------------
+    # 3. Planning & Specialist Dispatch
+    # -------------------------------------------------------------------------
+    task_plan: List[str]
+    """Ordered sequence of specialist tools planned for execution by Supervisor."""
 
-    # Risk & Evaluation (Populated by deterministic tool results, NOT LLM hallucination)
-    recommendation: Optional[Recommendation]
+    tool_results: Dict[str, Any]
+    """Normalized ToolResult payloads returned by executed specialist tools."""
+
+    # -------------------------------------------------------------------------
+    # 4. Domain Data & Observations (Supplied by Dev 4 Tools / Dev 2 Connectors)
+    # -------------------------------------------------------------------------
+    observations: Dict[str, Any]
+    """Normalized marine and weather measurements (wave height, wind, swell, etc.)."""
+
+    advisories: List[Dict[str, Any]]
+    """Active bulletins and alerts (e.g., IMD cyclone warnings, squall notices)."""
+
+    pfz_candidates: List[Dict[str, Any]]
+    """Ranked Potential Fishing Zone candidates with distance, bearing, and depth."""
+
+    route_candidates: List[Dict[str, Any]]
+    """Evaluated navigation routes with waypoint coordinates and exposure metrics."""
+
+    # -------------------------------------------------------------------------
+    # 5. Deterministic Risk Evaluation & Evidence (Immutable by LLM)
+    # -------------------------------------------------------------------------
+    risk_assessment: Optional[Recommendation]
+    """Deterministic safety decision (GO/CAUTION/NO_GO/UNKNOWN) produced by Dev 4 engine."""
+
     confidence: Optional[Confidence]
+    """Evidence-backed confidence rating derived from source availability and freshness."""
 
-    # Provenance & Geospatial Output
-    evidence_items: List[EvidenceItem]
-    map_layers: List[MapLayer]
-    trace_events: List[AgentTraceItem]
+    evidence: List[EvidenceItem]
+    """Verified factual citations underpinning every numerical or safety assertion."""
 
-    # Output Synthesis
-    final_answer: str
     warnings: List[str]
+    """Operational caveats, degraded fallback notices, or sensor stale flags."""
+
+    # -------------------------------------------------------------------------
+    # 6. Final Output & Presentation
+    # -------------------------------------------------------------------------
+    response: Optional[str]
+    """Synthesized, localized conversational explanation for the user."""
+
+    map_layers: List[MapLayer]
+    """Vector spatial layers (GeoJSON) ready for rendering on MapLibre map."""
+
     suggested_followups: List[str]
+    """Contextual quick-reply suggestions for the mariner."""
+
+    # -------------------------------------------------------------------------
+    # 7. Audit Telemetry (Sanitized)
+    # -------------------------------------------------------------------------
+    trace: List[AgentTraceItem]
+    """Sanitized high-level execution steps (no private chain-of-thought)."""
+
+
+# Backward-compatibility alias for existing references across codebase
+AgentState = ORCAState

@@ -5,7 +5,6 @@ Owned by Dev 2 (Backend Platform).
 """
 
 from typing import List
-from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
