@@ -256,41 +256,40 @@ def intent_locale_node(state: ORCAState) -> Dict[str, Any]:
             else:
                 raise ValueError(f"Extracted intent '{extraction.intent}' is not an approved IntentCategory.")
 
-            # Resolve entities with thread memory
-            detected_harbor = extraction.entities.origin_harbor
-            thread_ctx = memory_manager.get_context(thread_id)
-            if not detected_harbor and thread_ctx.active_harbor:
-                detected_harbor = thread_ctx.active_harbor
-            if not detected_harbor:
-                detected_harbor = "Ratnagiri"  # Standard default
+            # 2. Memory Context Integration & Selective Carry-Forward (M4)
+            thread_ctx = memory_manager.load_context(thread_id)
+            updated_ctx, audit_summary = memory_manager.apply_memory_policy(
+                current_context=thread_ctx,
+                extracted_entities=extraction.entities,
+                current_intent=IntentCategory(validated_intent),
+                detected_language=extraction.detected_language,
+                raw_user_message=raw_msg,
+            )
+            memory_manager.save_context(updated_ctx)
 
+            detected_harbor = updated_ctx.active_harbor or "Ratnagiri"
             location = state.get("location") or {
                 "harbor": detected_harbor,
-                "coordinates": extraction.entities.coordinates or [73.28, 16.99],
+                "coordinates": updated_ctx.active_coordinates or extraction.entities.coordinates or [73.28, 16.99],
             }
-            time_window = state.get("time_window") or {
-                "departure_time": extraction.entities.departure_time or "tomorrow_morning",
-                "duration_hours": extraction.entities.duration_hours or 8.0,
+            time_window = state.get("time_window") or updated_ctx.time_window or {
+                "departure_time": "tomorrow_morning",
+                "duration_hours": 8.0,
             }
 
-            # Update memory context
-            memory_manager.update_context(
-                thread_id=thread_id,
-                entities=ExtractedEntities(origin_harbor=detected_harbor, craft_type=extraction.entities.craft_type),
-                intent=IntentCategory(validated_intent),
-                language=extraction.detected_language,
-            )
-
+            carried_str = ", ".join(audit_summary["carried_fields"]) or "none"
+            overwritten_str = ", ".join(audit_summary["overwritten_fields"]) or "none"
             trace = _append_trace(
                 trace,
                 node_name="Intent / Locale",
                 action=f"LLM extraction ({llm_provider.provider_name}/{llm_provider.model_name}): "
-                       f"intent='{validated_intent}', locale='{extraction.detected_language}' (Harbor: {detected_harbor})",
+                       f"intent='{validated_intent}', locale='{extraction.detected_language}' (Harbor: {detected_harbor}) "
+                       f"[Memory Turn {updated_ctx.turn_count}: carried=({carried_str}), overwritten=({overwritten_str})]",
             )
 
             return {
                 "intent": validated_intent,
-                "language": extraction.detected_language or "en",
+                "language": extraction.detected_language or updated_ctx.preferred_language or "en",
                 "location": location,
                 "time_window": time_window,
                 "missing_fields": extraction.missing_critical_fields,
@@ -336,33 +335,46 @@ def intent_locale_node(state: ORCAState) -> Dict[str, Any]:
         intent = IntentCategory.UNSUPPORTED
 
     harbors = ["ratnagiri", "veraval", "porbandar", "mumbai", "panaji", "goa", "malpe", "chennai"]
-    detected_harbor = None
+    explicit_harbor = None
     for h in harbors:
         if h in msg_lower:
-            detected_harbor = h.capitalize()
+            explicit_harbor = h.capitalize()
             break
 
-    thread_ctx = memory_manager.get_context(thread_id)
-    if not detected_harbor and thread_ctx.active_harbor:
-        detected_harbor = thread_ctx.active_harbor
-    if not detected_harbor:
-        detected_harbor = "Ratnagiri"
+    # Resolve departure time from deterministic message
+    dep_time = None
+    if "tomorrow" in msg_lower:
+        dep_time = "tomorrow"
+    elif "today" in msg_lower or "now" in msg_lower:
+        dep_time = "now"
 
-    location = state.get("location") or {"harbor": detected_harbor, "coordinates": [73.28, 16.99]}
-    time_window = state.get("time_window") or {"departure_time": "tomorrow_morning", "duration_hours": 8.0}
-
-    # Update thread memory context
-    memory_manager.update_context(
-        thread_id=thread_id,
-        entities=ExtractedEntities(origin_harbor=detected_harbor),
-        intent=intent,
-        language=lang,
+    entities = ExtractedEntities(
+        origin_harbor=explicit_harbor,
+        departure_time=dep_time,
     )
 
+    # Apply M4 selective carry-forward policy
+    thread_ctx = memory_manager.load_context(thread_id)
+    updated_ctx, audit_summary = memory_manager.apply_memory_policy(
+        current_context=thread_ctx,
+        extracted_entities=entities,
+        current_intent=intent,
+        detected_language=lang,
+        raw_user_message=raw_msg,
+    )
+    memory_manager.save_context(updated_ctx)
+
+    detected_harbor = updated_ctx.active_harbor or "Ratnagiri"
+    location = state.get("location") or {"harbor": detected_harbor, "coordinates": updated_ctx.active_coordinates or [73.28, 16.99]}
+    time_window = state.get("time_window") or updated_ctx.time_window or {"departure_time": "tomorrow_morning", "duration_hours": 8.0}
+
+    carried_str = ", ".join(audit_summary["carried_fields"]) or "none"
+    overwritten_str = ", ".join(audit_summary["overwritten_fields"]) or "none"
     trace = _append_trace(
         trace,
         node_name="Intent / Locale",
-        action=f"Detected intent '{intent.value}' and locale '{lang}' (Harbor: {detected_harbor})",
+        action=f"Detected intent '{intent.value}' and locale '{lang}' (Harbor: {detected_harbor}) "
+               f"[Memory Turn {updated_ctx.turn_count}: carried=({carried_str}), overwritten=({overwritten_str})]",
     )
 
     return {

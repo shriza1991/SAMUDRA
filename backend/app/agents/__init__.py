@@ -58,7 +58,15 @@ from backend.app.agents.llm import (
     get_llm_provider,
 )
 from backend.app.agents.security import PromptInjectionGuard
-from backend.app.agents.memory import MemoryManager, ThreadContext, memory_manager
+from backend.app.agents.memory import (
+    ConversationStore,
+    InMemoryConversationStore,
+    MemoryManager,
+    PostgreSQLConversationStore,
+    RedisConversationStore,
+    ThreadContext,
+    memory_manager,
+)
 from backend.app.agents.response import ResponseComposer, ResponseCompositionInput
 from backend.app.agents.state import AgentState, ORCAState
 from backend.app.agents.stub_tools import (
@@ -113,10 +121,14 @@ __all__ = [
     "risk_stub",
     "route_stub",
     "explanation_stub",
-    # Memory
+    # Memory (M0, M4)
     "ThreadContext",
     "MemoryManager",
     "memory_manager",
+    "ConversationStore",
+    "InMemoryConversationStore",
+    "PostgreSQLConversationStore",
+    "RedisConversationStore",
     # Evidence
     "EvidenceRecord",
     "EvidenceValidationReport",
