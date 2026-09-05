@@ -26,7 +26,6 @@ All data is strictly tagged as M1_DEMO_DATA / SIMULATED.
 from datetime import datetime, timezone
 from enum import Enum
 import json
-import re
 from typing import Any, Dict, List, Optional
 import uuid
 
@@ -46,6 +45,10 @@ from backend.app.agents.llm import (
     LLMProvider,
     MessageRole,
     get_llm_provider,
+)
+from backend.app.agents.localization import (
+    generate_localized_clarification,
+    normalize_maritime_entities,
 )
 from backend.app.agents.memory import memory_manager
 from backend.app.agents.response import ResponseComposer, ResponseCompositionInput
@@ -99,45 +102,7 @@ def _generate_clarification_prompt(
     missing_fields: Optional[List[str]] = None,
 ) -> str:
     """Generates a localized clarification question requesting missing operational parameters."""
-    lang_lower = (language or "en").lower()
-
-    if missing_fields and "destination" in missing_fields:
-        if "origin_harbor" in missing_fields:
-            if lang_lower == "mr":
-                return "मार्गावरील धोके तपासण्यासाठी, कृपया आपले प्रस्थान आणि गंतव्य बंदर (उदा. मुंबई ते गोवा) सांगा."
-            elif lang_lower == "hi":
-                return "मार्ग पर खतरों की जांच के लिए, कृपया अपना प्रस्थान और गंतव्य बंदरगाह (जैसे मुंबई से गोवा) बताएं।"
-            elif lang_lower == "ta":
-                return "பாதை அபாயங்களை மதிப்பிட, தயவுசெய்து உங்கள் புறப்படும் மற்றும் இலக்கு துறைமுகத்தைக் குறிப்பிடவும்."
-            else:
-                return "To evaluate route hazards, which departure harbor and destination are you sailing between (e.g., from Mumbai to Goa)?"
-        else:
-            if lang_lower == "mr":
-                return "मार्गावरील धोके व सुरक्षितता तपासण्यासाठी, कृपया आपले गंतव्य बंदर (उदा. गोवा, मुंबई) सांगा."
-            elif lang_lower == "hi":
-                return "मार्ग पर खतरों और सुरक्षा की जांच के लिए, कृपया अपना गंतव्य बंदरगाह (जैसे गोवा, मुंबई) बताएं।"
-            elif lang_lower == "ta":
-                return "பாதை அபாயங்களை மதிப்பிட, தயவுசெய்து உங்கள் இலக்கு துறைமுகத்தைக் குறிப்பிடவும்."
-            else:
-                return "To assess route hazards and safe passage, which destination harbor are you heading to (e.g., Goa, Mumbai)?"
-
-    if intent == IntentCategory.PFZ:
-        if lang_lower == "mr":
-            return "जवळचे संभाव्य मत्स्य क्षेत्र (PFZ) शोधण्यासाठी, कृपया आपले प्रस्थान बंदर (उदा. रत्नागिरी, मालवण, वेरावळ किंवा मुंबई) सांगा."
-        elif lang_lower == "hi":
-            return "निकटतम मत्स्य क्षेत्र (PFZ) खोजने के लिए, कृपया अपना प्रस्थान बंदरगाह (जैसे रत्नागिरी, मालवण, वेरावल या मुंबई) बताएं।"
-        elif lang_lower == "ta":
-            return "அருகிலுள்ள மீன்பிடி மண்டலத்தைக் (PFZ) கண்டறிய, தயவுசெய்து உங்கள் புறப்படும் துறைமுகத்தைக் குறிப்பிடவும் (எ.கா. தூத்துக்குடி, சென்னை, கொச்சி)."
-        else:
-            return "To locate the nearest Potential Fishing Zone (PFZ), please specify your departure harbor (e.g., Ratnagiri, Malvan, Veraval, or Mumbai)."
-
-    if lang_lower == "mr":
-        return "सुरक्षिततेचा अंदाज घेण्यासाठी, कृपया आपले प्रस्थान बंदर सांगा."
-    elif lang_lower == "hi":
-        return "सुरक्षा मूल्यांकन के लिए, कृपया अपना प्रस्थान बंदरगाह बताएं।"
-    elif lang_lower == "ta":
-        return "பாதுகாப்பு மதிப்பீட்டிற்கு, தயவுசெய்து உங்கள் புறப்படும் துறைமுகத்தைக் குறிப்பிடவும்."
-    return "To provide an accurate maritime assessment, please specify your departure harbor."
+    return generate_localized_clarification(intent=intent, language=language, missing_fields=missing_fields)
 
 
 # Helper function: canonical capability dependency order
@@ -466,128 +431,29 @@ def intent_locale_node(state: ORCAState) -> Dict[str, Any]:
             # Fall through seamlessly to deterministic classifier below
 
     # 3. Deterministic Fallback Classifier
+    thread_ctx = memory_manager.load_context(thread_id)
+    user_prof = state.get("user_profile") or {}
+    if not thread_ctx.active_harbor and (user_prof.get("active_harbor") or user_prof.get("harbor")):
+        thread_ctx.active_harbor = user_prof.get("active_harbor") or user_prof.get("harbor")
+
+    # M9: Normalization & Language Detection
+    norm = normalize_maritime_entities(raw_msg, context_language=thread_ctx.preferred_language)
+    lang = state.get("language") or norm.detected_language
     msg_lower = raw_msg.lower()
-    lang = state.get("language") or "en"
-    marathi_distinctive = ["उद्या", "लाटा", "मासेमारी", "होडी", "सावध", "आहे का", "कुठे", "सकाळी", "वाजता", "जाणे", "आहे", "आहेत", "नाही", "वारा", "सांग", "कशी"]
-    hindi_distinctive = ["क्या", "तूफान", "हवा", "नाव", "मछली", "सकते", "चेतावनी", "सुरक्षा", "कहाँ", "कहा", "कल", "सुबह", "पकड़ने", "जाना", "है"]
 
-    mr_count = sum(1 for kw in marathi_distinctive if kw in raw_msg)
-    hi_count = sum(1 for kw in hindi_distinctive if kw in raw_msg)
-    if mr_count > hi_count:
-        lang = "mr"
-    elif hi_count > mr_count:
-        lang = "hi"
-    elif mr_count > 0:
-        lang = "mr"
+    explicit_harbor = norm.origin_harbor
+    explicit_dest = norm.destination
+    craft_type = norm.craft_type
+    dep_time = norm.departure_time
 
-    indic_harbors = {
-        "रत्नागिरी": "Ratnagiri",
-        "मालवण": "Malvan",
-        "वेरावळ": "Veraval",
-        "वेरावल": "Veraval",
-        "मुंबई": "Mumbai",
-        "गोवा": "Goa",
-        "चेन्नई": "Chennai",
-        "कोची": "Kochi",
-    }
-    known_harbors = [
-        "ratnagiri", "veraval", "porbandar", "mumbai", "panaji", "goa",
-        "malpe", "malvan", "chennai", "tuticorin", "kochi", "cochin",
-        "mangalore", "karwar", "alibaug", "visakhapatnam", "vizag",
-        "kakinada", "paradip", "digha", "puri", "bhavnagar", "okha",
-        "mandvi", "jafrabad", "trivandrum", "kanyakumari", "pondicherry",
-    ]
-
-    explicit_harbor = None
-    explicit_dest = None
-
-    stop_words = {
-        "The", "Here", "There", "Port", "Harbor", "Coast", "Sea",
-        "Tomorrow", "Today", "Now", "Me", "My", "Us", "Any", "Our", "All", "Route", "Passage",
-        "Safe", "Safety", "Fish", "Fishing", "Sail", "Sailing", "Go", "Going", "Depart", "Check",
-        "Head", "Travel", "Want", "Like", "Able", "Out", "In", "On", "Off", "Near", "Tell",
-    }
-
-    # 1. Indic from-to patterns (e.g. "मुंबई ते गोवा", "मुंबई से गोवा")
-    for ih_orig, orig_val in indic_harbors.items():
-        for ih_dest, dest_val in indic_harbors.items():
-            if ih_orig != ih_dest and (f"{ih_orig} ते {ih_dest}" in raw_msg or f"{ih_orig} से {ih_dest}" in raw_msg):
-                explicit_harbor = orig_val
-                explicit_dest = dest_val
-                break
-        if explicit_harbor and explicit_dest:
-            break
-
-    # 2. English "from <origin> to <destination>"
-    if not explicit_harbor or not explicit_dest:
-        from_to_match = re.search(r"\bfrom\s+([A-Za-z]+)\s+to\s+([A-Za-z]+)\b", raw_msg, re.IGNORECASE)
-        if from_to_match:
-            c_orig = from_to_match.group(1).capitalize()
-            c_dest = from_to_match.group(2).capitalize()
-            if c_orig not in stop_words:
-                explicit_harbor = c_orig
-            if c_dest not in stop_words:
-                explicit_dest = c_dest
-
-    # 3. English "between <origin> and <destination>"
-    if not explicit_harbor or not explicit_dest:
-        between_match = re.search(r"\bbetween\s+([A-Za-z]+)\s+and\s+([A-Za-z]+)\b", raw_msg, re.IGNORECASE)
-        if between_match:
-            c_orig = between_match.group(1).capitalize()
-            c_dest = between_match.group(2).capitalize()
-            if c_orig not in stop_words:
-                explicit_harbor = c_orig
-            if c_dest not in stop_words:
-                explicit_dest = c_dest
-
-    # 4. English "<origin> to <destination>" (e.g. "Ratnagiri to Goa", "Mumbai to Goa")
-    if not explicit_harbor or not explicit_dest:
-        to_pair_match = re.search(r"\b([A-Za-z]+)\s+to\s+([A-Za-z]+)\b", raw_msg, re.IGNORECASE)
-        if to_pair_match:
-            c_orig = to_pair_match.group(1).capitalize()
-            c_dest = to_pair_match.group(2).capitalize()
-            if (
-                c_orig not in stop_words
-                and c_dest not in stop_words
-                and (c_orig.lower() in known_harbors or c_dest.lower() in known_harbors)
-            ):
-                explicit_harbor = c_orig
-                explicit_dest = c_dest
-
-    # 5. English "to <destination>"
-    if not explicit_dest:
-        to_match = re.search(r"\b(?:to|towards|into)\s+([A-Za-z]+)\b", raw_msg, re.IGNORECASE)
-        if to_match:
-            c_dest = to_match.group(1).capitalize()
-            if (
-                c_dest not in stop_words
-                and c_dest != explicit_harbor
-                and (c_dest.lower() in known_harbors or any(rk in msg_lower for rk in ["route", "passage", "sailing", "heading", "dest"]))
-            ):
-                explicit_dest = c_dest
-
-    # 6. Fallback single harbor for origin
-    if not explicit_harbor:
-        for ih_kw, ih_val in indic_harbors.items():
-            if ih_kw in raw_msg and ih_val != explicit_dest:
-                explicit_harbor = ih_val
-                break
-
-    if not explicit_harbor:
-        for h in known_harbors:
-            if re.search(rf"\b{h}\b", msg_lower) and h.capitalize() != explicit_dest:
-                explicit_harbor = h.capitalize()
-                break
-
-    if not explicit_harbor:
-        match = re.search(r"\b(?:from|at|near|off|around)\s+([A-Za-z]+)\b", raw_msg, re.IGNORECASE)
-        if match:
-            candidate = match.group(1).capitalize()
-            if candidate not in stop_words and candidate != explicit_dest:
-                explicit_harbor = candidate
+    if not dep_time:
+        if any(w in msg_lower for w in ["tomorrow", "udya", "kal"]):
+            dep_time = "tomorrow"
+        elif any(w in msg_lower for w in ["today", "now", "aaj", "atta", "abhi"]):
+            dep_time = "now"
 
     if any(k in msg_lower for k in ["pfz", "fishing zone", "fish ground", "मत्स्य"]) or (
-        any(f in msg_lower for f in ["fish", "मछली", "मासेमारी"]) and any(q in msg_lower for q in ["where", "nearest", "find", "कुठे", "कहाँ", "कहा", "निकटतम"])
+        any(f in msg_lower for f in ["fish", "मछली", "मासेमारी", "macchi", "masemari"]) and any(q in msg_lower for q in ["where", "nearest", "find", "कुठे", "कहाँ", "कहा", "निकटतम", "kuthe", "kaha", "kidhar", "jawal"])
     ):
         intent = IntentCategory.PFZ
     elif any(k in msg_lower for k in [
@@ -595,45 +461,43 @@ def intent_locale_node(state: ORCAState) -> Dict[str, Any]:
         "तूफान", "चेतावनी", "धोका", "चक्रवात", "चक्रीवादळ",
         "firing", "restricted", "restriction", "geofence", "geofenced", "boundary", "boundaries",
         "protected area", "sanctuary", "prohibited", "naval", "प्रतिबंधित", "संरक्षित",
+        "toofan", "chakrivadal", "khatra", "dhoka", "chetavani",
     ]):
         intent = IntentCategory.HAZARDS
-    elif any(k in msg_lower for k in ["route", "passage", "channel", "waypoint", "रास्ता", "मार्ग"]):
+    elif any(k in msg_lower for k in ["route", "passage", "channel", "waypoint", "रास्ता", "मार्ग", "rasta", "marg"]):
         intent = IntentCategory.ROUTE
-    elif any(k in msg_lower for k in ["safe", "safety", "सुरक्षित", "सुरक्षा", "leave", "depart", "sail", "can we go", "can i go", "head out", "heading out", "go out", "go fishing", "fishing tomorrow", "should i"]):
+    elif any(k in msg_lower for k in [
+        "safe", "safety", "सुरक्षित", "सुरक्षा", "leave", "depart", "sail",
+        "can we go", "can i go", "head out", "heading out", "go out", "go fishing",
+        "fishing tomorrow", "should i", "surakshit", "suraksha", "jaau ka", "jao ka",
+    ]):
         intent = IntentCategory.SAFETY
-    elif any(k in msg_lower for k in ["why", "explain", "risky", "reason", "कारण", "क्यों"]):
+    elif any(k in msg_lower for k in ["why", "explain", "risky", "reason", "कारण", "क्यों", "kaaran", "kyon"]):
         intent = IntentCategory.ANALYTICAL_EXPLANATION
-    elif any(k in msg_lower for k in ["wave", "swell", "current", "condition", "sea state", "समुद्र", "लाटा"]):
+    elif any(k in msg_lower for k in ["wave", "swell", "current", "condition", "sea state", "समुद्र", "लाटा", "लहरें", "lata", "lahre", "samudra", "darya"]):
         intent = IntentCategory.CONDITIONS
     else:
         # Check if user is continuing a previous intent conversation
-        thread_ctx_pre = memory_manager.load_context(thread_id)
-        if thread_ctx_pre.last_intent in [IntentCategory.PFZ, IntentCategory.SAFETY, IntentCategory.HAZARDS, IntentCategory.ROUTE]:
-            if explicit_harbor or any(w in msg_lower for w in ["what about", "how about", "tomorrow", "today", "afternoon", "morning", "evening", "instead"]):
-                intent = thread_ctx_pre.last_intent
+        continuation_markers = [
+            "what about", "how about", "tomorrow", "today", "afternoon", "morning", "evening", "instead",
+            "udya", "kal", "sakali", "subah", "दुपारी", "dupari", "दोपहर", "dopahar",
+            "सकाळी", "संध्याकाळी", "शाम", "रात्री", "रात", "काय", "कशी", "कसा", "परिस्थिती",
+            "सांगा", "सांग", "क्या", "बताओ", "कैसा", "कैसी",
+        ]
+        if thread_ctx.last_intent in [IntentCategory.PFZ, IntentCategory.SAFETY, IntentCategory.HAZARDS, IntentCategory.ROUTE]:
+            if explicit_harbor or dep_time or any(w in msg_lower for w in continuation_markers):
+                intent = thread_ctx.last_intent
             else:
                 intent = IntentCategory.UNSUPPORTED
         else:
             intent = IntentCategory.UNSUPPORTED
 
-    # Resolve departure time from deterministic message
-    dep_time = None
-    if "tomorrow" in msg_lower:
-        dep_time = "tomorrow"
-    elif "today" in msg_lower or "now" in msg_lower:
-        dep_time = "now"
-
     entities = ExtractedEntities(
         origin_harbor=explicit_harbor,
         target_destination=explicit_dest,
+        craft_type=craft_type,
         departure_time=dep_time,
     )
-
-    # Apply M4 selective carry-forward policy
-    thread_ctx = memory_manager.load_context(thread_id)
-    user_prof = state.get("user_profile") or {}
-    if not thread_ctx.active_harbor and (user_prof.get("active_harbor") or user_prof.get("harbor")):
-        thread_ctx.active_harbor = user_prof.get("active_harbor") or user_prof.get("harbor")
 
     updated_ctx, audit_summary = memory_manager.apply_memory_policy(
         current_context=thread_ctx,
@@ -1163,14 +1027,28 @@ def response_composer_node(state: ORCAState) -> Dict[str, Any]:
     harbor = state.get("origin_harbor") or state.get("location", {}).get("harbor", "Ratnagiri")
     evidence = state.get("evidence", [])
     evidence_names = ", ".join(set(ev.source_name for ev in evidence)) or "No external evidence required"
+    lang = state.get("language", "en")
 
     if intent_val == IntentCategory.UNSUPPORTED.value:
-        answer = (
-            "SAMUDRA is focused exclusively on marine intelligence, Potential Fishing Zones (PFZ), "
-            "coastal weather forecasts, and maritime safety advisories. Your query does not appear to be "
-            "related to marine operations. Please ask about sea conditions, fishing zones, safe routes, "
-            "or departure advisories."
-        )
+        if lang == "mr":
+            answer = (
+                "समुद्रा (SAMUDRA) प्रणाली केवळ सागरी माहिती, संभाव्य मत्स्य क्षेत्र (PFZ), "
+                "किनारपट्टी हवामान अंदाज आणि सागरी सुरक्षा सल्ल्यासाठी तयार केली आहे. आपली विचारणा सागरी कामकाजाशी "
+                "संबंधित दिसत नाही. कृपया समुद्र स्थिती, मत्स्य क्षेत्र, सुरक्षित मार्ग किंवा प्रस्थान सल्ल्याबद्दल विचारा."
+            )
+        elif lang == "hi":
+            answer = (
+                "समुद्रा (SAMUDRA) प्रणाली विशेष रूप से समुद्री समझ, संभावित मत्स्य क्षेत्र (PFZ), "
+                "तटीय मौसम पूर्वानुमान और समुद्री सुरक्षा सलाह के लिए समर्पित है। आपका प्रश्न समुद्री कार्यों से "
+                "संबंधित नहीं लगता है। कृपया समुद्र की स्थिति, मछली पकड़ने के क्षेत्र, सुरक्षित मार्ग या प्रस्थान सलाह के बारे में पूछें।"
+            )
+        else:
+            answer = (
+                "SAMUDRA is focused exclusively on marine intelligence, Potential Fishing Zones (PFZ), "
+                "coastal weather forecasts, and maritime safety advisories. Your query does not appear to be "
+                "related to marine operations. Please ask about sea conditions, fishing zones, safe routes, "
+                "or departure advisories."
+            )
         recommendation = Recommendation(
             status=RecommendationStatus.INFORMATIONAL,
             summary="Query outside marine intelligence purview.",
@@ -1183,12 +1061,27 @@ def response_composer_node(state: ORCAState) -> Dict[str, Any]:
         )
 
     elif intent_val == IntentCategory.PFZ.value:
-        answer = (
-            f"[M1 DEMO DATA] A simulated Potential Fishing Zone was identified approximately 12.4 nautical miles "
-            f"bearing 285° from {harbor} (water depth: 45m, chlorophyll: 1.25 mg/m³).\n\n"
-            f"Supporting Evidence:\n- {evidence_names}\n\n"
-            f"Notice: This is demonstration data for software verification and is NOT a live fishing advisory."
-        )
+        if lang == "mr":
+            answer = (
+                f"[M1 DEMO DATA] {harbor} पासून अंदाजे 12.4 सागरी मैल (दिशा 285°) अंतरावर संभाव्य मत्स्य क्षेत्र (PFZ) "
+                f"आढळले आहे (पाण्याची खोली: 45 मी, क्लोरोफिल: 1.25 mg/m³).\n\n"
+                f"पुरावा आधार:\n- {evidence_names}\n\n"
+                f"सूचना: हे सॉफ्टवेअर पडताळणीसाठी प्रात्यक्षिक डेटा आहे आणि थेट मासेमारी सल्ला नाही."
+            )
+        elif lang == "hi":
+            answer = (
+                f"[M1 DEMO DATA] {harbor} से लगभग 12.4 समुद्री मील (दिशा 285°) पर संभावित मत्स्य क्षेत्र (PFZ) "
+                f"चिन्हित किया गया है (पानी की गहराई: 45 मी, क्लोरोफिल: 1.25 mg/m³)।\n\n"
+                f"साक्ष्य आधार:\n- {evidence_names}\n\n"
+                f"सूचना: यह सॉफ्टवेयर सत्यापन के लिए प्रदर्शन डेटा है और लाइव मत्स्य पालन सलाह नहीं है।"
+            )
+        else:
+            answer = (
+                f"[M1 DEMO DATA] A simulated Potential Fishing Zone was identified approximately 12.4 nautical miles "
+                f"bearing 285° from {harbor} (water depth: 45m, chlorophyll: 1.25 mg/m³).\n\n"
+                f"Supporting Evidence:\n- {evidence_names}\n\n"
+                f"Notice: This is demonstration data for software verification and is NOT a live fishing advisory."
+            )
         recommendation = Recommendation(
             status=RecommendationStatus.GO,
             summary=f"Simulated PFZ located 12.4 nm bearing 285° from {harbor}.",
@@ -1212,7 +1105,6 @@ def response_composer_node(state: ORCAState) -> Dict[str, Any]:
 
         recommendation = rec
         factors_text = "\n".join(f"- {factor}" for factor in rec.decisive_factors)
-        lang = state.get("language", "en")
         if lang == "mr":
             answer = (
                 f"[{rec.status.value}] {harbor} साठी सागरी सुरक्षा सल्ला:\n\n"
@@ -1250,14 +1142,33 @@ def response_composer_node(state: ORCAState) -> Dict[str, Any]:
         obs = state.get("observations", {})
         wave = obs.get("significant_wave_height_m", 1.8)
         swell_period = obs.get("swell_period_sec", 8.5)
-        answer = (
-            f"[M1 DEMO DATA] Simulated marine conditions for {harbor}:\n"
-            f"- Significant Wave Height: {wave} meters\n"
-            f"- Swell Period: {swell_period} seconds\n"
-            f"- Sea Surface Current: 1.1 knots\n\n"
-            f"Supporting Evidence:\n- {evidence_names}\n\n"
-            f"Notice: Demonstration data only — not an official INCOIS broadcast."
-        )
+        if lang == "mr":
+            answer = (
+                f"[M1 DEMO DATA] {harbor} साठी सागरी हवामान व समुद्र स्थिती:\n"
+                f"- लक्षणीय लाटांची उंची: {wave} मीटर\n"
+                f"- उसळीचा कालावधी (Swell Period): {swell_period} सेकंद\n"
+                f"- सागरी प्रवाह: 1.1 नॉट्स\n\n"
+                f"पुरावा आधार:\n- {evidence_names}\n\n"
+                f"सूचना: केवळ प्रात्यक्षिक डेटा — अधिकृत INCOIS प्रसारण नाही."
+            )
+        elif lang == "hi":
+            answer = (
+                f"[M1 DEMO DATA] {harbor} के लिए समुद्री मौसम एवं समुद्र की स्थिति:\n"
+                f"- महत्वपूर्ण तरंग ऊंचाई: {wave} मीटर\n"
+                f"- स्वेल अवधि (Swell Period): {swell_period} सेकंड\n"
+                f"- समुद्री सतह धारा: 1.1 नॉट्स\n\n"
+                f"साक्ष्य आधार:\n- {evidence_names}\n\n"
+                f"सूचना: केवल प्रदर्शन डेटा — आधिकारिक INCOIS प्रसारण नहीं।"
+            )
+        else:
+            answer = (
+                f"[M1 DEMO DATA] Simulated marine conditions for {harbor}:\n"
+                f"- Significant Wave Height: {wave} meters\n"
+                f"- Swell Period: {swell_period} seconds\n"
+                f"- Sea Surface Current: 1.1 knots\n\n"
+                f"Supporting Evidence:\n- {evidence_names}\n\n"
+                f"Notice: Demonstration data only — not an official INCOIS broadcast."
+            )
         recommendation = Recommendation(
             status=RecommendationStatus.INFORMATIONAL,
             summary=f"Simulated wave height around {harbor} is {wave}m.",

@@ -16,6 +16,10 @@
 | **M3** | LLM Provider Integration | **COMPLETE** | Provider-agnostic LLM interface, Fake/Ollama/OpenAI providers, prompt injection guard, XML sandboxing, zero CoT leakage, safety invariance, fallback resilience. 65/65 tests passing. |
 | **M4** | Multi-Turn Memory & State Persistence | **COMPLETE** | ThreadContext, selective carry-forward, ConversationStore abstraction (InMemory, PostgreSQL, Redis), data sanitization. 88/88 tests passing. |
 | **M5** | Safety Reasoning Flow | **COMPLETE** | End-to-end voyage safety flow, DAG dependency order, conservative upstream failure handling, authoritative Dev 4 status invariance, evidence grounding, multilingual advisories. 116/116 tests passing. |
+| **M6** | Hazard & Geofence Flow | **COMPLETE** | Multi-domain hazard/geofence planning, boundary distance checks, hard-stop NO_GO and restricted CAUTION rules, multilingual explanations. 144/144 tests passing. |
+| **M7** | Route Reasoning Flow | **COMPLETE** | Route comparison pipeline, candidate preservation, Dev 4 recommended route highlighting, invariant risk headers, localized comparisons. 189/189 tests passing. |
+| **M8** | Intent Switching Across Turns | **COMPLETE** | Dynamic intent hopping (SAFETY ↔ HAZARDS ↔ ROUTE ↔ PFZ), selective context carry-forward, fresh tool dispatch per turn, thread isolation. 204/204 tests passing. |
+| **M9** | Multilingual / Local-Language Pipeline | **COMPLETE** | Script and token-based language detection (en, mr, hi), bounded coastal/Konkan normalization glossary, same-language grounded responses, multi-turn language switching, strict safety status invariance. 223/223 tests passing. |
 
 ---
 
