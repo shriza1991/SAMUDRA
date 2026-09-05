@@ -21,7 +21,15 @@ Must NOT implement:
 """
 
 from backend.app.agents.evidence import EvidenceRecord, EvidenceValidationReport, EvidenceValidator
-from backend.app.agents.graph import GRAPH_NODE_REGISTRY, NodeContract, NodeId, RoutingPolicy
+from backend.app.agents.graph import (
+    GRAPH_NODE_REGISTRY,
+    NodeContract,
+    NodeId,
+    RoutingPolicy,
+    build_orca_graph,
+    orca_graph,
+    run_orca_graph,
+)
 from backend.app.agents.intent import (
     ExtractedEntities,
     IntentCategory,
@@ -32,6 +40,14 @@ from backend.app.agents.llm import LLMMessage, LLMProvider, LLMResponse, Message
 from backend.app.agents.memory import MemoryManager, ThreadContext, memory_manager
 from backend.app.agents.response import ResponseComposer, ResponseCompositionInput
 from backend.app.agents.state import AgentState, ORCAState
+from backend.app.agents.stub_tools import (
+    explanation_stub,
+    marine_stub,
+    pfz_stub,
+    risk_stub,
+    route_stub,
+    weather_stub,
+)
 from backend.app.agents.supervisor import TaskPlan, ToolExecutionStep, get_default_plan_for_intent
 from backend.app.agents.tools import (
     AgentToolRegistry,
@@ -51,21 +67,31 @@ __all__ = [
     "ExtractedEntities",
     "IntentExtractionResult",
     "normalize_intent",
-    # Graph & Nodes
+    # Graph & Executable Workflow
     "NodeId",
     "NodeContract",
     "GRAPH_NODE_REGISTRY",
     "RoutingPolicy",
+    "build_orca_graph",
+    "orca_graph",
+    "run_orca_graph",
     # Supervisor
     "TaskPlan",
     "ToolExecutionStep",
     "get_default_plan_for_intent",
-    # Tools
+    # Tools & Registry
     "AgentToolRegistry",
     "ToolDefinition",
     "ToolParameter",
     "ToolExecutionRecord",
     "tool_registry",
+    # Stub Tools (M1)
+    "pfz_stub",
+    "marine_stub",
+    "weather_stub",
+    "risk_stub",
+    "route_stub",
+    "explanation_stub",
     # Memory
     "ThreadContext",
     "MemoryManager",
