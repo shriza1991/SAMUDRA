@@ -17,8 +17,7 @@ Tests M7 Requirements:
   M7.11 — M0-M6 regression
 """
 
-import pytest
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 from backend.app.agents.graph import run_orca_graph, _compare_route_candidates
 from backend.app.agents.intent import IntentCategory
