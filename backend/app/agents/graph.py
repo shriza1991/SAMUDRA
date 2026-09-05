@@ -1762,6 +1762,17 @@ def response_composer_node(state: ORCAState) -> Dict[str, Any]:
             )
             # Fall back to deterministic template
 
+    # Generate suggested follow-ups for user
+    suggested_followups = state.get("suggested_followups")
+    if not suggested_followups:
+        suggested_followups = ResponseComposer.generate_suggested_followups(
+            intent=intent_val,
+            status=recommendation.status,
+            language=lang,
+            harbor=harbor,
+            destination=state.get("destination"),
+        )
+
     # Validate safety invariance if risk_assessment exists or for SAFETY, HAZARDS, or ROUTE intent
     if state.get("risk_assessment") or intent_val in [
         IntentCategory.SAFETY.value,
@@ -1777,10 +1788,12 @@ def response_composer_node(state: ORCAState) -> Dict[str, Any]:
             recommendation=authoritative_rec,
             confidence=confidence,
             evidence=evidence,
+            warnings=state.get("warnings", []),
         )
         composed_chat_response = ResponseComposer.build_chat_response(
             composition_input=comp_input,
             synthesized_answer=answer,
+            suggested_followups=suggested_followups,
         )
         ResponseComposer.validate_safety_invariance(composed_chat_response, authoritative_rec)
 
@@ -1794,6 +1807,7 @@ def response_composer_node(state: ORCAState) -> Dict[str, Any]:
         "response": answer,
         "risk_assessment": recommendation,
         "confidence": confidence,
+        "suggested_followups": suggested_followups,
         "trace": trace,
     }
 

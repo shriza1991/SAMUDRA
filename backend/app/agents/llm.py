@@ -134,6 +134,11 @@ class FakeLLMProvider(LLMProvider):
         self.simulate_malformed = simulate_malformed
         self.call_history: List[Dict[str, Any]] = []
 
+    def set_canned_structured_response(self, response_obj: BaseModel) -> None:
+        """Helper to program a specific canned structured response for testing."""
+        schema_name = type(response_obj).__name__
+        self.canned_responses[schema_name] = response_obj
+
     @property
     def provider_name(self) -> str:
         return "fake"

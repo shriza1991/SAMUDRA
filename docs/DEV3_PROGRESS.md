@@ -21,6 +21,7 @@
 | **M8** | Intent Switching Across Turns | **COMPLETE** | Dynamic intent hopping (SAFETY ↔ HAZARDS ↔ ROUTE ↔ PFZ), selective context carry-forward, fresh tool dispatch per turn, thread isolation. 204/204 tests passing. |
 | **M9** | Multilingual / Local-Language Pipeline | **COMPLETE** | Script and token-based language detection (en, mr, hi), bounded coastal/Konkan normalization glossary, LLM-assisted multilingual NLU + response generation, multi-turn language switching, strict safety status invariance. 239/239 tests passing. |
 | **M10** | Evidence Validation & Hallucination Prevention | **COMPLETE** | Deterministic numerical claim extraction across EN/HI/MR, claim-to-evidence mapping, citation enforcement ([EV...]), stale/conflict detection, partial evidence support, selective clause-level hallucination suppression, safety invariance preservation, 100% offline FakeLLM testing. 265/265 tests passing. |
+| **M11** | Response Composer & Operational Presentation | **COMPLETE** | 10 core M11 requirements implemented: recommendation status, concise summary, decisive factors, suggested next action, confidence explanation, evidence references, warnings, suggested follow-ups, same-language output (EN/MR/HI/TA), and concise scannable format. Strict safety/evidence/language invariants preserved. 281/281 tests passing. |
 
 ---
 
@@ -463,4 +464,32 @@
     * Linting: **0 ruff errors**.
   - **Documentation**:
     * `docs/M10_EVIDENCE_VALIDATION.md`: Master M10 architecture guide covering lifecycle, graph propagation, claim mapping, edge cases, suppression mechanisms, and verification matrix.
+
+---
+
+### M11 — Response Composer & Operational Presentation (COMPLETE)
+- **Delivered**:
+  - **M11.1 — Complete 10 Core Requirements Implementation**:
+    1. *Recommendation Status*: Immutable `RecommendationStatus` (`GO`, `CAUTION`, `NO_GO`, `UNKNOWN`, `INFORMATIONAL`) prepended as `[<STATUS>]` header.
+    2. *Concise Summary*: Executive 1-2 sentence recommendation summary.
+    3. *Decisive Factors*: Bulleted key environmental and numerical drivers with citation references.
+    4. *Suggested Next Action*: Direct, actionable directive for vessel operators.
+    5. *Confidence Explanation*: Multilingual confidence rating (`HIGH`, `MEDIUM`, `LOW`) and justifications formatted via `ResponseComposer.format_confidence_explanation()`.
+    6. *Evidence References*: Verifiable `EvidenceItem` citations with `evidence_id` identifiers attached to `ChatResponse.evidence` and cited in response text.
+    7. *Operational Warnings*: Surfaced caveats, degraded service warnings, and conflict flags.
+    8. *Contextual Suggested Follow-ups*: Intelligent quick replies generated via `ResponseComposer.generate_suggested_followups()` across intents, statuses, and languages.
+    9. *Same-Language Output*: End-to-end localized synthesis in English (`en`), Marathi (`mr`), Hindi (`hi`), and Tamil (`ta`).
+    10. *Concise Operational Template*: Structured, scannable markdown format avoiding conversational clutter.
+  - **M11.2 — Invariant Enforcement**:
+    * Preserved Dev 4 risk evaluation immutability with `ResponseComposer.validate_safety_invariance()`.
+    * Maintained M10 numerical evidence grounding and hallucination filtering.
+    * Maintained M9 language selection without bleed.
+    * Maintained M4/M8 multi-turn context carry-forward without fabricating facts.
+  - **M11.3 — Comprehensive Test Suite** (`tests/agent_eval/test_m11_response_composer.py`):
+    * 16 dedicated test cases covering all 10 M11 requirements, safety invariance, evidence grounding, and multi-turn multilingual E2E flows.
+    * Total repository test count: **281/281 passing** in 2.45s.
+    * Linting: **0 ruff errors**.
+  - **Documentation**:
+    * `docs/M11_RESPONSE_COMPOSER.md`: Architectural specification and verification guide for Milestone M11.
+
 
