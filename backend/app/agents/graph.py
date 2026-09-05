@@ -26,6 +26,7 @@ All data is strictly tagged as M1_DEMO_DATA / SIMULATED.
 from datetime import datetime, timezone
 from enum import Enum
 import json
+import re
 from typing import Any, Dict, List, Optional
 import uuid
 
@@ -61,6 +62,61 @@ from backend.app.contracts.chat import (
     RecommendationStatus,
 )
 from backend.app.prompts import load_prompt
+
+
+# Reference coordinates for major Indian coastal landing centers / harbors (EPSG:4326 [lon, lat])
+HARBOR_COORDINATES: Dict[str, List[float]] = {
+    "Ratnagiri": [73.28, 16.99],
+    "Veraval": [70.37, 20.90],
+    "Porbandar": [69.60, 21.64],
+    "Mumbai": [72.87, 18.92],
+    "Panaji": [73.83, 15.49],
+    "Goa": [73.83, 15.49],
+    "Malpe": [74.70, 13.35],
+    "Malvan": [73.47, 16.06],
+    "Chennai": [80.27, 13.08],
+    "Tuticorin": [78.13, 8.76],
+    "Kochi": [76.27, 9.93],
+    "Mangalore": [74.85, 12.87],
+    "Karwar": [74.13, 14.81],
+    "Alibaug": [72.88, 18.64],
+    "Visakhapatnam": [83.30, 17.68],
+    "Kakinada": [82.23, 16.99],
+    "Paradip": [86.67, 20.32],
+}
+
+
+def _get_harbor_coordinates(harbor: Optional[str]) -> Optional[List[float]]:
+    """Resolves standard [lon, lat] coordinates for known harbors."""
+    if not harbor:
+        return None
+    return HARBOR_COORDINATES.get(harbor, [73.28, 16.99])
+
+
+def _generate_clarification_prompt(
+    intent: IntentCategory,
+    language: str = "en",
+    missing_fields: Optional[List[str]] = None,
+) -> str:
+    """Generates a localized clarification question requesting missing operational parameters."""
+    lang_lower = (language or "en").lower()
+    if intent == IntentCategory.PFZ:
+        if lang_lower == "mr":
+            return "जवळचे संभाव्य मत्स्य क्षेत्र (PFZ) शोधण्यासाठी, कृपया आपले प्रस्थान बंदर (उदा. रत्नागिरी, मालवण, वेरावळ किंवा मुंबई) सांगा."
+        elif lang_lower == "hi":
+            return "निकटतम मत्स्य क्षेत्र (PFZ) खोजने के लिए, कृपया अपना प्रस्थान बंदरगाह (जैसे रत्नागिरी, मालवण, वेरावल या मुंबई) बताएं।"
+        elif lang_lower == "ta":
+            return "அருகிலுள்ள மீன்பிடி மண்டலத்தைக் (PFZ) கண்டறிய, தயவுசெய்து உங்கள் புறப்படும் துறைமுகத்தைக் குறிப்பிடவும் (எ.கா. தூத்துக்குடி, சென்னை, கொச்சி)."
+        else:
+            return "To locate the nearest Potential Fishing Zone (PFZ), please specify your departure harbor (e.g., Ratnagiri, Malvan, Veraval, or Mumbai)."
+
+    if lang_lower == "mr":
+        return "सुरक्षिततेचा अंदाज घेण्यासाठी, कृपया आपले प्रस्थान बंदर सांगा."
+    elif lang_lower == "hi":
+        return "सुरक्षा मूल्यांकन के लिए, कृपया अपना प्रस्थान बंदरगाह बताएं।"
+    elif lang_lower == "ta":
+        return "பாதுகாப்பு மதிப்பீட்டிற்கு, தயவுசெய்து உங்கள் புறப்படும் துறைமுகத்தைக் குறிப்பிடவும்."
+    return "To provide an accurate maritime assessment, please specify your departure harbor."
 
 
 # Helper function: canonical capability dependency order
@@ -121,8 +177,16 @@ GRAPH_NODE_REGISTRY: Dict[NodeId, NodeContract] = {
         name="Intent / Locale Detection Node",
         description="Extracts language and intent using controlled deterministic rules.",
         inputs=["user_message", "user_profile", "thread_id"],
-        allowed_mutations=["language", "intent", "location", "time_window", "trace"],
+        allowed_mutations=["language", "intent", "location", "time_window", "missing_fields", "clarification_needed", "clarification_prompt", "trace"],
         forbidden_actions=["Do NOT calculate wave heights or risk status."],
+    ),
+    NodeId.CLARIFICATION: NodeContract(
+        node_id=NodeId.CLARIFICATION,
+        name="Clarification Node",
+        description="Generates courteous, localized clarification questions when critical operational context is missing.",
+        inputs=["user_message", "intent", "language", "missing_fields", "clarification_prompt"],
+        allowed_mutations=["response", "risk_assessment", "confidence", "suggested_followups", "trace"],
+        forbidden_actions=["Do NOT execute specialist tools or fabricate operational locations."],
     ),
     NodeId.SUPERVISOR_PLANNER: NodeContract(
         node_id=NodeId.SUPERVISOR_PLANNER,
@@ -258,6 +322,10 @@ def intent_locale_node(state: ORCAState) -> Dict[str, Any]:
 
             # 2. Memory Context Integration & Selective Carry-Forward (M4)
             thread_ctx = memory_manager.load_context(thread_id)
+            user_prof = state.get("user_profile") or {}
+            if not thread_ctx.active_harbor and (user_prof.get("active_harbor") or user_prof.get("harbor")):
+                thread_ctx.active_harbor = user_prof.get("active_harbor") or user_prof.get("harbor")
+
             updated_ctx, audit_summary = memory_manager.apply_memory_policy(
                 current_context=thread_ctx,
                 extracted_entities=extraction.entities,
@@ -267,11 +335,48 @@ def intent_locale_node(state: ORCAState) -> Dict[str, Any]:
             )
             memory_manager.save_context(updated_ctx)
 
-            detected_harbor = updated_ctx.active_harbor or "Ratnagiri"
-            location = state.get("location") or {
-                "harbor": detected_harbor,
-                "coordinates": updated_ctx.active_coordinates or extraction.entities.coordinates or [73.28, 16.99],
-            }
+            # PFZ Origin Resolution:
+            # 1. Explicit origin in current user message
+            # 2. Valid active harbor from current ThreadContext
+            # 3. Otherwise request clarification (DO NOT fall back to Ratnagiri)
+            origin_harbor: Optional[str] = None
+            clarification_needed = extraction.clarification_needed
+            missing_fields = list(extraction.missing_critical_fields)
+            clarification_prompt = extraction.clarification_prompt
+
+            if validated_intent == IntentCategory.PFZ.value:
+                explicit_harbor = extraction.entities.origin_harbor
+                if explicit_harbor:
+                    origin_harbor = explicit_harbor
+                    clarification_needed = False
+                    missing_fields = [f for f in missing_fields if f not in ["origin_harbor", "harbor"]]
+                elif updated_ctx.active_harbor:
+                    origin_harbor = updated_ctx.active_harbor
+                    clarification_needed = False
+                    missing_fields = [f for f in missing_fields if f not in ["origin_harbor", "harbor"]]
+                else:
+                    origin_harbor = None
+                    clarification_needed = True
+                    if "origin_harbor" not in missing_fields:
+                        missing_fields.append("origin_harbor")
+                    if not clarification_prompt:
+                        clarification_prompt = _generate_clarification_prompt(
+                            IntentCategory.PFZ,
+                            language=extraction.detected_language or "en",
+                            missing_fields=missing_fields,
+                        )
+            else:
+                detected_harbor = updated_ctx.active_harbor or "Ratnagiri"
+                origin_harbor = detected_harbor
+
+            if origin_harbor:
+                location = state.get("location") or {
+                    "harbor": origin_harbor,
+                    "coordinates": updated_ctx.active_coordinates or extraction.entities.coordinates or _get_harbor_coordinates(origin_harbor),
+                }
+            else:
+                location = None
+
             time_window = state.get("time_window") or updated_ctx.time_window or {
                 "departure_time": "tomorrow_morning",
                 "duration_hours": 8.0,
@@ -283,18 +388,20 @@ def intent_locale_node(state: ORCAState) -> Dict[str, Any]:
                 trace,
                 node_name="Intent / Locale",
                 action=f"LLM extraction ({llm_provider.provider_name}/{llm_provider.model_name}): "
-                       f"intent='{validated_intent}', locale='{extraction.detected_language}' (Harbor: {detected_harbor}) "
-                       f"[Memory Turn {updated_ctx.turn_count}: carried=({carried_str}), overwritten=({overwritten_str})]",
+                       f"intent='{validated_intent}', locale='{extraction.detected_language}' (Harbor: {origin_harbor or 'Unresolved'}) "
+                       f"[Memory Turn {updated_ctx.turn_count}: carried=({carried_str}), overwritten=({overwritten_str})]"
+                       + (f" [Clarification needed: {', '.join(missing_fields)}]" if clarification_needed else ""),
             )
 
             return {
                 "intent": validated_intent,
+                "origin_harbor": origin_harbor,
                 "language": extraction.detected_language or updated_ctx.preferred_language or "en",
                 "location": location,
                 "time_window": time_window,
-                "missing_fields": extraction.missing_critical_fields,
-                "clarification_needed": extraction.clarification_needed,
-                "clarification_prompt": extraction.clarification_prompt,
+                "missing_fields": missing_fields,
+                "clarification_needed": clarification_needed,
+                "clarification_prompt": clarification_prompt,
                 "trace": trace,
             }
         except Exception as exc:
@@ -309,21 +416,60 @@ def intent_locale_node(state: ORCAState) -> Dict[str, Any]:
     # 3. Deterministic Fallback Classifier
     msg_lower = raw_msg.lower()
     lang = state.get("language") or "en"
-    marathi_keywords = ["उद्या", "सुरक्षित", "लाटा", "मासेमारी", "बंदर", "होडी", "सावध", "आहे का"]
-    hindi_keywords = ["क्या", "तूफान", "हवा", "नाव", "मछली", "सकते", "चेतावनी", "सुरक्षा"]
+    marathi_keywords = ["उद्या", "सुरक्षित", "लाटा", "मासेमारी", "बंदर", "होडी", "सावध", "आहे का", "कुठे"]
+    hindi_keywords = ["क्या", "तूफान", "हवा", "नाव", "मछली", "सकते", "चेतावनी", "सुरक्षा", "कहाँ", "कहा"]
 
     if any(kw in raw_msg for kw in marathi_keywords):
         lang = "mr"
     elif any(kw in raw_msg for kw in hindi_keywords):
         lang = "hi"
 
+    indic_harbors = {
+        "रत्नागिरी": "Ratnagiri",
+        "मालवण": "Malvan",
+        "वेरावळ": "Veraval",
+        "वेरावल": "Veraval",
+        "मुंबई": "Mumbai",
+        "गोवा": "Goa",
+        "चेन्नई": "Chennai",
+        "कोची": "Kochi",
+    }
+    known_harbors = [
+        "ratnagiri", "veraval", "porbandar", "mumbai", "panaji", "goa",
+        "malpe", "malvan", "chennai", "tuticorin", "kochi", "cochin",
+        "mangalore", "karwar", "alibaug", "visakhapatnam", "vizag",
+        "kakinada", "paradip", "digha", "puri", "bhavnagar", "okha",
+        "mandvi", "jafrabad", "trivandrum", "kanyakumari", "pondicherry",
+    ]
+
+    explicit_harbor = None
+    for ih_kw, ih_val in indic_harbors.items():
+        if ih_kw in raw_msg:
+            explicit_harbor = ih_val
+            break
+
+    if not explicit_harbor:
+        for h in known_harbors:
+            if re.search(rf"\b{h}\b", msg_lower):
+                explicit_harbor = h.capitalize()
+                break
+
+    if not explicit_harbor:
+        # Regex extraction for "from <harbor>", "at <harbor>", "off <harbor>"
+        match = re.search(r"\b(?:from|at|near|off|around)\s+([A-Za-z]+)\b", raw_msg, re.IGNORECASE)
+        if match:
+            candidate = match.group(1).capitalize()
+            stop_words = {"The", "Here", "There", "Port", "Harbor", "Coast", "Sea", "Tomorrow", "Today", "Now"}
+            if candidate not in stop_words:
+                explicit_harbor = candidate
+
     if any(k in msg_lower for k in ["pfz", "fishing zone", "fish ground", "मत्स्य"]) or (
-        "fish" in msg_lower and any(q in msg_lower for q in ["where", "nearest", "find", "कुठे", "कहाँ"])
+        any(f in msg_lower for f in ["fish", "मछली", "मासेमारी"]) and any(q in msg_lower for q in ["where", "nearest", "find", "कुठे", "कहाँ", "कहा", "निकटतम"])
     ):
         intent = IntentCategory.PFZ
     elif any(k in msg_lower for k in ["route", "passage", "channel", "waypoint", "रास्ता", "मार्ग"]):
         intent = IntentCategory.ROUTE
-    elif any(k in msg_lower for k in ["why", "explain", "risky", "reason", "कारण", "का", "क्यों"]):
+    elif any(k in msg_lower for k in ["why", "explain", "risky", "reason", "कारण", "क्यों"]) or (" का?" in msg_lower or msg_lower.endswith(" का")):
         intent = IntentCategory.ANALYTICAL_EXPLANATION
     elif any(k in msg_lower for k in ["cyclone", "storm", "hazard", "warning", "lightning", "तूफान", "चेतावनी", "firing", "restricted", "range"]):
         intent = IntentCategory.HAZARDS
@@ -332,14 +478,12 @@ def intent_locale_node(state: ORCAState) -> Dict[str, Any]:
     elif any(k in msg_lower for k in ["wave", "swell", "current", "condition", "sea state", "समुद्र", "लाटा"]):
         intent = IntentCategory.CONDITIONS
     else:
-        intent = IntentCategory.UNSUPPORTED
-
-    harbors = ["ratnagiri", "veraval", "porbandar", "mumbai", "panaji", "goa", "malpe", "chennai"]
-    explicit_harbor = None
-    for h in harbors:
-        if h in msg_lower:
-            explicit_harbor = h.capitalize()
-            break
+        # Check if user is replying with a harbor on a thread where previous intent was PFZ
+        thread_ctx_pre = memory_manager.load_context(thread_id)
+        if explicit_harbor and thread_ctx_pre.last_intent == IntentCategory.PFZ:
+            intent = IntentCategory.PFZ
+        else:
+            intent = IntentCategory.UNSUPPORTED
 
     # Resolve departure time from deterministic message
     dep_time = None
@@ -355,6 +499,10 @@ def intent_locale_node(state: ORCAState) -> Dict[str, Any]:
 
     # Apply M4 selective carry-forward policy
     thread_ctx = memory_manager.load_context(thread_id)
+    user_prof = state.get("user_profile") or {}
+    if not thread_ctx.active_harbor and (user_prof.get("active_harbor") or user_prof.get("harbor")):
+        thread_ctx.active_harbor = user_prof.get("active_harbor") or user_prof.get("harbor")
+
     updated_ctx, audit_summary = memory_manager.apply_memory_policy(
         current_context=thread_ctx,
         extracted_entities=entities,
@@ -364,8 +512,40 @@ def intent_locale_node(state: ORCAState) -> Dict[str, Any]:
     )
     memory_manager.save_context(updated_ctx)
 
-    detected_harbor = updated_ctx.active_harbor or "Ratnagiri"
-    location = state.get("location") or {"harbor": detected_harbor, "coordinates": updated_ctx.active_coordinates or [73.28, 16.99]}
+    # PFZ Origin Resolution:
+    # 1. Explicit origin in current user message
+    # 2. Valid active harbor from current ThreadContext
+    # 3. Otherwise request clarification (DO NOT fall back to Ratnagiri or hard-coded harbor)
+    origin_harbor: Optional[str] = None
+    clarification_needed: bool = False
+    missing_fields: List[str] = []
+    clarification_prompt: Optional[str] = None
+
+    if intent == IntentCategory.PFZ:
+        if explicit_harbor:
+            origin_harbor = explicit_harbor
+        elif updated_ctx.active_harbor:
+            origin_harbor = updated_ctx.active_harbor
+        else:
+            clarification_needed = True
+            missing_fields = ["origin_harbor"]
+            clarification_prompt = _generate_clarification_prompt(
+                IntentCategory.PFZ,
+                language=lang,
+                missing_fields=missing_fields,
+            )
+    else:
+        detected_harbor = updated_ctx.active_harbor or "Ratnagiri"
+        origin_harbor = detected_harbor
+
+    if origin_harbor:
+        location = state.get("location") or {
+            "harbor": origin_harbor,
+            "coordinates": updated_ctx.active_coordinates or _get_harbor_coordinates(origin_harbor) or [73.28, 16.99],
+        }
+    else:
+        location = None
+
     time_window = state.get("time_window") or updated_ctx.time_window or {"departure_time": "tomorrow_morning", "duration_hours": 8.0}
 
     carried_str = ", ".join(audit_summary["carried_fields"]) or "none"
@@ -373,17 +553,20 @@ def intent_locale_node(state: ORCAState) -> Dict[str, Any]:
     trace = _append_trace(
         trace,
         node_name="Intent / Locale",
-        action=f"Detected intent '{intent.value}' and locale '{lang}' (Harbor: {detected_harbor}) "
-               f"[Memory Turn {updated_ctx.turn_count}: carried=({carried_str}), overwritten=({overwritten_str})]",
+        action=f"Detected intent '{intent.value}' and locale '{lang}' (Harbor: {origin_harbor or 'Unresolved'}) "
+               f"[Memory Turn {updated_ctx.turn_count}: carried=({carried_str}), overwritten=({overwritten_str})]"
+               + (f" [Clarification needed: {', '.join(missing_fields)}]" if clarification_needed else ""),
     )
 
     return {
         "intent": intent.value,
+        "origin_harbor": origin_harbor,
         "language": lang,
         "location": location,
         "time_window": time_window,
-        "missing_fields": [],
-        "clarification_needed": False,
+        "missing_fields": missing_fields,
+        "clarification_needed": clarification_needed,
+        "clarification_prompt": clarification_prompt,
         "trace": trace,
     }
 
@@ -521,7 +704,7 @@ def supervisor_node(state: ORCAState) -> Dict[str, Any]:
 def specialist_tools_node(state: ORCAState) -> Dict[str, Any]:
     """Dispatches scheduled tools via AgentToolRegistry and collects normalized ToolResults."""
     task_plan = state.get("task_plan", [])
-    harbor = state.get("location", {}).get("harbor", "Ratnagiri")
+    harbor = state.get("origin_harbor") or state.get("location", {}).get("harbor", "Ratnagiri")
     craft_type = state.get("user_profile", {}).get("craft_profile", "motorized_boat")
 
     tool_results: Dict[str, Any] = dict(state.get("tool_results", {}))
@@ -666,7 +849,7 @@ def response_composer_node(state: ORCAState) -> Dict[str, Any]:
         }
 
     intent_val = state.get("intent", IntentCategory.UNSUPPORTED.value)
-    harbor = state.get("location", {}).get("harbor", "Ratnagiri")
+    harbor = state.get("origin_harbor") or state.get("location", {}).get("harbor", "Ratnagiri")
     evidence = state.get("evidence", [])
     evidence_names = ", ".join(set(ev.source_name for ev in evidence)) or "No external evidence required"
 
@@ -925,6 +1108,69 @@ def response_composer_node(state: ORCAState) -> Dict[str, Any]:
 
 
 # =============================================================================
+# Node: Clarification Node
+# =============================================================================
+
+def clarification_node(state: ORCAState) -> Dict[str, Any]:
+    """Generates courteous, localized clarification questions when critical operational context is missing.
+
+    Strictly satisfies NodeContract(NodeId.CLARIFICATION):
+    - Inputs: user_message, intent, language, missing_fields, clarification_prompt
+    - Allowed mutations: response, risk_assessment, confidence, suggested_followups, trace
+    - Forbidden: Do NOT execute specialist tools or fabricate operational locations.
+    """
+    intent_val = state.get("intent", IntentCategory.UNSUPPORTED.value)
+    lang = state.get("language", "en")
+    missing = state.get("missing_fields", ["origin_harbor"])
+    prompt = state.get("clarification_prompt")
+    trace = list(state.get("trace", []))
+
+    if not prompt:
+        try:
+            intent_enum = IntentCategory(intent_val)
+        except ValueError:
+            intent_enum = IntentCategory.UNSUPPORTED
+        prompt = _generate_clarification_prompt(intent_enum, language=lang, missing_fields=missing)
+
+    # Suggest regional harbor quick chips
+    if lang == "mr":
+        suggested_chips = ["रत्नागिरी", "मालवण", "वेरावळ", "मुंबई"]
+    elif lang == "hi":
+        suggested_chips = ["रत्नागिरी", "मालवण", "वेरावल", "मुंबई"]
+    elif lang == "ta":
+        suggested_chips = ["தூத்துக்குடி", "சென்னை", "கொச்சி"]
+    else:
+        suggested_chips = ["Ratnagiri", "Malvan", "Veraval", "Mumbai"]
+
+    recommendation = Recommendation(
+        status=RecommendationStatus.INFORMATIONAL,
+        summary="Awaiting departure harbor for operational advisory.",
+        decisive_factors=[f"Missing critical field: {f}" for f in missing],
+        next_action="Specify departure harbor to proceed with analysis.",
+    )
+
+    confidence = Confidence(
+        level=ConfidenceLevel.LOW,
+        reasons=["Operational context incomplete: departure origin unknown."],
+    )
+
+    trace = _append_trace(
+        trace,
+        node_name="Clarification",
+        action=f"Requested user clarification for missing operational fields ({', '.join(missing)}) in '{lang}'",
+        status="completed",
+    )
+
+    return {
+        "response": prompt,
+        "risk_assessment": recommendation,
+        "confidence": confidence,
+        "suggested_followups": suggested_chips,
+        "trace": trace,
+    }
+
+
+# =============================================================================
 # Node 6: Terminal / Finalization Node
 # =============================================================================
 
@@ -954,15 +1200,33 @@ def build_orca_graph():
 
     # 1. Register Nodes
     builder.add_node(NodeId.INTENT_LOCALE.value, intent_locale_node)
+    builder.add_node(NodeId.CLARIFICATION.value, clarification_node)
     builder.add_node(NodeId.SUPERVISOR_PLANNER.value, supervisor_node)
     builder.add_node(NodeId.SPECIALIST_TOOLS.value, specialist_tools_node)
     builder.add_node(NodeId.EVIDENCE_VALIDATOR.value, evidence_validator_node)
     builder.add_node(NodeId.RESPONSE_COMPOSER.value, response_composer_node)
     builder.add_node(NodeId.TERMINAL.value, terminal_node)
 
-    # 2. Sequential Bounded Edges
+    # 2. Sequential Bounded Edges with Clarification Gate
     builder.add_edge(START, NodeId.INTENT_LOCALE.value)
-    builder.add_edge(NodeId.INTENT_LOCALE.value, NodeId.SUPERVISOR_PLANNER.value)
+
+    def _route_after_intent(state: ORCAState) -> str:
+        if state.get("clarification_needed", False):
+            return NodeId.CLARIFICATION.value
+        return NodeId.SUPERVISOR_PLANNER.value
+
+    builder.add_conditional_edges(
+        NodeId.INTENT_LOCALE.value,
+        _route_after_intent,
+        {
+            NodeId.CLARIFICATION.value: NodeId.CLARIFICATION.value,
+            NodeId.SUPERVISOR_PLANNER.value: NodeId.SUPERVISOR_PLANNER.value,
+        },
+    )
+
+    # Clarification node bypasses specialist tools and routes to Terminal
+    builder.add_edge(NodeId.CLARIFICATION.value, NodeId.TERMINAL.value)
+
     builder.add_edge(NodeId.SUPERVISOR_PLANNER.value, NodeId.SPECIALIST_TOOLS.value)
     builder.add_edge(NodeId.SPECIALIST_TOOLS.value, NodeId.EVIDENCE_VALIDATOR.value)
     builder.add_edge(NodeId.EVIDENCE_VALIDATOR.value, NodeId.RESPONSE_COMPOSER.value)

@@ -53,6 +53,9 @@ class ORCAState(TypedDict, total=False):
     location: Optional[Dict[str, Any]]
     """Spatio-temporal origin: harbor name, EPSG:4326 [lon, lat], maritime zone."""
 
+    origin_harbor: Optional[str]
+    """Resolved departure or origin harbor name (e.g. 'Ratnagiri', 'Malvan')."""
+
     time_window: Optional[Dict[str, Any]]
     """Temporal window of voyage: departure_time, duration_hours, valid_until."""
 

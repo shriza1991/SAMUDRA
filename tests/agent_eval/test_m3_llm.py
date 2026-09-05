@@ -496,7 +496,7 @@ def test_llm_telemetry_in_trace_without_raw_prompt_leakage():
 def test_m1_demo_mode_backward_compatibility():
     """Verify M1 demo stub tools continue to work when tool_mode='demo'."""
     result = run_orca_graph(
-        user_message="Where is the nearest PFZ?",
+        user_message="Where is the nearest PFZ from Ratnagiri?",
         tool_mode="demo",
         llm_mode="deterministic",
     )

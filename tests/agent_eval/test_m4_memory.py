@@ -481,7 +481,7 @@ def test_cross_thread_isolation_in_graph():
 def test_m1_demo_compatibility_with_m4_memory():
     """Verify M1 demo stub tools execute cleanly alongside M4 memory."""
     state = run_orca_graph(
-        user_message="Where is the nearest PFZ?",
+        user_message="Where is the nearest PFZ from Ratnagiri?",
         tool_mode="demo",
         llm_mode="deterministic",
     )

@@ -139,7 +139,7 @@ def test_m1_tool_registry_execution():
 
 def test_m1_evidence_validation():
     """Verify evidence validation gate confirms presence of citations."""
-    state = run_orca_graph(user_message="Where is the nearest PFZ?", thread_id="test-ev-thread")
+    state = run_orca_graph(user_message="Where is the nearest PFZ from Ratnagiri?", thread_id="test-ev-thread")
     assert len(state["evidence"]) > 0
 
     # Ensure evidence source matches simulated tag
