@@ -97,22 +97,30 @@ class PromptInjectionGuard:
                 "departure is recommended",
                 "proceed with voyage",
                 "safe for departure",
+                "route should probably be fine",
+                "can proceed carefully",
+                "restriction can be ignored",
+                "safe to proceed through the restricted area",
+                "proceed carefully",
                 "[go]",
             ]
             for assertion in safe_assertions:
                 if assertion in text_lower:
                     return False, f"LLM output claimed safe voyage ('{assertion}') while risk status is NO_GO"
 
-        # If deterministic status is CAUTION, verify response does not claim unrestricted GO
+        # If deterministic status is CAUTION, verify response does not claim unrestricted GO or ignore restrictions
         elif expected_status == RecommendationStatus.CAUTION:
             unrestricted_assertions = [
                 "conditions are completely safe",
                 "no risks present",
+                "route should probably be fine",
+                "restriction can be ignored",
+                "safe to proceed through the restricted area",
                 "[go]",
             ]
             for assertion in unrestricted_assertions:
                 if assertion in text_lower:
-                    return False, "LLM output claimed completely safe voyage while risk status is CAUTION"
+                    return False, f"LLM output claimed completely safe voyage ('{assertion}') while risk status is CAUTION"
 
         # If deterministic status is UNKNOWN, verify response does not claim safe voyage
         elif expected_status == RecommendationStatus.UNKNOWN:

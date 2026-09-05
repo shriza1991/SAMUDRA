@@ -418,6 +418,14 @@ class MemoryManager:
         elif ctx.active_harbor:
             carried_fields.append(f"active_harbor: '{ctx.active_harbor}'")
 
+        # 1b. Target Destination
+        if extracted_entities.target_destination:
+            if ctx.destination and ctx.destination != extracted_entities.target_destination:
+                overwritten_fields.append(f"destination: '{ctx.destination}' -> '{extracted_entities.target_destination}'")
+            ctx.destination = extracted_entities.target_destination
+        elif ctx.destination:
+            carried_fields.append(f"destination: '{ctx.destination}'")
+
         # 2. Coordinates
         if extracted_entities.coordinates:
             ctx.active_coordinates = extracted_entities.coordinates

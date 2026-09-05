@@ -100,6 +100,27 @@ def _generate_clarification_prompt(
 ) -> str:
     """Generates a localized clarification question requesting missing operational parameters."""
     lang_lower = (language or "en").lower()
+
+    if missing_fields and "destination" in missing_fields:
+        if "origin_harbor" in missing_fields:
+            if lang_lower == "mr":
+                return "मार्गावरील धोके तपासण्यासाठी, कृपया आपले प्रस्थान आणि गंतव्य बंदर (उदा. मुंबई ते गोवा) सांगा."
+            elif lang_lower == "hi":
+                return "मार्ग पर खतरों की जांच के लिए, कृपया अपना प्रस्थान और गंतव्य बंदरगाह (जैसे मुंबई से गोवा) बताएं।"
+            elif lang_lower == "ta":
+                return "பாதை அபாயங்களை மதிப்பிட, தயவுசெய்து உங்கள் புறப்படும் மற்றும் இலக்கு துறைமுகத்தைக் குறிப்பிடவும்."
+            else:
+                return "To evaluate route hazards, which departure harbor and destination are you sailing between (e.g., from Mumbai to Goa)?"
+        else:
+            if lang_lower == "mr":
+                return "मार्गावरील धोके व सुरक्षितता तपासण्यासाठी, कृपया आपले गंतव्य बंदर (उदा. गोवा, मुंबई) सांगा."
+            elif lang_lower == "hi":
+                return "मार्ग पर खतरों और सुरक्षा की जांच के लिए, कृपया अपना गंतव्य बंदरगाह (जैसे गोवा, मुंबई) बताएं।"
+            elif lang_lower == "ta":
+                return "பாதை அபாயங்களை மதிப்பிட, தயவுசெய்து உங்கள் இலக்கு துறைமுகத்தைக் குறிப்பிடவும்."
+            else:
+                return "To assess route hazards and safe passage, which destination harbor are you heading to (e.g., Goa, Mumbai)?"
+
     if intent == IntentCategory.PFZ:
         if lang_lower == "mr":
             return "जवळचे संभाव्य मत्स्य क्षेत्र (PFZ) शोधण्यासाठी, कृपया आपले प्रस्थान बंदर (उदा. रत्नागिरी, मालवण, वेरावळ किंवा मुंबई) सांगा."
@@ -126,6 +147,7 @@ def _enforce_dependency_order(capabilities: List[str]) -> List[str]:
         "marine_conditions": 10,
         "weather_conditions": 20,
         "hazard_search": 30,
+        "geospatial_hazard": 35,
         "pfz_source": 40,
         "pfz_search": 50,
         "route_analysis": 60,
@@ -335,16 +357,44 @@ def intent_locale_node(state: ORCAState) -> Dict[str, Any]:
             )
             memory_manager.save_context(updated_ctx)
 
-            # PFZ Origin Resolution:
-            # 1. Explicit origin in current user message
-            # 2. Valid active harbor from current ThreadContext
-            # 3. Otherwise request clarification (DO NOT fall back to Ratnagiri)
+            # Origin & Destination Resolution (M6.3):
+            # 1. Explicit origin/destination in current user message
+            # 2. Valid active harbor / destination from current ThreadContext
+            # 3. Otherwise request clarification (DO NOT fall back to Ratnagiri for PFZ or route queries)
             origin_harbor: Optional[str] = None
+            destination: Optional[str] = None
             clarification_needed = extraction.clarification_needed
             missing_fields = list(extraction.missing_critical_fields)
             clarification_prompt = extraction.clarification_prompt
 
-            if validated_intent == IntentCategory.PFZ.value:
+            msg_lower = raw_msg.lower()
+            is_route_query = (
+                validated_intent == IntentCategory.ROUTE.value
+                or any(k in msg_lower for k in ["route", "along my route", "on my route", "between", "passage", "channel", "रास्ता", "मार्ग"])
+                or bool(extraction.entities.target_destination)
+                or (bool(updated_ctx.destination) and any(w in msg_lower for w in ["what about", "how about", "restricted", "hazard", "cyclone", "risk"]))
+            )
+
+            if is_route_query:
+                origin_harbor = extraction.entities.origin_harbor or updated_ctx.active_harbor
+                destination = extraction.entities.target_destination or updated_ctx.destination
+                if not origin_harbor or not destination:
+                    clarification_needed = True
+                    if not origin_harbor and "origin_harbor" not in missing_fields:
+                        missing_fields.append("origin_harbor")
+                    if not destination and "destination" not in missing_fields:
+                        missing_fields.append("destination")
+                    if not clarification_prompt:
+                        try:
+                            intent_enum = IntentCategory(validated_intent)
+                        except ValueError:
+                            intent_enum = IntentCategory.HAZARDS
+                        clarification_prompt = _generate_clarification_prompt(
+                            intent_enum,
+                            language=extraction.detected_language or "en",
+                            missing_fields=missing_fields,
+                        )
+            elif validated_intent == IntentCategory.PFZ.value:
                 explicit_harbor = extraction.entities.origin_harbor
                 if explicit_harbor:
                     origin_harbor = explicit_harbor
@@ -366,8 +416,9 @@ def intent_locale_node(state: ORCAState) -> Dict[str, Any]:
                             missing_fields=missing_fields,
                         )
             else:
-                detected_harbor = updated_ctx.active_harbor or "Ratnagiri"
+                detected_harbor = extraction.entities.origin_harbor or updated_ctx.active_harbor or "Ratnagiri"
                 origin_harbor = detected_harbor
+                destination = extraction.entities.target_destination or updated_ctx.destination
 
             if origin_harbor:
                 location = state.get("location") or {
@@ -388,7 +439,7 @@ def intent_locale_node(state: ORCAState) -> Dict[str, Any]:
                 trace,
                 node_name="Intent / Locale",
                 action=f"LLM extraction ({llm_provider.provider_name}/{llm_provider.model_name}): "
-                       f"intent='{validated_intent}', locale='{extraction.detected_language}' (Harbor: {origin_harbor or 'Unresolved'}) "
+                       f"intent='{validated_intent}', locale='{extraction.detected_language}' (Harbor: {origin_harbor or 'Unresolved'}{f', Dest: {destination}' if destination else ''}) "
                        f"[Memory Turn {updated_ctx.turn_count}: carried=({carried_str}), overwritten=({overwritten_str})]"
                        + (f" [Clarification needed: {', '.join(missing_fields)}]" if clarification_needed else ""),
             )
@@ -396,6 +447,7 @@ def intent_locale_node(state: ORCAState) -> Dict[str, Any]:
             return {
                 "intent": validated_intent,
                 "origin_harbor": origin_harbor,
+                "destination": destination,
                 "language": extraction.detected_language or updated_ctx.preferred_language or "en",
                 "location": location,
                 "time_window": time_window,
@@ -447,34 +499,103 @@ def intent_locale_node(state: ORCAState) -> Dict[str, Any]:
     ]
 
     explicit_harbor = None
-    for ih_kw, ih_val in indic_harbors.items():
-        if ih_kw in raw_msg:
-            explicit_harbor = ih_val
+    explicit_dest = None
+
+    stop_words = {
+        "The", "Here", "There", "Port", "Harbor", "Coast", "Sea",
+        "Tomorrow", "Today", "Now", "Me", "My", "Us", "Any", "Our", "All", "Route", "Passage",
+        "Safe", "Safety", "Fish", "Fishing", "Sail", "Sailing", "Go", "Going", "Depart", "Check",
+        "Head", "Travel", "Want", "Like", "Able", "Out", "In", "On", "Off", "Near", "Tell",
+    }
+
+    # 1. Indic from-to patterns (e.g. "मुंबई ते गोवा", "मुंबई से गोवा")
+    for ih_orig, orig_val in indic_harbors.items():
+        for ih_dest, dest_val in indic_harbors.items():
+            if ih_orig != ih_dest and (f"{ih_orig} ते {ih_dest}" in raw_msg or f"{ih_orig} से {ih_dest}" in raw_msg):
+                explicit_harbor = orig_val
+                explicit_dest = dest_val
+                break
+        if explicit_harbor and explicit_dest:
             break
+
+    # 2. English "from <origin> to <destination>"
+    if not explicit_harbor or not explicit_dest:
+        from_to_match = re.search(r"\bfrom\s+([A-Za-z]+)\s+to\s+([A-Za-z]+)\b", raw_msg, re.IGNORECASE)
+        if from_to_match:
+            c_orig = from_to_match.group(1).capitalize()
+            c_dest = from_to_match.group(2).capitalize()
+            if c_orig not in stop_words:
+                explicit_harbor = c_orig
+            if c_dest not in stop_words:
+                explicit_dest = c_dest
+
+    # 3. English "between <origin> and <destination>"
+    if not explicit_harbor or not explicit_dest:
+        between_match = re.search(r"\bbetween\s+([A-Za-z]+)\s+and\s+([A-Za-z]+)\b", raw_msg, re.IGNORECASE)
+        if between_match:
+            c_orig = between_match.group(1).capitalize()
+            c_dest = between_match.group(2).capitalize()
+            if c_orig not in stop_words:
+                explicit_harbor = c_orig
+            if c_dest not in stop_words:
+                explicit_dest = c_dest
+
+    # 4. English "<origin> to <destination>" (e.g. "Ratnagiri to Goa", "Mumbai to Goa")
+    if not explicit_harbor or not explicit_dest:
+        to_pair_match = re.search(r"\b([A-Za-z]+)\s+to\s+([A-Za-z]+)\b", raw_msg, re.IGNORECASE)
+        if to_pair_match:
+            c_orig = to_pair_match.group(1).capitalize()
+            c_dest = to_pair_match.group(2).capitalize()
+            if (
+                c_orig not in stop_words
+                and c_dest not in stop_words
+                and (c_orig.lower() in known_harbors or c_dest.lower() in known_harbors)
+            ):
+                explicit_harbor = c_orig
+                explicit_dest = c_dest
+
+    # 5. English "to <destination>"
+    if not explicit_dest:
+        to_match = re.search(r"\b(?:to|towards|into)\s+([A-Za-z]+)\b", raw_msg, re.IGNORECASE)
+        if to_match:
+            c_dest = to_match.group(1).capitalize()
+            if (
+                c_dest not in stop_words
+                and c_dest != explicit_harbor
+                and (c_dest.lower() in known_harbors or any(rk in msg_lower for rk in ["route", "passage", "sailing", "heading", "dest"]))
+            ):
+                explicit_dest = c_dest
+
+    # 6. Fallback single harbor for origin
+    if not explicit_harbor:
+        for ih_kw, ih_val in indic_harbors.items():
+            if ih_kw in raw_msg and ih_val != explicit_dest:
+                explicit_harbor = ih_val
+                break
 
     if not explicit_harbor:
         for h in known_harbors:
-            if re.search(rf"\b{h}\b", msg_lower):
+            if re.search(rf"\b{h}\b", msg_lower) and h.capitalize() != explicit_dest:
                 explicit_harbor = h.capitalize()
                 break
 
     if not explicit_harbor:
-        # Regex extraction for "from <harbor>", "at <harbor>", "off <harbor>"
         match = re.search(r"\b(?:from|at|near|off|around)\s+([A-Za-z]+)\b", raw_msg, re.IGNORECASE)
         if match:
             candidate = match.group(1).capitalize()
-            stop_words = {
-                "The", "Here", "There", "Port", "Harbor", "Coast", "Sea",
-                "Tomorrow", "Today", "Now", "Me", "My", "Us", "Any", "Our", "All", "Route",
-            }
-            if candidate not in stop_words:
+            if candidate not in stop_words and candidate != explicit_dest:
                 explicit_harbor = candidate
 
     if any(k in msg_lower for k in ["pfz", "fishing zone", "fish ground", "मत्स्य"]) or (
         any(f in msg_lower for f in ["fish", "मछली", "मासेमारी"]) and any(q in msg_lower for q in ["where", "nearest", "find", "कुठे", "कहाँ", "कहा", "निकटतम"])
     ):
         intent = IntentCategory.PFZ
-    elif any(k in msg_lower for k in ["cyclone", "storm", "hazard", "warning", "squall", "depression", "gale", "lightning", "तूफान", "चेतावनी", "धोका", "firing", "restricted", "range"]):
+    elif any(k in msg_lower for k in [
+        "cyclone", "storm", "hazard", "warning", "squall", "depression", "gale", "lightning",
+        "तूफान", "चेतावनी", "धोका", "चक्रवात", "चक्रीवादळ",
+        "firing", "restricted", "restriction", "geofence", "geofenced", "boundary", "boundaries",
+        "protected area", "sanctuary", "prohibited", "naval", "प्रतिबंधित", "संरक्षित",
+    ]):
         intent = IntentCategory.HAZARDS
     elif any(k in msg_lower for k in ["route", "passage", "channel", "waypoint", "रास्ता", "मार्ग"]):
         intent = IntentCategory.ROUTE
@@ -487,7 +608,7 @@ def intent_locale_node(state: ORCAState) -> Dict[str, Any]:
     else:
         # Check if user is continuing a previous intent conversation
         thread_ctx_pre = memory_manager.load_context(thread_id)
-        if thread_ctx_pre.last_intent in [IntentCategory.PFZ, IntentCategory.SAFETY, IntentCategory.HAZARDS]:
+        if thread_ctx_pre.last_intent in [IntentCategory.PFZ, IntentCategory.SAFETY, IntentCategory.HAZARDS, IntentCategory.ROUTE]:
             if explicit_harbor or any(w in msg_lower for w in ["what about", "how about", "tomorrow", "today", "afternoon", "morning", "evening", "instead"]):
                 intent = thread_ctx_pre.last_intent
             else:
@@ -504,6 +625,7 @@ def intent_locale_node(state: ORCAState) -> Dict[str, Any]:
 
     entities = ExtractedEntities(
         origin_harbor=explicit_harbor,
+        target_destination=explicit_dest,
         departure_time=dep_time,
     )
 
@@ -522,16 +644,35 @@ def intent_locale_node(state: ORCAState) -> Dict[str, Any]:
     )
     memory_manager.save_context(updated_ctx)
 
-    # PFZ Origin Resolution:
-    # 1. Explicit origin in current user message
-    # 2. Valid active harbor from current ThreadContext
-    # 3. Otherwise request clarification (DO NOT fall back to Ratnagiri or hard-coded harbor)
+    # Origin & Destination Resolution (M6.3):
     origin_harbor: Optional[str] = None
+    destination: Optional[str] = None
     clarification_needed: bool = False
     missing_fields: List[str] = []
     clarification_prompt: Optional[str] = None
 
-    if intent == IntentCategory.PFZ:
+    is_route_query = (
+        intent == IntentCategory.ROUTE
+        or any(k in msg_lower for k in ["route", "along my route", "on my route", "between", "passage", "channel", "रास्ता", "मार्ग"])
+        or bool(explicit_dest)
+        or (bool(updated_ctx.destination) and any(w in msg_lower for w in ["what about", "how about", "restricted", "hazard", "cyclone", "risk"]))
+    )
+
+    if is_route_query:
+        origin_harbor = explicit_harbor or updated_ctx.active_harbor
+        destination = explicit_dest or updated_ctx.destination
+        if not origin_harbor or not destination:
+            clarification_needed = True
+            if not origin_harbor and "origin_harbor" not in missing_fields:
+                missing_fields.append("origin_harbor")
+            if not destination and "destination" not in missing_fields:
+                missing_fields.append("destination")
+            clarification_prompt = _generate_clarification_prompt(
+                intent,
+                language=lang,
+                missing_fields=missing_fields,
+            )
+    elif intent == IntentCategory.PFZ:
         if explicit_harbor:
             origin_harbor = explicit_harbor
         elif updated_ctx.active_harbor:
@@ -545,8 +686,9 @@ def intent_locale_node(state: ORCAState) -> Dict[str, Any]:
                 missing_fields=missing_fields,
             )
     else:
-        detected_harbor = updated_ctx.active_harbor or "Ratnagiri"
+        detected_harbor = explicit_harbor or updated_ctx.active_harbor or "Ratnagiri"
         origin_harbor = detected_harbor
+        destination = explicit_dest or updated_ctx.destination
 
     if origin_harbor:
         location = state.get("location") or {
@@ -563,7 +705,7 @@ def intent_locale_node(state: ORCAState) -> Dict[str, Any]:
     trace = _append_trace(
         trace,
         node_name="Intent / Locale",
-        action=f"Detected intent '{intent.value}' and locale '{lang}' (Harbor: {origin_harbor or 'Unresolved'}) "
+        action=f"Detected intent '{intent.value}' and locale '{lang}' (Harbor: {origin_harbor or 'Unresolved'}{f', Dest: {destination}' if destination else ''}) "
                f"[Memory Turn {updated_ctx.turn_count}: carried=({carried_str}), overwritten=({overwritten_str})]"
                + (f" [Clarification needed: {', '.join(missing_fields)}]" if clarification_needed else ""),
     )
@@ -571,6 +713,7 @@ def intent_locale_node(state: ORCAState) -> Dict[str, Any]:
     return {
         "intent": intent.value,
         "origin_harbor": origin_harbor,
+        "destination": destination,
         "language": lang,
         "location": location,
         "time_window": time_window,
@@ -592,17 +735,34 @@ def supervisor_node(state: ORCAState) -> Dict[str, Any]:
 
     if tool_mode == "contract_mock":
         # 1. Capability requirements by intent
+        msg_lower = state.get("user_message", "").lower()
+        destination = state.get("destination")
+        has_weather_hazard = any(k in msg_lower for k in ["cyclone", "storm", "squall", "depression", "gale", "weather", "तूफान"])
+        has_geofence = any(k in msg_lower for k in ["restricted", "geofence", "naval", "firing", "protected", "mpa", "boundary", "reef", "coral", "zone", "प्रतिबंधित", "क्षेत्र"])
+        has_route = any(k in msg_lower for k in ["route", "along my route", "on my route", "passage", "channel", "waypoint", "रास्ता", "मार्ग"]) or bool(destination)
+
         required_capabilities: List[str] = []
         if intent_val == IntentCategory.SAFETY.value:
             required_capabilities = ["marine_conditions", "weather_conditions", "hazard_search", "risk_evaluation"]
         elif intent_val == IntentCategory.PFZ.value:
-            required_capabilities = ["pfz_search"]
+            required_capabilities = ["marine_conditions", "pfz_search"]
         elif intent_val == IntentCategory.CONDITIONS.value:
             required_capabilities = ["marine_conditions"]
-        elif intent_val == IntentCategory.HAZARDS.value:
-            required_capabilities = ["hazard_search"]
-        elif intent_val == IntentCategory.ROUTE.value:
-            required_capabilities = ["route_analysis"]
+        elif intent_val in [IntentCategory.HAZARDS.value, IntentCategory.ROUTE.value]:
+            if has_route:
+                required_capabilities = ["marine_conditions", "route_analysis"]
+                if has_geofence:
+                    required_capabilities.append("geospatial_hazard")
+                if has_weather_hazard or not has_geofence:
+                    required_capabilities.append("hazard_search")
+            elif has_geofence and not has_weather_hazard:
+                required_capabilities = ["geospatial_hazard"]
+            elif has_geofence and has_weather_hazard:
+                required_capabilities = ["hazard_search", "geospatial_hazard"]
+            else:
+                required_capabilities = ["hazard_search"]
+        elif intent_val == IntentCategory.ANALYTICAL_EXPLANATION.value:
+            required_capabilities = ["explanation_context"]
 
         # 2. Capability availability check
         unavailable = tool_registry.get_unavailable_capabilities(required_capabilities)
@@ -669,12 +829,10 @@ def supervisor_node(state: ORCAState) -> Dict[str, Any]:
             tools = ["marine_conditions", "weather_conditions", "hazard_search", "risk_evaluation"]
         elif intent_val == IntentCategory.CONDITIONS.value:
             tools = ["marine_conditions"]
-        elif intent_val == IntentCategory.HAZARDS.value:
-            tools = ["hazard_search"]
-        elif intent_val == IntentCategory.ROUTE.value:
-            tools = ["marine_conditions", "hazard_search", "route_analysis"]
+        elif intent_val in [IntentCategory.HAZARDS.value, IntentCategory.ROUTE.value]:
+            tools = _enforce_dependency_order(required_capabilities)
         elif intent_val == IntentCategory.ANALYTICAL_EXPLANATION.value:
-            tools = ["explanation_stub"]
+            tools = ["explanation_context"]
         else:
             tools = []
 
@@ -725,6 +883,8 @@ def specialist_tools_node(state: ORCAState) -> Dict[str, Any]:
     derived_confidence: Optional[Confidence] = state.get("confidence")
     trace = list(state.get("trace", []))
 
+    destination = state.get("destination")
+
     failed_tools = set()
     for tool_name in task_plan:
         # Check upstream failure for risk evaluation
@@ -751,12 +911,28 @@ def specialist_tools_node(state: ORCAState) -> Dict[str, Any]:
                 )
                 continue
 
+        # Check upstream failure for route analysis
+        if tool_name in ["route_stub", "route_analysis"]:
+            if "marine_conditions" in failed_tools:
+                collected_warnings.append(f"Skipping '{tool_name}' due to failed upstream marine conditions.")
+                trace = _append_trace(
+                    trace,
+                    node_name=f"Specialist Tool: {tool_name}",
+                    action=f"Aborted '{tool_name}': Upstream marine conditions failed.",
+                    status="degraded",
+                )
+                failed_tools.add(tool_name)
+                continue
+
         # Prepare tool arguments
         params: Dict[str, Any] = {}
         if tool_name in ["pfz_stub", "marine_stub", "weather_stub"]:
             params["harbor"] = harbor
-        elif tool_name in ["marine_conditions", "weather_conditions", "hazard_search", "pfz_search"]:
+        elif tool_name in ["marine_conditions", "weather_conditions", "hazard_search", "pfz_search", "geospatial_hazard"]:
             params["origin_harbor"] = harbor
+            coords = state.get("location", {}).get("coordinates") or _get_harbor_coordinates(harbor)
+            if coords:
+                params["coordinates"] = coords
         elif tool_name == "risk_stub":
             # Pass collected marine observations into risk engine
             wave_m = observations.get("significant_wave_height_m", 1.8)
@@ -775,7 +951,7 @@ def specialist_tools_node(state: ORCAState) -> Dict[str, Any]:
             }
         elif tool_name in ["route_stub", "route_analysis"]:
             params["origin_harbor"] = harbor
-            params["destination"] = "Outer Bank"
+            params["destination"] = destination or "Outer Bank"
 
         # Execute through typed registry
         result = tool_registry.execute_tool(tool_name, params)
@@ -830,6 +1006,7 @@ def specialist_tools_node(state: ORCAState) -> Dict[str, Any]:
         "observations": observations,
         "evidence": collected_evidence,
         "warnings": collected_warnings,
+        "failed_tools": list(failed_tools),
         "risk_assessment": risk_assessment,
         "confidence": derived_confidence,
         "trace": trace,
@@ -852,8 +1029,17 @@ def evidence_validator_node(state: ORCAState) -> Dict[str, Any]:
         critical_metrics = ["pfz_distance_nm"]
     elif intent == IntentCategory.CONDITIONS.value:
         critical_metrics = ["significant_wave_height"]
-    elif intent == IntentCategory.HAZARDS.value:
-        critical_metrics = ["cyclone_warning_active"]
+    elif intent in [IntentCategory.HAZARDS.value, IntentCategory.ROUTE.value]:
+        task_plan = state.get("task_plan", [])
+        failed_tools = state.get("failed_tools", [])
+        if "hazard_search" in task_plan and "hazard_search" not in failed_tools:
+            critical_metrics.append("cyclone_warning_active")
+        if "geospatial_hazard" in task_plan and "geospatial_hazard" not in failed_tools:
+            critical_metrics.append("geofence_intersection")
+        if "route_analysis" in task_plan and "route_analysis" not in failed_tools:
+            critical_metrics.append("recommended_route_id")
+        if not critical_metrics and not failed_tools:
+            critical_metrics = ["cyclone_warning_active"]
 
     report = EvidenceValidator.audit_evidence(evidence, critical_metrics)
     warnings = list(state.get("warnings", []))
@@ -1018,91 +1204,218 @@ def response_composer_node(state: ORCAState) -> Dict[str, Any]:
             reasons=["Simulated M1 ocean state forecast"],
         )
 
-    elif intent_val == IntentCategory.HAZARDS.value:
+    elif intent_val in [IntentCategory.HAZARDS.value, IntentCategory.ROUTE.value]:
         tool_mode = state.get("tool_mode", "demo")
         obs = state.get("observations", {})
-        cyclone = obs.get("cyclone_warning_active", False)
-        squall = obs.get("squall_alert", False)
-        severity = obs.get("severity", "NORMAL")
-        headline = obs.get("headline", "Coastal Weather Watch")
+        task_plan = state.get("task_plan", [])
+        failed_tools = state.get("failed_tools", [])
+        destination = state.get("destination")
+        lang = state.get("language", "en")
 
         if tool_mode == "contract_mock":
-            if cyclone:
+            has_hazard_tool = "hazard_search" in task_plan
+            has_geofence_tool = "geospatial_hazard" in task_plan
+            has_route_tool = "route_analysis" in task_plan
+
+            cyclone = obs.get("cyclone_warning_active", False) if has_hazard_tool else False
+            squall = obs.get("squall_alert", False) if has_hazard_tool else False
+            severity = obs.get("severity", "NORMAL") if has_hazard_tool else "NORMAL"
+            headline = obs.get("headline", "Coastal Weather Watch")
+
+            hard_stop = obs.get("hard_stop", False) if has_geofence_tool else False
+            restricted = obs.get("restricted", False) if has_geofence_tool else False
+            intersected = obs.get("intersected", False) if has_geofence_tool else False
+            zone_name = obs.get("restriction_name", "Protected Marine Zone")
+            zone_type = obs.get("zone_type", "RESTRICTED")
+            dist_km = obs.get("distance_to_boundary_km")
+
+            rec_route = obs.get("recommended_route_id") if has_route_tool else None
+
+            # 1. Authoritative Status Hierarchy
+            # Critical failure -> UNKNOWN
+            # hard_stop or cyclone -> NO_GO
+            # restricted or squall or intersected -> CAUTION
+            # Otherwise -> INFORMATIONAL
+            critical_failed = [t for t in failed_tools if t in task_plan]
+            if critical_failed:
+                hazard_status = RecommendationStatus.UNKNOWN
+                summary = f"Operational assessment incomplete due to upstream tool failure ({', '.join(critical_failed)})."
+                action = "Hold departure until authoritative data services are restored."
+            elif hard_stop or cyclone:
                 hazard_status = RecommendationStatus.NO_GO
-                summary = f"Active Cyclone Warning for {harbor}: {headline}."
-                action = "Do NOT venture out to sea. Return to port or remain securely moored."
-            elif squall:
+                reasons = []
+                if hard_stop:
+                    reasons.append(f"Hard-stop boundary violation: {zone_name} is strictly prohibited")
+                if cyclone:
+                    reasons.append(f"Active Cyclone Warning: {headline}")
+                summary = f"Passage strictly prohibited: {'; '.join(reasons)}."
+                action = "Do NOT proceed. Passage through prohibited zone or active cyclone warning is strictly forbidden."
+            elif restricted or intersected or squall or severity == "HIGH":
                 hazard_status = RecommendationStatus.CAUTION
-                summary = f"Squall Alert active for {harbor}: {headline}."
-                action = "Exercise caution and stay within sheltered coastal waters."
+                reasons = []
+                if restricted or intersected:
+                    reasons.append(f"Traverses or approaches restricted zone: {zone_name} ({zone_type})")
+                if squall:
+                    reasons.append(f"Active Squall Alert: {headline}")
+                summary = f"Exercise extreme caution: {'; '.join(reasons)}."
+                action = "Exercise caution, maintain radio watch, and prepare to reroute clear of restricted areas."
             else:
                 hazard_status = RecommendationStatus.INFORMATIONAL
-                summary = f"No active cyclone or severe hazard alerts for {harbor}."
-                action = "Standard coastal operations permitted. Monitor VHF broadcasts."
+                route_str = f" from {harbor} to {destination}" if destination else f" near {harbor}"
+                summary = f"No active cyclone warnings or geofence boundary restrictions detected{route_str}."
+                action = "Standard coastal operations permitted. Monitor VHF broadcasts and maintain navigational watch."
 
-            answer = (
-                f"[{hazard_status.value}] IMD Hazard Bulletin for {harbor}:\n"
-                f"- Cyclone Warning: {'ACTIVE (Severe Threat)' if cyclone else 'No active cyclone warning'}\n"
-                f"- Squall Alert: {'ACTIVE' if squall else 'None'}\n"
-                f"- Advisory Severity: {severity}\n"
-                f"- Headline: {headline}\n\n"
-                f"Actionable Directive: {action}\n\n"
-                f"Supporting Evidence:\n- {evidence_names}\n\n"
-                f"Notice: IMD hazard advisory bulletin data."
-            )
+            # 2. Decisive Factors
+            decisive_factors = []
+            if has_hazard_tool:
+                if "hazard_search" in failed_tools:
+                    decisive_factors.append("Marine hazard bulletin: UNAVAILABLE (upstream failure)")
+                else:
+                    decisive_factors.append(f"Cyclone warning: {'ACTIVE (Severe Threat)' if cyclone else 'INACTIVE'}")
+                    decisive_factors.append(f"Squall alert: {'ACTIVE' if squall else 'INACTIVE'}")
+                    decisive_factors.append(f"Bulletin severity: {severity}")
+            if has_geofence_tool:
+                if "geospatial_hazard" in failed_tools:
+                    decisive_factors.append("Geofence / boundary verification: UNAVAILABLE (upstream failure)")
+                else:
+                    decisive_factors.append(f"Geofence intersection: {'PROHIBITED / HARD STOP' if hard_stop else ('RESTRICTED' if (restricted or intersected) else 'CLEAR')}")
+                    if zone_name:
+                        decisive_factors.append(f"Boundary zone: {zone_name} ({zone_type})")
+                    if dist_km is not None:
+                        decisive_factors.append(f"Distance to boundary: {dist_km:.1f} km")
+            if has_route_tool:
+                if "route_analysis" in failed_tools:
+                    decisive_factors.append("Route exposure analysis: UNAVAILABLE (upstream failure)")
+                else:
+                    decisive_factors.append(f"Recommended route: {rec_route or 'Standard corridor'}")
+
+            # 3. Multilingual Formatting
+            route_label = f"from {harbor} to {destination}" if destination else f"near {harbor}"
+            route_label_mr = f"{harbor} ते {destination}" if destination else f"{harbor} जवळ"
+            route_label_hi = f"{harbor} से {destination}" if destination else f"{harbor} के पास"
+
+            if lang == "mr":
+                sections = [f"[{hazard_status.value}] सागरी धोका व सीमा क्षेत्र सल्ला ({route_label_mr}):"]
+                if has_hazard_tool:
+                    if "hazard_search" in failed_tools:
+                        sections.append("- सागरी / हवामान धोके: पडताळणी अनुपलब्ध (सर्व्हर त्रुटी)")
+                    else:
+                        sections.append(f"- चक्रीवादळ इशारा: {'सक्रिय (गंभीर धोका)' if cyclone else 'सक्रिय नाही'}")
+                        sections.append(f"- वादळी वारे (Squall): {'सक्रिय' if squall else 'नाही'}")
+                if has_geofence_tool:
+                    if "geospatial_hazard" in failed_tools:
+                        sections.append("- प्रतिबंधित क्षेत्र / जिओफेन्स: पडताळणी अनुपलब्ध (त्रुटी)")
+                    else:
+                        sections.append(f"- प्रतिबंधित क्षेत्र: {'प्रवेश पूर्णपणे निषिद्ध (HARD STOP)' if hard_stop else ('प्रतिबंधित क्षेत्र उपस्थित (CAUTION)' if (restricted or intersected) else 'कोणतेही निर्बंध नाहीत')}")
+                        if zone_name:
+                            sections.append(f"- क्षेत्राचे नाव: {zone_name}")
+                if has_route_tool and "route_analysis" not in failed_tools and rec_route:
+                    sections.append(f"- शिफारस केलेला मार्ग: {rec_route}")
+                sections.append("\nमहत्त्वाचे घटक:\n" + "\n".join(f"- {f}" for f in decisive_factors))
+                sections.append(f"\nकृती निर्देश: {action}")
+                sections.append(f"\nपुरावा आधार:\n- {evidence_names}")
+                sections.append("\nसूचना: हा सल्ला अधिकृत हवामान व सागरी सीमा माहितीवर आधारित आहे.")
+                answer = "\n".join(sections)
+            elif lang == "hi":
+                sections = [f"[{hazard_status.value}] समुद्री खतरा एवं प्रतिबंधित क्षेत्र सलाह ({route_label_hi}):"]
+                if has_hazard_tool:
+                    if "hazard_search" in failed_tools:
+                        sections.append("- समुद्री / मौसम खतरे: सत्यापन अनुपलब्ध (सर्वर त्रुटि)")
+                    else:
+                        sections.append(f"- चक्रवात चेतावनी: {'सक्रिय (गंभीर खतरा)' if cyclone else 'सक्रिय नहीं'}")
+                        sections.append(f"- तूफान अलर्ट (Squall): {'सक्रिय' if squall else 'नहीं'}")
+                if has_geofence_tool:
+                    if "geospatial_hazard" in failed_tools:
+                        sections.append("- प्रतिबंधित क्षेत्र / जियोफेंस: सत्यापन अनुपलब्ध (त्रुटि)")
+                    else:
+                        sections.append(f"- प्रतिबंधित क्षेत्र: {'प्रवेश पूरी तरह वर्जित (HARD STOP)' if hard_stop else ('प्रतिबंधित क्षेत्र उपस्थित (CAUTION)' if (restricted or intersected) else 'कोई प्रतिबंध नहीं')}")
+                        if zone_name:
+                            sections.append(f"- क्षेत्र का नाम: {zone_name}")
+                if has_route_tool and "route_analysis" not in failed_tools and rec_route:
+                    sections.append(f"- अनुशंसित मार्ग: {rec_route}")
+                sections.append("\nप्रमुख निर्णायक कारक:\n" + "\n".join(f"- {f}" for f in decisive_factors))
+                sections.append(f"\nकार्रवाई निर्देश: {action}")
+                sections.append(f"\nसाक्ष्य आधार:\n- {evidence_names}")
+                sections.append("\nसूचना: यह सलाह आधिकारिक मौसम और समुद्री सीमा डेटा पर आधारित है।")
+                answer = "\n".join(sections)
+            else:
+                sections = [f"[{hazard_status.value}] Maritime Hazard & Boundary Advisory ({route_label}):"]
+                if has_hazard_tool:
+                    if "hazard_search" in failed_tools:
+                        sections.append("- Marine / Weather Hazards: Verification unavailable (upstream failure)")
+                    else:
+                        sections.append(f"- Cyclone Warning: {'ACTIVE (Severe Threat)' if cyclone else 'No active cyclone warning'}")
+                        sections.append(f"- Squall Alert: {'ACTIVE' if squall else 'None'}")
+                        sections.append(f"- Advisory Severity: {severity}")
+                if has_geofence_tool:
+                    if "geospatial_hazard" in failed_tools:
+                        sections.append("- Restricted Zones / Geofence: Verification unavailable (upstream failure)")
+                    else:
+                        sections.append(f"- Restricted Area Status: {'STRICT PROHIBITION (HARD STOP)' if hard_stop else ('RESTRICTED ZONE DETECTED' if (restricted or intersected) else 'Clear of known restrictions')}")
+                        if zone_name:
+                            sections.append(f"- Zone Name: {zone_name} ({zone_type})")
+                        if dist_km is not None:
+                            sections.append(f"- Distance to Boundary: {dist_km:.1f} km")
+                if has_route_tool:
+                    if "route_analysis" in failed_tools:
+                        sections.append("- Route Exposure: Verification unavailable (upstream failure)")
+                    elif rec_route:
+                        sections.append(f"- Recommended Corridor: {rec_route}")
+                sections.append("\nKey Decisive Factors:\n" + "\n".join(f"- {f}" for f in decisive_factors))
+                sections.append(f"\nActionable Directive: {action}")
+                sections.append(f"\nSupporting Evidence:\n- {evidence_names}")
+                sections.append("\nNotice: Authoritative IMD hazard bulletin and maritime boundary verification.")
+                answer = "\n".join(sections)
+
             recommendation = Recommendation(
                 status=hazard_status,
                 summary=summary,
-                decisive_factors=[
-                    f"Cyclone warning: {'ACTIVE' if cyclone else 'INACTIVE'}",
-                    f"Squall alert: {'ACTIVE' if squall else 'INACTIVE'}",
-                    f"Bulletin severity: {severity}",
-                ],
+                decisive_factors=decisive_factors,
                 next_action=action,
             )
             confidence = Confidence(
-                level=ConfidenceLevel.HIGH,
-                reasons=["Authoritative IMD hazard bulletin observation"],
+                level=ConfidenceLevel.LOW if critical_failed else ConfidenceLevel.HIGH,
+                reasons=["Evaluated against authoritative IMD bulletins and maritime boundary registries"],
             )
         else:
-            answer = (
-                f"[M1 DEMO DATA] Weather & Hazard bulletin for {harbor}:\n"
-                f"- Cyclone Warning: No active storm warnings in simulated bulletin\n"
-                f"- Squall Alert: None\n"
-                f"- Wind: 16 knots (gusts to 22 knots)\n\n"
-                f"Supporting Evidence:\n- {evidence_names}\n\n"
-                f"Notice: Simulated demonstration data only."
-            )
-            recommendation = Recommendation(
-                status=RecommendationStatus.INFORMATIONAL,
-                summary="No active storm hazards in simulated dataset.",
-                decisive_factors=["Cyclone warning inactive", "Wind gusts under 25 knots"],
-                next_action="Monitor VHF marine forecasts regularly.",
-            )
-            confidence = Confidence(
-                level=ConfidenceLevel.MEDIUM,
-                reasons=["Simulated M1 coastal weather bulletin"],
-            )
-
-    elif intent_val == IntentCategory.ROUTE.value:
-        answer = (
-            f"[M1 DEMO DATA] Evaluated route passages from {harbor}:\n"
-            f"- Route A (Inshore Channel): 28.2 km, wave height 1.4m (Rating: LOW RISK)\n"
-            f"- Route B (Deepwater Channel): 22.1 km, wave height 2.2m (Rating: MODERATE RISK)\n\n"
-            f"Recommendation: Inshore passage is safer under elevated swell conditions.\n\n"
-            f"Supporting Evidence:\n- {evidence_names}\n\n"
-            f"Notice: Simulated route calculations for testing."
-        )
-        recommendation = Recommendation(
-            status=RecommendationStatus.CAUTION,
-            summary="Inshore passage recommended due to lower wave exposure.",
-            decisive_factors=["Route B exceeds 2.0m wave threshold"],
-            next_action="Follow Route A waypoint plan (Simulation only).",
-        )
-        confidence = Confidence(
-            level=ConfidenceLevel.MEDIUM,
-            reasons=["Simulated route scoring dataset"],
-        )
+            if intent_val == IntentCategory.ROUTE.value:
+                answer = (
+                    f"[M1 DEMO DATA] Evaluated route passages from {harbor}:\n"
+                    f"- Route A (Inshore Channel): 28.2 km, wave height 1.4m (Rating: LOW RISK)\n"
+                    f"- Route B (Deepwater Channel): 22.1 km, wave height 2.2m (Rating: MODERATE RISK)\n\n"
+                    f"Recommendation: Inshore passage is safer under elevated swell conditions.\n\n"
+                    f"Supporting Evidence:\n- {evidence_names}\n\n"
+                    f"Notice: Simulated route calculations for testing."
+                )
+                recommendation = Recommendation(
+                    status=RecommendationStatus.CAUTION,
+                    summary="Inshore passage recommended due to lower wave exposure.",
+                    decisive_factors=["Route B exceeds 2.0m wave threshold"],
+                    next_action="Follow Route A waypoint plan (Simulation only).",
+                )
+                confidence = Confidence(
+                    level=ConfidenceLevel.MEDIUM,
+                    reasons=["Simulated route scoring dataset"],
+                )
+            else:
+                answer = (
+                    f"[M1 DEMO DATA] Weather & Hazard bulletin for {harbor}:\n"
+                    f"- Cyclone Warning: No active storm warnings in simulated bulletin\n"
+                    f"- Squall Alert: None\n"
+                    f"- Wind: 16 knots (gusts to 22 knots)\n\n"
+                    f"Supporting Evidence:\n- {evidence_names}\n\n"
+                    f"Notice: Simulated demonstration data only."
+                )
+                recommendation = Recommendation(
+                    status=RecommendationStatus.INFORMATIONAL,
+                    summary="No active storm hazards in simulated dataset.",
+                    decisive_factors=["Cyclone warning inactive", "Wind gusts under 25 knots"],
+                    next_action="Monitor VHF marine forecasts regularly.",
+                )
+                confidence = Confidence(
+                    level=ConfidenceLevel.MEDIUM,
+                    reasons=["Simulated M1 coastal weather bulletin"],
+                )
 
     elif intent_val == IntentCategory.ANALYTICAL_EXPLANATION.value:
         answer = (
@@ -1202,8 +1515,12 @@ def response_composer_node(state: ORCAState) -> Dict[str, Any]:
             )
             # Fall back to deterministic template
 
-    # Validate safety invariance if risk_assessment exists or for SAFETY intent
-    if state.get("risk_assessment") or intent_val == IntentCategory.SAFETY.value:
+    # Validate safety invariance if risk_assessment exists or for SAFETY, HAZARDS, or ROUTE intent
+    if state.get("risk_assessment") or intent_val in [
+        IntentCategory.SAFETY.value,
+        IntentCategory.HAZARDS.value,
+        IntentCategory.ROUTE.value,
+    ]:
         authoritative_rec = state.get("risk_assessment") or recommendation
         comp_input = ResponseCompositionInput(
             run_id=state.get("request_id", "demo-run"),

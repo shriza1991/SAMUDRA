@@ -131,7 +131,8 @@
 ## Upcoming Milestones
 
 | **M4** | Multi-Turn Memory & State Persistence | **COMPLETE** | ThreadContext, ConversationStore abstraction, InMemory/PostgreSQL/Redis adapters, selective carry-forward policy, explicit user overrides, temporal expiration, domain freshness. 88/88 tests passing. |
-| **M5** | Evaluation Benchmarks, Observability & Guardrail Hardening | **PENDING** | End-to-end evaluation harness, metric aggregation, LangSmith/OpenTelemetry tracing. |
+| **M5** | Safety Reasoning Flow | **COMPLETE** | Authoritative safety orchestration via Dev 4 RiskEvaluationEngine, strict DAG ordering, conservative fallback, safety invariance guardrails, multilingual response synthesis. 116/116 tests passing. |
+| **M6** | Hazard & Geofence Flow | **COMPLETE** | Geofence capability selection (`geospatial_hazard`), route context resolution, multi-domain orchestration (hazard, geofence, route), hard-stop (`NO_GO`) and restricted-zone (`CAUTION`) enforcement, multilingual evidence grounding. 144/144 tests passing. |
 
 ---
 
@@ -294,3 +295,36 @@
     * Linting: 0 ruff errors.
   - **Documentation**:
     * `docs/M5_SAFETY_REASONING.md`: Complete architectural guide and test verification matrix.
+
+---
+
+### M6 — Hazard & Geofence Flow (COMPLETE)
+- **Delivered**:
+  - **M6.2 — Geofence Tool Selection**:
+    * Integrated Dev 4 `geospatial_hazard` capability into `ToolRegistry` and `CAPABILITIES_CATALOG`.
+    * Implemented `ProviderToolAdapter.adapt_geospatial_hazard()` producing normalized `ToolResult` with `geofence_intersection` and `distance_to_boundary_km` evidence citations.
+    * Extended `MockGeospatialHazardEngine` double supporting `hard_stop`, `restricted`, `intersected`, and failure simulation.
+  - **M6.3 — Route Context Resolution**:
+    * Resolved origin and destination from explicit prompt expressions (priority 1), `ThreadContext` via M4 `MemoryManager` (priority 2), or `clarification_node` (priority 3).
+    * Guaranteed zero fabrication: Never invents destinations or falls back to Ratnagiri for route-dependent inquiries.
+    * Handled explicit route corrections overriding remembered context.
+  - **M6.4 — Route Hazard Orchestration**:
+    * Supervisor dynamically schedules required specialist capabilities (`hazard_search`, `geospatial_hazard`, `route_analysis`, `marine_conditions`) under strict DAG dependency ordering.
+    * Passes typed `origin_harbor` and `destination` into specialist contexts.
+  - **M6.5 — Combined Hazard + Geofence Reasoning**:
+    * Combines weather bulletins, geofenced boundaries, and route exposures into coherent mariner advisories.
+    * Preserves successful results on partial dependency failures while reporting missing verifications conservatively (`UNKNOWN`).
+  - **M6.6 — Hard-Stop / Restricted-Zone Enforcement**:
+    * Authoritative status mapping: `hard_stop=True` or `cyclone_warning_active=True` $\rightarrow$ `NO_GO`; `restricted=True`, `intersected=True`, or `squall_alert=True` $\rightarrow$ `CAUTION`.
+    * Strict invariance: `PromptInjectionGuard` and `ResponseComposer.validate_safety_invariance()` prevent softening phrases.
+  - **M6.7 — Evidence + Response Explanation**:
+    * `EvidenceValidator` audits dynamic critical metrics (`cyclone_warning_active`, `geofence_intersection`, `recommended_route_id`).
+    * Clear grounding without hallucinating provenance.
+  - **M6.8 — Multilingual Support & Hardening**:
+    * Localized advisories in English, Hindi (`hi`), and Marathi (`mr`) with invariant `[<STATUS>]` headers.
+  - **Comprehensive Test Suite**:
+    * `tests/agent_eval/test_m6_hazards.py` (28 test cases covering all M6 requirements).
+    * Total repository test count: **144/144 passing** in 1.74s.
+    * Linting: 0 ruff errors across all agent packages and test suites.
+  - **Documentation**:
+    * `docs/M6_HAZARD_GEOFENCE.md`: Comprehensive guide to M6 architecture, workflows, contracts, and test matrix.

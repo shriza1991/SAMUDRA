@@ -89,11 +89,19 @@ class MockWeatherProvider:
 class MockHazardProvider:
     """Contract test double satisfying Dev 2 HazardBulletinsProvider protocol."""
 
-    def __init__(self, cyclone_active: bool = False, squall_alert: bool = False) -> None:
+    def __init__(
+        self,
+        cyclone_active: bool = False,
+        squall_alert: bool = False,
+        should_fail: bool = False,
+    ) -> None:
         self.cyclone_active = cyclone_active
         self.squall_alert = squall_alert
+        self.should_fail = should_fail
 
     def get_hazard_bulletin(self, context: ToolInvocationContext) -> HazardBulletinPayload:
+        if self.should_fail:
+            raise RuntimeError("Simulated upstream IMD hazard bulletin failure")
         now_iso = datetime.now(timezone.utc).isoformat()
         severity = "WARNING" if self.cyclone_active else ("ALERT" if self.squall_alert else "NORMAL")
         return HazardBulletinPayload(
@@ -285,16 +293,38 @@ class MockRouteExposureEngine:
 class MockGeospatialHazardEngine:
     """Contract test double satisfying Dev 4 GeospatialHazardEngine protocol."""
 
+    def __init__(
+        self,
+        intersected: bool = False,
+        restriction_name: Optional[str] = None,
+        restriction_type: Optional[str] = None,
+        distance_to_boundary_km: Optional[float] = 18.5,
+        hard_stop: bool = False,
+        restricted: bool = False,
+        should_fail: bool = False,
+    ) -> None:
+        self.intersected = intersected
+        self.restriction_name = restriction_name or ("Naval Firing Range Foxtrot" if intersected else "None")
+        self.restriction_type = restriction_type or ("NAVAL_RANGE" if intersected else None)
+        self.distance_to_boundary_km = distance_to_boundary_km
+        self.hard_stop = hard_stop
+        self.restricted = restricted
+        self.should_fail = should_fail
+
     def check_geofence_hazards(
         self,
         context: ToolInvocationContext,
         coordinates: List[float],
     ) -> GeospatialHazardPayload:
+        if self.should_fail:
+            raise RuntimeError("Simulated upstream geospatial hazard service failure")
         return GeospatialHazardPayload(
-            intersected=False,
-            restriction_name="None",
-            restriction_type=None,
-            distance_to_boundary_km=18.5,
+            intersected=self.intersected,
+            restriction_name=self.restriction_name,
+            restriction_type=self.restriction_type,
+            distance_to_boundary_km=self.distance_to_boundary_km,
+            hard_stop=self.hard_stop,
+            restricted=self.restricted,
         )
 
 
@@ -310,6 +340,7 @@ def register_m2_contract_mocks(
     mock_pfz: Optional[Any] = None,
     mock_risk: Optional[Any] = None,
     mock_route: Optional[Any] = None,
+    mock_geospatial: Optional[Any] = None,
     override: bool = False,
 ) -> None:
     """Registers M2 contract mocks wrapped in ProviderToolAdapter into the tool registry."""
@@ -325,6 +356,7 @@ def register_m2_contract_mocks(
     mock_pfz = mock_pfz or MockPFZRankingEngine()
     mock_risk = mock_risk or MockRiskEngine()
     mock_route = mock_route or MockRouteExposureEngine()
+    mock_geospatial = mock_geospatial or MockGeospatialHazardEngine()
 
     definitions_and_handlers = [
         (
@@ -464,6 +496,29 @@ def register_m2_contract_mocks(
                 ToolInvocationContext(**params),
                 mock_marine.get_marine_conditions(ToolInvocationContext(**params)),
                 destination=params.get("destination", "Outer Bank"),
+                is_mock=True,
+            ),
+        ),
+        (
+            ToolDefinition(
+                name="geospatial_hazard",
+                description="Dev 4 Engine: Evaluate spatial intersections with restricted maritime polygons and zones",
+                category="marine",
+                owner=ToolOwner.DEV4,
+                capability="geospatial_hazard",
+                required_context_fields=["origin_harbor"],
+                dependencies=[],
+                requires_evidence=True,
+                is_available=True,
+                is_deterministic=True,
+                parameters=[
+                    ToolParameter(name="origin_harbor", type_name="str", description="Departure harbor", required=True),
+                ],
+            ),
+            lambda **params: ProviderToolAdapter.adapt_geospatial_hazard(
+                mock_geospatial.check_geofence_hazards,
+                ToolInvocationContext(**params),
+                coordinates=params.get("coordinates"),
                 is_mock=True,
             ),
         ),

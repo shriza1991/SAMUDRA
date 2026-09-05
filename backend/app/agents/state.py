@@ -56,6 +56,9 @@ class ORCAState(TypedDict, total=False):
     origin_harbor: Optional[str]
     """Resolved departure or origin harbor name (e.g. 'Ratnagiri', 'Malvan')."""
 
+    destination: Optional[str]
+    """Resolved target destination harbor or waypoint (e.g. 'Goa', 'Outer Bank')."""
+
     time_window: Optional[Dict[str, Any]]
     """Temporal window of voyage: departure_time, duration_hours, valid_until."""
 
@@ -91,6 +94,9 @@ class ORCAState(TypedDict, total=False):
 
     tool_results: Dict[str, Any]
     """Normalized ToolResult payloads returned by executed specialist tools."""
+
+    failed_tools: Optional[List[str]]
+    """List of capability or tool names that failed during execution."""
 
     # -------------------------------------------------------------------------
     # 4. Domain Data & Observations (Supplied by Dev 4 Tools / Dev 2 Connectors)

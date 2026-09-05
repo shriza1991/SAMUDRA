@@ -94,6 +94,8 @@ class GeospatialHazardPayload(BaseModel):
     restriction_name: Optional[str] = Field(None, description="Name of polygon (e.g. 'Naval Firing Range Foxtrot')")
     restriction_type: Optional[str] = Field(None, description="Category: NAVAL_RANGE | MPA | SHALLOW_REEF | IMBL")
     distance_to_boundary_km: Optional[float] = Field(None, description="Distance to nearest restricted polygon")
+    hard_stop: bool = Field(False, description="True if passage is strictly prohibited (NO_GO)")
+    restricted: bool = Field(False, description="True if operational caution or restriction applies (CAUTION)")
 
 
 # =============================================================================

@@ -175,4 +175,12 @@ CAPABILITIES_CATALOG: Dict[str, CapabilityDefinition] = {
         dependencies=[],
         requires_evidence=True,
     ),
+    "geospatial_hazard": CapabilityDefinition(
+        name="geospatial_hazard",
+        owner=ToolOwner.DEV4,
+        description="Evaluates spatial intersections with restricted maritime polygons, naval ranges, and MPAs.",
+        required_context_fields=["origin_harbor"],
+        dependencies=[],
+        requires_evidence=True,
+    ),
 }

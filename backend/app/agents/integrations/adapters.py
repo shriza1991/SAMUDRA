@@ -16,7 +16,7 @@ Adapters sit between external providers (Dev 2 / Dev 4) and the LangGraph graph:
 """
 
 from datetime import datetime, timezone
-from typing import Any, Callable, Dict, List
+from typing import Any, Callable, Dict, List, Optional
 
 from backend.app.agents.integrations.contracts import (
     ToolErrorCode,
@@ -28,6 +28,7 @@ from backend.app.agents.integrations.dev2 import (
     WeatherConditionsPayload,
 )
 from backend.app.agents.integrations.dev4 import (
+    GeospatialHazardPayload,
     PFZRankingPayload,
     RiskAssessmentPayload,
     RouteExposurePayload,
@@ -342,3 +343,54 @@ class ProviderToolAdapter:
                 warnings=[f"Route exposure engine failed: {str(exc)}"],
                 error_code=ToolErrorCode.UPSTREAM_FAILURE.value,
             )
+
+    @staticmethod
+    def adapt_geospatial_hazard(
+        engine_fn: Callable[[ToolInvocationContext, List[float]], GeospatialHazardPayload],
+        context: ToolInvocationContext,
+        coordinates: Optional[List[float]] = None,
+        is_mock: bool = False,
+    ) -> ToolResult:
+        """Adapts Dev 4 GeospatialHazardEngine output into normalized ToolResult."""
+        try:
+            coords = coordinates or context.coordinates or [73.28, 16.99]
+            payload = engine_fn(context, coords)
+            quality_flags = ["M2_CONTRACT_MOCK", "SIMULATED"] if is_mock else ["REAL_SOURCE", "GEOSPATIAL_EVAL"]
+
+            evidence = [
+                EvidenceItem(
+                    source_name="Geospatial Hazard Engine (Dev 4)",
+                    retrieved_at=datetime.now(timezone.utc).isoformat(),
+                    metric_name="geofence_intersection",
+                    metric_value=str(payload.intersected),
+                    quality_flags=quality_flags,
+                )
+            ]
+            if payload.distance_to_boundary_km is not None:
+                evidence.append(
+                    EvidenceItem(
+                        source_name="Geospatial Hazard Engine (Dev 4)",
+                        retrieved_at=datetime.now(timezone.utc).isoformat(),
+                        metric_name="distance_to_boundary_km",
+                        metric_value=payload.distance_to_boundary_km,
+                        metric_unit="km",
+                        quality_flags=quality_flags,
+                    )
+                )
+
+            return ToolResult(
+                status=ToolStatus.OK,
+                data=payload.model_dump(),
+                evidence=evidence,
+                warnings=[],
+            )
+
+        except Exception as exc:
+            return ToolResult(
+                status=ToolStatus.FAILED,
+                data={},
+                evidence=[],
+                warnings=[f"Geospatial hazard engine failed: {str(exc)}"],
+                error_code=ToolErrorCode.UPSTREAM_FAILURE.value,
+            )
+
