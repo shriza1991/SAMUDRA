@@ -1,0 +1,120 @@
+"""Dev 2 Interface Protocols & Payload Schemas (External Data & Connectors).
+
+Owned by Dev 3 (Architecture & Interface Definition).
+Implemented by Dev 2 (Backend Platform & External Connectors).
+Part of SIH 2026 Problem Statement PS 26176 — ORCA.
+
+CRITICAL ARCHITECTURAL BOUNDARY:
+===============================================================================
+Dev 2 implements connectors to external authorities (INCOIS, IMD, MOSDAC).
+Dev 2 MUST satisfy these typed interface protocols and return standardized
+payloads with authentic UTC timestamps and source names.
+Dev 3 consumes these through adapters that normalize them into ToolResult.
+===============================================================================
+"""
+
+from typing import Any, Dict, List, Optional, Protocol, runtime_checkable
+from pydantic import BaseModel, Field
+
+from backend.app.agents.integrations.contracts import ToolInvocationContext
+
+
+# =============================================================================
+# 1. Dev 2 Output Payload Schemas
+# =============================================================================
+
+class MarineConditionsPayload(BaseModel):
+    """Normalized marine ocean state retrieved by Dev 2 connectors (INCOIS)."""
+
+    harbor: str = Field(..., description="Target coastal harbor or station")
+    significant_wave_height_m: float = Field(..., ge=0.0, description="Wave height in meters")
+    swell_height_m: Optional[float] = Field(None, ge=0.0, description="Swell wave height in meters")
+    swell_period_sec: Optional[float] = Field(None, ge=0.0, description="Swell period in seconds")
+    surface_current_knots: Optional[float] = Field(None, description="Surface current speed in knots")
+    sea_surface_temp_c: Optional[float] = Field(None, description="Sea surface temperature in Celsius")
+    observed_at: str = Field(..., description="Sensor or satellite measurement timestamp (ISO-8601 UTC)")
+    valid_to: str = Field(..., description="Forecast window expiration (ISO-8601 UTC)")
+    source_name: str = Field("INCOIS Ocean State Forecast", description="Official issuing authority")
+    source_url: Optional[str] = Field(None, description="Direct URL to official bulletin or feed")
+
+
+class WeatherConditionsPayload(BaseModel):
+    """Normalized coastal atmospheric weather retrieved by Dev 2 connectors (IMD)."""
+
+    harbor: str = Field(..., description="Target coastal station or harbor")
+    wind_speed_knots: float = Field(..., ge=0.0, description="Sustained wind speed in knots")
+    wind_gust_knots: Optional[float] = Field(None, ge=0.0, description="Peak wind gust speed in knots")
+    wind_direction_deg: Optional[float] = Field(None, ge=0.0, le=360.0, description="Wind direction in degrees")
+    visibility_km: Optional[float] = Field(None, ge=0.0, description="Horizontal visibility in kilometers")
+    observed_at: str = Field(..., description="Observation timestamp (ISO-8601 UTC)")
+    valid_to: str = Field(..., description="Advisory expiration (ISO-8601 UTC)")
+    source_name: str = Field("IMD Coastal Weather Bulletin", description="Official issuing authority")
+    source_url: Optional[str] = Field(None, description="Direct URL to official bulletin")
+
+
+class HazardBulletinPayload(BaseModel):
+    """Severe weather and cyclone warnings retrieved by Dev 2 connectors (IMD)."""
+
+    harbor: str = Field(..., description="Monitored coastal zone or harbor")
+    cyclone_warning_active: bool = Field(False, description="True if cyclone alert or depression is active")
+    squall_alert: bool = Field(False, description="True if squall or high wind gale warning issued")
+    bulletin_id: Optional[str] = Field(None, description="Official bulletin reference identifier")
+    severity: str = Field("NORMAL", description="Severity category: NORMAL | WATCH | ALERT | WARNING")
+    headline: Optional[str] = Field(None, description="Official headline from issuing authority")
+    valid_from: str = Field(..., description="Advisory start timestamp (ISO-8601 UTC)")
+    valid_to: str = Field(..., description="Advisory expiration timestamp (ISO-8601 UTC)")
+    source_name: str = Field("IMD Cyclone Warning Division", description="Official issuing authority")
+    source_url: Optional[str] = Field(None, description="Direct URL to warning bulletin")
+
+
+class PFZSourceDataPayload(BaseModel):
+    """Raw Potential Fishing Zone satellite vectors retrieved by Dev 2 connectors (INCOIS)."""
+
+    features: List[Dict[str, Any]] = Field(
+        default_factory=list,
+        description="GeoJSON features or records of thermal fronts and chlorophyll gradients",
+    )
+    bulletin_date: str = Field(..., description="Date of INCOIS PFZ advisory release (ISO-8601 UTC)")
+    valid_to: str = Field(..., description="Validity expiration (ISO-8601 UTC)")
+    source_name: str = Field("INCOIS PFZ Mission", description="Official issuing authority")
+    source_url: Optional[str] = Field(None, description="Direct URL to PFZ geospatial layer")
+
+
+# =============================================================================
+# 2. Dev 2 Interface Protocols
+# =============================================================================
+
+@runtime_checkable
+class MarineConditionsProvider(Protocol):
+    """Interface that Dev 2's marine connector module must implement."""
+
+    def get_marine_conditions(self, context: ToolInvocationContext) -> MarineConditionsPayload:
+        """Fetches ocean state observations for the given operational context."""
+        ...
+
+
+@runtime_checkable
+class WeatherConditionsProvider(Protocol):
+    """Interface that Dev 2's weather connector module must implement."""
+
+    def get_weather_conditions(self, context: ToolInvocationContext) -> WeatherConditionsPayload:
+        """Fetches coastal atmospheric conditions for the given operational context."""
+        ...
+
+
+@runtime_checkable
+class HazardBulletinsProvider(Protocol):
+    """Interface that Dev 2's hazard/bulletin connector module must implement."""
+
+    def get_hazard_bulletin(self, context: ToolInvocationContext) -> HazardBulletinPayload:
+        """Fetches active storm, depression, and squall alerts for the given harbor."""
+        ...
+
+
+@runtime_checkable
+class PFZSourceDataProvider(Protocol):
+    """Interface that Dev 2's PFZ connector module must implement."""
+
+    def get_pfz_raw_advisories(self, context: ToolInvocationContext) -> PFZSourceDataPayload:
+        """Fetches raw INCOIS PFZ advisories for maritime analysis."""
+        ...

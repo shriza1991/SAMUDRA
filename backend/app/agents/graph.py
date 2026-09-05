@@ -239,29 +239,77 @@ def intent_locale_node(state: ORCAState) -> Dict[str, Any]:
 # =============================================================================
 
 def supervisor_node(state: ORCAState) -> Dict[str, Any]:
-    """Generates a bounded TaskPlan mapping the classified intent to specialist stub tools."""
+    """Generates a bounded TaskPlan mapping the classified intent to specialist tools or contract mocks."""
     intent_val = state.get("intent", IntentCategory.UNSUPPORTED.value)
+    tool_mode = state.get("tool_mode", "demo")
 
-    if intent_val == IntentCategory.PFZ.value:
-        tools = ["pfz_stub"]
-    elif intent_val == IntentCategory.SAFETY.value:
-        tools = ["marine_stub", "weather_stub", "risk_stub"]
-    elif intent_val == IntentCategory.CONDITIONS.value:
-        tools = ["marine_stub"]
-    elif intent_val == IntentCategory.HAZARDS.value:
-        tools = ["weather_stub"]
-    elif intent_val == IntentCategory.ROUTE.value:
-        tools = ["route_stub"]
-    elif intent_val == IntentCategory.ANALYTICAL_EXPLANATION.value:
-        tools = ["explanation_stub"]
+    if tool_mode == "contract_mock":
+        # 1. Capability requirements by intent
+        required_capabilities: List[str] = []
+        if intent_val == IntentCategory.SAFETY.value:
+            required_capabilities = ["marine_conditions", "weather_conditions", "risk_evaluation"]
+        elif intent_val == IntentCategory.PFZ.value:
+            required_capabilities = ["pfz_search"]
+        elif intent_val == IntentCategory.CONDITIONS.value:
+            required_capabilities = ["marine_conditions"]
+        elif intent_val == IntentCategory.HAZARDS.value:
+            required_capabilities = ["hazard_search"]
+        elif intent_val == IntentCategory.ROUTE.value:
+            required_capabilities = ["route_analysis"]
+
+        # 2. Capability availability check
+        unavailable = tool_registry.get_unavailable_capabilities(required_capabilities)
+        if unavailable:
+            missing_cap = unavailable[0]
+            trace = _append_trace(
+                state.get("trace"),
+                node_name="Supervisor / Planner",
+                action=f"Capability check failed: '{missing_cap}' is currently unavailable. Aborting tool dispatch.",
+                status="failed",
+            )
+            return {
+                "task_plan": [],
+                "capability_error": missing_cap,
+                "trace": trace,
+            }
+
+        # 3. Dependency-ordered tool sequences
+        if intent_val == IntentCategory.PFZ.value:
+            tools = ["marine_conditions", "pfz_search"]
+        elif intent_val == IntentCategory.SAFETY.value:
+            tools = ["marine_conditions", "weather_conditions", "hazard_search", "risk_evaluation"]
+        elif intent_val == IntentCategory.CONDITIONS.value:
+            tools = ["marine_conditions"]
+        elif intent_val == IntentCategory.HAZARDS.value:
+            tools = ["hazard_search"]
+        elif intent_val == IntentCategory.ROUTE.value:
+            tools = ["marine_conditions", "hazard_search", "route_analysis"]
+        elif intent_val == IntentCategory.ANALYTICAL_EXPLANATION.value:
+            tools = ["explanation_stub"]
+        else:
+            tools = []
+
     else:
-        # UNSUPPORTED queries schedule ZERO tools
-        tools = []
+        # Default M1 demonstration mode
+        if intent_val == IntentCategory.PFZ.value:
+            tools = ["pfz_stub"]
+        elif intent_val == IntentCategory.SAFETY.value:
+            tools = ["marine_stub", "weather_stub", "risk_stub"]
+        elif intent_val == IntentCategory.CONDITIONS.value:
+            tools = ["marine_stub"]
+        elif intent_val == IntentCategory.HAZARDS.value:
+            tools = ["weather_stub"]
+        elif intent_val == IntentCategory.ROUTE.value:
+            tools = ["route_stub"]
+        elif intent_val == IntentCategory.ANALYTICAL_EXPLANATION.value:
+            tools = ["explanation_stub"]
+        else:
+            tools = []
 
     trace = _append_trace(
         state.get("trace"),
         node_name="Supervisor / Planner",
-        action=f"Constructed TaskPlan with {len(tools)} tool(s): {tools}",
+        action=f"Constructed TaskPlan ({tool_mode}) with {len(tools)} tool(s): {tools}",
     )
 
     return {
@@ -293,6 +341,8 @@ def specialist_tools_node(state: ORCAState) -> Dict[str, Any]:
         params: Dict[str, Any] = {}
         if tool_name in ["pfz_stub", "marine_stub", "weather_stub"]:
             params["harbor"] = harbor
+        elif tool_name in ["marine_conditions", "weather_conditions", "hazard_search", "pfz_search"]:
+            params["origin_harbor"] = harbor
         elif tool_name == "risk_stub":
             # Pass collected marine observations into risk engine
             wave_m = observations.get("significant_wave_height_m", 1.8)
@@ -304,8 +354,14 @@ def specialist_tools_node(state: ORCAState) -> Dict[str, Any]:
                 "cyclone_active": cyclone,
                 "craft_type": craft_type,
             }
-        elif tool_name == "route_stub":
+        elif tool_name == "risk_evaluation":
+            params = {
+                "origin_harbor": harbor,
+                "craft_profile": craft_type,
+            }
+        elif tool_name in ["route_stub", "route_analysis"]:
             params["origin_harbor"] = harbor
+            params["destination"] = "Outer Bank"
 
         # Execute through typed registry
         result = tool_registry.execute_tool(tool_name, params)
@@ -319,8 +375,8 @@ def specialist_tools_node(state: ORCAState) -> Dict[str, Any]:
         collected_evidence.extend(result.evidence)
         collected_warnings.extend(result.warnings)
 
-        # If risk_stub ran, populate deterministic Recommendation
-        if tool_name == "risk_stub" and "recommendation" in result.data:
+        # If risk engine ran, populate deterministic Recommendation
+        if tool_name in ["risk_stub", "risk_evaluation"] and "recommendation" in result.data:
             rec_dict = result.data["recommendation"]
             risk_assessment = Recommendation(**rec_dict)
             if "confidence" in result.data:
@@ -384,6 +440,35 @@ def evidence_validator_node(state: ORCAState) -> Dict[str, Any]:
 
 def response_composer_node(state: ORCAState) -> Dict[str, Any]:
     """Synthesizes the final natural-language answer, strictly preserving deterministic safety status."""
+    capability_error = state.get("capability_error")
+    if capability_error:
+        answer = (
+            f"I cannot provide a reliable safety assessment because the required capability "
+            f"'{capability_error}' is currently unavailable. Please try again later or check system status."
+        )
+        recommendation = Recommendation(
+            status=RecommendationStatus.UNKNOWN,
+            summary=f"Required capability '{capability_error}' is currently unavailable.",
+            decisive_factors=[f"Unavailable capability: {capability_error}"],
+            next_action="Wait for external capability to be restored or retry query.",
+        )
+        confidence = Confidence(
+            level=ConfidenceLevel.LOW,
+            reasons=[f"Capability '{capability_error}' unavailable"],
+        )
+        trace = _append_trace(
+            state.get("trace"),
+            node_name="Response Composer",
+            action=f"Capability check failed for '{capability_error}': returned safe fallback advisory",
+            status="completed",
+        )
+        return {
+            "response": answer,
+            "risk_assessment": recommendation,
+            "confidence": confidence,
+            "trace": trace,
+        }
+
     intent_val = state.get("intent", IntentCategory.UNSUPPORTED.value)
     harbor = state.get("location", {}).get("harbor", "Ratnagiri")
     evidence = state.get("evidence", [])
@@ -633,13 +718,19 @@ def run_orca_graph(
     user_message: str,
     thread_id: str = "default-thread",
     user_context: Optional[Dict[str, Any]] = None,
+    tool_mode: str = "demo",
 ) -> ORCAState:
     """Convenience execution runner to execute a query through the LangGraph pipeline."""
+    if tool_mode == "contract_mock":
+        from backend.app.agents.integrations.mocks import register_m2_contract_mocks
+        register_m2_contract_mocks(tool_registry)
+
     initial_state: ORCAState = {
         "request_id": f"req-{uuid.uuid4().hex[:8]}",
         "thread_id": thread_id,
         "user_message": user_message,
         "user_profile": (user_context or {}).copy(),
+        "tool_mode": tool_mode,
         "trace": [],
         "evidence": [],
         "warnings": [],

@@ -30,6 +30,14 @@ from backend.app.agents.graph import (
     orca_graph,
     run_orca_graph,
 )
+from backend.app.agents.integrations import (
+    CAPABILITIES_CATALOG,
+    ProviderToolAdapter,
+    ToolErrorCode,
+    ToolInvocationContext,
+    ToolOwner,
+    register_m2_contract_mocks,
+)
 from backend.app.agents.intent import (
     ExtractedEntities,
     IntentCategory,
@@ -112,4 +120,11 @@ __all__ = [
     "LLMMessage",
     "LLMResponse",
     "MessageRole",
+    # M2 Integrations & Contracts
+    "ToolOwner",
+    "ToolErrorCode",
+    "ToolInvocationContext",
+    "CAPABILITIES_CATALOG",
+    "ProviderToolAdapter",
+    "register_m2_contract_mocks",
 ]

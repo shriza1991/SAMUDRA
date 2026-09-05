@@ -12,7 +12,7 @@
 | :--- | :--- | :--- | :--- |
 | **M0** | Repository & Agent Architecture | **COMPLETE** | All typed contracts, state schema, registries, prompt specs, and evaluation fixtures defined. |
 | **M1** | Basic Agent Graph (Vertical Slice) | **COMPLETE** | Executable LangGraph pipeline running on in-memory stub tools with evidence validation, safety invariance, and sanitized traces. 24/24 tests passing. |
-| **M2** | Tool Integration & Real Handoffs | **PENDING** | Connect real Dev 4 tools, real Dev 2 connectors, and implement dynamic dependency graph. |
+| **M2** | Integration Contracts & Orchestration Hardening | **COMPLETE** | Typed Dev 2/Dev 4 protocols, ProviderToolAdapter, contract mocks tagged M2_CONTRACT_MOCK, capability discovery, error semantics, handoff guides. 41/41 tests passing. |
 | **M3** | LLM Provider Integration | **PENDING** | Connect real LLM for intent/locale and multilingual response composition. |
 | **M4** | Multi-Turn Memory & State Persistence | **PENDING** | Integrate PostgreSQL/Redis session state persistence and context carries. |
 
@@ -59,16 +59,49 @@
 
 ---
 
-## Current Limitations in M1
-1. **Simulated In-Memory Data Only**: M1 uses controlled stub tools. No live external API calls or real database reads are performed.
-2. **Deterministic Extraction**: Intent classification uses deterministic keyword patterns rather than live LLM embeddings or few-shot prompts.
-3. **Template-Based Response**: Response composer uses structured string templates rather than an LLM generation call.
-4. **Synchronous Stub Dispatch**: Stub tools execute sequentially in-memory.
+### M2 — Integration Contracts, Tool Interfaces & Orchestration Hardening (COMPLETE)
+- **Delivered**:
+  - **Contract Definitions** in `backend/app/agents/integrations/contracts.py`:
+    * `ToolOwner` enum (`DEV2`, `DEV3`, `DEV4`).
+    * `ToolErrorCode` enum with semantic properties (`is_retryable`, `requires_clarification`, `is_user_safe`).
+    * `ToolInvocationContext` typed schema.
+    * `CAPABILITIES_CATALOG` capability taxonomy.
+  - **Interface Protocols & Schemas**:
+    * Dev 2 (`backend/app/agents/integrations/dev2.py`): `MarineConditionsPayload`, `WeatherConditionsPayload`, `HazardBulletinPayload`, `PFZSourceDataPayload`, and typed `@runtime_checkable` protocols.
+    * Dev 4 (`backend/app/agents/integrations/dev4.py`): `RiskAssessmentPayload`, `PFZRankingPayload`, `RouteExposurePayload`, `GeospatialHazardPayload`, and typed protocols.
+  - **Tool Adapters** in `backend/app/agents/integrations/adapters.py`:
+    * `ProviderToolAdapter` normalizing external provider outputs into `ToolResult`.
+    * Standardized `EvidenceItem` generation with provenance quality flags.
+  - **M2 Contract Mocks** in `backend/app/agents/integrations/mocks.py`:
+    * `MockMarineConditionsProvider`, `MockWeatherProvider`, `MockHazardProvider`, `MockPFZSourceProvider`.
+    * `MockRiskEngine`, `MockPFZRankingEngine`, `MockRouteExposureEngine`, `MockGeospatialHazardEngine`.
+    * Stamped with `["M2_CONTRACT_MOCK", "SIMULATED"]`.
+    * Registration helper `register_m2_contract_mocks()`.
+  - **Hardened Tool Registry & Graph**:
+    * Capability availability discovery and toggling (`is_capability_available`, `get_unavailable_capabilities`).
+    * Input context field validation (`required_context_fields`).
+    * Supervisor dependency ordering (`marine_conditions` -> `weather_conditions` -> `hazard_search` -> `risk_evaluation`).
+    * `run_orca_graph(..., tool_mode="contract_mock")` support.
+    * Safe failure handling when capabilities are unavailable (`RecommendationStatus.UNKNOWN`).
+  - **Comprehensive Test Suite**:
+    * `tests/agent_eval/test_m2_integration.py` (17 tests covering ownership, capabilities, adapters, mocks, errors, dependency ordering, telemetry).
+    * Total test count: 41/41 passing in 0.65s.
+  - **Documentation & Handoff Guides**:
+    * `docs/DEV2_DEV4_INTEGRATION_CONTRACT.md`: Master integration contract.
+    * `docs/DEV2_IMPLEMENTATION_GUIDE.md`: Step-by-step connector implementation guide.
+    * `docs/DEV4_IMPLEMENTATION_GUIDE.md`: Step-by-step risk/PFZ/route engine implementation guide.
+    * `docs/M2_TOOL_INTEGRATION.md`: Milestone M2 architecture summary.
 
 ---
 
-## What Remains for M2 (Tool Integration & Real Handoffs)
-1. Replace `marine_stub`, `risk_stub`, `route_stub`, and `pfz_stub` with real Dev 4 tools (`backend/app/tools/marine/`, `backend/app/tools/geospatial/`, `backend/app/domain/risk/`).
-2. Integrate Dev 2 live/snapshot connector feeds into the tool execution layer.
-3. Implement true parallel tool execution for independent tools using `asyncio` or LangGraph parallel fan-out branches.
-4. Add conditional clarification branching in the graph if required fields are missing.
+## Upcoming Milestones
+
+### M3 — LLM Provider Integration (PENDING)
+1. Connect real LLM providers (Google Gemini / Anthropic / OpenAI / Ollama) via `LLMProvider` interface.
+2. Replace deterministic keyword intent extraction with structured LLM classification.
+3. Multilingual response composition using contextual mariner prompts.
+4. Integrate prompt management in `backend/app/prompts/`.
+
+### M4 — Multi-Turn Memory & State Persistence (PENDING)
+1. Integrate PostgreSQL/Redis for thread conversation state persistence.
+2. Selective context carry-forward across multi-turn sessions.

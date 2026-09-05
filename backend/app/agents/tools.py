@@ -22,6 +22,7 @@ import time
 from typing import Any, Callable, Dict, List, Optional
 from pydantic import BaseModel, Field
 
+from backend.app.agents.integrations.contracts import ToolErrorCode, ToolOwner
 from backend.app.contracts.tools import ToolResult, ToolStatus
 
 
@@ -46,8 +47,33 @@ class ToolDefinition(BaseModel):
     category: str = Field(
         ..., description="Domain category: marine | weather | geospatial | risk | route"
     )
+    owner: ToolOwner = Field(
+        default=ToolOwner.DEV3,
+        description="Explicit developer role owner (dev2 | dev3 | dev4)",
+    )
+    capability: Optional[str] = Field(
+        default=None,
+        description="Standardized capability name (e.g. 'marine_conditions', 'risk_evaluation')",
+    )
+    required_context_fields: List[str] = Field(
+        default_factory=list,
+        description="Mandatory context variables required before execution (e.g. ['origin_harbor'])",
+    )
+    dependencies: List[str] = Field(
+        default_factory=list,
+        description="List of capability names that must be resolved prior to invoking this tool",
+    )
+    requires_evidence: bool = Field(
+        default=True,
+        description="True if tool execution must yield verifiable EvidenceItem citations",
+    )
+    is_available: bool = Field(
+        default=True,
+        description="True if tool is currently operational and available for execution",
+    )
     is_deterministic: bool = Field(
-        True, description="True if output is mathematically/programmatically deterministic"
+        default=True,
+        description="True if output is mathematically/programmatically deterministic",
     )
 
 
@@ -55,6 +81,7 @@ class ToolExecutionRecord(BaseModel):
     """Telemetry record captured upon each specialist tool execution."""
 
     tool_name: str = Field(..., description="Invoked tool identifier")
+    owner: ToolOwner = Field(default=ToolOwner.DEV3, description="Owner of the executed tool")
     input_params: Dict[str, Any] = Field(
         default_factory=dict, description="Sanitized input arguments passed to the tool"
     )
@@ -71,6 +98,7 @@ class AgentToolRegistry:
     """Central registry of approved specialist tools callable by the SAMUDRA agent.
 
     Enforces strict execution boundaries: no arbitrary code execution or unvetted APIs.
+    Supports capability discovery and operational availability checks.
     """
 
     def __init__(self) -> None:
@@ -85,12 +113,16 @@ class AgentToolRegistry:
     ) -> None:
         """Registers a specialist tool with its definition and executable handler.
 
-        Args:
-            definition: Schema and metadata for the tool.
-            handler: Callable implementing the tool; MUST return ToolResult.
+        Raises:
+            ValueError: If tool is already registered or schema definition is malformed.
         """
+        if not definition.name or not definition.name.strip():
+            raise ValueError("Tool definition must have a valid non-empty name.")
         if definition.name in self._registry:
             raise ValueError(f"Tool '{definition.name}' is already registered.")
+        if not isinstance(definition.owner, ToolOwner):
+            raise ValueError(f"Tool '{definition.name}' must have a valid ToolOwner (dev2, dev3, dev4).")
+
         self._registry[definition.name] = definition
         self._handlers[definition.name] = handler
 
@@ -102,12 +134,37 @@ class AgentToolRegistry:
         """Lists all registered tools."""
         return list(self._registry.values())
 
+    def list_capabilities(self) -> List[str]:
+        """Lists all unique capabilities currently registered in the registry."""
+        capabilities = set()
+        for tool in self._registry.values():
+            if tool.capability:
+                capabilities.add(tool.capability)
+        return sorted(list(capabilities))
+
+    def is_capability_available(self, capability: str) -> bool:
+        """Returns True if at least one operational tool implements the capability."""
+        for tool in self._registry.values():
+            if tool.capability == capability and tool.is_available:
+                return True
+        return False
+
+    def get_unavailable_capabilities(self, required_capabilities: List[str]) -> List[str]:
+        """Returns list of required capabilities that are not currently available."""
+        return [c for c in required_capabilities if not self.is_capability_available(c)]
+
+    def set_capability_availability(self, capability: str, is_available: bool) -> None:
+        """Toggles the availability of all tools implementing a specific capability."""
+        for tool in self._registry.values():
+            if tool.capability == capability:
+                tool.is_available = is_available
+
     def execute_tool(
         self,
         tool_name: str,
         params: Dict[str, Any],
     ) -> ToolResult:
-        """Executes a registered tool with telemetry tracking and boundary enforcement.
+        """Executes a registered tool with telemetry tracking, capability validation, and boundary enforcement.
 
         Args:
             tool_name: Name of the registered tool to invoke.
@@ -116,15 +173,17 @@ class AgentToolRegistry:
         Returns:
             Normalized ToolResult.
         """
+        # 1. Unregistered tool rejection
         if tool_name not in self._registry:
             record = ToolExecutionRecord(
                 tool_name=tool_name,
+                owner=ToolOwner.DEV3,
                 input_params=params,
                 status=ToolStatus.FAILED,
                 duration_ms=0.0,
                 evidence_ids=[],
                 warning_count=1,
-                error_code="TOOL_NOT_REGISTERED",
+                error_code=ToolErrorCode.TOOL_NOT_REGISTERED.value,
             )
             self._execution_history.append(record)
             return ToolResult(
@@ -132,9 +191,57 @@ class AgentToolRegistry:
                 data={},
                 evidence=[],
                 warnings=[f"Execution rejected: Tool '{tool_name}' is not in approved registry."],
-                error_code="TOOL_NOT_REGISTERED",
+                error_code=ToolErrorCode.TOOL_NOT_REGISTERED.value,
             )
 
+        tool_def = self._registry[tool_name]
+
+        # 2. Availability check
+        if not tool_def.is_available:
+            record = ToolExecutionRecord(
+                tool_name=tool_name,
+                owner=tool_def.owner,
+                input_params=params,
+                status=ToolStatus.FAILED,
+                duration_ms=0.0,
+                evidence_ids=[],
+                warning_count=1,
+                error_code=ToolErrorCode.TOOL_UNAVAILABLE.value,
+            )
+            self._execution_history.append(record)
+            return ToolResult(
+                status=ToolStatus.FAILED,
+                data={},
+                evidence=[],
+                warnings=[f"Execution rejected: Capability for tool '{tool_name}' is currently unavailable."],
+                error_code=ToolErrorCode.TOOL_UNAVAILABLE.value,
+            )
+
+        # 3. Context fields check
+        missing_context = [
+            f for f in tool_def.required_context_fields if f not in params or params[f] is None
+        ]
+        if missing_context:
+            record = ToolExecutionRecord(
+                tool_name=tool_name,
+                owner=tool_def.owner,
+                input_params=params,
+                status=ToolStatus.FAILED,
+                duration_ms=0.0,
+                evidence_ids=[],
+                warning_count=1,
+                error_code=ToolErrorCode.MISSING_CONTEXT.value,
+            )
+            self._execution_history.append(record)
+            return ToolResult(
+                status=ToolStatus.FAILED,
+                data={},
+                evidence=[],
+                warnings=[f"Execution rejected: Tool '{tool_name}' missing required context fields: {missing_context}."],
+                error_code=ToolErrorCode.MISSING_CONTEXT.value,
+            )
+
+        # 4. Handler execution
         handler = self._handlers[tool_name]
         start_time = time.perf_counter()
 
@@ -150,6 +257,7 @@ class AgentToolRegistry:
 
             record = ToolExecutionRecord(
                 tool_name=tool_name,
+                owner=tool_def.owner,
                 input_params=params,
                 status=result.status,
                 duration_ms=round(duration_ms, 2),
@@ -164,6 +272,7 @@ class AgentToolRegistry:
             duration_ms = (time.perf_counter() - start_time) * 1000.0
             record = ToolExecutionRecord(
                 tool_name=tool_name,
+                owner=tool_def.owner,
                 input_params=params,
                 status=ToolStatus.FAILED,
                 duration_ms=round(duration_ms, 2),

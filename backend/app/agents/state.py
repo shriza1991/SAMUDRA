@@ -56,6 +56,12 @@ class ORCAState(TypedDict, total=False):
     time_window: Optional[Dict[str, Any]]
     """Temporal window of voyage: departure_time, duration_hours, valid_until."""
 
+    tool_mode: Optional[str]
+    """Execution mode for specialist tools: 'demo' (M1 stubs) or 'contract_mock' (M2 mocks)."""
+
+    capability_error: Optional[str]
+    """Recorded capability failure if a required provider is unavailable."""
+
     # -------------------------------------------------------------------------
     # 2. Cognitive Extraction & Intent
     # -------------------------------------------------------------------------
