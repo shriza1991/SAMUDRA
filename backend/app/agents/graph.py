@@ -463,7 +463,10 @@ def intent_locale_node(state: ORCAState) -> Dict[str, Any]:
         match = re.search(r"\b(?:from|at|near|off|around)\s+([A-Za-z]+)\b", raw_msg, re.IGNORECASE)
         if match:
             candidate = match.group(1).capitalize()
-            stop_words = {"The", "Here", "There", "Port", "Harbor", "Coast", "Sea", "Tomorrow", "Today", "Now"}
+            stop_words = {
+                "The", "Here", "There", "Port", "Harbor", "Coast", "Sea",
+                "Tomorrow", "Today", "Now", "Me", "My", "Us", "Any", "Our", "All", "Route",
+            }
             if candidate not in stop_words:
                 explicit_harbor = candidate
 
@@ -471,20 +474,20 @@ def intent_locale_node(state: ORCAState) -> Dict[str, Any]:
         any(f in msg_lower for f in ["fish", "मछली", "मासेमारी"]) and any(q in msg_lower for q in ["where", "nearest", "find", "कुठे", "कहाँ", "कहा", "निकटतम"])
     ):
         intent = IntentCategory.PFZ
+    elif any(k in msg_lower for k in ["cyclone", "storm", "hazard", "warning", "squall", "depression", "gale", "lightning", "तूफान", "चेतावनी", "धोका", "firing", "restricted", "range"]):
+        intent = IntentCategory.HAZARDS
     elif any(k in msg_lower for k in ["route", "passage", "channel", "waypoint", "रास्ता", "मार्ग"]):
         intent = IntentCategory.ROUTE
     elif any(k in msg_lower for k in ["safe", "safety", "सुरक्षित", "सुरक्षा", "leave", "depart", "sail", "can we go", "can i go", "head out", "heading out", "go out", "go fishing", "fishing tomorrow", "should i"]):
         intent = IntentCategory.SAFETY
     elif any(k in msg_lower for k in ["why", "explain", "risky", "reason", "कारण", "क्यों"]):
         intent = IntentCategory.ANALYTICAL_EXPLANATION
-    elif any(k in msg_lower for k in ["cyclone", "storm", "hazard", "warning", "lightning", "तूफान", "चेतावनी", "firing", "restricted", "range"]):
-        intent = IntentCategory.HAZARDS
     elif any(k in msg_lower for k in ["wave", "swell", "current", "condition", "sea state", "समुद्र", "लाटा"]):
         intent = IntentCategory.CONDITIONS
     else:
         # Check if user is continuing a previous intent conversation
         thread_ctx_pre = memory_manager.load_context(thread_id)
-        if thread_ctx_pre.last_intent in [IntentCategory.PFZ, IntentCategory.SAFETY]:
+        if thread_ctx_pre.last_intent in [IntentCategory.PFZ, IntentCategory.SAFETY, IntentCategory.HAZARDS]:
             if explicit_harbor or any(w in msg_lower for w in ["what about", "how about", "tomorrow", "today", "afternoon", "morning", "evening", "instead"]):
                 intent = thread_ctx_pre.last_intent
             else:
@@ -849,6 +852,8 @@ def evidence_validator_node(state: ORCAState) -> Dict[str, Any]:
         critical_metrics = ["pfz_distance_nm"]
     elif intent == IntentCategory.CONDITIONS.value:
         critical_metrics = ["significant_wave_height"]
+    elif intent == IntentCategory.HAZARDS.value:
+        critical_metrics = ["cyclone_warning_active"]
 
     report = EvidenceValidator.audit_evidence(evidence, critical_metrics)
     warnings = list(state.get("warnings", []))
@@ -1014,24 +1019,70 @@ def response_composer_node(state: ORCAState) -> Dict[str, Any]:
         )
 
     elif intent_val == IntentCategory.HAZARDS.value:
-        answer = (
-            f"[M1 DEMO DATA] Weather & Hazard bulletin for {harbor}:\n"
-            f"- Cyclone Warning: No active storm warnings in simulated bulletin\n"
-            f"- Squall Alert: None\n"
-            f"- Wind: 16 knots (gusts to 22 knots)\n\n"
-            f"Supporting Evidence:\n- {evidence_names}\n\n"
-            f"Notice: Simulated demonstration data only."
-        )
-        recommendation = Recommendation(
-            status=RecommendationStatus.INFORMATIONAL,
-            summary="No active storm hazards in simulated dataset.",
-            decisive_factors=["Cyclone warning inactive", "Wind gusts under 25 knots"],
-            next_action="Monitor VHF marine forecasts regularly.",
-        )
-        confidence = Confidence(
-            level=ConfidenceLevel.MEDIUM,
-            reasons=["Simulated M1 coastal weather bulletin"],
-        )
+        tool_mode = state.get("tool_mode", "demo")
+        obs = state.get("observations", {})
+        cyclone = obs.get("cyclone_warning_active", False)
+        squall = obs.get("squall_alert", False)
+        severity = obs.get("severity", "NORMAL")
+        headline = obs.get("headline", "Coastal Weather Watch")
+
+        if tool_mode == "contract_mock":
+            if cyclone:
+                hazard_status = RecommendationStatus.NO_GO
+                summary = f"Active Cyclone Warning for {harbor}: {headline}."
+                action = "Do NOT venture out to sea. Return to port or remain securely moored."
+            elif squall:
+                hazard_status = RecommendationStatus.CAUTION
+                summary = f"Squall Alert active for {harbor}: {headline}."
+                action = "Exercise caution and stay within sheltered coastal waters."
+            else:
+                hazard_status = RecommendationStatus.INFORMATIONAL
+                summary = f"No active cyclone or severe hazard alerts for {harbor}."
+                action = "Standard coastal operations permitted. Monitor VHF broadcasts."
+
+            answer = (
+                f"[{hazard_status.value}] IMD Hazard Bulletin for {harbor}:\n"
+                f"- Cyclone Warning: {'ACTIVE (Severe Threat)' if cyclone else 'No active cyclone warning'}\n"
+                f"- Squall Alert: {'ACTIVE' if squall else 'None'}\n"
+                f"- Advisory Severity: {severity}\n"
+                f"- Headline: {headline}\n\n"
+                f"Actionable Directive: {action}\n\n"
+                f"Supporting Evidence:\n- {evidence_names}\n\n"
+                f"Notice: IMD hazard advisory bulletin data."
+            )
+            recommendation = Recommendation(
+                status=hazard_status,
+                summary=summary,
+                decisive_factors=[
+                    f"Cyclone warning: {'ACTIVE' if cyclone else 'INACTIVE'}",
+                    f"Squall alert: {'ACTIVE' if squall else 'INACTIVE'}",
+                    f"Bulletin severity: {severity}",
+                ],
+                next_action=action,
+            )
+            confidence = Confidence(
+                level=ConfidenceLevel.HIGH,
+                reasons=["Authoritative IMD hazard bulletin observation"],
+            )
+        else:
+            answer = (
+                f"[M1 DEMO DATA] Weather & Hazard bulletin for {harbor}:\n"
+                f"- Cyclone Warning: No active storm warnings in simulated bulletin\n"
+                f"- Squall Alert: None\n"
+                f"- Wind: 16 knots (gusts to 22 knots)\n\n"
+                f"Supporting Evidence:\n- {evidence_names}\n\n"
+                f"Notice: Simulated demonstration data only."
+            )
+            recommendation = Recommendation(
+                status=RecommendationStatus.INFORMATIONAL,
+                summary="No active storm hazards in simulated dataset.",
+                decisive_factors=["Cyclone warning inactive", "Wind gusts under 25 knots"],
+                next_action="Monitor VHF marine forecasts regularly.",
+            )
+            confidence = Confidence(
+                level=ConfidenceLevel.MEDIUM,
+                reasons=["Simulated M1 coastal weather bulletin"],
+            )
 
     elif intent_val == IntentCategory.ROUTE.value:
         answer = (
