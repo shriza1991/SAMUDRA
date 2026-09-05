@@ -192,10 +192,24 @@ class FakeLLMProvider(LLMProvider):
         schema_key = response_schema.__name__
         if schema_key in self.canned_responses:
             data = self.canned_responses[schema_key]
-            if isinstance(data, dict):
+            if callable(data):
+                res = data(messages)
+                if isinstance(res, dict):
+                    return response_schema.model_validate(res)
+                elif isinstance(res, response_schema):
+                    return res
+                return res
+            elif isinstance(data, dict):
                 return response_schema.model_validate(data)
             elif isinstance(data, response_schema):
                 return data
+
+        if schema_key == "LLMResponseDraft":
+            return response_schema.model_validate({
+                "synthesized_text": self.canned_text,
+                "key_factors_cited": [],
+                "language": "en",
+            })
 
         # Fallback: construct default model instance if fields allow defaults
         try:
@@ -203,6 +217,7 @@ class FakeLLMProvider(LLMProvider):
         except Exception:
             # If schema requires fields, return reasonable canned mock data
             return response_schema.model_construct()
+
 
 
 # Backward-compatible alias

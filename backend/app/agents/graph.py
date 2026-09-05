@@ -47,6 +47,9 @@ from backend.app.agents.llm import (
     get_llm_provider,
 )
 from backend.app.agents.localization import (
+    SUPPORTED_LANGUAGES,
+    canonicalize_extracted_entities,
+    detect_language,
     generate_localized_clarification,
     normalize_maritime_entities,
 )
@@ -287,7 +290,11 @@ def intent_locale_node(state: ORCAState) -> Dict[str, Any]:
     if llm_provider is not None:
         try:
             sanitized_input = PromptInjectionGuard.sanitize_user_input(raw_msg)
-            system_prompt = load_prompt("intent.md")
+            try:
+                system_prompt = load_prompt("multilingual_understanding.md")
+            except Exception:
+                system_prompt = load_prompt("intent.md")
+
             messages = [
                 LLMMessage(role=MessageRole.SYSTEM, content=system_prompt),
                 LLMMessage(role=MessageRole.USER, content=sanitized_input),
@@ -307,17 +314,31 @@ def intent_locale_node(state: ORCAState) -> Dict[str, Any]:
             else:
                 raise ValueError(f"Extracted intent '{extraction.intent}' is not an approved IntentCategory.")
 
-            # 2. Memory Context Integration & Selective Carry-Forward (M4)
+            # M9: Deterministic normalization & canonicalization of LLM output
             thread_ctx = memory_manager.load_context(thread_id)
             user_prof = state.get("user_profile") or {}
             if not thread_ctx.active_harbor and (user_prof.get("active_harbor") or user_prof.get("harbor")):
                 thread_ctx.active_harbor = user_prof.get("active_harbor") or user_prof.get("harbor")
 
+            # Canonicalize extracted entities via maritime glossary
+            canonical_entities = canonicalize_extracted_entities(
+                extraction.entities,
+                raw_message=raw_msg,
+                context_language=thread_ctx.preferred_language,
+            )
+            extraction.entities = canonical_entities
+
+            # Validate language code against supported set
+            detected_lang = extraction.detected_language
+            if not detected_lang or detected_lang not in SUPPORTED_LANGUAGES:
+                detected_lang = detect_language(raw_msg, context_language=thread_ctx.preferred_language)
+            extraction.detected_language = detected_lang
+
             updated_ctx, audit_summary = memory_manager.apply_memory_policy(
                 current_context=thread_ctx,
                 extracted_entities=extraction.entities,
                 current_intent=IntentCategory(validated_intent),
-                detected_language=extraction.detected_language,
+                detected_language=detected_lang,
                 raw_user_message=raw_msg,
             )
             memory_manager.save_context(updated_ctx)
@@ -1619,7 +1640,10 @@ def response_composer_node(state: ORCAState) -> Dict[str, Any]:
     llm_provider: Optional[LLMProvider] = state.get("llm_provider")
     if llm_provider is not None:
         try:
-            response_prompt = load_prompt("response.md")
+            try:
+                response_prompt = load_prompt("multilingual_response.md")
+            except Exception:
+                response_prompt = load_prompt("response.md")
             req_status = recommendation.status.value
             lang = state.get("language", "en")
             system_instruction = (
@@ -1666,7 +1690,11 @@ def response_composer_node(state: ORCAState) -> Dict[str, Any]:
                     status="blocked",
                 )
             else:
-                answer = draft.synthesized_text
+                synthesized = draft.synthesized_text.strip()
+                status_header = f"[{req_status}]"
+                if not synthesized.startswith(status_header):
+                    synthesized = f"{status_header} {synthesized}"
+                answer = synthesized
                 trace = _append_trace(
                     state.get("trace"),
                     node_name="Response Composer",

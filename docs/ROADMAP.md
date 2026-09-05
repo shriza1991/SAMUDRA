@@ -35,7 +35,7 @@ Day 12            : Feature Freeze, Offline Disaster Recovery & Judge Rehearsal
 - [ ] **Member 5**: Review output tone, safety warnings, and terminology accuracy.
 
 ### Phase 4: Multilingual Capabilities & Scenario Verification (Days 10–11)
-- [ ] **Dev 3**: Multilingual prompting for Hindi and Marathi; multi-turn context retention.
+- [x] **Dev 3**: Multilingual prompting for Hindi and Marathi; multi-turn context retention. *(M9 COMPLETE — 239/239 tests passing)*
 - [ ] **Dev 1 & 4**: Candidate route comparison visualization (Green vs. Amber vs. Red paths).
 - [ ] **Member 6**: Execute automated and manual test matrix across S1 through S8.
 - [ ] **All**: Code cleanup, elimination of console warnings, and responsive layout adjustments.

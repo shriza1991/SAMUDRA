@@ -14,7 +14,7 @@ from enum import Enum
 import re
 from typing import Dict, List, Optional, Set
 
-from backend.app.agents.intent import IntentCategory
+from backend.app.agents.intent import ExtractedEntities, IntentCategory
 
 
 class LanguageCode(str, Enum):
@@ -23,9 +23,15 @@ class LanguageCode(str, Enum):
     EN = "en"
     HI = "hi"
     MR = "mr"
+    TA = "ta"
 
 
-SUPPORTED_LANGUAGES: Set[str] = {LanguageCode.EN.value, LanguageCode.HI.value, LanguageCode.MR.value}
+SUPPORTED_LANGUAGES: Set[str] = {
+    LanguageCode.EN.value,
+    LanguageCode.HI.value,
+    LanguageCode.MR.value,
+    LanguageCode.TA.value,
+}
 DEFAULT_LANGUAGE: str = LanguageCode.EN.value
 
 
@@ -111,8 +117,11 @@ CRAFT_GLOSSARY: Dict[str, str] = {
     "boat": "motorized_boat",
     "मशीन बोट": "motorized_boat",
     "motorized": "motorized_boat",
-    "ट्रॉलर": "mechanized_trawler",
-    "trawler": "mechanized_trawler",
+    "motorized_boat": "motorized_boat",
+    "traditional_non_motorized": "traditional_non_motorized",
+    "mechanized_trawler": "mechanized_trawler",
+    "ट्रॉलर": "trawler",
+    "trawler": "trawler",
     "mechanized": "mechanized_trawler",
 }
 
@@ -440,3 +449,58 @@ def generate_localized_clarification(
     elif lang_lower == LanguageCode.HI.value:
         return "सुरक्षा मूल्यांकन के लिए, कृपया अपना प्रस्थान बंदरगाह बताएं।"
     return "To provide an accurate maritime assessment, please specify your departure harbor."
+
+
+def canonicalize_extracted_entities(
+    entities: ExtractedEntities,
+    raw_message: str = "",
+    context_language: Optional[str] = None,
+) -> ExtractedEntities:
+    """Canonicalizes extracted operational entities using deterministic maritime glossaries.
+
+    Guarantees:
+    - Normalizes multilingual harbor names (e.g. 'रत्नागिरी' -> 'Ratnagiri', 'ससून डॉक' -> 'Sassoon Dock').
+    - Normalizes vessel classes (e.g. 'नाव'/'hodi' -> 'motorized_boat' / 'traditional_non_motorized').
+    - Normalizes temporal markers (e.g. 'उद्या' -> 'tomorrow', 'कल' -> 'tomorrow').
+    - Fills in missing entities discovered by deterministic scan of raw_message if not extracted by LLM.
+    """
+    origin = entities.origin_harbor
+    dest = entities.target_destination
+    craft = entities.craft_type
+    dep_time = entities.departure_time
+
+    # Canonicalize existing fields through glossaries
+    if origin:
+        origin_clean = origin.strip().lower()
+        origin = HARBOR_GLOSSARY.get(origin_clean, HARBOR_GLOSSARY.get(origin.strip(), origin.strip()))
+    if dest:
+        dest_clean = dest.strip().lower()
+        dest = HARBOR_GLOSSARY.get(dest_clean, HARBOR_GLOSSARY.get(dest.strip(), dest.strip()))
+    if craft:
+        craft_clean = craft.strip().lower()
+        craft = CRAFT_GLOSSARY.get(craft_clean, craft)
+    if dep_time:
+        dep_clean = dep_time.strip().lower()
+        dep_time = TEMPORAL_GLOSSARY.get(dep_clean, dep_time)
+
+    # If raw_message provided, supplement any fields that were missed
+    if raw_message:
+        norm = normalize_maritime_entities(raw_message, context_language=context_language)
+        if not origin and norm.origin_harbor:
+            origin = norm.origin_harbor
+        if not dest and norm.destination:
+            dest = norm.destination
+        if not craft and norm.craft_type:
+            craft = norm.craft_type
+        if not dep_time and norm.departure_time:
+            dep_time = norm.departure_time
+
+    return ExtractedEntities(
+        origin_harbor=origin,
+        coordinates=entities.coordinates,
+        departure_time=dep_time,
+        duration_hours=entities.duration_hours,
+        craft_type=craft,
+        target_destination=dest,
+    )
+

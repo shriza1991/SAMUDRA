@@ -19,7 +19,7 @@
 | **M6** | Hazard & Geofence Flow | **COMPLETE** | Multi-domain hazard/geofence planning, boundary distance checks, hard-stop NO_GO and restricted CAUTION rules, multilingual explanations. 144/144 tests passing. |
 | **M7** | Route Reasoning Flow | **COMPLETE** | Route comparison pipeline, candidate preservation, Dev 4 recommended route highlighting, invariant risk headers, localized comparisons. 189/189 tests passing. |
 | **M8** | Intent Switching Across Turns | **COMPLETE** | Dynamic intent hopping (SAFETY ↔ HAZARDS ↔ ROUTE ↔ PFZ), selective context carry-forward, fresh tool dispatch per turn, thread isolation. 204/204 tests passing. |
-| **M9** | Multilingual / Local-Language Pipeline | **COMPLETE** | Script and token-based language detection (en, mr, hi), bounded coastal/Konkan normalization glossary, same-language grounded responses, multi-turn language switching, strict safety status invariance. 223/223 tests passing. |
+| **M9** | Multilingual / Local-Language Pipeline | **COMPLETE** | Script and token-based language detection (en, mr, hi), bounded coastal/Konkan normalization glossary, LLM-assisted multilingual NLU + response generation, multi-turn language switching, strict safety status invariance. 239/239 tests passing. |
 
 ---
 
@@ -366,3 +366,65 @@
     * Zero regressions in M0–M6 test suites.
   - **Documentation**:
     * `docs/M7_ROUTE_REASONING.md`: Full architectural guide covering capability plan, dependency contracts, candidate comparison, response templates, safety invariants, and test matrix.
+
+---
+
+### M8 — Intent Switching Across Multi-Turn Conversations (COMPLETE)
+- **Delivered**:
+  - **M8.1 — Dynamic Intent Transition Detection**:
+    * `intent_locale_node` evaluates `current_intent` from prior turn (via `ThreadContext.last_intent`) and the incoming message together, enabling clean SAFETY → HAZARDS → ROUTE → PFZ hops without ambiguity.
+    * Intent resolution follows strict priority: explicit current-turn signals override carry-forward.
+  - **M8.2 — Selective Context Carry-Forward on Intent Switch**:
+    * On intent change, `MemoryManager` carries forward operationally stable fields: `active_harbor`, `destination`, `active_craft_profile`, `time_window`.
+    * Volatile turn-specific fields (`tool_results`, `evidence_items`, `observations`, `risk_status`) are cleared so stale data never bleeds across intents.
+  - **M8.3 — Fresh Tool Dispatch Per Intent**:
+    * Supervisor generates a fresh capability plan matching the new intent's requirements each turn.
+    * Dependency DAG is re-evaluated; no cached tool results from prior intents are reused.
+  - **M8.4 — Thread Isolation**:
+    * Each `thread_id` maintains independent `ThreadContext`; concurrent sessions never share state.
+    * `ConversationStore` (InMemory / PostgreSQL / Redis) guarantees per-thread isolation.
+  - **M8.5 — Clarification on Missing Context After Switch**:
+    * If required parameters (e.g., origin for a ROUTE query) are absent after an intent hop and not inferable from carry-forward context, `clarification_node` responds immediately without tool dispatch.
+  - **Comprehensive Test Suite**:
+    * `tests/agent_eval/test_m8_intent_switching.py` (15 test cases covering SAFETY↔HAZARDS, HAZARDS↔ROUTE, ROUTE↔PFZ, and multi-hop chains).
+    * Total repository test count: **204/204 passing** in 2.41s.
+    * Zero regressions in M0–M7 test suites.
+  - **Documentation**:
+    * M8 behaviour is documented under the intent-switching section of `docs/M4_MEMORY_ARCHITECTURE.md` and `docs/AGENT_WORKFLOW.md`.
+
+---
+
+### M9 — Multilingual / Local-Language Pipeline (COMPLETE)
+- **Delivered**:
+  - **M9.1 — Deterministic Language Detection** (`backend/app/agents/localization.py`):
+    * Devanagari Unicode block scoring (`\u0900–\u097F`) with per-language distinctive token lexicons (Marathi: `आहे`, `मासेमारी`, `होडी`, `लाटा`; Hindi: `क्या`, `है`, `मछली`, `तूफान`).
+    * Romanized transliteration parser for common coastal Hinglish/Marathish tokens (`masemari`, `hodi`, `udya`, `toofan`, `sakali`).
+    * Contextual carry-forward: short continuation queries inherit `preferred_language` from `ThreadContext` avoiding incorrect language flips.
+    * Safe fallback: unrecognized scripts default to `en` without pipeline degradation.
+  - **M9.2 — Bounded Maritime Glossary Normalization**:
+    * `HARBOR_GLOSSARY`: Marathi/Hindi harbor name variants → canonical English strings (`रत्नागिरी` → `Ratnagiri`, `मुंबई` → `Mumbai`).
+    * `CRAFT_GLOSSARY`: Vessel-type variants → canonical tokens (`होडी` → `motorized_boat`, `nao` → `traditional_vessel`).
+    * `TEMPORAL_GLOSSARY`: Temporal markers → canonical values (`उद्या` / `kal` → `tomorrow`, `sakali` → `morning`).
+    * Explicitly rejects open-ended dialect hallucination; only defined glossary terms are normalized.
+  - **M9.3 — LLM-Assisted Multilingual Structured Understanding**:
+    * `intent_locale_node` optionally invokes `LLMProvider` with `multilingual_understanding.md` prompt to extract `IntentExtractionResult` JSON from Marathi/Hindi queries.
+    * `canonicalize_extracted_entities()` passes LLM-extracted harbor/craft/temporal values through deterministic glossaries before downstream DAG.
+    * Graceful fallback: malformed or timed-out LLM responses trigger immediate deterministic regex/glossary extraction without pipeline interruption.
+  - **M9.4 — LLM Multilingual Response Generation**:
+    * `response_composer_node` passes authoritative risk status, decisive factors, and verified evidence to `LLMProvider` with `multilingual_response.md` prompt.
+    * LLM synthesizes natural, empathetic advisories in the mariner's detected language (`en`, `hi`, `mr`).
+    * `ResponseComposer.validate_safety_invariance()` and `PromptInjectionGuard.audit_response_for_tampering()` audit every LLM draft — multilingual unauthorized safe assertions (`जाणे सुरक्षित आहे`, `जाना सुरक्षित है`) are detected and blocked.
+    * Canonical `[STATUS]` invariant header is always prepended regardless of LLM output.
+  - **M9.5 — Multi-Turn Language Switching & Persistence**:
+    * `preferred_language` maintained in `ThreadContext`; updated each turn on language detection.
+    * Switching language never clears operational attributes (`active_harbor`, `destination`, `active_craft_profile`, `time_window`).
+    * Clarification responses are issued in the mariner's currently detected language.
+  - **M9.6 — 100% Offline FakeLLMProvider Support**:
+    * `FakeLLMProvider` extended with `callable` canned response support and `LLMResponseDraft` fallbacks.
+    * All 35 multilingual test cases execute fully offline without external API keys.
+  - **Comprehensive Test Suite** (`tests/agent_eval/test_m9_multilingual.py`):
+    * 35 test cases covering language detection, glossary normalization, E2E multilingual flows (EN/HI/MR), multi-turn switching, clarification in detected language, safety/status invariance, LLM NLU extraction, LLM response generation, tampering rejection, and offline FakeLLMProvider validation.
+    * Total repository test count: **239/239 passing** in 2.37s.
+    * Linting: **0 ruff errors**.
+  - **Documentation**:
+    * `docs/M9_MULTILINGUAL_PIPELINE.md`: Full architecture guide covering all 6 pillars, pipeline diagram, language detection algorithm, glossary design, LLM NLU/response nodes, multi-turn persistence, dialect strategy/limitations, and complete 35-test verification matrix.

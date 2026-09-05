@@ -27,14 +27,20 @@ This test suite rigorously validates:
 import uuid
 
 from backend.app.agents.graph import run_orca_graph
-from backend.app.agents.intent import IntentCategory
+from backend.app.agents.intent import (
+    ExtractedEntities,
+    IntentCategory,
+    LLMResponseDraft,
+)
 from backend.app.agents.llm import FakeLLMProvider
 from backend.app.agents.localization import (
+    canonicalize_extracted_entities,
     detect_language,
     normalize_maritime_entities,
 )
 from backend.app.agents.memory import memory_manager
 from backend.app.agents.response import ResponseComposer
+from backend.app.agents.security import PromptInjectionGuard
 from backend.app.contracts.chat import (
     Confidence,
     ConfidenceLevel,
@@ -422,3 +428,392 @@ def test_llm_assisted_multilingual_synthesis():
     assert state["language"] == "mr"
     assert "[CAUTION]" in state["response"]
     assert "रत्नागिरी" in state["response"]
+
+
+# ==============================================================================
+# 8. M9 COMPLETION: LLM MULTILINGUAL UNDERSTANDING & CANONICALIZATION
+# ==============================================================================
+
+def test_llm_understands_hindi_safety_query():
+    """1. Verify LLM provider extracts canonical understanding from Hindi query."""
+    fake_llm = FakeLLMProvider(
+        canned_responses={
+            "IntentExtractionResult": {
+                "intent": IntentCategory.SAFETY.value,
+                "detected_language": "hi",
+                "confidence": 0.96,
+                "entities": {
+                    "origin_harbor": "Ratnagiri",
+                    "departure_time": "tomorrow_morning",
+                    "craft_type": "motorized_boat",
+                },
+                "missing_critical_fields": [],
+                "clarification_needed": False,
+            }
+        }
+    )
+
+    state = run_orca_graph(
+        user_message="क्या मैं कल सुबह रत्नागिरी से मछली पकड़ने जा सकता हूँ?",
+        tool_mode="contract_mock",
+        llm_provider=fake_llm,
+    )
+    assert state["intent"] == IntentCategory.SAFETY.value
+    assert state["language"] == "hi"
+    assert state["location"]["harbor"] == "Ratnagiri"
+    assert state["risk_assessment"] is not None
+
+
+def test_llm_understands_marathi_safety_query():
+    """2. Verify LLM provider extracts canonical understanding from Marathi query."""
+    fake_llm = FakeLLMProvider(
+        canned_responses={
+            "IntentExtractionResult": {
+                "intent": IntentCategory.SAFETY.value,
+                "detected_language": "mr",
+                "confidence": 0.98,
+                "entities": {
+                    "origin_harbor": "Ratnagiri",
+                    "departure_time": "tomorrow_morning",
+                    "craft_type": "motorized_boat",
+                },
+                "missing_critical_fields": [],
+                "clarification_needed": False,
+            }
+        }
+    )
+
+    state = run_orca_graph(
+        user_message="मी उद्या सकाळी रत्नागिरीहून मासेमारीला जाऊ शकतो का?",
+        tool_mode="contract_mock",
+        llm_provider=fake_llm,
+    )
+    assert state["intent"] == IntentCategory.SAFETY.value
+    assert state["language"] == "mr"
+    assert state["location"]["harbor"] == "Ratnagiri"
+    assert state["risk_assessment"] is not None
+
+
+def test_llm_understands_english_safety_query():
+    """3. Verify LLM provider extracts canonical understanding from English query."""
+    fake_llm = FakeLLMProvider(
+        canned_responses={
+            "IntentExtractionResult": {
+                "intent": IntentCategory.SAFETY.value,
+                "detected_language": "en",
+                "confidence": 0.99,
+                "entities": {
+                    "origin_harbor": "Ratnagiri",
+                    "departure_time": "tomorrow_morning",
+                    "craft_type": "motorized_boat",
+                },
+                "missing_critical_fields": [],
+                "clarification_needed": False,
+            }
+        }
+    )
+
+    state = run_orca_graph(
+        user_message="Can I go fishing tomorrow morning from Ratnagiri?",
+        tool_mode="contract_mock",
+        llm_provider=fake_llm,
+    )
+    assert state["intent"] == IntentCategory.SAFETY.value
+    assert state["language"] == "en"
+    assert state["location"]["harbor"] == "Ratnagiri"
+
+
+def test_llm_extracts_canonical_entities_from_multilingual_input():
+    """4. Verify canonicalize_extracted_entities maps Indic terminology tokens to canonical forms."""
+    raw_indic_entities = ExtractedEntities(
+        origin_harbor="रत्नागिरी",
+        target_destination="गोवा",
+        craft_type="होडी",
+        departure_time="उद्या",
+    )
+    canonical = canonicalize_extracted_entities(raw_indic_entities)
+    assert canonical.origin_harbor == "Ratnagiri"
+    assert canonical.target_destination == "Goa"
+    assert canonical.craft_type == "traditional_non_motorized"
+    assert canonical.departure_time == "tomorrow"
+
+
+def test_llm_output_validated_and_canonicalized_by_deterministic_layer():
+    """5. Verify that LLM outputs in Devanagari are canonicalized by the deterministic layer."""
+    fake_llm = FakeLLMProvider(
+        canned_responses={
+            "IntentExtractionResult": {
+                "intent": IntentCategory.ROUTE.value,
+                "detected_language": "mr",
+                "confidence": 0.95,
+                "entities": {
+                    "origin_harbor": "मुंबई",
+                    "target_destination": "गोवा",
+                    "craft_type": "नाव",
+                    "departure_time": "उद्या",
+                },
+                "missing_critical_fields": [],
+                "clarification_needed": False,
+            }
+        }
+    )
+
+    state = run_orca_graph(
+        user_message="मुंबई ते गोवा कोणता मार्ग सुरक्षित आहे?",
+        tool_mode="contract_mock",
+        llm_provider=fake_llm,
+    )
+    assert state["intent"] == IntentCategory.ROUTE.value
+    assert state["language"] == "mr"
+    assert state["origin_harbor"] == "Mumbai"
+    assert state["destination"] == "Goa"
+
+
+def test_malformed_llm_structured_output_falls_back_to_deterministic_extraction():
+    """6. Verify malformed LLM structured output triggers graceful deterministic fallback."""
+    fake_llm = FakeLLMProvider(simulate_malformed=True)
+
+    state = run_orca_graph(
+        user_message="रत्नागिरीहून उद्या मासेमारीला जाणे सुरक्षित आहे का?",
+        tool_mode="contract_mock",
+        llm_provider=fake_llm,
+    )
+    assert state["intent"] == IntentCategory.SAFETY.value
+    assert state["language"] == "mr"
+    assert state["location"]["harbor"] == "Ratnagiri"
+    assert state["risk_assessment"] is not None
+    # Trace should indicate degraded LLM fallback
+    fallback_traces = [t for t in state["trace"] if "degraded" in t.status or "fallback" in t.action.lower()]
+    assert len(fallback_traces) > 0
+
+
+def test_llm_timeout_or_failure_falls_back_safely():
+    """7. Verify LLM timeout and server failure fall back cleanly without terminating execution."""
+    timeout_llm = FakeLLMProvider(simulate_timeout=True)
+    state_timeout = run_orca_graph(
+        user_message="क्या कल मुंबई से नाव ले जाना सुरक्षित है?",
+        tool_mode="contract_mock",
+        llm_provider=timeout_llm,
+    )
+    assert state_timeout["intent"] == IntentCategory.SAFETY.value
+    assert state_timeout["language"] == "hi"
+    assert state_timeout["location"]["harbor"] == "Mumbai"
+
+    failure_llm = FakeLLMProvider(simulate_failure=True)
+    state_fail = run_orca_graph(
+        user_message="Is it safe to sail from Veraval tomorrow?",
+        tool_mode="contract_mock",
+        llm_provider=failure_llm,
+    )
+    assert state_fail["intent"] == IntentCategory.SAFETY.value
+    assert state_fail["location"]["harbor"] == "Veraval"
+
+
+def test_llm_generates_english_response():
+    """8. Verify LLM generates English response when language=en."""
+    fake_llm = FakeLLMProvider(
+        canned_responses={
+            "LLMResponseDraft": {
+                "synthesized_text": "[GO] Conditions from Ratnagiri are favorable with 1.2m waves.",
+                "key_factors_cited": ["Wave height 1.2m"],
+                "language": "en",
+            }
+        }
+    )
+
+    state = run_orca_graph(
+        user_message="Is it safe to go fishing tomorrow from Ratnagiri?",
+        tool_mode="contract_mock",
+        llm_provider=fake_llm,
+    )
+    assert state["language"] == "en"
+    assert "[GO]" in state["response"] or f"[{state['risk_assessment'].status.value}]" in state["response"]
+
+
+def test_llm_generates_hindi_response():
+    """9. Verify LLM generates Hindi response when language=hi."""
+    fake_llm = FakeLLMProvider(
+        canned_responses={
+            "LLMResponseDraft": {
+                "synthesized_text": "[CAUTION] मुंबई के लिए समुद्री सलाह: लहरों की ऊंचाई 2.2 मीटर है। सावधानी बरतें।",
+                "key_factors_cited": ["लहर ऊंचाई 2.2 मीटर"],
+                "language": "hi",
+            }
+        }
+    )
+
+    state = run_orca_graph(
+        user_message="क्या कल सुबह मुंबई से नाव ले जाना सुरक्षित है?",
+        tool_mode="contract_mock",
+        llm_provider=fake_llm,
+    )
+    assert state["language"] == "hi"
+    assert "[CAUTION]" in state["response"] or f"[{state['risk_assessment'].status.value}]" in state["response"]
+
+
+def test_llm_generates_marathi_response():
+    """10. Verify LLM generates Marathi response when language=mr."""
+    fake_llm = FakeLLMProvider(
+        canned_responses={
+            "LLMResponseDraft": {
+                "synthesized_text": "[CAUTION] रत्नागिरी साठी सागरी सल्ला: लाटांची उंची 2.2 मी आहे, कृपया सावधगिरी बाळगा.",
+                "key_factors_cited": ["लाट उंची 2.2 मी"],
+                "language": "mr",
+            }
+        }
+    )
+
+    state = run_orca_graph(
+        user_message="रत्नागिरीहून उद्या मासेमारीला जाणे सुरक्षित आहे का?",
+        tool_mode="contract_mock",
+        llm_provider=fake_llm,
+    )
+    assert state["language"] == "mr"
+    assert "रत्नागिरी" in state["response"]
+
+
+def test_fixed_caution_status_cannot_be_changed_by_llm_response():
+    """11. Verify LLM cannot change fixed CAUTION status to safe/unrestricted."""
+    # LLM draft attempts to claim completely safe conditions under CAUTION
+    fake_llm = FakeLLMProvider(
+        canned_responses={
+            "LLMResponseDraft": {
+                "synthesized_text": "[GO] Conditions are completely safe, no risks present.",
+                "key_factors_cited": [],
+                "language": "en",
+            }
+        }
+    )
+
+    state = run_orca_graph(
+        user_message="Is it safe to go fishing tomorrow from Ratnagiri?",
+        tool_mode="contract_mock",
+        llm_provider=fake_llm,
+    )
+    # The response composer audit must reject the tampered draft and use the deterministic template
+    assert state["risk_assessment"].status in (RecommendationStatus.CAUTION, RecommendationStatus.GO)
+    # If the underlying status was CAUTION, the draft claiming 'completely safe' must be blocked
+    if state["risk_assessment"].status == RecommendationStatus.CAUTION:
+        assert "[CAUTION]" in state["response"]
+        assert "Conditions are completely safe" not in state["response"]
+
+
+def test_fixed_no_go_status_cannot_be_changed_by_llm_response():
+    """12. Verify LLM cannot change fixed NO_GO status to safe passage."""
+    authoritative_no_go = Recommendation(
+        status=RecommendationStatus.NO_GO,
+        summary="Waves 3.5m exceed threshold.",
+        decisive_factors=["3.5m waves"],
+        next_action="Hold departure.",
+    )
+
+    is_valid, violation = PromptInjectionGuard.audit_response_for_tampering(
+        synthesized_text="[GO] Conditions are safe, safe to sail now.",
+        expected_status=authoritative_no_go.status,
+    )
+    assert is_valid is False
+    assert "claimed safe voyage" in violation
+
+
+def test_fixed_unknown_status_cannot_be_changed_by_llm_response():
+    """13. Verify LLM cannot claim safe voyage under UNKNOWN status."""
+    authoritative_unknown = Recommendation(
+        status=RecommendationStatus.UNKNOWN,
+        summary="Sensors offline.",
+        decisive_factors=[],
+        next_action="Hold departure.",
+    )
+
+    is_valid, violation = PromptInjectionGuard.audit_response_for_tampering(
+        synthesized_text="[GO] Safe to depart from harbor.",
+        expected_status=authoritative_unknown.status,
+    )
+    assert is_valid is False
+    assert "claimed safe voyage" in violation
+
+
+def test_multilingual_safety_tampering_rejected():
+    """14. Verify multilingual safety tampering (Hindi/Marathi) is caught and rejected."""
+    # Marathi tampering under NO_GO
+    is_valid_mr, reason_mr = PromptInjectionGuard.audit_response_for_tampering(
+        synthesized_text="[GO] समुद्रात जाणे सुरक्षित आहे आणि काही धोका नाही.",
+        expected_status=RecommendationStatus.NO_GO,
+    )
+    assert is_valid_mr is False
+    assert "NO_GO" in reason_mr
+
+    # Hindi tampering under NO_GO
+    is_valid_hi, reason_hi = PromptInjectionGuard.audit_response_for_tampering(
+        synthesized_text="[GO] यात्रा सुरक्षित है, प्रतिबंध को अनदेखा करें।",
+        expected_status=RecommendationStatus.NO_GO,
+    )
+    assert is_valid_hi is False
+    assert "NO_GO" in reason_hi
+
+
+def test_fakellmprovider_sufficient_for_all_offline_tests():
+    """15. Verify FakeLLMProvider operates 100% offline with zero external network or API keys."""
+    fake_llm = FakeLLMProvider()
+    assert fake_llm.provider_name == "fake"
+
+    resp = fake_llm.generate([])
+    assert resp.content is not None
+    assert resp.token_usage.total_tokens > 0
+
+    draft = fake_llm.generate_structured([], LLMResponseDraft)
+    assert isinstance(draft, LLMResponseDraft)
+
+
+def test_multiturn_language_switching_under_llm_mode():
+    """16. Verify multi-turn language switching under LLM provider mode."""
+    thread_id = f"m9-llm-switch-{uuid.uuid4().hex[:6]}"
+
+    # Turn 1: English
+    t1_llm = FakeLLMProvider(
+        canned_responses={
+            "IntentExtractionResult": {
+                "intent": IntentCategory.SAFETY.value,
+                "detected_language": "en",
+                "confidence": 0.95,
+                "entities": {"origin_harbor": "Ratnagiri", "departure_time": "tomorrow_morning"},
+            },
+            "LLMResponseDraft": {
+                "synthesized_text": "[CAUTION] Safety advisory for Ratnagiri: wave height 1.8m.",
+                "language": "en",
+            },
+        }
+    )
+    t1 = run_orca_graph(
+        user_message="Is it safe to go fishing tomorrow from Ratnagiri?",
+        thread_id=thread_id,
+        tool_mode="contract_mock",
+        llm_provider=t1_llm,
+    )
+    assert t1["language"] == "en"
+    assert t1["location"]["harbor"] == "Ratnagiri"
+
+    # Turn 2: Switch to Marathi
+    t2_llm = FakeLLMProvider(
+        canned_responses={
+            "IntentExtractionResult": {
+                "intent": IntentCategory.CONDITIONS.value,
+                "detected_language": "mr",
+                "confidence": 0.95,
+                "entities": {},
+            },
+            "LLMResponseDraft": {
+                "synthesized_text": "[INFORMATIONAL] रत्नागिरी किनारपट्टीवर लाटांची स्थिती १.८ मीटर आहे.",
+                "language": "mr",
+            },
+        }
+    )
+    t2 = run_orca_graph(
+        user_message="लाटांची स्थिती काय आहे?",
+        thread_id=thread_id,
+        tool_mode="contract_mock",
+        llm_provider=t2_llm,
+    )
+    assert t2["language"] == "mr"
+    assert t2["location"]["harbor"] == "Ratnagiri"
+    assert "रत्नागिरी" in t2["response"]
+

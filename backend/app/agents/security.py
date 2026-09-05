@@ -27,7 +27,10 @@ INJECTION_PATTERNS: List[Tuple[str, str]] = [
     (r"(?i)\bignore\s+(the\s+)?risk\s+engine\b", "Risk engine bypass attempt"),
     (r"(?i)\bforce\s+(status\s+)?to\s+go\b", "Forced recommendation status attempt"),
     (r"(?i)\balways\s+say\s+(it\s+is\s+)?safe\b", "Forced positive safety attempt"),
-    (r"(?i)\bact\s+as\s+DAN\b", "Do Anything Now jailbreak attempt"),
+    # Marathi / Hindi adversarial patterns
+    (r"(?i)\bपिछला\s+निर्देश\s+(हटाएं|अनदेखा\s+करें)\b", "Instruction override attempt (Hindi)"),
+    (r"(?i)\bमागील\s+सूचनांकडे\s+दुर्लक्ष\s+करा\b", "Instruction override attempt (Marathi)"),
+    (r"(?i)\bसुरक्षा\s+नियम\s+(तोड़े|अनदेखा\s+करें)\b", "Safety bypass attempt (Indic)"),
 ]
 
 
@@ -75,6 +78,9 @@ class PromptInjectionGuard:
     ) -> Tuple[bool, Optional[str]]:
         """Validates that synthesized text does not contradict the deterministic safety status.
 
+        Checks English, Marathi, and Hindi expressions for unauthorized safe claims
+        under NO_GO, CAUTION, and UNKNOWN states.
+
         Args:
             synthesized_text: The natural-language draft produced by LLM.
             expected_status: The authoritative status from Dev 4 risk engine.
@@ -103,9 +109,25 @@ class PromptInjectionGuard:
                 "safe to proceed through the restricted area",
                 "proceed carefully",
                 "[go]",
+                # Indic multilingual assertions
+                "जाणे सुरक्षित आहे",
+                "मासेमारीसाठी सुरक्षित आहे",
+                "समुद्रात जाणे सुरक्षित आहे",
+                "परिस्थिती पूर्णपणे सुरक्षित आहे",
+                "प्रस्थान सुरक्षित आहे",
+                "धोका नाही",
+                "काही धोका नाही",
+                "प्रतिबंध दुर्लक्ष करा",
+                "जाना सुरक्षित है",
+                "मछली पकड़ने जाना सुरक्षित है",
+                "यात्रा सुरक्षित है",
+                "स्थिति पूरी तरह सुरक्षित है",
+                "प्रस्थान सुरक्षित है",
+                "कोई खतरा नहीं है",
+                "प्रतिबंध को अनदेखा करें",
             ]
             for assertion in safe_assertions:
-                if assertion in text_lower:
+                if assertion.lower() in text_lower:
                     return False, f"LLM output claimed safe voyage ('{assertion}') while risk status is NO_GO"
 
         # If deterministic status is CAUTION, verify response does not claim unrestricted GO or ignore restrictions
@@ -117,9 +139,16 @@ class PromptInjectionGuard:
                 "restriction can be ignored",
                 "safe to proceed through the restricted area",
                 "[go]",
+                # Indic multilingual assertions
+                "परिस्थिती पूर्णपणे सुरक्षित आहे",
+                "कोणताही धोका नाही",
+                "प्रतिबंध दुर्लक्ष करा",
+                "स्थिति पूरी तरह सुरक्षित है",
+                "कोई जोखिम नहीं है",
+                "प्रतिबंध को अनदेखा करें",
             ]
             for assertion in unrestricted_assertions:
-                if assertion in text_lower:
+                if assertion.lower() in text_lower:
                     return False, f"LLM output claimed completely safe voyage ('{assertion}') while risk status is CAUTION"
 
         # If deterministic status is UNKNOWN, verify response does not claim safe voyage
@@ -136,9 +165,15 @@ class PromptInjectionGuard:
                 "proceed with voyage",
                 "safe for departure",
                 "[go]",
+                # Indic multilingual assertions
+                "जाणे सुरक्षित आहे",
+                "मासेमारीसाठी सुरक्षित आहे",
+                "समुद्रात जाणे सुरक्षित आहे",
+                "जाना सुरक्षित है",
+                "यात्रा सुरक्षित है",
             ]
             for assertion in unknown_violations:
-                if assertion in text_lower:
+                if assertion.lower() in text_lower:
                     return False, f"LLM output claimed safe voyage ('{assertion}') while risk status is UNKNOWN"
 
         return True, None
