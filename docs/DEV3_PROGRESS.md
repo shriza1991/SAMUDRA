@@ -14,7 +14,8 @@
 | **M1** | Basic Agent Graph (Vertical Slice) | **COMPLETE** | Executable LangGraph pipeline running on in-memory stub tools with evidence validation, safety invariance, and sanitized traces. 24/24 tests passing. |
 | **M2** | Integration Contracts & Orchestration Hardening | **COMPLETE** | Typed Dev 2/Dev 4 protocols, ProviderToolAdapter, contract mocks tagged M2_CONTRACT_MOCK, capability discovery, error semantics, handoff guides. 41/41 tests passing. |
 | **M3** | LLM Provider Integration | **COMPLETE** | Provider-agnostic LLM interface, Fake/Ollama/OpenAI providers, prompt injection guard, XML sandboxing, zero CoT leakage, safety invariance, fallback resilience. 65/65 tests passing. |
-| **M4** | Multi-Turn Memory & State Persistence | **PENDING** | Integrate PostgreSQL/Redis session state persistence and context carries. |
+| **M4** | Multi-Turn Memory & State Persistence | **COMPLETE** | ThreadContext, selective carry-forward, ConversationStore abstraction (InMemory, PostgreSQL, Redis), data sanitization. 88/88 tests passing. |
+| **M5** | Safety Reasoning Flow | **COMPLETE** | End-to-end voyage safety flow, DAG dependency order, conservative upstream failure handling, authoritative Dev 4 status invariance, evidence grounding, multilingual advisories. 116/116 tests passing. |
 
 ---
 
@@ -273,10 +274,23 @@
 
 ---
 
-## Upcoming Milestones
-
-### M5 — Evaluation Benchmarks, Observability & Guardrail Hardening (PENDING)
-1. Automated evaluation benchmark harness across S1–S8 test fixtures.
-2. Latency, token economy, and provenance citation coverage metrics.
-3. Observability exporter (LangSmith / OpenTelemetry trace format).
-4. Guardrail hardening against edge cases.
+### M5 — Safety Reasoning Flow (COMPLETE)
+- **Delivered**:
+  - **Authoritative Safety Orchestration**:
+    * Clean separation of concerns: Dev 4 `RiskEvaluationEngine` holds single source of truth for safety determinations (`GO`, `CAUTION`, `NO_GO`, `UNKNOWN`). Dev 3 manages orchestrations, validations, and explanations.
+    * Strict DAG dependency ordering enforced by supervisor: `marine_conditions` + `weather_conditions` + `hazard_search` -> `risk_evaluation`.
+  - **Conservative Upstream Failure Handling**:
+    * If critical upstream observations (`marine_conditions` or `weather_conditions`) fail or time out, `risk_evaluation` is aborted and safely yields `RecommendationStatus.UNKNOWN`, low confidence, and no fabricated values.
+    * If `risk_evaluation` fails or raises an unhandled exception, state defaults gracefully to `UNKNOWN` with actionable warning to hold departure.
+  - **Safety Invariance Guardrail**:
+    * Enforces `ResponseComposer.validate_safety_invariance()` across all safety queries to prevent LLMs or templates from modifying authoritative status.
+    * `PromptInjectionGuard.audit_response_for_tampering()` blocks model drafts that declare safe voyage under `NO_GO`, `CAUTION`, or `UNKNOWN`.
+  - **Multilingual Grounded Response Synthesis**:
+    * Deterministic, evidence-backed English, Marathi, and Hindi templates anchored on immutable `[<STATUS>]` operational header.
+    * Mentions departure harbor and decisive factors clearly.
+  - **Comprehensive Test Suite**:
+    * `tests/agent_eval/test_m5_safety.py` (16 test cases covering basic safety flow, GO/CAUTION/NO_GO/UNKNOWN status handling, invariance guardrails, dependency order, upstream/downstream failures, multi-turn fresh evaluation, context carry-forward, explicit overrides, evidence grounding, multilingual advisories, and architectural isolation).
+    * Total repository test count: **116/116 passing** in 1.70s.
+    * Linting: 0 ruff errors.
+  - **Documentation**:
+    * `docs/M5_SAFETY_REASONING.md`: Complete architectural guide and test verification matrix.

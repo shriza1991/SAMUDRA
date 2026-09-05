@@ -110,21 +110,27 @@ class AgentToolRegistry:
         self,
         definition: ToolDefinition,
         handler: Callable[..., ToolResult],
+        override: bool = False,
     ) -> None:
         """Registers a specialist tool with its definition and executable handler.
 
         Raises:
-            ValueError: If tool is already registered or schema definition is malformed.
+            ValueError: If tool is already registered (and override=False) or schema definition is malformed.
         """
         if not definition.name or not definition.name.strip():
             raise ValueError("Tool definition must have a valid non-empty name.")
-        if definition.name in self._registry:
+        if definition.name in self._registry and not override:
             raise ValueError(f"Tool '{definition.name}' is already registered.")
         if not isinstance(definition.owner, ToolOwner):
             raise ValueError(f"Tool '{definition.name}' must have a valid ToolOwner (dev2, dev3, dev4).")
 
         self._registry[definition.name] = definition
         self._handlers[definition.name] = handler
+
+    def unregister_tool(self, tool_name: str) -> None:
+        """Removes a specialist tool from the registry if present."""
+        self._registry.pop(tool_name, None)
+        self._handlers.pop(tool_name, None)
 
     def get_tool(self, tool_name: str) -> Optional[ToolDefinition]:
         """Retrieves the tool definition if registered, else None."""

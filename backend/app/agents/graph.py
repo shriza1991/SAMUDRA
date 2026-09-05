@@ -52,7 +52,7 @@ from backend.app.agents.response import ResponseComposer, ResponseCompositionInp
 from backend.app.agents.security import PromptInjectionGuard
 from backend.app.agents.state import ORCAState
 from backend.app.agents.stub_tools import register_m1_stub_tools
-from backend.app.agents.tools import tool_registry
+from backend.app.agents.tools import ToolStatus, tool_registry
 from backend.app.contracts.chat import (
     AgentTraceItem,
     Confidence,
@@ -416,13 +416,17 @@ def intent_locale_node(state: ORCAState) -> Dict[str, Any]:
     # 3. Deterministic Fallback Classifier
     msg_lower = raw_msg.lower()
     lang = state.get("language") or "en"
-    marathi_keywords = ["उद्या", "सुरक्षित", "लाटा", "मासेमारी", "बंदर", "होडी", "सावध", "आहे का", "कुठे"]
-    hindi_keywords = ["क्या", "तूफान", "हवा", "नाव", "मछली", "सकते", "चेतावनी", "सुरक्षा", "कहाँ", "कहा"]
+    marathi_distinctive = ["उद्या", "लाटा", "मासेमारी", "होडी", "सावध", "आहे का", "कुठे", "सकाळी", "वाजता", "जाणे", "आहे", "आहेत", "नाही", "वारा", "सांग", "कशी"]
+    hindi_distinctive = ["क्या", "तूफान", "हवा", "नाव", "मछली", "सकते", "चेतावनी", "सुरक्षा", "कहाँ", "कहा", "कल", "सुबह", "पकड़ने", "जाना", "है"]
 
-    if any(kw in raw_msg for kw in marathi_keywords):
+    mr_count = sum(1 for kw in marathi_distinctive if kw in raw_msg)
+    hi_count = sum(1 for kw in hindi_distinctive if kw in raw_msg)
+    if mr_count > hi_count:
         lang = "mr"
-    elif any(kw in raw_msg for kw in hindi_keywords):
+    elif hi_count > mr_count:
         lang = "hi"
+    elif mr_count > 0:
+        lang = "mr"
 
     indic_harbors = {
         "रत्नागिरी": "Ratnagiri",
@@ -469,19 +473,22 @@ def intent_locale_node(state: ORCAState) -> Dict[str, Any]:
         intent = IntentCategory.PFZ
     elif any(k in msg_lower for k in ["route", "passage", "channel", "waypoint", "रास्ता", "मार्ग"]):
         intent = IntentCategory.ROUTE
-    elif any(k in msg_lower for k in ["why", "explain", "risky", "reason", "कारण", "क्यों"]) or (" का?" in msg_lower or msg_lower.endswith(" का")):
+    elif any(k in msg_lower for k in ["safe", "safety", "सुरक्षित", "सुरक्षा", "leave", "depart", "sail", "can we go", "can i go", "head out", "heading out", "go out", "go fishing", "fishing tomorrow", "should i"]):
+        intent = IntentCategory.SAFETY
+    elif any(k in msg_lower for k in ["why", "explain", "risky", "reason", "कारण", "क्यों"]):
         intent = IntentCategory.ANALYTICAL_EXPLANATION
     elif any(k in msg_lower for k in ["cyclone", "storm", "hazard", "warning", "lightning", "तूफान", "चेतावनी", "firing", "restricted", "range"]):
         intent = IntentCategory.HAZARDS
-    elif any(k in msg_lower for k in ["safe", "safety", "सुरक्षित", "सुरक्षा", "leave", "depart", "sail", "can we go", "can i go", "fishing tomorrow"]):
-        intent = IntentCategory.SAFETY
     elif any(k in msg_lower for k in ["wave", "swell", "current", "condition", "sea state", "समुद्र", "लाटा"]):
         intent = IntentCategory.CONDITIONS
     else:
-        # Check if user is replying with a harbor on a thread where previous intent was PFZ
+        # Check if user is continuing a previous intent conversation
         thread_ctx_pre = memory_manager.load_context(thread_id)
-        if explicit_harbor and thread_ctx_pre.last_intent == IntentCategory.PFZ:
-            intent = IntentCategory.PFZ
+        if thread_ctx_pre.last_intent in [IntentCategory.PFZ, IntentCategory.SAFETY]:
+            if explicit_harbor or any(w in msg_lower for w in ["what about", "how about", "tomorrow", "today", "afternoon", "morning", "evening", "instead"]):
+                intent = thread_ctx_pre.last_intent
+            else:
+                intent = IntentCategory.UNSUPPORTED
         else:
             intent = IntentCategory.UNSUPPORTED
 
@@ -584,7 +591,7 @@ def supervisor_node(state: ORCAState) -> Dict[str, Any]:
         # 1. Capability requirements by intent
         required_capabilities: List[str] = []
         if intent_val == IntentCategory.SAFETY.value:
-            required_capabilities = ["marine_conditions", "weather_conditions", "risk_evaluation"]
+            required_capabilities = ["marine_conditions", "weather_conditions", "hazard_search", "risk_evaluation"]
         elif intent_val == IntentCategory.PFZ.value:
             required_capabilities = ["pfz_search"]
         elif intent_val == IntentCategory.CONDITIONS.value:
@@ -715,7 +722,32 @@ def specialist_tools_node(state: ORCAState) -> Dict[str, Any]:
     derived_confidence: Optional[Confidence] = state.get("confidence")
     trace = list(state.get("trace", []))
 
+    failed_tools = set()
     for tool_name in task_plan:
+        # Check upstream failure for risk evaluation
+        if tool_name in ["risk_stub", "risk_evaluation"]:
+            critical_deps = {"marine_conditions", "weather_conditions", "marine_stub", "weather_stub"}
+            if any(dep in failed_tools for dep in critical_deps):
+                collected_warnings.append(f"Skipping '{tool_name}' due to failed upstream environmental dependencies.")
+                risk_assessment = Recommendation(
+                    status=RecommendationStatus.UNKNOWN,
+                    summary="Unable to assess voyage safety because environmental data providers failed.",
+                    decisive_factors=["Missing or failed marine/weather observation"],
+                    next_action="Hold departure and verify local port authority advisories.",
+                )
+                derived_confidence = Confidence(
+                    level=ConfidenceLevel.LOW,
+                    score=0.1,
+                    reasons=["Critical upstream dependencies failed"],
+                )
+                trace = _append_trace(
+                    trace,
+                    node_name=f"Specialist Tool: {tool_name}",
+                    action=f"Aborted '{tool_name}': Upstream environmental dependencies failed. Yielded UNKNOWN.",
+                    status="degraded",
+                )
+                continue
+
         # Prepare tool arguments
         params: Dict[str, Any] = {}
         if tool_name in ["pfz_stub", "marine_stub", "weather_stub"]:
@@ -744,6 +776,29 @@ def specialist_tools_node(state: ORCAState) -> Dict[str, Any]:
 
         # Execute through typed registry
         result = tool_registry.execute_tool(tool_name, params)
+        if result.status == ToolStatus.FAILED:
+            failed_tools.add(tool_name)
+            collected_warnings.extend(result.warnings)
+            if tool_name in ["risk_stub", "risk_evaluation"]:
+                risk_assessment = Recommendation(
+                    status=RecommendationStatus.UNKNOWN,
+                    summary="Risk evaluation engine failed or was unavailable.",
+                    decisive_factors=["Risk evaluation error"],
+                    next_action="Hold departure and verify local port authority advisories.",
+                )
+                derived_confidence = Confidence(
+                    level=ConfidenceLevel.LOW,
+                    score=0.1,
+                    reasons=["Risk evaluation failure"],
+                )
+            trace = _append_trace(
+                trace,
+                node_name=f"Specialist Tool: {tool_name}",
+                action=f"Tool '{tool_name}' failed: {result.error_code or 'Execution failure'}",
+                status="failed",
+            )
+            continue
+
         tool_results[tool_name] = result.data
 
         # Merge tool data into state
@@ -901,15 +956,35 @@ def response_composer_node(state: ORCAState) -> Dict[str, Any]:
 
         recommendation = rec
         factors_text = "\n".join(f"- {factor}" for factor in rec.decisive_factors)
-        answer = (
-            f"[{rec.status.value}]\n\n"
-            f"{rec.summary}\n\n"
-            f"Key Decisive Factors:\n{factors_text}\n\n"
-            f"Actionable Directive: {rec.next_action}\n\n"
-            f"Supporting Evidence:\n- {evidence_names}\n\n"
-            f"Notice: This is an M1 demonstration response generated from simulated marine, weather, and risk inputs. "
-            f"Live safety decisions are not available in M1."
-        )
+        lang = state.get("language", "en")
+        if lang == "mr":
+            answer = (
+                f"[{rec.status.value}] {harbor} साठी सागरी सुरक्षा सल्ला:\n\n"
+                f"{rec.summary}\n\n"
+                f"महत्त्वाचे घटक:\n{factors_text}\n\n"
+                f"कृती सल्ला: {rec.next_action}\n\n"
+                f"पुरावा आधार:\n- {evidence_names}\n\n"
+                f"सूचना: हे मूल्यमापन सागरी व हवामान माहितीवर आधारित सल्लागार विश्लेषण आहे."
+            )
+        elif lang == "hi":
+            answer = (
+                f"[{rec.status.value}] {harbor} के लिए समुद्री सुरक्षा सलाह:\n\n"
+                f"{rec.summary}\n\n"
+                f"प्रमुख निर्णायक कारक:\n{factors_text}\n\n"
+                f"कार्रवाई योग्य निर्देश: {rec.next_action}\n\n"
+                f"साक्ष्य आधार:\n- {evidence_names}\n\n"
+                f"सूचना: यह मूल्यांकन समुद्री और मौसम संबंधी इनपुट पर आधारित सलाह है।"
+            )
+        else:
+            answer = (
+                f"[{rec.status.value}] Operational Safety Advisory for {harbor}:\n\n"
+                f"{rec.summary}\n\n"
+                f"Key Decisive Factors:\n{factors_text}\n\n"
+                f"Actionable Directive: {rec.next_action}\n\n"
+                f"Supporting Evidence:\n- {evidence_names}\n\n"
+                f"Notice: This is an M1 demonstration response generated from simulated marine, weather, and risk inputs. "
+                f"Live safety decisions are not available in M1."
+            )
         confidence = state.get("confidence") or Confidence(
             level=ConfidenceLevel.MEDIUM,
             reasons=["Evaluated against M1 simulated sea-state thresholds"],
@@ -1076,14 +1151,15 @@ def response_composer_node(state: ORCAState) -> Dict[str, Any]:
             )
             # Fall back to deterministic template
 
-    # Validate safety invariance if risk_assessment exists
-    if state.get("risk_assessment"):
+    # Validate safety invariance if risk_assessment exists or for SAFETY intent
+    if state.get("risk_assessment") or intent_val == IntentCategory.SAFETY.value:
+        authoritative_rec = state.get("risk_assessment") or recommendation
         comp_input = ResponseCompositionInput(
             run_id=state.get("request_id", "demo-run"),
             conversation_id=state.get("thread_id", "demo-conv"),
             language=state.get("language", "en"),
             intent=intent_val,
-            recommendation=recommendation,
+            recommendation=authoritative_rec,
             confidence=confidence,
             evidence=evidence,
         )
@@ -1091,7 +1167,7 @@ def response_composer_node(state: ORCAState) -> Dict[str, Any]:
             composition_input=comp_input,
             synthesized_answer=answer,
         )
-        ResponseComposer.validate_safety_invariance(composed_chat_response, state["risk_assessment"])
+        ResponseComposer.validate_safety_invariance(composed_chat_response, authoritative_rec)
 
     trace = _append_trace(
         state.get("trace"),

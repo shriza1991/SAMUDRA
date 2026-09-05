@@ -370,6 +370,10 @@ class MemoryManager:
             logger.error(f"Failed to load context for thread '{thread_id}': {e}. Returning clean context.")
             return ThreadContext(thread_id=thread_id)
 
+    def clear_thread(self, thread_id: str) -> bool:
+        """Deletes thread context from persistence."""
+        return self._store.delete_thread(thread_id)
+
     def sanitize_context_data(self, data: Dict[str, Any]) -> Dict[str, Any]:
         """Enforces privacy and data minimization before saving.
 

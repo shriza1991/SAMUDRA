@@ -134,6 +134,9 @@ class MockPFZSourceProvider:
 class MockRiskEngine:
     """Contract test double satisfying Dev 4 RiskEvaluationEngine protocol."""
 
+    def __init__(self, override_status: Optional[RecommendationStatus] = None) -> None:
+        self.override_status = override_status
+
     def evaluate_risk(
         self,
         context: ToolInvocationContext,
@@ -141,6 +144,34 @@ class MockRiskEngine:
         weather: WeatherConditionsPayload,
         hazard: HazardBulletinPayload,
     ) -> RiskAssessmentPayload:
+        if self.override_status is not None:
+            status = self.override_status
+            if status == RecommendationStatus.NO_GO:
+                summary = f"Simulated conditions exceed safety ceiling for {context.craft_profile}."
+                action = "Remain moored in port (Simulation only)."
+            elif status == RecommendationStatus.CAUTION:
+                summary = f"Simulated conditions require operational caution for {context.craft_profile}."
+                action = "Operate within 5 nm of coastline (Simulation only)."
+            elif status == RecommendationStatus.GO:
+                summary = "Simulated conditions are calm and safe for departure."
+                action = "Proceed with voyage under standard VHF watch (Simulation only)."
+            else:
+                summary = "Insufficient or conflicting conditions preclude conclusive assessment."
+                action = "Hold departure until authoritative advisory is verified."
+
+            return RiskAssessmentPayload(
+                status=status,
+                summary=summary,
+                decisive_factors=[
+                    f"Authoritative evaluation status: {status.value}",
+                    f"Vessel profile: {context.craft_profile}",
+                ],
+                recommended_action=action,
+                confidence_level=ConfidenceLevel.LOW if status == RecommendationStatus.UNKNOWN else ConfidenceLevel.HIGH,
+                confidence_reasons=["Deterministic Dev 4 test double evaluation"],
+                warnings=["M2 Contract Mock evaluation — not for real navigation."],
+            )
+
         # Deterministic rules matching Dev 4 expected logic
         if hazard.cyclone_warning_active or marine.significant_wave_height_m > 2.5:
             status = RecommendationStatus.NO_GO
@@ -271,7 +302,16 @@ class MockGeospatialHazardEngine:
 # Helper: Register M2 Contract Mocks
 # =============================================================================
 
-def register_m2_contract_mocks(target_registry: Optional[Any] = None) -> None:
+def register_m2_contract_mocks(
+    target_registry: Optional[Any] = None,
+    mock_marine: Optional[Any] = None,
+    mock_weather: Optional[Any] = None,
+    mock_hazard: Optional[Any] = None,
+    mock_pfz: Optional[Any] = None,
+    mock_risk: Optional[Any] = None,
+    mock_route: Optional[Any] = None,
+    override: bool = False,
+) -> None:
     """Registers M2 contract mocks wrapped in ProviderToolAdapter into the tool registry."""
     from backend.app.agents.integrations.adapters import ProviderToolAdapter
     from backend.app.agents.integrations.contracts import ToolOwner
@@ -279,12 +319,12 @@ def register_m2_contract_mocks(target_registry: Optional[Any] = None) -> None:
 
     reg = target_registry or tool_registry
 
-    mock_marine = MockMarineConditionsProvider()
-    mock_weather = MockWeatherProvider()
-    mock_hazard = MockHazardProvider()
-    mock_pfz = MockPFZRankingEngine()
-    mock_risk = MockRiskEngine()
-    mock_route = MockRouteExposureEngine()
+    mock_marine = mock_marine or MockMarineConditionsProvider()
+    mock_weather = mock_weather or MockWeatherProvider()
+    mock_hazard = mock_hazard or MockHazardProvider()
+    mock_pfz = mock_pfz or MockPFZRankingEngine()
+    mock_risk = mock_risk or MockRiskEngine()
+    mock_route = mock_route or MockRouteExposureEngine()
 
     definitions_and_handlers = [
         (
@@ -430,6 +470,6 @@ def register_m2_contract_mocks(target_registry: Optional[Any] = None) -> None:
     ]
 
     for tool_def, handler in definitions_and_handlers:
-        if not reg.get_tool(tool_def.name):
-            reg.register_tool(tool_def, handler)
+        if override or not reg.get_tool(tool_def.name):
+            reg.register_tool(tool_def, handler, override=override)
 

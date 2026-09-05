@@ -91,6 +91,9 @@ class PromptInjectionGuard:
                 "safe to sail",
                 "safe to depart",
                 "safe to go fishing",
+                "safe to proceed",
+                "safe to go",
+                "safe to head out",
                 "departure is recommended",
                 "proceed with voyage",
                 "safe for departure",
@@ -110,5 +113,24 @@ class PromptInjectionGuard:
             for assertion in unrestricted_assertions:
                 if assertion in text_lower:
                     return False, "LLM output claimed completely safe voyage while risk status is CAUTION"
+
+        # If deterministic status is UNKNOWN, verify response does not claim safe voyage
+        elif expected_status == RecommendationStatus.UNKNOWN:
+            unknown_violations = [
+                "conditions are safe",
+                "safe to sail",
+                "safe to depart",
+                "safe to go fishing",
+                "safe to proceed",
+                "safe to go",
+                "safe to head out",
+                "departure is recommended",
+                "proceed with voyage",
+                "safe for departure",
+                "[go]",
+            ]
+            for assertion in unknown_violations:
+                if assertion in text_lower:
+                    return False, f"LLM output claimed safe voyage ('{assertion}') while risk status is UNKNOWN"
 
         return True, None
