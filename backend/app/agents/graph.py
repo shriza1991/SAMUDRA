@@ -541,7 +541,13 @@ def intent_locale_node(state: ORCAState) -> Dict[str, Any]:
             "सकाळी", "संध्याकाळी", "शाम", "रात्री", "रात", "काय", "कशी", "कसा", "परिस्थिती",
             "सांगा", "सांग", "क्या", "बताओ", "कैसा", "कैसी",
         ]
-        if thread_ctx.last_intent in [IntentCategory.PFZ, IntentCategory.SAFETY, IntentCategory.HAZARDS, IntentCategory.ROUTE]:
+        if thread_ctx.last_intent in [
+            IntentCategory.PFZ,
+            IntentCategory.SAFETY,
+            IntentCategory.HAZARDS,
+            IntentCategory.ROUTE,
+            IntentCategory.CONDITIONS,
+        ]:
             if explicit_harbor or dep_time or any(w in msg_lower for w in continuation_markers):
                 intent = thread_ctx.last_intent
             else:

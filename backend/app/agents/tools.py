@@ -141,6 +141,12 @@ class AgentToolRegistry:
         self._registry.pop(tool_name, None)
         self._handlers.pop(tool_name, None)
 
+    def clear(self) -> None:
+        """Clears all registered tools, handlers, and execution history."""
+        self._registry.clear()
+        self._handlers.clear()
+        self._execution_history.clear()
+
     def get_tool(self, tool_name: str) -> Optional[ToolDefinition]:
         """Retrieves the tool definition if registered, else None."""
         return self._registry.get(tool_name)

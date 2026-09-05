@@ -23,6 +23,9 @@
 | **M10** | Evidence Validation & Hallucination Prevention | **COMPLETE** | Deterministic numerical claim extraction across EN/HI/MR, claim-to-evidence mapping, citation enforcement ([EV...]), stale/conflict detection, partial evidence support, selective clause-level hallucination suppression, safety invariance preservation, 100% offline FakeLLM testing. 265/265 tests passing. |
 | **M11** | Response Composer & Operational Presentation | **COMPLETE** | 10 core M11 requirements implemented: recommendation status, concise summary, decisive factors, suggested next action, confidence explanation, evidence references, warnings, suggested follow-ups, same-language output (EN/MR/HI/TA), and concise scannable format. Strict safety/evidence/language invariants preserved. 281/281 tests passing. |
 | **M12** | Prompt Security & Untrusted Content Isolation | **COMPLETE** | PromptInjectionGuard enhanced with comprehensive injection/jailbreak detection across EN/HI/MR, XML boundary sandboxing (<untrusted_tool_data>), tool-result instruction isolation, secret & credential redaction, raw CoT prevention, output safety tampering defense, safe refusal handling, 100% M0–M11 regression passing. 305/305 tests passing. |
+| **M13** | Trace / Agent Activity | **COMPLETE** | Granular execution trace contracts, node & specialist step tracking, millisecond timing, sanitization & privacy isolation, zero CoT leakage. 329/329 tests passing. |
+| **M14** | Reliability & Fallback | **COMPLETE** | Bounded retries, timeout isolation, cached snapshot fallback, snapshot freshness validation, confidence degradation, safety invariance under critical tool failure. 356/356 tests passing. |
+| **M15** | 20-Query Agent Evaluation | **COMPLETE** | Deterministic 20-query evaluation benchmark verifying termination (20/20), tool selection accuracy (93.9%), 0 safety override violations, evidence grounding, multilingual consistency, security & reliability. 377/377 tests passing. |
 
 ---
 
@@ -564,6 +567,28 @@
   - **Documentation**:
     * `docs/M14_RELIABILITY_FALLBACK.md`: Comprehensive guide to reliability policies, timeout enforcement, snapshot freshness, and verification matrix.
 
+---
 
-
-
+### M15 — 20-Query Agent Evaluation (COMPLETE)
+- **Delivered**:
+  - **M15.1 — Fixed 20-Query Evaluation Dataset** (`tests/agent_eval/data/m15_queries.json`):
+    * 20 deterministic, version-controlled evaluation test cases spanning 6 core operational categories:
+      - Basic / Safety (Q1–Q5): Standard safety, calm `GO`, elevated swell `CAUTION`, rough sea `NO_GO`, and critical failure `UNKNOWN`.
+      - Hazard & Geofence (Q6–Q9): Hazard-only search, restricted zone geofences, combined hazard+geofence routes, and hard-stop prohibited zone violations.
+      - Route Reasoning (Q10–Q12): Route comparison scoring, explicit origin/destination planning, and missing-context clarification.
+      - Multi-turn Memory (Q13–Q15): Context carry-forward (Ratnagiri fishing), temporal parameter updates (3-day wave forecast), and explicit harbor overrides.
+      - Multilingual Consistency (Q16–Q17): Hindi (`hi`) and Marathi (`mr`) operational queries preserving immutable safety headers `[<STATUS>]`.
+      - Security, Unsupported & Reliability (Q18–Q20): Prompt injection blocking, unsupported domain routing, and untrusted payload isolation during reliability fallback.
+  - **M15.2 — Evaluation Metrics & Benchmark Runner** (`tests/agent_eval/test_m15_evaluation.py`):
+    * 21 dedicated test cases (20 individual query tests + 1 comprehensive aggregated benchmark).
+    * **Termination Rate**: 20/20 (100.0%).
+    * **Required Tool Selection Accuracy**: 62/66 (93.9% $\ge$ 90% target).
+    * **Safety Override Violations**: 0 (`NO_GO != GO`, `UNKNOWN != GO`).
+    * **Language Matching Accuracy**: 20/20 (100.0%).
+    * **Evidence Completeness**: 20/20 (100.0%).
+    * **Intent Detection Accuracy**: 18/20 (90.0%).
+  - **M15.3 — Zero Regression Across Full Test Suite**:
+    * Total repository test count: **377/377 passing** in 5.00s.
+    * Linting: **0 ruff errors**.
+  - **Documentation**:
+    * `docs/M15_AGENT_EVALUATION.md`: Comprehensive evaluation report, per-query analysis, scoring methodology, and validation breakdown.
