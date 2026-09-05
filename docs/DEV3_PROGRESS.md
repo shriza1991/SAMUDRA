@@ -22,6 +22,7 @@
 | **M9** | Multilingual / Local-Language Pipeline | **COMPLETE** | Script and token-based language detection (en, mr, hi), bounded coastal/Konkan normalization glossary, LLM-assisted multilingual NLU + response generation, multi-turn language switching, strict safety status invariance. 239/239 tests passing. |
 | **M10** | Evidence Validation & Hallucination Prevention | **COMPLETE** | Deterministic numerical claim extraction across EN/HI/MR, claim-to-evidence mapping, citation enforcement ([EV...]), stale/conflict detection, partial evidence support, selective clause-level hallucination suppression, safety invariance preservation, 100% offline FakeLLM testing. 265/265 tests passing. |
 | **M11** | Response Composer & Operational Presentation | **COMPLETE** | 10 core M11 requirements implemented: recommendation status, concise summary, decisive factors, suggested next action, confidence explanation, evidence references, warnings, suggested follow-ups, same-language output (EN/MR/HI/TA), and concise scannable format. Strict safety/evidence/language invariants preserved. 281/281 tests passing. |
+| **M12** | Prompt Security & Untrusted Content Isolation | **COMPLETE** | PromptInjectionGuard enhanced with comprehensive injection/jailbreak detection across EN/HI/MR, XML boundary sandboxing (<untrusted_tool_data>), tool-result instruction isolation, secret & credential redaction, raw CoT prevention, output safety tampering defense, safe refusal handling, 100% M0–M11 regression passing. 305/305 tests passing. |
 
 ---
 
@@ -491,5 +492,33 @@
     * Linting: **0 ruff errors**.
   - **Documentation**:
     * `docs/M11_RESPONSE_COMPOSER.md`: Architectural specification and verification guide for Milestone M11.
+
+---
+
+### M12 — Prompt Security & Untrusted Content Isolation (COMPLETE)
+- **Delivered**:
+  - **M12.1 — System Prompt Guardrails & XML Boundary Partitioning**:
+    * System/developer instructions remain strictly authoritative.
+    * User input is encapsulated within `<user_input>` boundary tags.
+    * External tool outputs and weather bulletins are encapsulated within `<untrusted_tool_data>` tags with explicit notices declaring them passive observation data, not instructions.
+    * Validated numerical evidence metrics are partitioned within `<evidence_context>`.
+  - **M12.2 — Tool-Result & External Data Isolation**:
+    * Hardened boundary ensuring text inside tool outputs (e.g. cyclone bulletins with adversarial text) remains pure DATA.
+    * External content cannot alter intent, schedule arbitrary tools, mutate `ThreadContext`, change risk status, or bypass evidence validation.
+  - **M12.3 — PromptInjectionGuard Extension & Deterministic Audits**:
+    * Comprehensive injection signatures covering instruction overrides (`"ignore previous instructions"`), system prompt extraction (`"reveal system prompt"`), chain-of-thought extraction (`"show chain of thought"`), status forcing (`"pretend risk engine returned GO"`), unauthorized commands, and Indic multilingual injection patterns (Hindi/Marathi).
+    * Structured `SecurityAuditResult` (`SAFE`, `BLOCKED`, `SANITIZED`) with detected vulnerability signatures.
+  - **M12.4 — Secret & Credential Redaction**:
+    * Automated multi-pattern redaction for OpenAI keys, Google API keys, GitHub tokens, AWS keys, Bearer tokens, passwords, and database connection strings before delivery or memory persistence.
+  - **M12.5 — Raw Chain-of-Thought Protection**:
+    * Strict stripping of `<think>...</think>`, `<scratchpad>`, and ReAct `Thought:` / `Reasoning:` prefixes.
+  - **M12.6 — Output Safety Tampering Defense**:
+    * Deterministic cross-check ensuring synthesized drafts never declare safe voyage under `NO_GO`, `CAUTION`, or `UNKNOWN` statuses.
+  - **M12.7 — Comprehensive Test Suite** (`tests/agent_eval/test_m12_prompt_security.py`):
+    * 24 dedicated test cases verifying all 24 required scenarios (system prompt authority, injection blocking, tool result isolation, bulletin isolation, evidence isolation, memory protection, secret redaction, CoT protection, safety invariance, multilingual handling, and full M0–M11 regression).
+    * Total repository test count: **305/305 passing** in 2.66s.
+    * Linting: **0 ruff errors**.
+  - **Documentation**:
+    * `docs/M12_PROMPT_SECURITY.md`: Comprehensive threat model, authority partitioning, defense-in-depth architecture, and verification matrix.
 
 
