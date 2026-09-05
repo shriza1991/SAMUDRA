@@ -74,6 +74,9 @@ class Confidence(BaseModel):
 
 
 class EvidenceItem(BaseModel):
+    evidence_id: Optional[str] = Field(
+        None, description="Unique deterministic identifier (e.g., 'EV123' or 'EV-INCOIS-WAVE-001')"
+    )
     source_name: str = Field(
         ..., description="Official issuing authority (e.g., 'INCOIS Ocean State Forecast')"
     )

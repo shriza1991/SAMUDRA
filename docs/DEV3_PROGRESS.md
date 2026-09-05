@@ -20,6 +20,7 @@
 | **M7** | Route Reasoning Flow | **COMPLETE** | Route comparison pipeline, candidate preservation, Dev 4 recommended route highlighting, invariant risk headers, localized comparisons. 189/189 tests passing. |
 | **M8** | Intent Switching Across Turns | **COMPLETE** | Dynamic intent hopping (SAFETY ↔ HAZARDS ↔ ROUTE ↔ PFZ), selective context carry-forward, fresh tool dispatch per turn, thread isolation. 204/204 tests passing. |
 | **M9** | Multilingual / Local-Language Pipeline | **COMPLETE** | Script and token-based language detection (en, mr, hi), bounded coastal/Konkan normalization glossary, LLM-assisted multilingual NLU + response generation, multi-turn language switching, strict safety status invariance. 239/239 tests passing. |
+| **M10** | Evidence Validation & Hallucination Prevention | **COMPLETE** | Deterministic numerical claim extraction across EN/HI/MR, claim-to-evidence mapping, citation enforcement ([EV...]), stale/conflict detection, partial evidence support, selective clause-level hallucination suppression, safety invariance preservation, 100% offline FakeLLM testing. 265/265 tests passing. |
 
 ---
 
@@ -428,3 +429,38 @@
     * Linting: **0 ruff errors**.
   - **Documentation**:
     * `docs/M9_MULTILINGUAL_PIPELINE.md`: Full architecture guide covering all 6 pillars, pipeline diagram, language detection algorithm, glossary design, LLM NLU/response nodes, multi-turn persistence, dialect strategy/limitations, and complete 35-test verification matrix.
+
+---
+
+### M10 — Evidence Validation & Hallucination Prevention (COMPLETE)
+- **Delivered**:
+  - **M10.1 — Evidence Provenance Propagation**:
+    * Propagated `evidence_id: Optional[str]` across `EvidenceItem`, `EvidenceRecord`, and `ToolResult`.
+    * `specialist_tools_node` guarantees deterministic `evidence_id` assignment for all observations.
+    * `evidence_validator_node` and `response_composer_node` preserve machine-verifiable evidence chains across LangGraph executions.
+  - **M10.2 — Multilingual Numerical Claim Extraction**:
+    * `EvidenceValidator.extract_numerical_claims(text)` extracts numerical statements across English, Hindi, and Marathi.
+    * Parses units for wave height (`m`), wind speed (`km/h`), visibility (`km`), rainfall (`mm`), sea temperature (`°C`), water depth (`m`), distance (`km`), heading (`°`), route exposure score, hazard proximity (`km`), and swell period (`s`).
+    * Supports Devanagari numerals (`०-९`) and Marathi/Hindi metric unit expressions.
+  - **M10.3 — Claim-to-Evidence Mapping & Validation**:
+    * `EvidenceValidator.validate_claim(...)` binds nearest citation tag (`[EV123]`) and compares extracted numerical values against cited `EvidenceItem` data points within permissible tolerances.
+    * Detects uncited claims (`MISSING_CITATION`), non-existent citations (`INVALID_CITATION_ID`), metric mismatches (`UNRELATED_EVIDENCE`), value hallucinations (`VALUE_MISMATCH`), and stale evidence (`STALE_EVIDENCE`).
+  - **M10.4 — Stale, Conflicting & Missing Evidence Handling**:
+    * `EvidenceValidator.is_evidence_stale(item)` invalidates expired evidence records based on timestamp thresholds without inventing new domain calculations.
+    * `EvidenceValidator.detect_conflicts(evidence_items)` detects contradictory sensor inputs for the same metric, suppressing single-value assertions and flagging explicit uncertainty.
+    * Numerical values without valid `EvidenceItem` records are blocked from authoritative presentation.
+  - **M10.5 — Selective Unsupported Claim Suppression**:
+    * `EvidenceValidator.suppress_unsupported_claims(text, report)` prunes ungrounded clauses at clause/sentence boundaries while preserving grounded claims and citations.
+    * Fallback to deterministic template composer if text is corrupted or ungrounded.
+  - **M10.6 — Safety Invariance Preserved (M5 Guard)**:
+    * Evidence validation functions strictly as a factual grounding filter; it cannot override or upgrade authoritative risk statuses (`GO`, `CAUTION`, `NO_GO`, `UNKNOWN`).
+    * Full prompt injection and tampering defenses remain active.
+  - **M10.7 — 100% Offline Testing**:
+    * Verified with `FakeLLMProvider` simulating hallucinated numerical facts and unauthorized citations.
+  - **Comprehensive Test Suite** (`tests/agent_eval/test_m10_evidence.py`):
+    * 26 test cases covering evidence ID survival, valid claim acceptance, uncited claim rejection, wind speed suppression, missing/invalid evidence IDs, stale evidence expiry, conflict detection, partial evidence support, discrete multi-claim mapping, LLM hallucination prevention, safety invariance (GO/CAUTION/NO_GO/UNKNOWN), multilingual grounding (EN/HI/MR), and M5–M9 compatibility.
+    * Total repository test count: **265/265 passing** in 2.28s.
+    * Linting: **0 ruff errors**.
+  - **Documentation**:
+    * `docs/M10_EVIDENCE_VALIDATION.md`: Master M10 architecture guide covering lifecycle, graph propagation, claim mapping, edge cases, suppression mechanisms, and verification matrix.
+

@@ -134,6 +134,10 @@ class PromptInjectionGuard:
         elif expected_status == RecommendationStatus.CAUTION:
             unrestricted_assertions = [
                 "conditions are completely safe",
+                "conditions are totally safe",
+                "totally safe",
+                "completely safe",
+                "safe to proceed without restriction",
                 "no risks present",
                 "route should probably be fine",
                 "restriction can be ignored",

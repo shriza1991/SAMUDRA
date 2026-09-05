@@ -946,6 +946,9 @@ def specialist_tools_node(state: ORCAState) -> Dict[str, Any]:
             action=f"Executed '{tool_name}' (status: {result.status.value}, evidence items: {len(result.evidence)})",
         )
 
+    # M10: Ensure every collected evidence item has a deterministic evidence_id
+    collected_evidence = EvidenceValidator.ensure_evidence_ids(collected_evidence)
+
     # M7: Build deterministic route comparison after all tools complete
     if route_candidates:
         observations["route_comparison"] = _compare_route_candidates(route_candidates, observations)
@@ -969,7 +972,7 @@ def specialist_tools_node(state: ORCAState) -> Dict[str, Any]:
 
 def evidence_validator_node(state: ORCAState) -> Dict[str, Any]:
     """Audits whether factual and numerical claims are backed by verifiable evidence citations."""
-    evidence = state.get("evidence", [])
+    evidence = EvidenceValidator.ensure_evidence_ids(state.get("evidence", []))
     intent = state.get("intent")
 
     critical_metrics: List[str] = []
@@ -996,6 +999,10 @@ def evidence_validator_node(state: ORCAState) -> Dict[str, Any]:
 
     if not report.is_valid:
         warnings.extend([f"Missing evidence for metric: {m}" for m in report.unverified_claims])
+    if report.stale_evidence_warnings:
+        warnings.extend(report.stale_evidence_warnings)
+    if report.conflicting_metrics:
+        warnings.append(f"Conflicting evidence detected for: {', '.join(report.conflicting_metrics)}")
 
     trace = _append_trace(
         state.get("trace"),
@@ -1004,6 +1011,7 @@ def evidence_validator_node(state: ORCAState) -> Dict[str, Any]:
     )
 
     return {
+        "evidence": evidence,
         "warnings": warnings,
         "trace": trace,
     }
@@ -1650,8 +1658,20 @@ def response_composer_node(state: ORCAState) -> Dict[str, Any]:
                 f"{response_prompt}\n\n"
                 f"CRITICAL IMMUTABLE DIRECTIVE:\n"
                 f"The authoritative safety status is [{req_status}]. You MUST NOT change or soften this status.\n"
+                f"EVERY numerical claim must cite a valid evidence ID in brackets (e.g. [EV123]). Do not invent claims or IDs.\n"
                 f"Output strictly adhering to LLMResponseDraft schema."
             )
+            evidence_summary = [
+                {
+                    "evidence_id": ev.evidence_id,
+                    "source_name": ev.source_name,
+                    "metric_name": ev.metric_name,
+                    "metric_value": ev.metric_value,
+                    "metric_unit": ev.metric_unit,
+                    "valid_to": ev.valid_to,
+                }
+                for ev in evidence
+            ]
             context_summary = {
                 "intent": intent_val,
                 "language": lang,
@@ -1661,6 +1681,7 @@ def response_composer_node(state: ORCAState) -> Dict[str, Any]:
                 "decisive_factors": recommendation.decisive_factors,
                 "next_action": recommendation.next_action,
                 "observations": state.get("observations", {}),
+                "evidence_items": evidence_summary,
                 "evidence_sources": [ev.source_name for ev in evidence],
             }
             messages = [
@@ -1677,7 +1698,7 @@ def response_composer_node(state: ORCAState) -> Dict[str, Any]:
                 timeout_seconds=5.0,
             )
 
-            # Audit response draft for safety tampering
+            # Audit 1: Safety tampering check
             is_valid_safety, violation_reason = PromptInjectionGuard.audit_response_for_tampering(
                 draft.synthesized_text,
                 recommendation.status,
@@ -1690,16 +1711,48 @@ def response_composer_node(state: ORCAState) -> Dict[str, Any]:
                     status="blocked",
                 )
             else:
-                synthesized = draft.synthesized_text.strip()
-                status_header = f"[{req_status}]"
-                if not synthesized.startswith(status_header):
-                    synthesized = f"{status_header} {synthesized}"
-                answer = synthesized
-                trace = _append_trace(
-                    state.get("trace"),
-                    node_name="Response Composer",
-                    action=f"LLM-synthesized localized response ({llm_provider.provider_name}/{llm_provider.model_name}) in '{lang}'",
+                # Audit 2: Validate numerical claims against evidence (M10)
+                claim_report = EvidenceValidator.validate_response_claims(
+                    draft.synthesized_text,
+                    evidence,
                 )
+                if not claim_report.is_valid:
+                    # Attempt deterministic suppression of unsupported statements
+                    suppressed = EvidenceValidator.suppress_unsupported_claims(
+                        draft.synthesized_text,
+                        evidence,
+                        fallback_text=answer,
+                    )
+                    second_check = EvidenceValidator.validate_response_claims(suppressed, evidence)
+                    if second_check.is_valid and len(suppressed.strip()) > 15:
+                        synthesized = suppressed.strip()
+                        status_header = f"[{req_status}]"
+                        if not synthesized.startswith(status_header):
+                            synthesized = f"{status_header} {synthesized}"
+                        answer = synthesized
+                        trace = _append_trace(
+                            state.get("trace"),
+                            node_name="Response Composer",
+                            action=f"Suppressed unsupported numerical claim(s) from LLM draft ({'; '.join(claim_report.rejection_reasons)})",
+                        )
+                    else:
+                        trace = _append_trace(
+                            state.get("trace"),
+                            node_name="Response Composer",
+                            action=f"Unresolvable hallucinated claims in LLM draft ({'; '.join(claim_report.rejection_reasons)}); fell back to deterministic template",
+                            status="blocked",
+                        )
+                else:
+                    synthesized = draft.synthesized_text.strip()
+                    status_header = f"[{req_status}]"
+                    if not synthesized.startswith(status_header):
+                        synthesized = f"{status_header} {synthesized}"
+                    answer = synthesized
+                    trace = _append_trace(
+                        state.get("trace"),
+                        node_name="Response Composer",
+                        action=f"LLM-synthesized localized response ({llm_provider.provider_name}/{llm_provider.model_name}) in '{lang}' with verified evidence citations",
+                    )
         except Exception as exc:
             trace = _append_trace(
                 state.get("trace"),
