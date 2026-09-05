@@ -748,7 +748,25 @@ def supervisor_node(state: ORCAState) -> Dict[str, Any]:
             required_capabilities = ["marine_conditions", "pfz_search"]
         elif intent_val == IntentCategory.CONDITIONS.value:
             required_capabilities = ["marine_conditions"]
-        elif intent_val in [IntentCategory.HAZARDS.value, IntentCategory.ROUTE.value]:
+        elif intent_val == IntentCategory.ROUTE.value:
+            # M7: Full route comparison plan.
+            # Satisfies all declared dependency chains in CAPABILITIES_CATALOG:
+            #   route_analysis  → [marine_conditions, hazard_search]
+            #   risk_evaluation → [marine_conditions, weather_conditions, hazard_search]
+            #   geospatial_hazard → [] (needed for restricted-zone route exposure)
+            required_capabilities = [
+                "marine_conditions",
+                "weather_conditions",
+                "hazard_search",
+                "geospatial_hazard",
+                "route_analysis",
+                "risk_evaluation",
+            ]
+        elif intent_val == IntentCategory.HAZARDS.value:
+            # M6: Keyword-driven hazard plan (restored from M6).
+            # has_route: HAZARDS query that also includes route context ("on my route from X to Y").
+            # This differs from pure ROUTE intent — here the user asks about cyclone/geofence
+            # hazards along a route; route_analysis is added when route context exists.
             if has_route:
                 required_capabilities = ["marine_conditions", "route_analysis"]
                 if has_geofence:
@@ -830,7 +848,7 @@ def supervisor_node(state: ORCAState) -> Dict[str, Any]:
         elif intent_val == IntentCategory.CONDITIONS.value:
             tools = ["marine_conditions"]
         elif intent_val in [IntentCategory.HAZARDS.value, IntentCategory.ROUTE.value]:
-            tools = _enforce_dependency_order(required_capabilities)
+            tools = _enforce_dependency_order(required_capabilities)  # Handles both; required_capabilities already set above
         elif intent_val == IntentCategory.ANALYTICAL_EXPLANATION.value:
             tools = ["explanation_context"]
         else:
@@ -866,6 +884,42 @@ def supervisor_node(state: ORCAState) -> Dict[str, Any]:
 
 
 # =============================================================================
+# M7 Helper: Deterministic Route Candidate Comparison
+# =============================================================================
+
+def _compare_route_candidates(
+    route_candidates: List[Dict[str, Any]],
+    observations: Dict[str, Any],
+) -> Dict[str, Any]:
+    """Produces a deterministic route comparison summary from Dev 4 outputs only.
+
+    Reads from RouteExposurePayload fields:
+      - recommended_route_id  (Dev 4 authoritative recommendation)
+      - risk_rating           (EvaluatedRouteItem.risk_rating: LOW | MODERATE | HIGH)
+      - exposure_score        (EvaluatedRouteItem.exposure_score: numerical)
+
+    Never invents thresholds or scoring formulas.
+    """
+    recommended_id = observations.get("recommended_route_id", "")
+    candidates_summary = []
+    for route in route_candidates:
+        candidates_summary.append({
+            "route_id": route.get("route_id", "UNKNOWN"),
+            "name": route.get("name", "Unnamed Route"),
+            "risk_rating": route.get("risk_rating", "UNKNOWN"),
+            "exposure_score": route.get("exposure_score"),
+            "distance_km": route.get("distance_km"),
+            "max_wave_height_m": route.get("max_wave_height_m"),
+        })
+
+    return {
+        "recommended_route_id": recommended_id,
+        "candidates": candidates_summary,
+        "comparison_basis": "Dev 4 RouteExposureEngine (risk_rating + exposure_score)",
+    }
+
+
+# =============================================================================
 # Node 3: Specialist Tool Execution Node
 # =============================================================================
 
@@ -882,6 +936,7 @@ def specialist_tools_node(state: ORCAState) -> Dict[str, Any]:
     risk_assessment: Optional[Recommendation] = state.get("risk_assessment")
     derived_confidence: Optional[Confidence] = state.get("confidence")
     trace = list(state.get("trace", []))
+    route_candidates: List[Dict[str, Any]] = list(state.get("route_candidates") or [])
 
     destination = state.get("destination")
 
@@ -995,11 +1050,20 @@ def specialist_tools_node(state: ORCAState) -> Dict[str, Any]:
             if "confidence" in result.data:
                 derived_confidence = Confidence(**result.data["confidence"])
 
+        # M7: Preserve candidate route list and build comparison summary
+        if tool_name in ["route_analysis", "route_stub"] and result.status != ToolStatus.FAILED:
+            raw_routes = result.data.get("routes", [])
+            route_candidates = list(raw_routes)
+
         trace = _append_trace(
             trace,
             node_name=f"Specialist Tool: {tool_name}",
             action=f"Executed '{tool_name}' (status: {result.status.value}, evidence items: {len(result.evidence)})",
         )
+
+    # M7: Build deterministic route comparison after all tools complete
+    if route_candidates:
+        observations["route_comparison"] = _compare_route_candidates(route_candidates, observations)
 
     return {
         "tool_results": tool_results,
@@ -1009,6 +1073,7 @@ def specialist_tools_node(state: ORCAState) -> Dict[str, Any]:
         "failed_tools": list(failed_tools),
         "risk_assessment": risk_assessment,
         "confidence": derived_confidence,
+        "route_candidates": route_candidates,
         "trace": trace,
     }
 
@@ -1204,7 +1269,216 @@ def response_composer_node(state: ORCAState) -> Dict[str, Any]:
             reasons=["Simulated M1 ocean state forecast"],
         )
 
-    elif intent_val in [IntentCategory.HAZARDS.value, IntentCategory.ROUTE.value]:
+    elif intent_val == IntentCategory.ROUTE.value:
+        # M7: Dedicated route comparison handler
+        tool_mode = state.get("tool_mode", "demo")
+        obs = state.get("observations", {})
+        task_plan = state.get("task_plan", [])
+        failed_tools = state.get("failed_tools", [])
+        destination = state.get("destination")
+        lang = state.get("language", "en")
+
+        if tool_mode == "contract_mock":
+            # Read only Dev 4 authoritative output fields
+            route_comparison = obs.get("route_comparison", {})
+            route_candidates_data = route_comparison.get("candidates", [])
+            recommended_id = route_comparison.get("recommended_route_id", "")
+
+            # Hazard observations
+            has_hazard_tool = "hazard_search" in task_plan
+            has_geofence_tool = "geospatial_hazard" in task_plan
+            cyclone = obs.get("cyclone_warning_active", False) if has_hazard_tool else False
+            squall = obs.get("squall_alert", False) if has_hazard_tool else False
+            hard_stop = obs.get("hard_stop", False) if has_geofence_tool else False
+            restricted = obs.get("restricted", False) if has_geofence_tool else False
+            intersected = obs.get("intersected", False) if has_geofence_tool else False
+            zone_name = obs.get("restriction_name", "Protected Marine Zone")
+
+            # Authoritative status: risk_evaluation is the single source of truth;
+            # fall back to route/hazard signals only if risk_evaluation failed or was not scheduled
+            rec = state.get("risk_assessment")
+            critical_failed = [t for t in failed_tools if t in task_plan]
+            if rec and rec.status != RecommendationStatus.UNKNOWN:
+                route_status = rec.status
+                action = rec.next_action
+                summary = rec.summary
+                decisive_factors = list(rec.decisive_factors)
+            elif critical_failed:
+                route_status = RecommendationStatus.UNKNOWN
+                summary = f"Route comparison incomplete: upstream tool failures ({', '.join(critical_failed)})."
+                action = "Hold departure until data services are restored."
+                decisive_factors = [f"Failed tool: {t}" for t in critical_failed]
+            elif hard_stop or cyclone:
+                route_status = RecommendationStatus.NO_GO
+                reasons = []
+                if hard_stop:
+                    reasons.append(f"Hard-stop boundary: {zone_name}")
+                if cyclone:
+                    reasons.append("Active Cyclone Warning")
+                summary = f"Route passage strictly prohibited: {'; '.join(reasons)}."
+                action = "Do NOT proceed. Prohibited boundary or active cyclone warning."
+                decisive_factors = reasons
+            elif restricted or intersected or squall:
+                route_status = RecommendationStatus.CAUTION
+                reasons = []
+                if restricted or intersected:
+                    reasons.append(f"Route traverses restricted zone: {zone_name}")
+                if squall:
+                    reasons.append("Active Squall Alert")
+                summary = f"Route caution required: {'; '.join(reasons)}."
+                action = "Proceed with extreme caution and maintain radio watch."
+                decisive_factors = reasons
+            else:
+                route_status = RecommendationStatus.INFORMATIONAL
+                route_label_en = f"from {harbor} to {destination}" if destination else f"near {harbor}"
+                summary = f"No hazard or boundary restrictions detected {route_label_en}."
+                action = "Standard passage permitted. Monitor VHF maritime forecasts."
+                decisive_factors = []
+
+            # Add route-specific decisive factors
+            if "route_analysis" in failed_tools:
+                decisive_factors.append("Route exposure analysis: UNAVAILABLE (upstream failure)")
+            elif route_candidates_data:
+                for cand in route_candidates_data:
+                    decisive_factors.append(
+                        f"Route {cand['route_id']} ({cand['name']}): "
+                        f"{cand['risk_rating']} risk, exposure score {cand.get('exposure_score', 'N/A')}, "
+                        f"{cand.get('distance_km', 'N/A')} km"
+                    )
+                if recommended_id:
+                    decisive_factors.append(f"Dev 4 recommended route: {recommended_id} (lowest exposure)")
+
+            # Hazard tool decisive factors
+            if has_hazard_tool:
+                if "hazard_search" in failed_tools:
+                    decisive_factors.append("Marine hazard bulletin: UNAVAILABLE (upstream failure)")
+                else:
+                    decisive_factors.append(f"Cyclone warning: {'ACTIVE' if cyclone else 'INACTIVE'}")
+                    decisive_factors.append(f"Squall alert: {'ACTIVE' if squall else 'INACTIVE'}")
+            if has_geofence_tool:
+                if "geospatial_hazard" in failed_tools:
+                    decisive_factors.append("Geofence verification: UNAVAILABLE (upstream failure)")
+                else:
+                    decisive_factors.append(
+                        f"Geofence intersection: {'PROHIBITED' if hard_stop else ('RESTRICTED' if (restricted or intersected) else 'CLEAR')}"
+                    )
+
+            # Multilingual route comparison narrative
+            route_label = f"from {harbor} to {destination}" if destination else f"near {harbor}"
+            route_label_mr = f"{harbor} ते {destination}" if destination else f"{harbor} जवळ"
+            route_label_hi = f"{harbor} से {destination}" if destination else f"{harbor} के पास"
+
+            def _format_route_candidates_en(candidates: List[Dict[str, Any]], rec_id: str) -> str:
+                lines = []
+                for cand in candidates:
+                    marker = " ✓ [RECOMMENDED by Dev 4]" if cand["route_id"] == rec_id else ""
+                    lines.append(
+                        f"  • {cand['route_id']} — {cand['name']}: "
+                        f"{cand['risk_rating']} risk | {cand.get('distance_km', 'N/A')} km | "
+                        f"wave exposure {cand.get('max_wave_height_m', 'N/A')}m | "
+                        f"exposure score {cand.get('exposure_score', 'N/A')}{marker}"
+                    )
+                return "\n".join(lines) if lines else "  Route data unavailable."
+
+            def _format_route_candidates_mr(candidates: List[Dict[str, Any]], rec_id: str) -> str:
+                rating_map = {"LOW": "कमी धोका", "MODERATE": "मध्यम धोका", "HIGH": "जास्त धोका"}
+                lines = []
+                for cand in candidates:
+                    marker = " ✓ [Dev 4 शिफारस]" if cand["route_id"] == rec_id else ""
+                    lines.append(
+                        f"  • {cand['route_id']} — {cand['name']}: "
+                        f"{rating_map.get(cand['risk_rating'], cand['risk_rating'])} | "
+                        f"{cand.get('distance_km', 'N/A')} किमी | "
+                        f"लाट उंची {cand.get('max_wave_height_m', 'N/A')}मी{marker}"
+                    )
+                return "\n".join(lines) if lines else "  मार्ग माहिती अनुपलब्ध."
+
+            def _format_route_candidates_hi(candidates: List[Dict[str, Any]], rec_id: str) -> str:
+                rating_map = {"LOW": "कम खतरा", "MODERATE": "मध्यम खतरा", "HIGH": "उच्च खतरा"}
+                lines = []
+                for cand in candidates:
+                    marker = " ✓ [Dev 4 अनुशंसित]" if cand["route_id"] == rec_id else ""
+                    lines.append(
+                        f"  • {cand['route_id']} — {cand['name']}: "
+                        f"{rating_map.get(cand['risk_rating'], cand['risk_rating'])} | "
+                        f"{cand.get('distance_km', 'N/A')} किमी | "
+                        f"तरंग ऊंचाई {cand.get('max_wave_height_m', 'N/A')}मी{marker}"
+                    )
+                return "\n".join(lines) if lines else "  मार्ग डेटा अनुपलब्ध."
+
+            route_list_en = _format_route_candidates_en(route_candidates_data, recommended_id)
+            route_list_mr = _format_route_candidates_mr(route_candidates_data, recommended_id)
+            route_list_hi = _format_route_candidates_hi(route_candidates_data, recommended_id)
+
+            factors_text = "\n".join(f"- {f}" for f in decisive_factors)
+
+            if lang == "mr":
+                answer = (
+                    f"[{route_status.value}] मार्ग सुरक्षा तुलना ({route_label_mr}):\n\n"
+                    f"मूल्यांकित मार्ग:\n{route_list_mr}\n\n"
+                    f"चक्रीवादळ इशारा: {'सक्रिय (NO_GO)' if cyclone else 'नाही'}\n"
+                    f"प्रतिबंधित क्षेत्र: {'HARD STOP' if hard_stop else ('प्रतिबंधित' if (restricted or intersected) else 'नाही')}\n\n"
+                    f"महत्त्वाचे घटक:\n{factors_text}\n\n"
+                    f"कृती निर्देश: {action}\n\n"
+                    f"पुरावा आधार:\n- {evidence_names}\n\n"
+                    f"सूचना: हे मूल्यांकन Dev 4 RouteExposureEngine च्या अधिकृत विश्लेषणावर आधारित आहे."
+                )
+            elif lang == "hi":
+                answer = (
+                    f"[{route_status.value}] मार्ग सुरक्षा तुलना ({route_label_hi}):\n\n"
+                    f"मूल्यांकित मार्ग:\n{route_list_hi}\n\n"
+                    f"चक्रवात चेतावनी: {'सक्रिय (NO_GO)' if cyclone else 'नहीं'}\n"
+                    f"प्रतिबंधित क्षेत्र: {'HARD STOP' if hard_stop else ('प्रतिबंधित' if (restricted or intersected) else 'नहीं')}\n\n"
+                    f"प्रमुख निर्णायक कारक:\n{factors_text}\n\n"
+                    f"कार्रवाई निर्देश: {action}\n\n"
+                    f"साक्ष्य आधार:\n- {evidence_names}\n\n"
+                    f"सूचना: यह मूल्यांकन Dev 4 RouteExposureEngine के आधिकारिक विश्लेषण पर आधारित है।"
+                )
+            else:
+                answer = (
+                    f"[{route_status.value}] Route Safety Comparison ({route_label}):\n\n"
+                    f"Evaluated Passage Options:\n{route_list_en}\n\n"
+                    f"Cyclone Warning: {'ACTIVE — passage not recommended' if cyclone else 'None active'}\n"
+                    f"Restricted Zone Status: {'STRICT PROHIBITION (HARD STOP)' if hard_stop else ('RESTRICTED ZONE' if (restricted or intersected) else 'Clear of known restrictions')}\n\n"
+                    f"Key Decisive Factors:\n{factors_text}\n\n"
+                    f"Actionable Directive: {action}\n\n"
+                    f"Supporting Evidence:\n- {evidence_names}\n\n"
+                    f"Notice: Route assessment based on Dev 4 RouteExposureEngine authoritative analysis."
+                )
+
+            recommendation = Recommendation(
+                status=route_status,
+                summary=summary,
+                decisive_factors=decisive_factors,
+                next_action=action,
+            )
+            confidence = state.get("confidence") or Confidence(
+                level=ConfidenceLevel.LOW if critical_failed else ConfidenceLevel.HIGH,
+                reasons=["Evaluated against Dev 4 RouteExposureEngine and authoritative hazard bulletins"],
+            )
+        else:
+            # M1 demo mode — unchanged
+            answer = (
+                f"[M1 DEMO DATA] Evaluated route passages from {harbor}:\n"
+                f"- Route A (Inshore Channel): 28.2 km, wave height 1.4m (Rating: LOW RISK)\n"
+                f"- Route B (Deepwater Channel): 22.1 km, wave height 2.2m (Rating: MODERATE RISK)\n\n"
+                f"Recommendation: Inshore passage is safer under elevated swell conditions.\n\n"
+                f"Supporting Evidence:\n- {evidence_names}\n\n"
+                f"Notice: Simulated route calculations for testing."
+            )
+            recommendation = Recommendation(
+                status=RecommendationStatus.CAUTION,
+                summary="Inshore passage recommended due to lower wave exposure.",
+                decisive_factors=["Route B exceeds 2.0m wave threshold"],
+                next_action="Follow Route A waypoint plan (Simulation only).",
+            )
+            confidence = Confidence(
+                level=ConfidenceLevel.MEDIUM,
+                reasons=["Simulated route scoring dataset"],
+            )
+
+    elif intent_val == IntentCategory.HAZARDS.value:
+        # M6: Hazard/geofence advisory (unchanged from M6)
         tool_mode = state.get("tool_mode", "demo")
         obs = state.get("observations", {})
         task_plan = state.get("task_plan", [])
@@ -1378,44 +1652,25 @@ def response_composer_node(state: ORCAState) -> Dict[str, Any]:
                 reasons=["Evaluated against authoritative IMD bulletins and maritime boundary registries"],
             )
         else:
-            if intent_val == IntentCategory.ROUTE.value:
-                answer = (
-                    f"[M1 DEMO DATA] Evaluated route passages from {harbor}:\n"
-                    f"- Route A (Inshore Channel): 28.2 km, wave height 1.4m (Rating: LOW RISK)\n"
-                    f"- Route B (Deepwater Channel): 22.1 km, wave height 2.2m (Rating: MODERATE RISK)\n\n"
-                    f"Recommendation: Inshore passage is safer under elevated swell conditions.\n\n"
-                    f"Supporting Evidence:\n- {evidence_names}\n\n"
-                    f"Notice: Simulated route calculations for testing."
-                )
-                recommendation = Recommendation(
-                    status=RecommendationStatus.CAUTION,
-                    summary="Inshore passage recommended due to lower wave exposure.",
-                    decisive_factors=["Route B exceeds 2.0m wave threshold"],
-                    next_action="Follow Route A waypoint plan (Simulation only).",
-                )
-                confidence = Confidence(
-                    level=ConfidenceLevel.MEDIUM,
-                    reasons=["Simulated route scoring dataset"],
-                )
-            else:
-                answer = (
-                    f"[M1 DEMO DATA] Weather & Hazard bulletin for {harbor}:\n"
-                    f"- Cyclone Warning: No active storm warnings in simulated bulletin\n"
-                    f"- Squall Alert: None\n"
-                    f"- Wind: 16 knots (gusts to 22 knots)\n\n"
-                    f"Supporting Evidence:\n- {evidence_names}\n\n"
-                    f"Notice: Simulated demonstration data only."
-                )
-                recommendation = Recommendation(
-                    status=RecommendationStatus.INFORMATIONAL,
-                    summary="No active storm hazards in simulated dataset.",
-                    decisive_factors=["Cyclone warning inactive", "Wind gusts under 25 knots"],
-                    next_action="Monitor VHF marine forecasts regularly.",
-                )
-                confidence = Confidence(
-                    level=ConfidenceLevel.MEDIUM,
-                    reasons=["Simulated M1 coastal weather bulletin"],
-                )
+            # M1 demo mode for HAZARDS intent
+            answer = (
+                f"[M1 DEMO DATA] Weather & Hazard bulletin for {harbor}:\n"
+                f"- Cyclone Warning: No active storm warnings in simulated bulletin\n"
+                f"- Squall Alert: None\n"
+                f"- Wind: 16 knots (gusts to 22 knots)\n\n"
+                f"Supporting Evidence:\n- {evidence_names}\n\n"
+                f"Notice: Simulated demonstration data only."
+            )
+            recommendation = Recommendation(
+                status=RecommendationStatus.INFORMATIONAL,
+                summary="No active storm hazards in simulated dataset.",
+                decisive_factors=["Cyclone warning inactive", "Wind gusts under 25 knots"],
+                next_action="Monitor VHF marine forecasts regularly.",
+            )
+            confidence = Confidence(
+                level=ConfidenceLevel.MEDIUM,
+                reasons=["Simulated M1 coastal weather bulletin"],
+            )
 
     elif intent_val == IntentCategory.ANALYTICAL_EXPLANATION.value:
         answer = (

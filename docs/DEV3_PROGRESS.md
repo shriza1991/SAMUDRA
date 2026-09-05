@@ -328,3 +328,37 @@
     * Linting: 0 ruff errors across all agent packages and test suites.
   - **Documentation**:
     * `docs/M6_HAZARD_GEOFENCE.md`: Comprehensive guide to M6 architecture, workflows, contracts, and test matrix.
+
+### M7 — Route Reasoning Flow (COMPLETE)
+- **Delivered**:
+  - **M7.1 — Contract-Accurate Capability Plan**:
+    * Audited all existing `CAPABILITIES_CATALOG` entries, `ToolDefinition` declarations, and `_enforce_dependency_order()` ranks — zero contract modifications needed.
+    * Split `ROUTE` intent out of the combined `HAZARDS/ROUTE` supervisor branch into its own deterministic plan.
+    * ROUTE plan: `marine_conditions(10) → weather_conditions(20) → hazard_search(30) → geospatial_hazard(35) → route_analysis(60) → risk_evaluation(80)`.
+    * Satisfies all declared dependency chains: `route_analysis → [marine_conditions, hazard_search]`; `risk_evaluation → [marine_conditions, weather_conditions, hazard_search]`.
+    * HAZARDS branch restored with M6 `has_route` logic for queries like "cyclone risks on my route from X to Y".
+  - **M7.2 — Route Candidate Preservation**:
+    * `specialist_tools_node` now extracts `routes` list from `RouteExposurePayload` after successful `route_analysis` execution.
+    * Writes full candidate list to `state["route_candidates"]` (declared `ORCAState` field).
+    * `_compare_route_candidates()` helper reads only Dev 4 output fields (`recommended_route_id`, `risk_rating`, `exposure_score`) — no new formulas or thresholds.
+    * Comparison summary stored in `observations["route_comparison"]` for response composer.
+  - **M7.3 — Dedicated Route Response Template**:
+    * `response_composer_node` now has a dedicated `ROUTE` branch separate from `HAZARDS`.
+    * Lists both candidate routes with Dev 4's `risk_rating`, `exposure_score`, `distance_km`, `max_wave_height_m`.
+    * Marks Dev 4 recommended route with ✓ `[RECOMMENDED by Dev 4]`.
+    * Authoritative `[STATUS]` header from `risk_evaluation` as single source of truth.
+    * Fallback to hazard/geofence signals only when `risk_evaluation` fails or yields `UNKNOWN`.
+  - **M7.4 — Multilingual Route Advisories**:
+    * English: `[STATUS] Route Safety Comparison (from X to Y):`
+    * Hindi: `[STATUS] मार्ग सुरक्षा तुलना (X से Y):`
+    * Marathi: `[STATUS] मार्ग सुरक्षा तुलना (X ते Y):`
+    * Route risk ratings localized: LOW → कम खतरा/कमी धोका, MODERATE → मध्यम खतरा/मध्यम धोका, HIGH → उच्च खतरा/जास्त धोका.
+  - **M7.5 — Safety Invariants Preserved**:
+    * `NO_GO` and `CAUTION` from authoritative engines are never softened.
+    * Conservative failure semantics reused from M5/M6.
+  - **Comprehensive Test Suite**:
+    * `tests/agent_eval/test_m7_route.py` (45 test cases covering all M7 requirements).
+    * Total repository test count: **189/189 passing** in 2.32s.
+    * Zero regressions in M0–M6 test suites.
+  - **Documentation**:
+    * `docs/M7_ROUTE_REASONING.md`: Full architectural guide covering capability plan, dependency contracts, candidate comparison, response templates, safety invariants, and test matrix.
