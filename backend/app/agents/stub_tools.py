@@ -353,8 +353,9 @@ def explanation_stub(
 # Registry Initialization Helper
 # =============================================================================
 
-def register_m1_stub_tools() -> None:
+def register_m1_stub_tools(registry: Optional[Any] = None) -> None:
     """Registers all M1 in-memory stub tools with the global AgentToolRegistry."""
+    target_registry = registry or tool_registry
     stubs = [
         (
             ToolDefinition(
@@ -438,8 +439,7 @@ def register_m1_stub_tools() -> None:
     ]
 
     for definition, handler in stubs:
-        if not tool_registry.get_tool(definition.name):
-            tool_registry.register_tool(definition, handler)
+        target_registry.register_tool(definition, handler, override=True)
 
 
 # Auto-register stub tools upon module import

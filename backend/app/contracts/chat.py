@@ -130,8 +130,13 @@ class MapLayer(BaseModel):
 class AgentTraceItem(BaseModel):
     step: int = Field(..., description="Sequential order in pipeline execution")
     node: str = Field(..., description="LangGraph specialist node name")
+    agent: Optional[str] = Field(None, description="Responsible cognitive component, agent, or node identifier")
     action: str = Field(..., description="Sanitized description of task executed")
-    status: str = Field("completed", description="Status: started | completed | failed")
+    status: str = Field("completed", description="Status: started | completed | failed | skipped | blocked | sanitized | degraded")
+    duration_ms: Optional[float] = Field(None, description="Execution duration in milliseconds")
+    evidence_ids: List[str] = Field(default_factory=list, description="Associated evidence IDs produced or consumed")
+    error: Optional[str] = Field(None, description="Sanitized error description when execution fails")
+    tool_name: Optional[str] = Field(None, description="Specific tool identifier if step is a specialist tool")
     timestamp: str = Field(
         default_factory=lambda: datetime.now(timezone.utc).isoformat(),
         description="ISO-8601 UTC timestamp",

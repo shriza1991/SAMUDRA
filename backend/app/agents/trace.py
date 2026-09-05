@@ -45,7 +45,7 @@ class TraceEvent(BaseModel):
     agent: str = Field(..., description="Node or specialist agent identifier (e.g. 'Supervisor')")
     action: str = Field(..., description="Sanitized, user-comprehensible description of action")
     status: TraceStatus = Field(TraceStatus.COMPLETED, description="Status of the step")
-    duration_ms: Optional[float] = Field(None, description="Execution duration in milliseconds")
+    duration_ms: Optional[float] = Field(0.0, description="Execution duration in milliseconds")
     evidence_ids: List[str] = Field(
         default_factory=list, description="IDs of evidence items produced or consumed"
     )
@@ -59,8 +59,11 @@ class TraceEvent(BaseModel):
         return AgentTraceItem(
             step=self.step,
             node=self.agent,
+            agent=self.agent,
             action=self.action,
             status=self.status.value,
+            duration_ms=self.duration_ms if self.duration_ms is not None else 0.0,
+            evidence_ids=self.evidence_ids,
             timestamp=self.timestamp,
         )
 
@@ -95,13 +98,14 @@ class AgentTraceLogger:
             ValueError: If the action string contains disallowed chain-of-thought markers.
         """
         sanitized_action = self._sanitize_text(action)
+        dur = duration_ms if duration_ms is not None else 0.0
 
         event = TraceEvent(
             step=self._current_step,
             agent=agent,
             action=sanitized_action,
             status=status,
-            duration_ms=duration_ms,
+            duration_ms=dur,
             evidence_ids=evidence_ids or [],
         )
         self._events.append(event)

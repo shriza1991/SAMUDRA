@@ -521,4 +521,27 @@
   - **Documentation**:
     * `docs/M12_PROMPT_SECURITY.md`: Comprehensive threat model, authority partitioning, defense-in-depth architecture, and verification matrix.
 
+---
+
+### M13 — Trace / Agent Activity (COMPLETE)
+- **Delivered**:
+  - **M13.1 — Public Execution Trace Schema & Contracts**:
+    * Implemented `TraceEvent`, `TraceStatus`, and `AgentTraceLogger` in [trace.py](file:///c:/Users/dyara/SAMUDRA/backend/app/agents/trace.py).
+    * Integrated with frontend `AgentTraceItem` contract schema: `step`, `node`, `agent`, `action`, `status`, `duration_ms`, `evidence_ids`, `error`, `tool_name`, `timestamp`.
+  - **M13.2 — Granular Node & Specialist Step Tracking**:
+    * Every LangGraph execution node (`intent_locale`, `supervisor_planner`, `specialist_tools`, `evidence_validator`, `response_composer`, `clarification`, `terminal`) records a structured trace event with millisecond timings.
+    * Every tool execution records individual tool invocation status (`completed`, `failed`, `degraded`), duration, and generated evidence IDs.
+  - **M13.3 — Trace Sanitization & Security Isolation**:
+    * Integrated with `PromptInjectionGuard` to ensure no raw Chain-of-Thought tokens (`<think>`, `Thought:`), system prompt text, API secrets, or raw database/stack traces are ever leaked into the public trace.
+  - **M13.4 — Strict Invariant Preservation**:
+    * Dev 4 risk status (`GO`, `CAUTION`, `NO_GO`, `UNKNOWN`) is 100% immutable and unchanged by tracing.
+    * M10 evidence validation and M9 multilingual synthesis operate with full trace transparency.
+  - **M13.5 — Comprehensive Test Suite** (`tests/agent_eval/test_m13_trace.py`):
+    * 24 dedicated test cases verifying trace schema validation, node events, tool events, evidence ID propagation, duration tracking, failure handling, clarification pruning, DAG order, CoT/system-prompt/secret non-leakage, safety status preservation, multilingual stability, and full M0–M12 regression.
+    * Total repository test count: **329/329 passing** in 3.94s.
+    * Linting: **0 ruff errors**.
+  - **Documentation**:
+    * `docs/M13_TRACE_ACTIVITY.md`: Comprehensive architectural guide, privacy model, event taxonomy, and verification matrix.
+
+
 

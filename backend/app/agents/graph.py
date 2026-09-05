@@ -25,6 +25,7 @@ All data is strictly tagged as M1_DEMO_DATA / SIMULATED.
 
 from datetime import datetime, timezone
 from enum import Enum
+import time
 from typing import Any, Dict, List, Optional
 import uuid
 
@@ -238,16 +239,39 @@ def _append_trace(
     node_name: str,
     action: str,
     status: str = "completed",
+    duration_ms: Optional[float] = None,
+    evidence_ids: Optional[List[str]] = None,
+    error: Optional[str] = None,
+    agent: Optional[str] = None,
+    tool_name: Optional[str] = None,
 ) -> List[AgentTraceItem]:
     """Appends a new sanitized trace item to the execution history."""
     trace_list = list(current_trace or [])
     step_num = len(trace_list) + 1
+
+    # Security sanitization against secrets and raw CoT
+    _, sanitized_action, _ = PromptInjectionGuard.audit_response_for_secrets(action)
+    _, clean_action = PromptInjectionGuard.audit_response_for_cot(sanitized_action)
+
+    clean_error = None
+    if error:
+        _, sanitized_err, _ = PromptInjectionGuard.audit_response_for_secrets(str(error))
+        _, clean_error = PromptInjectionGuard.audit_response_for_cot(sanitized_err)
+
+    if duration_ms is None:
+        duration_ms = 0.0
+
     trace_list.append(
         AgentTraceItem(
             step=step_num,
             node=node_name,
-            action=action,
+            agent=agent or node_name,
+            action=clean_action,
             status=status,
+            duration_ms=duration_ms,
+            evidence_ids=list(evidence_ids or []),
+            error=clean_error,
+            tool_name=tool_name,
             timestamp=datetime.now(timezone.utc).isoformat(),
         )
     )
@@ -260,6 +284,7 @@ def _append_trace(
 
 def intent_locale_node(state: ORCAState) -> Dict[str, Any]:
     """Classifies user intent and locale using LLM assistance with transparent fallback."""
+    start_time = time.perf_counter()
     raw_msg = state.get("user_message", "").strip()
     thread_id = state.get("thread_id", "default-thread")
     trace = list(state.get("trace", []))
@@ -269,11 +294,14 @@ def intent_locale_node(state: ORCAState) -> Dict[str, Any]:
     if is_injection:
         thread_ctx = memory_manager.load_context(thread_id)
         detected_lang = detect_language(raw_msg, context_language=thread_ctx.preferred_language or "en")
+        dur = round((time.perf_counter() - start_time) * 1000, 2)
         trace = _append_trace(
             trace,
             node_name="Security Guard",
+            agent="intent_locale",
             action=f"Prompt injection attempt detected ({injection_reason}). Neutralizing adversarial input.",
             status="blocked",
+            duration_ms=dur,
         )
         return {
             "intent": IntentCategory.UNSUPPORTED.value,
@@ -422,13 +450,17 @@ def intent_locale_node(state: ORCAState) -> Dict[str, Any]:
 
             carried_str = ", ".join(audit_summary["carried_fields"]) or "none"
             overwritten_str = ", ".join(audit_summary["overwritten_fields"]) or "none"
+            dur = round((time.perf_counter() - start_time) * 1000, 2)
             trace = _append_trace(
                 trace,
                 node_name="Intent / Locale",
+                agent="intent_locale",
                 action=f"LLM extraction ({llm_provider.provider_name}/{llm_provider.model_name}): "
                        f"intent='{validated_intent}', locale='{extraction.detected_language}' (Harbor: {origin_harbor or 'Unresolved'}{f', Dest: {destination}' if destination else ''}) "
                        f"[Memory Turn {updated_ctx.turn_count}: carried=({carried_str}), overwritten=({overwritten_str})]"
                        + (f" [Clarification needed: {', '.join(missing_fields)}]" if clarification_needed else ""),
+                status="completed",
+                duration_ms=dur,
             )
 
             return {
@@ -444,11 +476,14 @@ def intent_locale_node(state: ORCAState) -> Dict[str, Any]:
                 "trace": trace,
             }
         except Exception as exc:
+            dur = round((time.perf_counter() - start_time) * 1000, 2)
             trace = _append_trace(
                 trace,
                 node_name="Intent / Locale",
+                agent="intent_locale",
                 action=f"LLM extraction fallback triggered ({type(exc).__name__}: {str(exc)}); using deterministic classifier",
                 status="degraded",
+                duration_ms=dur,
             )
             # Fall through seamlessly to deterministic classifier below
 
@@ -588,12 +623,16 @@ def intent_locale_node(state: ORCAState) -> Dict[str, Any]:
 
     carried_str = ", ".join(audit_summary["carried_fields"]) or "none"
     overwritten_str = ", ".join(audit_summary["overwritten_fields"]) or "none"
+    dur = round((time.perf_counter() - start_time) * 1000, 2)
     trace = _append_trace(
         trace,
         node_name="Intent / Locale",
+        agent="intent_locale",
         action=f"Detected intent '{intent.value}' and locale '{lang}' (Harbor: {origin_harbor or 'Unresolved'}{f', Dest: {destination}' if destination else ''}) "
                f"[Memory Turn {updated_ctx.turn_count}: carried=({carried_str}), overwritten=({overwritten_str})]"
                + (f" [Clarification needed: {', '.join(missing_fields)}]" if clarification_needed else ""),
+        status="completed",
+        duration_ms=dur,
     )
 
     return {
@@ -616,6 +655,7 @@ def intent_locale_node(state: ORCAState) -> Dict[str, Any]:
 
 def supervisor_node(state: ORCAState) -> Dict[str, Any]:
     """Generates a bounded TaskPlan mapping the classified intent to specialist tools or contract mocks."""
+    start_time = time.perf_counter()
     intent_val = state.get("intent", IntentCategory.UNSUPPORTED.value)
     tool_mode = state.get("tool_mode", "demo")
 
@@ -672,11 +712,15 @@ def supervisor_node(state: ORCAState) -> Dict[str, Any]:
         unavailable = tool_registry.get_unavailable_capabilities(required_capabilities)
         if unavailable:
             missing_cap = unavailable[0]
+            dur = round((time.perf_counter() - start_time) * 1000, 2)
             trace = _append_trace(
                 state.get("trace"),
                 node_name="Supervisor / Planner",
+                agent="supervisor_planner",
                 action=f"Capability check failed: '{missing_cap}' is currently unavailable. Aborting tool dispatch.",
                 status="failed",
+                duration_ms=dur,
+                error=f"Capability '{missing_cap}' is currently unavailable",
             )
             return {
                 "task_plan": [],
@@ -707,22 +751,29 @@ def supervisor_node(state: ORCAState) -> Dict[str, Any]:
                 if valid_proposed:
                     # Enforce strict dependency ordering
                     ordered_tools = _enforce_dependency_order(valid_proposed)
+                    dur = round((time.perf_counter() - start_time) * 1000, 2)
                     trace = _append_trace(
                         state.get("trace"),
                         node_name="Supervisor / Planner",
+                        agent="supervisor_planner",
                         action=f"LLM task plan validated ({llm_provider.provider_name}/{llm_provider.model_name}): "
                                f"{len(ordered_tools)} tool(s) scheduled (Rationale: {proposal.planning_rationale or 'Optimized DAG'})",
+                        status="completed",
+                        duration_ms=dur,
                     )
                     return {
                         "task_plan": ordered_tools,
                         "trace": trace,
                     }
             except Exception as exc:
+                dur = round((time.perf_counter() - start_time) * 1000, 2)
                 trace = _append_trace(
                     state.get("trace"),
                     node_name="Supervisor / Planner",
+                    agent="supervisor_planner",
                     action=f"LLM planning fallback triggered ({type(exc).__name__}); using deterministic standard plan",
                     status="degraded",
+                    duration_ms=dur,
                 )
                 # Fall through to deterministic plan
 
@@ -757,10 +808,14 @@ def supervisor_node(state: ORCAState) -> Dict[str, Any]:
         else:
             tools = []
 
+    dur = round((time.perf_counter() - start_time) * 1000, 2)
     trace = _append_trace(
         state.get("trace"),
         node_name="Supervisor / Planner",
+        agent="supervisor_planner",
         action=f"Constructed TaskPlan ({tool_mode}) with {len(tools)} tool(s): {tools}",
+        status="completed",
+        duration_ms=dur,
     )
 
     return {
@@ -895,7 +950,9 @@ def specialist_tools_node(state: ORCAState) -> Dict[str, Any]:
             params["destination"] = destination or "Outer Bank"
 
         # Execute through typed registry
+        start_tool = time.perf_counter()
         result = tool_registry.execute_tool(tool_name, params)
+        tool_dur = round((time.perf_counter() - start_tool) * 1000, 2)
         if result.status == ToolStatus.FAILED:
             failed_tools.add(tool_name)
             collected_warnings.extend(result.warnings)
@@ -914,8 +971,12 @@ def specialist_tools_node(state: ORCAState) -> Dict[str, Any]:
             trace = _append_trace(
                 trace,
                 node_name=f"Specialist Tool: {tool_name}",
+                agent="specialist_tools",
+                tool_name=tool_name,
                 action=f"Tool '{tool_name}' failed: {result.error_code or 'Execution failure'}",
                 status="failed",
+                duration_ms=tool_dur,
+                error=result.error_code or "Execution failure",
             )
             continue
 
@@ -941,10 +1002,16 @@ def specialist_tools_node(state: ORCAState) -> Dict[str, Any]:
             raw_routes = result.data.get("routes", [])
             route_candidates = list(raw_routes)
 
+        tool_ev_ids = [ev.evidence_id for ev in result.evidence if ev.evidence_id]
         trace = _append_trace(
             trace,
             node_name=f"Specialist Tool: {tool_name}",
+            agent="specialist_tools",
+            tool_name=tool_name,
             action=f"Executed '{tool_name}' (status: {result.status.value}, evidence items: {len(result.evidence)})",
+            status="completed",
+            duration_ms=tool_dur,
+            evidence_ids=tool_ev_ids,
         )
 
     # M10: Ensure every collected evidence item has a deterministic evidence_id
@@ -973,6 +1040,7 @@ def specialist_tools_node(state: ORCAState) -> Dict[str, Any]:
 
 def evidence_validator_node(state: ORCAState) -> Dict[str, Any]:
     """Audits whether factual and numerical claims are backed by verifiable evidence citations."""
+    start_time = time.perf_counter()
     evidence = EvidenceValidator.ensure_evidence_ids(state.get("evidence", []))
     intent = state.get("intent")
 
@@ -1005,10 +1073,16 @@ def evidence_validator_node(state: ORCAState) -> Dict[str, Any]:
     if report.conflicting_metrics:
         warnings.append(f"Conflicting evidence detected for: {', '.join(report.conflicting_metrics)}")
 
+    dur = round((time.perf_counter() - start_time) * 1000, 2)
+    ev_ids = [ev.evidence_id for ev in evidence if ev.evidence_id]
     trace = _append_trace(
         state.get("trace"),
         node_name="Evidence Validator",
+        agent="evidence_validator",
         action=f"Audited {len(evidence)} citation(s) against critical metrics (Quality: {report.quality_summary})",
+        status="completed",
+        duration_ms=dur,
+        evidence_ids=ev_ids,
     )
 
     return {
@@ -1024,8 +1098,11 @@ def evidence_validator_node(state: ORCAState) -> Dict[str, Any]:
 
 def response_composer_node(state: ORCAState) -> Dict[str, Any]:
     """Synthesizes the final natural-language answer, strictly preserving deterministic safety status."""
+    t0 = time.perf_counter()
+    trace = list(state.get("trace", []))
     capability_error = state.get("capability_error")
     if capability_error:
+        duration_ms = round((time.perf_counter() - t0) * 1000, 2)
         answer = (
             f"I cannot provide a reliable safety assessment because the required capability "
             f"'{capability_error}' is currently unavailable. Please try again later or check system status."
@@ -1041,10 +1118,12 @@ def response_composer_node(state: ORCAState) -> Dict[str, Any]:
             reasons=[f"Capability '{capability_error}' unavailable"],
         )
         trace = _append_trace(
-            state.get("trace"),
+            trace,
             node_name="Response Composer",
             action=f"Capability check failed for '{capability_error}': returned safe fallback advisory",
             status="completed",
+            agent="response_composer",
+            duration_ms=duration_ms,
         )
         return {
             "response": answer,
@@ -1816,10 +1895,17 @@ def response_composer_node(state: ORCAState) -> Dict[str, Any]:
         )
         ResponseComposer.validate_safety_invariance(composed_chat_response, authoritative_rec)
 
+    duration_ms = round((time.perf_counter() - t0) * 1000, 2)
+    evidence_ids = [ev.evidence_id for ev in evidence if hasattr(ev, "evidence_id") and ev.evidence_id]
+
     trace = _append_trace(
-        state.get("trace"),
+        trace,
         node_name="Response Composer",
         action=f"Synthesized localized response with evidence backing (Status: {recommendation.status.value})",
+        status="completed",
+        agent="response_composer",
+        duration_ms=duration_ms,
+        evidence_ids=evidence_ids,
     )
 
     return {
@@ -1843,11 +1929,13 @@ def clarification_node(state: ORCAState) -> Dict[str, Any]:
     - Allowed mutations: response, risk_assessment, confidence, suggested_followups, trace
     - Forbidden: Do NOT execute specialist tools or fabricate operational locations.
     """
+    t0 = time.perf_counter()
+    trace = list(state.get("trace", []))
+
     intent_val = state.get("intent", IntentCategory.UNSUPPORTED.value)
     lang = state.get("language", "en")
     missing = state.get("missing_fields", ["origin_harbor"])
     prompt = state.get("clarification_prompt")
-    trace = list(state.get("trace", []))
 
     if not prompt:
         try:
@@ -1878,11 +1966,14 @@ def clarification_node(state: ORCAState) -> Dict[str, Any]:
         reasons=["Operational context incomplete: departure origin unknown."],
     )
 
+    duration_ms = round((time.perf_counter() - t0) * 1000, 2)
     trace = _append_trace(
         trace,
         node_name="Clarification",
         action=f"Requested user clarification for missing operational fields ({', '.join(missing)}) in '{lang}'",
         status="completed",
+        agent="clarification",
+        duration_ms=duration_ms,
     )
 
     return {
@@ -1900,13 +1991,22 @@ def clarification_node(state: ORCAState) -> Dict[str, Any]:
 
 def terminal_node(state: ORCAState) -> Dict[str, Any]:
     """Finalizes pipeline execution, validates invariants, and seals audit trace."""
+    t0 = time.perf_counter()
     assert state.get("response") is not None, "Pipeline failed: missing response"
     assert state.get("trace") is not None, "Pipeline failed: missing execution trace"
+
+    duration_ms = round((time.perf_counter() - t0) * 1000, 2)
+    evidence = state.get("evidence", [])
+    evidence_ids = [ev.evidence_id for ev in evidence if hasattr(ev, "evidence_id") and ev.evidence_id]
 
     trace = _append_trace(
         state.get("trace"),
         node_name="Terminal",
         action="Pipeline execution successfully validated and finalized",
+        status="completed",
+        agent="terminal",
+        duration_ms=duration_ms,
+        evidence_ids=evidence_ids,
     )
 
     return {
