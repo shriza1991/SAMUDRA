@@ -25,6 +25,7 @@ All data is strictly tagged as M1_DEMO_DATA / SIMULATED.
 
 from datetime import datetime, timezone
 from enum import Enum
+import json
 from typing import Any, Dict, List, Optional
 import uuid
 
@@ -32,8 +33,22 @@ from langgraph.graph import END, START, StateGraph
 from pydantic import BaseModel, Field
 
 from backend.app.agents.evidence import EvidenceValidator
-from backend.app.agents.intent import IntentCategory
+from backend.app.agents.intent import (
+    ExtractedEntities,
+    IntentCategory,
+    IntentExtractionResult,
+    LLMResponseDraft,
+    LLMTaskPlanProposal,
+)
+from backend.app.agents.llm import (
+    LLMMessage,
+    LLMProvider,
+    MessageRole,
+    get_llm_provider,
+)
+from backend.app.agents.memory import memory_manager
 from backend.app.agents.response import ResponseComposer, ResponseCompositionInput
+from backend.app.agents.security import PromptInjectionGuard
 from backend.app.agents.state import ORCAState
 from backend.app.agents.stub_tools import register_m1_stub_tools
 from backend.app.agents.tools import tool_registry
@@ -45,6 +60,23 @@ from backend.app.contracts.chat import (
     Recommendation,
     RecommendationStatus,
 )
+from backend.app.prompts import load_prompt
+
+
+# Helper function: canonical capability dependency order
+def _enforce_dependency_order(capabilities: List[str]) -> List[str]:
+    """Orders specialist capabilities by dependency DAG."""
+    order_rank = {
+        "marine_conditions": 10,
+        "weather_conditions": 20,
+        "hazard_search": 30,
+        "pfz_source": 40,
+        "pfz_search": 50,
+        "route_analysis": 60,
+        "geofence_check": 70,
+        "risk_evaluation": 80,
+    }
+    return sorted(capabilities, key=lambda c: order_rank.get(c, 100))
 
 
 # Auto-register stub tools upon graph module import
@@ -170,15 +202,113 @@ def _append_trace(
 
 
 # =============================================================================
-# Node 1: Intent & Locale Classification (Deterministic M1 Implementation)
+# Node 1: Intent & Locale Classification (LLM-Assisted with Deterministic Fallback)
 # =============================================================================
 
 def intent_locale_node(state: ORCAState) -> Dict[str, Any]:
-    """Classifies user intent and locale using transparent keyword rules for M1."""
+    """Classifies user intent and locale using LLM assistance with transparent fallback."""
     raw_msg = state.get("user_message", "").strip()
-    msg_lower = raw_msg.lower()
+    thread_id = state.get("thread_id", "default-thread")
+    trace = list(state.get("trace", []))
 
-    # 1. Language Detection (English baseline, with Marathi and Hindi keyword detection)
+    # 1. Prompt Injection & Adversarial Query Defense
+    is_injection, injection_reason = PromptInjectionGuard.detect_injection(raw_msg)
+    if is_injection:
+        trace = _append_trace(
+            trace,
+            node_name="Security Guard",
+            action=f"Prompt injection attempt detected ({injection_reason}). Neutralizing adversarial input.",
+            status="blocked",
+        )
+        return {
+            "intent": IntentCategory.UNSUPPORTED.value,
+            "language": "en",
+            "location": {"harbor": "Ratnagiri", "coordinates": [73.28, 16.99]},
+            "time_window": {"departure_time": "tomorrow_morning", "duration_hours": 8.0},
+            "missing_fields": [],
+            "clarification_needed": False,
+            "warnings": list(state.get("warnings", [])) + [f"Security alert: {injection_reason}"],
+            "trace": trace,
+        }
+
+    # 2. LLM-Assisted Extraction (If provider is configured)
+    llm_provider: Optional[LLMProvider] = state.get("llm_provider")
+    if llm_provider is not None:
+        try:
+            sanitized_input = PromptInjectionGuard.sanitize_user_input(raw_msg)
+            system_prompt = load_prompt("intent.md")
+            messages = [
+                LLMMessage(role=MessageRole.SYSTEM, content=system_prompt),
+                LLMMessage(role=MessageRole.USER, content=sanitized_input),
+            ]
+            extraction = llm_provider.generate_structured(
+                messages=messages,
+                response_schema=IntentExtractionResult,
+                temperature=0.0,
+                timeout_seconds=5.0,
+            )
+
+            # Strict IntentCategory boundary validation
+            if isinstance(extraction.intent, IntentCategory):
+                validated_intent = extraction.intent.value
+            elif extraction.intent in [c.value for c in IntentCategory]:
+                validated_intent = extraction.intent
+            else:
+                raise ValueError(f"Extracted intent '{extraction.intent}' is not an approved IntentCategory.")
+
+            # Resolve entities with thread memory
+            detected_harbor = extraction.entities.origin_harbor
+            thread_ctx = memory_manager.get_context(thread_id)
+            if not detected_harbor and thread_ctx.active_harbor:
+                detected_harbor = thread_ctx.active_harbor
+            if not detected_harbor:
+                detected_harbor = "Ratnagiri"  # Standard default
+
+            location = state.get("location") or {
+                "harbor": detected_harbor,
+                "coordinates": extraction.entities.coordinates or [73.28, 16.99],
+            }
+            time_window = state.get("time_window") or {
+                "departure_time": extraction.entities.departure_time or "tomorrow_morning",
+                "duration_hours": extraction.entities.duration_hours or 8.0,
+            }
+
+            # Update memory context
+            memory_manager.update_context(
+                thread_id=thread_id,
+                entities=ExtractedEntities(origin_harbor=detected_harbor, craft_type=extraction.entities.craft_type),
+                intent=IntentCategory(validated_intent),
+                language=extraction.detected_language,
+            )
+
+            trace = _append_trace(
+                trace,
+                node_name="Intent / Locale",
+                action=f"LLM extraction ({llm_provider.provider_name}/{llm_provider.model_name}): "
+                       f"intent='{validated_intent}', locale='{extraction.detected_language}' (Harbor: {detected_harbor})",
+            )
+
+            return {
+                "intent": validated_intent,
+                "language": extraction.detected_language or "en",
+                "location": location,
+                "time_window": time_window,
+                "missing_fields": extraction.missing_critical_fields,
+                "clarification_needed": extraction.clarification_needed,
+                "clarification_prompt": extraction.clarification_prompt,
+                "trace": trace,
+            }
+        except Exception as exc:
+            trace = _append_trace(
+                trace,
+                node_name="Intent / Locale",
+                action=f"LLM extraction fallback triggered ({type(exc).__name__}: {str(exc)}); using deterministic classifier",
+                status="degraded",
+            )
+            # Fall through seamlessly to deterministic classifier below
+
+    # 3. Deterministic Fallback Classifier
+    msg_lower = raw_msg.lower()
     lang = state.get("language") or "en"
     marathi_keywords = ["उद्या", "सुरक्षित", "लाटा", "मासेमारी", "बंदर", "होडी", "सावध", "आहे का"]
     hindi_keywords = ["क्या", "तूफान", "हवा", "नाव", "मछली", "सकते", "चेतावनी", "सुरक्षा"]
@@ -188,7 +318,6 @@ def intent_locale_node(state: ORCAState) -> Dict[str, Any]:
     elif any(kw in raw_msg for kw in hindi_keywords):
         lang = "hi"
 
-    # 2. Intent Classification
     if any(k in msg_lower for k in ["pfz", "fishing zone", "fish ground", "मत्स्य"]) or (
         "fish" in msg_lower and any(q in msg_lower for q in ["where", "nearest", "find", "कुठे", "कहाँ"])
     ):
@@ -206,19 +335,32 @@ def intent_locale_node(state: ORCAState) -> Dict[str, Any]:
     else:
         intent = IntentCategory.UNSUPPORTED
 
-    # 3. Location Extraction
     harbors = ["ratnagiri", "veraval", "porbandar", "mumbai", "panaji", "goa", "malpe", "chennai"]
-    detected_harbor = "Ratnagiri"  # Default fallback for M1 demo
+    detected_harbor = None
     for h in harbors:
         if h in msg_lower:
             detected_harbor = h.capitalize()
             break
 
+    thread_ctx = memory_manager.get_context(thread_id)
+    if not detected_harbor and thread_ctx.active_harbor:
+        detected_harbor = thread_ctx.active_harbor
+    if not detected_harbor:
+        detected_harbor = "Ratnagiri"
+
     location = state.get("location") or {"harbor": detected_harbor, "coordinates": [73.28, 16.99]}
     time_window = state.get("time_window") or {"departure_time": "tomorrow_morning", "duration_hours": 8.0}
 
+    # Update thread memory context
+    memory_manager.update_context(
+        thread_id=thread_id,
+        entities=ExtractedEntities(origin_harbor=detected_harbor),
+        intent=intent,
+        language=lang,
+    )
+
     trace = _append_trace(
-        state.get("trace"),
+        trace,
         node_name="Intent / Locale",
         action=f"Detected intent '{intent.value}' and locale '{lang}' (Harbor: {detected_harbor})",
     )
@@ -273,7 +415,49 @@ def supervisor_node(state: ORCAState) -> Dict[str, Any]:
                 "trace": trace,
             }
 
-        # 3. Dependency-ordered tool sequences
+        # 3. LLM-Assisted Task Planning Proposal (if LLM provider available)
+        llm_provider: Optional[LLMProvider] = state.get("llm_provider")
+        if llm_provider is not None:
+            try:
+                supervisor_prompt = load_prompt("supervisor.md")
+                messages = [
+                    LLMMessage(role=MessageRole.SYSTEM, content=supervisor_prompt),
+                    LLMMessage(role=MessageRole.USER, content=f"Construct task plan for intent '{intent_val}' (Available capabilities: {tool_registry.list_capabilities()})."),
+                ]
+                proposal = llm_provider.generate_structured(
+                    messages=messages,
+                    response_schema=LLMTaskPlanProposal,
+                    temperature=0.0,
+                    timeout_seconds=5.0,
+                )
+                approved_capabilities = tool_registry.list_capabilities()
+                valid_proposed = [
+                    cap for cap in proposal.requested_capabilities
+                    if cap in approved_capabilities and tool_registry.is_capability_available(cap)
+                ]
+                if valid_proposed:
+                    # Enforce strict dependency ordering
+                    ordered_tools = _enforce_dependency_order(valid_proposed)
+                    trace = _append_trace(
+                        state.get("trace"),
+                        node_name="Supervisor / Planner",
+                        action=f"LLM task plan validated ({llm_provider.provider_name}/{llm_provider.model_name}): "
+                               f"{len(ordered_tools)} tool(s) scheduled (Rationale: {proposal.planning_rationale or 'Optimized DAG'})",
+                    )
+                    return {
+                        "task_plan": ordered_tools,
+                        "trace": trace,
+                    }
+            except Exception as exc:
+                trace = _append_trace(
+                    state.get("trace"),
+                    node_name="Supervisor / Planner",
+                    action=f"LLM planning fallback triggered ({type(exc).__name__}); using deterministic standard plan",
+                    status="degraded",
+                )
+                # Fall through to deterministic plan
+
+        # 4. Standard Deterministic Dependency-ordered Tool Sequences
         if intent_val == IntentCategory.PFZ.value:
             tools = ["marine_conditions", "pfz_search"]
         elif intent_val == IntentCategory.SAFETY.value:
@@ -631,6 +815,72 @@ def response_composer_node(state: ORCAState) -> Dict[str, Any]:
             reasons=["Simulated M1 dataset"],
         )
 
+    # 4. LLM Response Synthesis (If LLM provider is available)
+    llm_provider: Optional[LLMProvider] = state.get("llm_provider")
+    if llm_provider is not None:
+        try:
+            response_prompt = load_prompt("response.md")
+            req_status = recommendation.status.value
+            lang = state.get("language", "en")
+            system_instruction = (
+                f"{response_prompt}\n\n"
+                f"CRITICAL IMMUTABLE DIRECTIVE:\n"
+                f"The authoritative safety status is [{req_status}]. You MUST NOT change or soften this status.\n"
+                f"Output strictly adhering to LLMResponseDraft schema."
+            )
+            context_summary = {
+                "intent": intent_val,
+                "language": lang,
+                "harbor": harbor,
+                "recommendation_status": req_status,
+                "recommendation_summary": recommendation.summary,
+                "decisive_factors": recommendation.decisive_factors,
+                "next_action": recommendation.next_action,
+                "observations": state.get("observations", {}),
+                "evidence_sources": [ev.source_name for ev in evidence],
+            }
+            messages = [
+                LLMMessage(role=MessageRole.SYSTEM, content=system_instruction),
+                LLMMessage(
+                    role=MessageRole.USER,
+                    content=f"<context_data>\n{json.dumps(context_summary, ensure_ascii=False)}\n</context_data>",
+                ),
+            ]
+            draft = llm_provider.generate_structured(
+                messages=messages,
+                response_schema=LLMResponseDraft,
+                temperature=0.1,
+                timeout_seconds=5.0,
+            )
+
+            # Audit response draft for safety tampering
+            is_valid_safety, violation_reason = PromptInjectionGuard.audit_response_for_tampering(
+                draft.synthesized_text,
+                recommendation.status,
+            )
+            if not is_valid_safety:
+                trace = _append_trace(
+                    state.get("trace"),
+                    node_name="Response Composer",
+                    action=f"Safety tampering detected in LLM draft ({violation_reason}); falling back to deterministic template",
+                    status="blocked",
+                )
+            else:
+                answer = draft.synthesized_text
+                trace = _append_trace(
+                    state.get("trace"),
+                    node_name="Response Composer",
+                    action=f"LLM-synthesized localized response ({llm_provider.provider_name}/{llm_provider.model_name}) in '{lang}'",
+                )
+        except Exception as exc:
+            trace = _append_trace(
+                state.get("trace"),
+                node_name="Response Composer",
+                action=f"LLM synthesis fallback triggered ({type(exc).__name__}); using deterministic template",
+                status="degraded",
+            )
+            # Fall back to deterministic template
+
     # Validate safety invariance if risk_assessment exists
     if state.get("risk_assessment"):
         comp_input = ResponseCompositionInput(
@@ -719,11 +969,25 @@ def run_orca_graph(
     thread_id: str = "default-thread",
     user_context: Optional[Dict[str, Any]] = None,
     tool_mode: str = "demo",
+    llm_provider: Optional[LLMProvider] = None,
+    llm_mode: str = "auto",
 ) -> ORCAState:
     """Convenience execution runner to execute a query through the LangGraph pipeline."""
     if tool_mode == "contract_mock":
         from backend.app.agents.integrations.mocks import register_m2_contract_mocks
         register_m2_contract_mocks(tool_registry)
+
+    # Determine LLM provider instance based on mode
+    active_provider: Optional[LLMProvider] = None
+    if llm_mode == "deterministic":
+        active_provider = None
+    elif llm_mode == "fake":
+        from backend.app.agents.llm import FakeLLMProvider
+        active_provider = llm_provider if llm_provider is not None else FakeLLMProvider()
+    elif llm_mode == "auto":
+        active_provider = llm_provider if llm_provider is not None else get_llm_provider()
+    else:
+        active_provider = llm_provider
 
     initial_state: ORCAState = {
         "request_id": f"req-{uuid.uuid4().hex[:8]}",
@@ -731,6 +995,7 @@ def run_orca_graph(
         "user_message": user_message,
         "user_profile": (user_context or {}).copy(),
         "tool_mode": tool_mode,
+        "llm_provider": active_provider,
         "trace": [],
         "evidence": [],
         "warnings": [],

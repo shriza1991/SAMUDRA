@@ -1,23 +1,37 @@
-"""Provider-Agnostic LLM Interface for SAMUDRA / ORCA.
+"""Provider-Agnostic LLM Interface & Implementations for SAMUDRA / ORCA.
 
 Owned by Dev 3 (Agent Orchestration & Explainability).
 Part of SIH 2026 Problem Statement PS 26176 — ORCA.
 
-Decouples the LangGraph cognitive nodes from specific LLM providers (e.g. Gemini,
-OpenAI, Anthropic, Ollama/local). Nodes depend strictly on this abstract interface.
-NO paid provider is configured or called in Milestone M0.
+Decouples LangGraph cognitive nodes from specific LLM vendors:
+- Abstract `LLMProvider` interface (text generation & structured output).
+- `FakeLLMProvider` for deterministic, zero-cost, 100% offline unit/eval testing.
+- `OllamaLLMProvider` for local open-weights inference (e.g. Llama 3) via HTTP.
+- `OpenAILLMProvider` for standard OpenAI-compatible endpoints.
+- Factory `get_llm_provider()` with graceful deterministic fallback.
 """
 
 from abc import ABC, abstractmethod
 from enum import Enum
+import json
+import logging
 from typing import Any, Dict, List, Optional, Type, TypeVar
+import httpx
 from pydantic import BaseModel, Field
+
+from backend.app.core.config import settings
+
+logger = logging.getLogger(__name__)
 
 T = TypeVar("T", bound=BaseModel)
 
 
+# =============================================================================
+# 1. Message & Response Representations
+# =============================================================================
+
 class MessageRole(str, Enum):
-    """Role of a message in a conversation sequence."""
+    """Role of a message participant in a prompt sequence."""
 
     SYSTEM = "system"
     USER = "user"
@@ -26,11 +40,11 @@ class MessageRole(str, Enum):
 
 
 class LLMMessage(BaseModel):
-    """Unified chat message representation across LLM backends."""
+    """Unified chat message representation across backends."""
 
     role: MessageRole = Field(..., description="Sender role: system | user | assistant | tool")
     content: str = Field(..., description="Message text content")
-    name: Optional[str] = Field(None, description="Optional author or tool identifier")
+    name: Optional[str] = Field(None, description="Optional author or function identifier")
 
 
 class TokenUsage(BaseModel):
@@ -50,8 +64,24 @@ class LLMResponse(BaseModel):
     raw_response: Optional[Any] = Field(None, description="Optional raw provider-specific payload")
 
 
+# =============================================================================
+# 2. Abstract Provider Interface
+# =============================================================================
+
 class LLMProvider(ABC):
     """Abstract interface that all LLM backends must implement for SAMUDRA."""
+
+    @property
+    @abstractmethod
+    def provider_name(self) -> str:
+        """Identifier name of the provider backend."""
+        pass
+
+    @property
+    @abstractmethod
+    def model_name(self) -> str:
+        """Model identifier currently configured."""
+        pass
 
     @abstractmethod
     def generate(
@@ -59,17 +89,9 @@ class LLMProvider(ABC):
         messages: List[LLMMessage],
         temperature: float = 0.0,
         max_tokens: int = 1024,
+        timeout_seconds: Optional[float] = None,
     ) -> LLMResponse:
-        """Generates a text completion given a list of messages.
-
-        Args:
-            messages: Conversation history and prompt.
-            temperature: Sampling temperature (0.0 for deterministic extraction).
-            max_tokens: Maximum output tokens to generate.
-
-        Returns:
-            Normalized LLMResponse.
-        """
+        """Generates a text completion given a list of messages."""
         pass
 
     @abstractmethod
@@ -78,35 +100,71 @@ class LLMProvider(ABC):
         messages: List[LLMMessage],
         response_schema: Type[T],
         temperature: float = 0.0,
+        timeout_seconds: Optional[float] = None,
     ) -> T:
-        """Generates a strictly structured output conforming to a Pydantic schema.
-
-        Args:
-            messages: Conversation history and prompt.
-            response_schema: Target Pydantic model class.
-            temperature: Sampling temperature (0.0 for strict JSON extraction).
-
-        Returns:
-            Instantiated and validated Pydantic model.
-        """
+        """Generates a strictly structured output conforming to a Pydantic schema."""
         pass
 
 
-class MockLLMProvider(LLMProvider):
-    """Test fixture provider for local verification and unit testing without network/API keys."""
+# =============================================================================
+# 3. Fake / Mock LLM Provider (Offline Testing & Benchmarking)
+# =============================================================================
 
-    def __init__(self, canned_responses: Optional[Dict[str, Any]] = None) -> None:
+class FakeLLMProvider(LLMProvider):
+    """Deterministic test double for testing without external network or API keys.
+
+    Allows programming custom responses, schema returns, and simulated failures (timeouts,
+    network crashes, malformed JSON).
+    """
+
+    def __init__(
+        self,
+        canned_responses: Optional[Dict[str, Any]] = None,
+        canned_text: str = "Simulated response from FakeLLMProvider",
+        model_name: str = "fake-marine-llm-v1",
+        simulate_timeout: bool = False,
+        simulate_failure: bool = False,
+        simulate_malformed: bool = False,
+    ) -> None:
         self.canned_responses = canned_responses or {}
+        self.canned_text = canned_text
+        self._model_name = model_name
+        self.simulate_timeout = simulate_timeout
+        self.simulate_failure = simulate_failure
+        self.simulate_malformed = simulate_malformed
+        self.call_history: List[Dict[str, Any]] = []
+
+    @property
+    def provider_name(self) -> str:
+        return "fake"
+
+    @property
+    def model_name(self) -> str:
+        return self._model_name
 
     def generate(
         self,
         messages: List[LLMMessage],
         temperature: float = 0.0,
         max_tokens: int = 1024,
+        timeout_seconds: Optional[float] = None,
     ) -> LLMResponse:
+        self.call_history.append({
+            "operation": "generate",
+            "messages": messages,
+            "temperature": temperature,
+            "max_tokens": max_tokens,
+        })
+
+        if self.simulate_timeout:
+            raise TimeoutError("Simulated LLM call deadline exceeded (timeout).")
+        if self.simulate_failure:
+            raise RuntimeError("Simulated LLM service connection error.")
+
         return LLMResponse(
-            content="[Mock LLM response: M0 architectural placeholder]",
-            token_usage=TokenUsage(prompt_tokens=10, completion_tokens=10, total_tokens=20),
+            content=self.canned_text,
+            token_usage=TokenUsage(prompt_tokens=15, completion_tokens=25, total_tokens=40),
+            finish_reason="stop",
         )
 
     def generate_structured(
@@ -114,6 +172,301 @@ class MockLLMProvider(LLMProvider):
         messages: List[LLMMessage],
         response_schema: Type[T],
         temperature: float = 0.0,
+        timeout_seconds: Optional[float] = None,
     ) -> T:
-        # Returns a mock instance with default values
-        return response_schema.model_validate(self.canned_responses.get(response_schema.__name__, {}))
+        self.call_history.append({
+            "operation": "generate_structured",
+            "schema": response_schema.__name__,
+            "messages": messages,
+            "temperature": temperature,
+        })
+
+        if self.simulate_timeout:
+            raise TimeoutError("Simulated LLM structured call deadline exceeded.")
+        if self.simulate_failure:
+            raise RuntimeError("Simulated LLM provider exception.")
+        if self.simulate_malformed:
+            # Attempt to validate an empty or malformed dictionary
+            return response_schema.model_validate({"_invalid_field_force_error": True})
+
+        schema_key = response_schema.__name__
+        if schema_key in self.canned_responses:
+            data = self.canned_responses[schema_key]
+            if isinstance(data, dict):
+                return response_schema.model_validate(data)
+            elif isinstance(data, response_schema):
+                return data
+
+        # Fallback: construct default model instance if fields allow defaults
+        try:
+            return response_schema.model_validate({})
+        except Exception:
+            # If schema requires fields, return reasonable canned mock data
+            return response_schema.model_construct()
+
+
+# Backward-compatible alias
+MockLLMProvider = FakeLLMProvider
+
+
+# =============================================================================
+# 4. Ollama Local LLM Provider (Free, Local, Open-Weights)
+# =============================================================================
+
+class OllamaLLMProvider(LLMProvider):
+    """Local LLM provider calling an Ollama daemon via HTTP REST API."""
+
+    def __init__(
+        self,
+        base_url: str = "http://localhost:11434",
+        model_name: str = "llama3",
+        timeout_seconds: float = 10.0,
+    ) -> None:
+        self.base_url = base_url.rstrip("/")
+        self._model_name = model_name
+        self.default_timeout = timeout_seconds
+
+    @property
+    def provider_name(self) -> str:
+        return "ollama"
+
+    @property
+    def model_name(self) -> str:
+        return self._model_name
+
+    def generate(
+        self,
+        messages: List[LLMMessage],
+        temperature: float = 0.0,
+        max_tokens: int = 1024,
+        timeout_seconds: Optional[float] = None,
+    ) -> LLMResponse:
+        url = f"{self.base_url}/api/chat"
+        payload = {
+            "model": self._model_name,
+            "messages": [{"role": m.role.value, "content": m.content} for m in messages],
+            "options": {"temperature": temperature, "num_predict": max_tokens},
+            "stream": False,
+        }
+        timeout = timeout_seconds or self.default_timeout
+
+        try:
+            with httpx.Client(timeout=timeout) as client:
+                res = client.post(url, json=payload)
+                res.raise_for_status()
+                data = res.json()
+
+            content = data.get("message", {}).get("content", "")
+            prompt_eval_count = data.get("prompt_eval_count", 0)
+            eval_count = data.get("eval_count", 0)
+
+            return LLMResponse(
+                content=content,
+                token_usage=TokenUsage(
+                    prompt_tokens=prompt_eval_count,
+                    completion_tokens=eval_count,
+                    total_tokens=prompt_eval_count + eval_count,
+                ),
+                raw_response=data,
+            )
+        except httpx.TimeoutException as exc:
+            raise TimeoutError(f"Ollama request timed out after {timeout}s: {exc}") from exc
+        except Exception as exc:
+            raise RuntimeError(f"Ollama generation failed: {exc}") from exc
+
+    def generate_structured(
+        self,
+        messages: List[LLMMessage],
+        response_schema: Type[T],
+        temperature: float = 0.0,
+        timeout_seconds: Optional[float] = None,
+    ) -> T:
+        url = f"{self.base_url}/api/chat"
+        # Request JSON output format from Ollama
+        schema_desc = json.dumps(response_schema.model_json_schema())
+        augmented_messages = list(messages)
+        augmented_messages.insert(
+            0,
+            LLMMessage(
+                role=MessageRole.SYSTEM,
+                content=f"You must respond ONLY with valid JSON conforming to this schema:\n{schema_desc}",
+            ),
+        )
+
+        payload = {
+            "model": self._model_name,
+            "messages": [{"role": m.role.value, "content": m.content} for m in augmented_messages],
+            "options": {"temperature": temperature},
+            "format": "json",
+            "stream": False,
+        }
+        timeout = timeout_seconds or self.default_timeout
+
+        try:
+            with httpx.Client(timeout=timeout) as client:
+                res = client.post(url, json=payload)
+                res.raise_for_status()
+                data = res.json()
+
+            raw_text = data.get("message", {}).get("content", "{}")
+            return response_schema.model_validate_json(raw_text)
+        except httpx.TimeoutException as exc:
+            raise TimeoutError(f"Ollama structured request timed out: {exc}") from exc
+        except Exception as exc:
+            raise RuntimeError(f"Ollama structured output failed: {exc}") from exc
+
+
+# =============================================================================
+# 5. OpenAI-Compatible HTTP Provider
+# =============================================================================
+
+class OpenAILLMProvider(LLMProvider):
+    """Generic OpenAI-compatible completions provider via HTTP."""
+
+    def __init__(
+        self,
+        api_key: str = "",
+        base_url: str = "https://api.openai.com/v1",
+        model_name: str = "gpt-4o-mini",
+        timeout_seconds: float = 15.0,
+    ) -> None:
+        self.api_key = api_key
+        self.base_url = base_url.rstrip("/")
+        self._model_name = model_name
+        self.default_timeout = timeout_seconds
+
+    @property
+    def provider_name(self) -> str:
+        return "openai"
+
+    @property
+    def model_name(self) -> str:
+        return self._model_name
+
+    def generate(
+        self,
+        messages: List[LLMMessage],
+        temperature: float = 0.0,
+        max_tokens: int = 1024,
+        timeout_seconds: Optional[float] = None,
+    ) -> LLMResponse:
+        url = f"{self.base_url}/chat/completions"
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {self.api_key}",
+        }
+        payload = {
+            "model": self._model_name,
+            "messages": [{"role": m.role.value, "content": m.content} for m in messages],
+            "temperature": temperature,
+            "max_tokens": max_tokens,
+        }
+        timeout = timeout_seconds or self.default_timeout
+
+        try:
+            with httpx.Client(timeout=timeout) as client:
+                res = client.post(url, headers=headers, json=payload)
+                res.raise_for_status()
+                data = res.json()
+
+            choice = data["choices"][0]
+            content = choice["message"]["content"]
+            usage_data = data.get("usage", {})
+
+            return LLMResponse(
+                content=content,
+                token_usage=TokenUsage(
+                    prompt_tokens=usage_data.get("prompt_tokens", 0),
+                    completion_tokens=usage_data.get("completion_tokens", 0),
+                    total_tokens=usage_data.get("total_tokens", 0),
+                ),
+                finish_reason=choice.get("finish_reason", "stop"),
+                raw_response=data,
+            )
+        except httpx.TimeoutException as exc:
+            raise TimeoutError(f"OpenAI request timed out: {exc}") from exc
+        except Exception as exc:
+            raise RuntimeError(f"OpenAI API call failed: {exc}") from exc
+
+    def generate_structured(
+        self,
+        messages: List[LLMMessage],
+        response_schema: Type[T],
+        temperature: float = 0.0,
+        timeout_seconds: Optional[float] = None,
+    ) -> T:
+        url = f"{self.base_url}/chat/completions"
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {self.api_key}",
+        }
+        schema_json = response_schema.model_json_schema()
+        payload = {
+            "model": self._model_name,
+            "messages": [{"role": m.role.value, "content": m.content} for m in messages],
+            "temperature": temperature,
+            "response_format": {
+                "type": "json_schema",
+                "json_schema": {
+                    "name": response_schema.__name__,
+                    "strict": True,
+                    "schema": schema_json,
+                },
+            },
+        }
+        timeout = timeout_seconds or self.default_timeout
+
+        try:
+            with httpx.Client(timeout=timeout) as client:
+                res = client.post(url, headers=headers, json=payload)
+                res.raise_for_status()
+                data = res.json()
+
+            raw_text = data["choices"][0]["message"]["content"]
+            return response_schema.model_validate_json(raw_text)
+        except httpx.TimeoutException as exc:
+            raise TimeoutError(f"OpenAI structured call timed out: {exc}") from exc
+        except Exception as exc:
+            raise RuntimeError(f"OpenAI structured output failed: {exc}") from exc
+
+
+# =============================================================================
+# 6. Factory Function
+# =============================================================================
+
+def get_llm_provider(provider_type: Optional[str] = None) -> Optional[LLMProvider]:
+    """Instantiates the configured LLM provider or returns None for deterministic mode.
+
+    Args:
+        provider_type: Optional explicit provider ('fake' | 'ollama' | 'openai' | 'none').
+                      Defaults to settings.LLM_PROVIDER if omitted.
+
+    Returns:
+        LLMProvider instance or None if configured for deterministic fallback.
+    """
+    choice = (provider_type or settings.LLM_PROVIDER or "").lower().strip()
+
+    if choice == "fake":
+        return FakeLLMProvider()
+    elif choice == "ollama":
+        return OllamaLLMProvider(
+            base_url=settings.LLM_BASE_URL or "http://localhost:11434",
+            model_name=settings.LLM_MODEL or "llama3",
+            timeout_seconds=float(settings.LLM_REQUEST_TIMEOUT_SECONDS or 10.0),
+        )
+    elif choice == "openai":
+        if not settings.LLM_API_KEY:
+            # No API key provided, fall back cleanly to deterministic without error
+            logger.info("LLM_PROVIDER is 'openai' but LLM_API_KEY is empty; using deterministic fallback.")
+            return None
+        return OpenAILLMProvider(
+            api_key=settings.LLM_API_KEY,
+            base_url=settings.LLM_BASE_URL or "https://api.openai.com/v1",
+            model_name=settings.LLM_MODEL or "gpt-4o-mini",
+            timeout_seconds=float(settings.LLM_REQUEST_TIMEOUT_SECONDS or 15.0),
+        )
+    elif choice in ("none", "deterministic", "disabled"):
+        return None
+
+    logger.warning(f"Unrecognized LLM_PROVIDER '{choice}'; falling back to deterministic execution.")
+    return None

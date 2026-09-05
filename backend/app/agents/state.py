@@ -62,6 +62,9 @@ class ORCAState(TypedDict, total=False):
     capability_error: Optional[str]
     """Recorded capability failure if a required provider is unavailable."""
 
+    llm_provider: Optional[Any]
+    """Optional LLMProvider instance for cognitive assistance (M3)."""
+
     # -------------------------------------------------------------------------
     # 2. Cognitive Extraction & Intent
     # -------------------------------------------------------------------------

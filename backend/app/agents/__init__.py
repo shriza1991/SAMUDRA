@@ -42,9 +42,22 @@ from backend.app.agents.intent import (
     ExtractedEntities,
     IntentCategory,
     IntentExtractionResult,
+    LLMClarificationProposal,
+    LLMResponseDraft,
+    LLMTaskPlanProposal,
     normalize_intent,
 )
-from backend.app.agents.llm import LLMMessage, LLMProvider, LLMResponse, MessageRole
+from backend.app.agents.llm import (
+    FakeLLMProvider,
+    LLMMessage,
+    LLMProvider,
+    LLMResponse,
+    MessageRole,
+    OllamaLLMProvider,
+    OpenAILLMProvider,
+    get_llm_provider,
+)
+from backend.app.agents.security import PromptInjectionGuard
 from backend.app.agents.memory import MemoryManager, ThreadContext, memory_manager
 from backend.app.agents.response import ResponseComposer, ResponseCompositionInput
 from backend.app.agents.state import AgentState, ORCAState
@@ -115,11 +128,20 @@ __all__ = [
     "TraceStatus",
     "TraceEvent",
     "AgentTraceLogger",
-    # LLM Abstraction
+    # LLM Abstraction & Providers (M3)
     "LLMProvider",
     "LLMMessage",
     "LLMResponse",
     "MessageRole",
+    "FakeLLMProvider",
+    "OllamaLLMProvider",
+    "OpenAILLMProvider",
+    "get_llm_provider",
+    # Structured Cognitive Models & Injection Defense (M3)
+    "PromptInjectionGuard",
+    "LLMTaskPlanProposal",
+    "LLMClarificationProposal",
+    "LLMResponseDraft",
     # M2 Integrations & Contracts
     "ToolOwner",
     "ToolErrorCode",

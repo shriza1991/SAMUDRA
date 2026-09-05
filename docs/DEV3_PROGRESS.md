@@ -13,7 +13,7 @@
 | **M0** | Repository & Agent Architecture | **COMPLETE** | All typed contracts, state schema, registries, prompt specs, and evaluation fixtures defined. |
 | **M1** | Basic Agent Graph (Vertical Slice) | **COMPLETE** | Executable LangGraph pipeline running on in-memory stub tools with evidence validation, safety invariance, and sanitized traces. 24/24 tests passing. |
 | **M2** | Integration Contracts & Orchestration Hardening | **COMPLETE** | Typed Dev 2/Dev 4 protocols, ProviderToolAdapter, contract mocks tagged M2_CONTRACT_MOCK, capability discovery, error semantics, handoff guides. 41/41 tests passing. |
-| **M3** | LLM Provider Integration | **PENDING** | Connect real LLM for intent/locale and multilingual response composition. |
+| **M3** | LLM Provider Integration | **COMPLETE** | Provider-agnostic LLM interface, Fake/Ollama/OpenAI providers, prompt injection guard, XML sandboxing, zero CoT leakage, safety invariance, fallback resilience. 65/65 tests passing. |
 | **M4** | Multi-Turn Memory & State Persistence | **PENDING** | Integrate PostgreSQL/Redis session state persistence and context carries. |
 
 ---
@@ -94,13 +94,40 @@
 
 ---
 
-## Upcoming Milestones
+### M3 — LLM Provider Integration & LLM-Assisted Agent Orchestration (COMPLETE)
+- **Delivered**:
+  - **Provider-Agnostic LLM Interface** in `backend/app/agents/llm.py`:
+    * Abstract base class `LLMProvider` requiring `generate()` and `generate_structured()`.
+    * `FakeLLMProvider` for deterministic, zero-cost, 100% offline testing with fault simulation (`simulate_timeout`, `simulate_failure`, `simulate_malformed`).
+    * `OllamaLLMProvider` for free local open-weights inference (e.g. Llama 3) via HTTP (`httpx`).
+    * `OpenAILLMProvider` for OpenAI-compatible HTTP endpoints.
+    * Factory function `get_llm_provider()` with environment-driven fallback.
+  - **Prompt Injection Defense & Security** in `backend/app/agents/security.py`:
+    * `PromptInjectionGuard`: Regex pattern detection for jailbreak and instruction overrides.
+    * Input sandboxing: Wraps user prompts in `<user_input>` XML tags and strips delimiter injection.
+    * Response safety auditing: Scans generated text to ensure models never claim safe voyage when deterministic status is `NO_GO` or `CAUTION`.
+  - **Structured Cognitive Models** in `backend/app/agents/intent.py`:
+    * `LLMTaskPlanProposal`: Structured tool scheduling with `planning_rationale` (strictly no chain-of-thought).
+    * `LLMClarificationProposal`: Structured clarification request with missing fields and suggested quick chips.
+    * `LLMResponseDraft`: Grounded multilingual synthesis draft.
+  - **Prompt Management** in `backend/app/prompts/`:
+    * `load_prompt()` loader with LRU caching in `backend/app/prompts/__init__.py`.
+    * Production prompt templates: `intent.md`, `supervisor.md`, `response.md`, `clarification.md`.
+  - **Graph Node Upgrades** in `backend/app/agents/graph.py`:
+    * `intent_locale_node`: LLM extraction with sandboxed input and seamless fallback to deterministic classifier.
+    * `supervisor_node`: LLM task plan validation against tool registry capabilities and strict dependency ordering.
+    * `response_composer_node`: LLM multilingual drafting with safety invariance enforcement and trace telemetry logging.
+  - **Comprehensive Test Suite**:
+    * `tests/agent_eval/test_m3_llm.py` (24 test cases covering interface contracts, fake provider, injection defense, planning, safety invariance, evidence grounding, fallback paths, trace telemetry, and backward compatibility).
+    * Total test count: 65/65 passing in 0.76s across the entire repository.
+    * Linting: 0 ruff errors.
+  - **Documentation**:
+    * `docs/M3_LLM_INTEGRATION.md`: Architecture overview and verification summary.
+    * `docs/LLM_PROVIDER_GUIDE.md`: Developer guide for configuring and deploying local Ollama or cloud providers.
 
-### M3 — LLM Provider Integration (PENDING)
-1. Connect real LLM providers (Google Gemini / Anthropic / OpenAI / Ollama) via `LLMProvider` interface.
-2. Replace deterministic keyword intent extraction with structured LLM classification.
-3. Multilingual response composition using contextual mariner prompts.
-4. Integrate prompt management in `backend/app/prompts/`.
+---
+
+## Upcoming Milestones
 
 ### M4 — Multi-Turn Memory & State Persistence (PENDING)
 1. Integrate PostgreSQL/Redis for thread conversation state persistence.
