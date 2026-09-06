@@ -16,12 +16,13 @@ from pydantic import BaseModel, Field
 
 if TYPE_CHECKING:
     from backend.app.agents.integrations.contracts import ToolInvocationContext
-    from backend.app.agents.integrations.dev2 import (
-        HazardBulletinPayload,
-        MarineConditionsPayload,
-        PFZSourceDataPayload,
-        WeatherConditionsPayload,
-    )
+
+from backend.app.agents.integrations.dev2 import (
+    HazardBulletinPayload,
+    MarineConditionsPayload,
+    PFZSourceDataPayload,
+    WeatherConditionsPayload,
+)
 from backend.app.connectors.base import validate_iso8601
 from backend.app.connectors.errors import (
     ConnectorMalformedResponseError,
