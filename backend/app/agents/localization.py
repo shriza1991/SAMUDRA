@@ -504,3 +504,107 @@ def canonicalize_extracted_entities(
         target_destination=dest,
     )
 
+
+def localize_operational_text(text: str, target_lang: str) -> str:
+    """Translates common operational summaries, factors, directives, and warnings into Hindi or Marathi."""
+    if not text or target_lang not in ("hi", "mr"):
+        return text
+
+    exact_map = {
+        "Operate within 5 nm of coastline (Simulation only).": {
+            "hi": "तटरेखा से 5 समुद्री मील के भीतर ही संचालन करें (केवल सिमुलेशन)।",
+            "mr": "किनारपट्टीपासून ५ सागरी मैलाच्या आतच बोट चालवा (केवळ सिम्युलेशन).",
+        },
+        "Operate within 5 nm of coastline.": {
+            "hi": "तटरेखा से 5 समुद्री मील के भीतर ही संचालन करें।",
+            "mr": "किनारपट्टीपासून ५ सागरी मैलाच्या आतच बोट चालवा.",
+        },
+        "Remain moored in port (Simulation only).": {
+            "hi": "बंदरगाह में ही लंगर डालकर रहें (केवल सिमुलेशन)।",
+            "mr": "बंदरातच नांगर टाकून थांबा (केवळ सिम्युलेशन).",
+        },
+        "Proceed with voyage under standard VHF watch (Simulation only).": {
+            "hi": "मानक VHF रेडियो संपर्क के तहत यात्रा जारी रखें (केवल सिमुलेशन)।",
+            "mr": "प्रमाणित VHF संपर्कात राहून प्रवास सुरू ठेवा (केवळ सिम्युलेशन).",
+        },
+        "Hold departure until authoritative advisory is verified.": {
+            "hi": "आधिकारिक सलाह सत्यापित होने तक प्रस्थान स्थगित रखें।",
+            "mr": "अधिकृत सल्ला पडताळेपर्यंत प्रस्थान थांबवा.",
+        },
+        "Hold departure.": {
+            "hi": "प्रस्थान स्थगित रखें।",
+            "mr": "प्रस्थान थांबवा.",
+        },
+        "Simulated conditions are calm and safe for departure.": {
+            "hi": "सिम्युलेटेड स्थितियां शांत हैं और प्रस्थान के लिए सुरक्षित हैं।",
+            "mr": "सिम्युलेटेड परिस्थिती शांत असून प्रस्थानासाठी अनुकूल आहे.",
+        },
+        "Insufficient or conflicting conditions preclude conclusive assessment.": {
+            "hi": "अपर्याप्त या परस्पर विरोधी डेटा के कारण निश्चित निष्कर्ष संभव नहीं है।",
+            "mr": "अपुऱ्या किंवा विसंगत माहितीमुळे अंतिम निष्कर्ष काढणे शक्य नाही.",
+        },
+        "Evaluated against M2 mock threshold ceilings": {
+            "hi": "M2 सिमुलेशन सुरक्षा सीमा थ्रेशोल्ड के आधार पर मूल्यांकित",
+            "mr": "M2 सिम्युलेशन सुरक्षा मर्यादा थ्रेशोल्डनुसार मूल्यमापन",
+        },
+        "M2 Contract Mock evaluation — not for real navigation.": {
+            "hi": "M2 अनुबंध सिमुलेशन मूल्यांकन — वास्तविक नौवहन के लिए नहीं।",
+            "mr": "M2 कॉन्ट्रॅक्ट सिम्युलेशन मूल्यमापन — प्रत्यक्ष सागरी प्रवासासाठी नाही.",
+        },
+        "No external evidence required": {
+            "hi": "किसी बाहरी साक्ष्य की आवश्यकता नहीं है",
+            "mr": "कोणत्याही बाह्य पुराव्याची आवश्यकता नाही",
+        },
+        "Operational baseline verified": {
+            "hi": "परिचालन आधार रेखा सत्यापित",
+            "mr": "सागरी सुरक्षा निकष पडताळले",
+        },
+        "Active simulated cyclone alert": {
+            "hi": "सक्रिय सिम्युलेटेड चक्रवात अलर्ट",
+            "mr": "सक्रिय सिम्युलेटेड चक्रीवादळ सतर्कता",
+        },
+    }
+
+    if text in exact_map and target_lang in exact_map[text]:
+        return exact_map[text][target_lang]
+
+    # Dynamic regex patterns
+    m_wave_craft = re.match(r"Moderate wave state \(([\d.]+)m\) requires caution for ([a-zA-Z_]+)\.?", text, re.IGNORECASE)
+    if m_wave_craft:
+        wave, craft = m_wave_craft.group(1), m_wave_craft.group(2)
+        craft_tr = "मोटराइज्ड नाव" if target_lang == "hi" else "मोटार बोट"
+        if target_lang == "hi":
+            return f"मध्यम समुद्री लहर स्थिति ({wave} मी) के कारण {craft_tr} के लिए सावधानी आवश्यक है।"
+        return f"मध्यम सागरी लाट स्थिती ({wave} मी) मुळे {craft_tr} साठी सावधगिरी बाळगणे आवश्यक आहे."
+
+    m_ceil = re.match(r"Simulated conditions exceed safety ceiling:?\s*(?:wave height\s*)?([\d.]+)m\.?", text, re.IGNORECASE)
+    if m_ceil:
+        wave = m_ceil.group(1)
+        if target_lang == "hi":
+            return f"सिम्युलेटेड स्थितियां सुरक्षा सीमा से अधिक: लहर ऊंचाई {wave} मी।"
+        return f"सिम्युलेटेड परिस्थिती सुरक्षा मर्यादेपेक्षा जास्त: लाटांची उंची {wave} मी."
+
+    m_wave = re.match(r"Significant wave height:?\s*([\d.]+)m", text, re.IGNORECASE)
+    if m_wave:
+        wave = m_wave.group(1)
+        return f"महत्वपूर्ण लहर ऊंचाई: {wave} मी" if target_lang == "hi" else f"महत्त्वाची लाट उंची: {wave} मी"
+
+    m_wind = re.match(r"(?:Sustained wind|Wind speed):?\s*([\d.]+)\s*(?:knots|kn)", text, re.IGNORECASE)
+    if m_wind:
+        wind = m_wind.group(1)
+        return f"हवा की गति: {wind} नॉट्स" if target_lang == "hi" else f"वाऱ्याचा वेग: {wind} नॉट्स"
+
+    m_vessel = re.match(r"Vessel profile:?\s*([a-zA-Z_]+)", text, re.IGNORECASE)
+    if m_vessel:
+        craft_tr = "मोटराइज्ड नाव" if target_lang == "hi" else "मोटार बोट"
+        return f"पोत/नाव का प्रकार: {craft_tr}" if target_lang == "hi" else f"बोटीचा प्रकार: {craft_tr}"
+
+    m_dist = re.match(r"Operate within ([\d.]+) nm of coastline(?:\s*\(Simulation only\)\.?)?", text, re.IGNORECASE)
+    if m_dist:
+        dist = m_dist.group(1)
+        if target_lang == "hi":
+            return f"तटरेखा से {dist} समुद्री मील के भीतर ही संचालन करें (केवल सिमुलेशन)।"
+        return f"किनारपट्टीपासून {dist} सागरी मैलाच्या आतच बोट चालवा (केवळ सिम्युलेशन)."
+
+    return text
+

@@ -82,7 +82,7 @@ export default function RecommendationBanner({
       {confidence?.reasons && confidence.reasons.length > 0 && (
         <div className="confidence-reasons">
           {confidence.reasons.map((reason, i) => (
-            <span key={i} className="confidence-reason">{reason}</span>
+            <span key={i} className="confidence-reason">{translateText(reason, language)}</span>
           ))}
         </div>
       )}
@@ -95,7 +95,7 @@ export default function RecommendationBanner({
           {warnings.map((warn, i) => (
             <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: '#f59e0b' }}>
               <AlertTriangle size={12} />
-              <span>{warn}</span>
+              <span>{translateText(warn, language)}</span>
             </div>
           ))}
         </div>

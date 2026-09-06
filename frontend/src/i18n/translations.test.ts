@@ -68,4 +68,60 @@ describe('Multilingual i18n Dictionary', () => {
     expect(translateText(decisive, 'hi')).toContain('लहर ऊंचाई 3.4 मी');
     expect(translateText(decisive, 'mr')).toContain('लाट उंची 3.4 मी');
   });
+
+  it('translates dynamic operational assessment strings in Hindi and Marathi', () => {
+    const summary = 'Moderate wave state (1.6m) requires caution for motorized_boat.';
+    expect(translateText(summary, 'hi')).toContain('सावधानी');
+    expect(translateText(summary, 'mr')).toContain('सावधगिरी');
+
+    expect(translateText('Significant wave height: 1.6m', 'hi')).toContain('1.6 मी');
+    expect(translateText('Significant wave height: 1.6m', 'mr')).toContain('1.6 मी');
+
+    expect(translateText('Sustained wind: 15.0 knots', 'hi')).toContain('15.0 नॉट्स');
+    expect(translateText('Sustained wind: 15.0 knots', 'mr')).toContain('15.0 नॉट्स');
+
+    expect(translateText('Vessel profile: motorized_boat', 'hi')).toContain('मोटराइज्ड नाव');
+    expect(translateText('Vessel profile: motorized_boat', 'mr')).toContain('मोटार बोट');
+
+    expect(translateText('Operate within 5 nm of coastline (Simulation only).', 'hi')).toContain('सिमुलेशन');
+    expect(translateText('Operate within 5 nm of coastline (Simulation only).', 'mr')).toContain('सिम्युलेशन');
+
+    expect(translateText('Evaluated against M2 mock threshold ceilings', 'hi')).toContain('M2');
+    expect(translateText('M2 Contract Mock evaluation — not for real navigation.', 'hi')).toContain('वास्तविक नौवहन के लिए नहीं');
+  });
+
+  it('translates suggested followup questions', () => {
+    expect(translateText('When will sea conditions improve?', 'hi')).toBe('समुद्र की स्थिति कब सुधरेगी?');
+    expect(translateText('When will sea conditions improve?', 'mr')).toBe('सागरी परिस्थिती कधी सुधारेल?');
+
+    expect(translateText('Alternative sheltered route options', 'hi')).toBe('तट के पास सुरक्षित वैकल्पिक मार्ग');
+    expect(translateText('Port authority emergency contacts', 'hi')).toBe('पत्तन प्राधिकरण आपातकालीन संपर्क');
+  });
+
+  it('translates full structured multi-line operational advisory in chat message', () => {
+    const rawAdvisory = [
+      '[CAUTION] Operational Advisory for Ratnagiri:',
+      '',
+      'Moderate wave state (1.6m) requires caution for motorized_boat.',
+      '',
+      'Key Decisive Factors:',
+      '- Significant wave height: 1.6m',
+      '- Sustained wind: 15.0 knots',
+      '- Vessel profile: motorized_boat',
+      '',
+      'Actionable Directive: Operate within 5 nm of coastline (Simulation only).',
+    ].join('\n');
+
+    const hiAdvisory = translateChatMessage(rawAdvisory, 'hi');
+    expect(hiAdvisory).toContain('रत्नागिरी के लिए समुद्री सुरक्षा सलाह:');
+    expect(hiAdvisory).toContain('प्रमुख निर्णायक कारक:');
+    expect(hiAdvisory).toContain('1.6 मी');
+    expect(hiAdvisory).toContain('15.0 नॉट्स');
+    expect(hiAdvisory).toContain('कार्रवाई निर्देश:');
+
+    const mrAdvisory = translateChatMessage(rawAdvisory, 'mr');
+    expect(mrAdvisory).toContain('रत्नागिरी साठी सागरी सुरक्षा सल्ला:');
+    expect(mrAdvisory).toContain('महत्त्वाचे निर्णायक घटक:');
+    expect(mrAdvisory).toContain('कृती सल्ला:');
+  });
 });

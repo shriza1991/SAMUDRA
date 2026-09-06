@@ -51,6 +51,7 @@ from backend.app.agents.localization import (
     canonicalize_extracted_entities,
     detect_language,
     generate_localized_clarification,
+    localize_operational_text,
     normalize_maritime_entities,
 )
 from backend.app.agents.memory import memory_manager
@@ -1285,24 +1286,39 @@ def response_composer_node(state: ORCAState) -> Dict[str, Any]:
                 next_action="Request updated observations.",
             )
 
-        recommendation = rec
-        factors_text = "\n".join(f"- {factor}" for factor in rec.decisive_factors)
+        if lang in ("hi", "mr"):
+            loc_summary = localize_operational_text(rec.summary, lang)
+            loc_factors = [localize_operational_text(f, lang) for f in rec.decisive_factors]
+            loc_action = localize_operational_text(rec.next_action, lang)
+            recommendation = Recommendation(
+                status=rec.status,
+                summary=loc_summary,
+                decisive_factors=loc_factors,
+                next_action=loc_action,
+            )
+        else:
+            recommendation = rec
+
+        factors_text = "\n".join(f"- {factor}" for factor in recommendation.decisive_factors)
+        harbor_display = "रत्नागिरी" if harbor == "Ratnagiri" and lang in ("hi", "mr") else ("मुंबई" if harbor == "Mumbai" and lang in ("hi", "mr") else harbor)
+        evidence_display = "कोणत्याही बाह्य पुराव्याची आवश्यकता नाही" if lang == "mr" and evidence_names == "No external evidence required" else ("किसी बाहरी साक्ष्य की आवश्यकता नहीं है" if lang == "hi" and evidence_names == "No external evidence required" else evidence_names)
+
         if lang == "mr":
             answer = (
-                f"[{rec.status.value}] {harbor} साठी सागरी सुरक्षा सल्ला:\n\n"
-                f"{rec.summary}\n\n"
+                f"[{rec.status.value}] {harbor_display} साठी सागरी सुरक्षा सल्ला:\n\n"
+                f"{recommendation.summary}\n\n"
                 f"महत्त्वाचे घटक:\n{factors_text}\n\n"
-                f"कृती सल्ला: {rec.next_action}\n\n"
-                f"पुरावा आधार:\n- {evidence_names}\n\n"
+                f"कृती सल्ला: {recommendation.next_action}\n\n"
+                f"पुरावा आधार:\n- {evidence_display}\n\n"
                 f"सूचना: हे मूल्यमापन सागरी व हवामान माहितीवर आधारित सल्लागार विश्लेषण आहे."
             )
         elif lang == "hi":
             answer = (
-                f"[{rec.status.value}] {harbor} के लिए समुद्री सुरक्षा सलाह:\n\n"
-                f"{rec.summary}\n\n"
+                f"[{rec.status.value}] {harbor_display} के लिए समुद्री सुरक्षा सलाह:\n\n"
+                f"{recommendation.summary}\n\n"
                 f"प्रमुख निर्णायक कारक:\n{factors_text}\n\n"
-                f"कार्रवाई योग्य निर्देश: {rec.next_action}\n\n"
-                f"साक्ष्य आधार:\n- {evidence_names}\n\n"
+                f"कार्रवाई योग्य निर्देश: {recommendation.next_action}\n\n"
+                f"साक्ष्य आधार:\n- {evidence_display}\n\n"
                 f"सूचना: यह मूल्यांकन समुद्री और मौसम संबंधी इनपुट पर आधारित सलाह है।"
             )
         else:
@@ -1935,7 +1951,7 @@ def response_composer_node(state: ORCAState) -> Dict[str, Any]:
 
     # Generate suggested follow-ups for user
     suggested_followups = state.get("suggested_followups")
-    if not suggested_followups:
+    if not suggested_followups or lang in ("hi", "mr"):
         suggested_followups = ResponseComposer.generate_suggested_followups(
             intent=intent_val,
             status=recommendation.status,
