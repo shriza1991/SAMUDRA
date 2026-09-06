@@ -1,15 +1,18 @@
 import type React from 'react';
 import { useState, useRef, useEffect } from 'react';
 import { Send } from 'lucide-react';
+import { TRANSLATIONS, type SupportedLanguage } from '../../i18n/translations';
 
 interface ChatInputProps {
+  language?: SupportedLanguage;
   onSend: (message: string) => void;
   disabled?: boolean;
 }
 
-export default function ChatInput({ onSend, disabled }: ChatInputProps) {
+export default function ChatInput({ language = 'en', onSend, disabled }: ChatInputProps) {
   const [text, setText] = useState('');
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const t = TRANSLATIONS[language] || TRANSLATIONS.en;
 
   useEffect(() => {
     inputRef.current?.focus();
@@ -34,19 +37,19 @@ export default function ChatInput({ onSend, disabled }: ChatInputProps) {
       <textarea
         ref={inputRef}
         className="chat-input"
-        placeholder="Ask about fishing zones, safety, hazards, or routes..."
+        placeholder={t.inputPlaceholder}
         value={text}
         onChange={e => setText(e.target.value)}
         onKeyDown={handleKeyDown}
         disabled={disabled}
         rows={1}
-        aria-label="Chat message input"
+        aria-label={t.sendBtnAria}
       />
       <button
         className="chat-send-btn"
         onClick={handleSend}
         disabled={disabled || !text.trim()}
-        aria-label="Send message"
+        aria-label={t.sendBtnAria}
       >
         <Send size={18} />
       </button>

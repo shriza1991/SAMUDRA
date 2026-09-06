@@ -1,10 +1,11 @@
 import LanguageSelector from './LanguageSelector';
 import DataModeIndicator from './DataModeIndicator';
 import { FileText } from 'lucide-react';
+import { TRANSLATIONS, type SupportedLanguage } from '../../i18n/translations';
 
 interface HeaderProps {
-  language: 'en' | 'hi' | 'mr';
-  onLanguageChange: (lang: 'en' | 'hi' | 'mr') => void;
+  language: SupportedLanguage;
+  onLanguageChange: (lang: SupportedLanguage) => void;
   evidenceCount: number;
   onOpenEvidence: () => void;
 }
@@ -15,6 +16,8 @@ export default function Header({
   evidenceCount,
   onOpenEvidence,
 }: HeaderProps) {
+  const t = TRANSLATIONS[language] || TRANSLATIONS.en;
+
   return (
     <header className="app-header">
       <div className="app-header-left">
@@ -23,7 +26,7 @@ export default function Header({
           <span className="app-subtitle">| SIH 2026 PS 26176 (ISRO)</span>
         </h1>
         <p className="app-tagline">
-          Smart Autonomous Marine Understanding, Decision &amp; Risk Assistant
+          {t.appTagline}
         </p>
       </div>
 
@@ -34,10 +37,10 @@ export default function Header({
           <button
             className="evidence-toggle-btn"
             onClick={onOpenEvidence}
-            aria-label={`Open evidence drawer with ${evidenceCount} items`}
+            aria-label={`${t.evidenceBtn} (${evidenceCount})`}
           >
             <FileText size={14} />
-            <span>Evidence ({evidenceCount})</span>
+            <span>{t.evidenceBtn} ({evidenceCount})</span>
           </button>
         )}
       </div>

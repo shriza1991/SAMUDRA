@@ -4,6 +4,7 @@ import ChatPanel from './components/chat/ChatPanel';
 import MapView from './components/map/MapView';
 import EvidenceDrawer from './components/evidence/EvidenceDrawer';
 import { useChat } from './hooks/useChat';
+import { TRANSLATIONS } from './i18n/translations';
 
 /**
  * SAMUDRA Main Application Shell
@@ -17,6 +18,7 @@ export default function App() {
 
   const evidenceItems = chat.activeResponse?.evidence ?? [];
   const traceItems = chat.activeResponse?.trace ?? [];
+  const t = TRANSLATIONS[chat.language] || TRANSLATIONS.en;
 
   return (
     <div className="app-container">
@@ -32,6 +34,7 @@ export default function App() {
       <main className="app-main" role="main">
         {/* Left Panel: Conversational Interface */}
         <ChatPanel
+          language={chat.language}
           messages={chat.messages}
           activeResponse={chat.activeResponse}
           isLoading={chat.isLoading}
@@ -49,11 +52,12 @@ export default function App() {
         onClose={() => setIsDrawerOpen(false)}
         evidence={evidenceItems}
         trace={traceItems}
+        language={chat.language}
       />
 
       {/* Persistent Prototype Disclaimer */}
       <footer className="prototype-disclaimer" role="contentinfo">
-        ⚠️ Prototype only — not an operational marine-navigation or life-safety system
+        {t.disclaimerText}
       </footer>
     </div>
   );

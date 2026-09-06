@@ -1,6 +1,7 @@
 import { useRef, useEffect } from 'react';
 import type { ChatMessage as ChatMessageType } from '../../hooks/useChat';
 import type { ChatResponse } from '../../types/contracts';
+import { TRANSLATIONS, type SupportedLanguage } from '../../i18n/translations';
 import ChatMessage from './ChatMessage';
 import ChatInput from './ChatInput';
 import SamplePrompts from './SamplePrompts';
@@ -8,6 +9,7 @@ import RecommendationBanner from '../recommendation/RecommendationBanner';
 import { Anchor } from 'lucide-react';
 
 interface ChatPanelProps {
+  language: SupportedLanguage;
   messages: ChatMessageType[];
   activeResponse: ChatResponse | null;
   isLoading: boolean;
@@ -16,6 +18,7 @@ interface ChatPanelProps {
 }
 
 export default function ChatPanel({
+  language,
   messages,
   activeResponse,
   isLoading,
@@ -23,6 +26,7 @@ export default function ChatPanel({
   onEvidenceClick,
 }: ChatPanelProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const t = TRANSLATIONS[language] || TRANSLATIONS.en;
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -38,17 +42,19 @@ export default function ChatPanel({
             <div className="chat-welcome-icon">
               <Anchor size={32} />
             </div>
-            <h2 className="chat-welcome-title">SAMUDRA Marine Assistant</h2>
-            <p className="chat-welcome-subtitle">
-              Ask about fishing zones, departure safety, hazards, or route comparisons
-              along the Maharashtra coast.
-            </p>
-            <SamplePrompts onSelect={onSend} disabled={isLoading} />
+            <h2 className="chat-welcome-title">{t.welcomeTitle}</h2>
+            <p className="chat-welcome-subtitle">{t.welcomeSubtitle}</p>
+            <SamplePrompts language={language} onSelect={onSend} disabled={isLoading} />
           </div>
         )}
 
         {messages.map(msg => (
-          <ChatMessage key={msg.id} message={msg} onEvidenceClick={onEvidenceClick} />
+          <ChatMessage
+            key={msg.id}
+            message={msg}
+            language={language}
+            onEvidenceClick={onEvidenceClick}
+          />
         ))}
 
         {/* Show recommendation banner after the latest assistant response */}
@@ -58,6 +64,7 @@ export default function ChatPanel({
               recommendation={activeResponse.recommendation}
               confidence={activeResponse.confidence}
               warnings={activeResponse.warnings}
+              language={language}
             />
           </div>
         )}
@@ -65,7 +72,7 @@ export default function ChatPanel({
         <div ref={messagesEndRef} />
       </div>
 
-      <ChatInput onSend={onSend} disabled={isLoading} />
+      <ChatInput language={language} onSend={onSend} disabled={isLoading} />
     </section>
   );
 }

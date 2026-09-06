@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import type { EvidenceItem, AgentTraceItem } from '../../types/contracts';
+import { TRANSLATIONS, type SupportedLanguage } from '../../i18n/translations';
 import EvidenceCard from './EvidenceCard';
 import AgentTimeline from '../trace/AgentTimeline';
 import { X, FileText, Activity } from 'lucide-react';
@@ -9,6 +10,7 @@ interface EvidenceDrawerProps {
   onClose: () => void;
   evidence: EvidenceItem[];
   trace: AgentTraceItem[];
+  language?: SupportedLanguage;
 }
 
 export default function EvidenceDrawer({
@@ -16,8 +18,10 @@ export default function EvidenceDrawer({
   onClose,
   evidence,
   trace,
+  language = 'en',
 }: EvidenceDrawerProps) {
   const [activeTab, setActiveTab] = useState<'evidence' | 'trace'>('evidence');
+  const t = TRANSLATIONS[language] || TRANSLATIONS.en;
 
   if (!isOpen) return null;
 
@@ -37,14 +41,14 @@ export default function EvidenceDrawer({
               onClick={() => setActiveTab('evidence')}
             >
               <FileText size={16} />
-              <span>Evidence ({evidence.length})</span>
+              <span>{t.drawerTitleEvidence} ({evidence.length})</span>
             </button>
             <button
               className={`drawer-tab ${activeTab === 'trace' ? 'active' : ''}`}
               onClick={() => setActiveTab('trace')}
             >
               <Activity size={16} />
-              <span>Agent Trace ({trace.length})</span>
+              <span>{t.drawerTitleTrace} ({trace.length})</span>
             </button>
           </div>
           <button
@@ -61,7 +65,7 @@ export default function EvidenceDrawer({
             <div className="evidence-list">
               {evidence.length === 0 ? (
                 <div className="drawer-empty">
-                  <p>No evidence items attached to this response.</p>
+                  <p>{t.drawerEmptyEvidence}</p>
                 </div>
               ) : (
                 evidence.map((item, idx) => (
@@ -73,7 +77,7 @@ export default function EvidenceDrawer({
             <div className="trace-container">
               {trace.length === 0 ? (
                 <div className="drawer-empty">
-                  <p>No agent trace steps available for this run.</p>
+                  <p>{t.drawerEmptyTrace}</p>
                 </div>
               ) : (
                 <AgentTimeline trace={trace} />

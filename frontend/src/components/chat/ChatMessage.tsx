@@ -1,14 +1,16 @@
-
 import type { ChatMessage as ChatMessageType } from '../../hooks/useChat';
 import { AlertTriangle, Bot, User } from 'lucide-react';
+import { TRANSLATIONS, type SupportedLanguage } from '../../i18n/translations';
 
 interface ChatMessageProps {
   message: ChatMessageType;
+  language?: SupportedLanguage;
   onEvidenceClick?: () => void;
 }
 
-export default function ChatMessage({ message, onEvidenceClick }: ChatMessageProps) {
+export default function ChatMessage({ message, language = 'en', onEvidenceClick }: ChatMessageProps) {
   const isUser = message.role === 'user';
+  const t = TRANSLATIONS[language] || TRANSLATIONS.en;
 
   if (message.isLoading) {
     return (
@@ -22,7 +24,7 @@ export default function ChatMessage({ message, onEvidenceClick }: ChatMessagePro
             <span className="chat-loading-dot" />
             <span className="chat-loading-dot" />
           </div>
-          <span className="chat-loading-text">Agents reasoning...</span>
+          <span className="chat-loading-text">{t.agentsReasoning}</span>
         </div>
       </div>
     );
@@ -47,10 +49,10 @@ export default function ChatMessage({ message, onEvidenceClick }: ChatMessagePro
         {isUser ? <User size={16} /> : <Bot size={16} />}
       </div>
       <div className="chat-message-content">
-        <p>{message.content}</p>
+        <p style={{ whiteSpace: 'pre-line' }}>{message.content}</p>
         {!isUser && message.response && message.response.evidence.length > 0 && (
           <button className="evidence-link" onClick={onEvidenceClick}>
-            📋 View {message.response.evidence.length} evidence source{message.response.evidence.length > 1 ? 's' : ''}
+            {t.viewEvidenceBtn(message.response.evidence.length)}
           </button>
         )}
         {!isUser && message.response?.suggested_followups && message.response.suggested_followups.length > 0 && (

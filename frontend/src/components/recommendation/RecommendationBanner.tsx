@@ -1,65 +1,56 @@
 import type { Recommendation, Confidence } from '../../types/contracts';
 import { ShieldCheck, ShieldAlert, ShieldX, ShieldQuestion, Info, ChevronRight, AlertTriangle } from 'lucide-react';
+import { TRANSLATIONS, type SupportedLanguage } from '../../i18n/translations';
 
 interface RecommendationBannerProps {
   recommendation: Recommendation;
   confidence?: Confidence;
   warnings?: string[];
+  language?: SupportedLanguage;
 }
 
-const STATUS_CONFIG: Record<string, { icon: any; label: string; className: string }> = {
-  GO: {
-    icon: ShieldCheck,
-    label: 'GO — Favorable / Safe',
-    className: 'status-go',
-  },
-  CAUTION: {
-    icon: ShieldAlert,
-    label: 'CAUTION — Elevated Marine Risk',
-    className: 'status-caution',
-  },
-  NO_GO: {
-    icon: ShieldX,
-    label: 'NO-GO — Hazardous Departure Advised Against',
-    className: 'status-no-go',
-  },
-  UNKNOWN: {
-    icon: ShieldQuestion,
-    label: 'UNKNOWN — Missing or Stale Critical Data',
-    className: 'status-unknown',
-  },
-  INFORMATIONAL: {
-    icon: Info,
-    label: 'INFORMATIONAL',
-    className: 'status-informational',
-  },
+const STATUS_ICONS: Record<string, any> = {
+  GO: ShieldCheck,
+  CAUTION: ShieldAlert,
+  NO_GO: ShieldX,
+  UNKNOWN: ShieldQuestion,
+  INFORMATIONAL: Info,
+};
+
+const STATUS_CLASSES: Record<string, string> = {
+  GO: 'status-go',
+  CAUTION: 'status-caution',
+  NO_GO: 'status-no-go',
+  UNKNOWN: 'status-unknown',
+  INFORMATIONAL: 'status-informational',
 };
 
 export default function RecommendationBanner({
   recommendation,
   confidence,
   warnings,
+  language = 'en',
 }: RecommendationBannerProps) {
+  const t = TRANSLATIONS[language] || TRANSLATIONS.en;
   const normalizedStatus = (recommendation.status || 'UNKNOWN').toUpperCase();
-  const config = STATUS_CONFIG[normalizedStatus] || {
-    icon: Info,
-    label: recommendation.status || 'Advisory',
-    className: 'status-informational',
-  };
-  const Icon = config.icon;
 
-  const confLevel = confidence?.level?.toUpperCase() || 'MEDIUM';
+  const Icon = STATUS_ICONS[normalizedStatus] || Info;
+  const statusClass = STATUS_CLASSES[normalizedStatus] || 'status-informational';
+  const statusLabel = t.statusLabels[normalizedStatus] || recommendation.status || 'Advisory';
+
+  const rawConf = confidence?.level?.toUpperCase() || 'MEDIUM';
+  const confLabel = t.confidenceLabels[rawConf] || `${rawConf} Confidence`;
 
   return (
-    <div className={`recommendation-banner ${config.className}`}>
+    <div className={`recommendation-banner ${statusClass}`}>
       <div className="recommendation-header">
         <div className="recommendation-status">
           <Icon size={20} />
-          <span className="recommendation-label">{config.label}</span>
+          <span className="recommendation-label">{statusLabel}</span>
         </div>
         {confidence && (
-          <span className={`confidence-badge confidence-${confLevel.toLowerCase()}`}>
-            {confLevel} confidence
+          <span className={`confidence-badge confidence-${rawConf.toLowerCase()}`}>
+            {confLabel}
           </span>
         )}
       </div>
@@ -70,7 +61,7 @@ export default function RecommendationBanner({
 
       {recommendation.decisive_factors && recommendation.decisive_factors.length > 0 && (
         <div className="decisive-factors">
-          <h5 className="factors-title">Decisive Factors</h5>
+          <h5 className="factors-title">{t.decisiveFactorsTitle}</h5>
           <ul className="factors-list">
             {recommendation.decisive_factors.map((factor, i) => (
               <li key={i} className="factor-item">
@@ -84,7 +75,7 @@ export default function RecommendationBanner({
 
       {recommendation.next_action && (
         <div className="next-action">
-          <strong>Recommended Next Action:</strong> {recommendation.next_action}
+          <strong>{t.nextActionLabel}:</strong> {recommendation.next_action}
         </div>
       )}
 
@@ -98,6 +89,9 @@ export default function RecommendationBanner({
 
       {warnings && warnings.length > 0 && (
         <div className="banner-warnings" style={{ marginTop: '8px' }}>
+          <h6 style={{ margin: '0 0 4px', fontSize: '11px', color: '#f59e0b', textTransform: 'uppercase' }}>
+            {t.warningsTitle}
+          </h6>
           {warnings.map((warn, i) => (
             <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: '#f59e0b' }}>
               <AlertTriangle size={12} />
