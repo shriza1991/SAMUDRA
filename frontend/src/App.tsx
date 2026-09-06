@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Header from './components/layout/Header';
 import ChatPanel from './components/chat/ChatPanel';
 import MapView from './components/map/MapView';
@@ -9,11 +9,22 @@ import { useChat } from './hooks/useChat';
  * SAMUDRA Main Application Shell
  *
  * Owned by Dev 1 (Frontend & Geospatial UX Lead).
+ * Default Theme: Light Mode
  * Layout: Header + Left Panel (Chat/Recommendation) + Right Panel (Map) + Slide-out Evidence/Trace Drawer
  */
 export default function App() {
   const chat = useChat();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [theme, setTheme] = useState<'light' | 'dark'>('light');
+
+  // Synchronize theme on HTML element
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme(prev => (prev === 'light' ? 'dark' : 'light'));
+  };
 
   const evidenceItems = chat.activeResponse?.evidence ?? [];
   const traceItems = chat.activeResponse?.trace ?? [];
@@ -26,6 +37,8 @@ export default function App() {
         onLanguageChange={chat.setLanguage}
         evidenceCount={evidenceItems.length}
         onOpenEvidence={() => setIsDrawerOpen(true)}
+        theme={theme}
+        onThemeToggle={toggleTheme}
       />
 
       {/* Main Workspace Layout */}
@@ -41,7 +54,10 @@ export default function App() {
         />
 
         {/* Right Panel: MapLibre Geospatial Viewport */}
-        <MapView layers={chat.activeResponse?.map_layers ?? []} />
+        <MapView
+          layers={chat.activeResponse?.map_layers ?? []}
+          theme={theme}
+        />
       </main>
 
       {/* Evidence & Trace Provenance Slide-out Drawer */}

@@ -8,18 +8,22 @@ import { Layers } from 'lucide-react';
 const INITIAL_CENTER: [number, number] = [73.28, 16.99];
 const INITIAL_ZOOM = 7;
 
-/** CartoDB Dark Matter style */
-const MAP_STYLE = 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json';
+/** CartoDB Vector Basemap Styles */
+const MAP_STYLE_LIGHT = 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json';
+const MAP_STYLE_DARK = 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json';
 
 interface MapViewProps {
   layers: MapLayer[];
+  theme?: 'light' | 'dark';
 }
 
-export default function MapView({ layers }: MapViewProps) {
+export default function MapView({ layers, theme = 'light' }: MapViewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const [showLayerPanel, setShowLayerPanel] = useState(false);
   const [layerVisibility, setLayerVisibility] = useState<Record<string, boolean>>({});
+
+  const activeStyle = theme === 'dark' ? MAP_STYLE_DARK : MAP_STYLE_LIGHT;
 
   // Initialize map
   useEffect(() => {
@@ -27,7 +31,7 @@ export default function MapView({ layers }: MapViewProps) {
 
     const map = new maplibregl.Map({
       container: containerRef.current,
-      style: MAP_STYLE,
+      style: activeStyle,
       center: INITIAL_CENTER,
       zoom: INITIAL_ZOOM,
       attributionControl: false,
@@ -43,6 +47,13 @@ export default function MapView({ layers }: MapViewProps) {
       mapRef.current = null;
     };
   }, []);
+
+  // Update map style when theme changes
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    map.setStyle(activeStyle);
+  }, [activeStyle]);
 
   // Manage GeoJSON layers dynamically
   useEffect(() => {

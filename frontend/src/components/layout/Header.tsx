@@ -1,5 +1,6 @@
 import LanguageSelector from './LanguageSelector';
 import DataModeIndicator from './DataModeIndicator';
+import ThemeToggle from './ThemeToggle';
 import { FileText } from 'lucide-react';
 import { TRANSLATIONS, type SupportedLanguage } from '../../i18n/translations';
 
@@ -8,6 +9,8 @@ interface HeaderProps {
   onLanguageChange: (lang: SupportedLanguage) => void;
   evidenceCount: number;
   onOpenEvidence: () => void;
+  theme: 'light' | 'dark';
+  onThemeToggle: () => void;
 }
 
 export default function Header({
@@ -15,6 +18,8 @@ export default function Header({
   onLanguageChange,
   evidenceCount,
   onOpenEvidence,
+  theme,
+  onThemeToggle,
 }: HeaderProps) {
   const t = TRANSLATIONS[language] || TRANSLATIONS.en;
 
@@ -30,6 +35,7 @@ export default function Header({
       <div className="app-header-right">
         <LanguageSelector language={language} onChange={onLanguageChange} />
         <DataModeIndicator />
+        <ThemeToggle theme={theme} onToggle={onThemeToggle} />
         {evidenceCount > 0 && (
           <button
             className="evidence-toggle-btn"
