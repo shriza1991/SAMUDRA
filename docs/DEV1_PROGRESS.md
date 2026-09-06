@@ -101,3 +101,4 @@ frontend/src/
 8. `0ef7802` — `refactor(frontend): eliminate all hardcoded mocks and connect dynamically to backend API`
 9. `84a9dac` — `feat(frontend): add comprehensive multilingual i18n support for Hindi and Marathi`
 10. `3b3bc0a` — `style(frontend): remove prototype disclaimer footer and SIH/ISRO badge from header`
+11. `20b02db` — `feat(frontend): set clean Light Mode as default theme and add theme toggle`
