@@ -48,6 +48,7 @@ async def chat_endpoint(request: ChatRequest) -> ChatResponse:
 
 
 @router.get("/scenarios", tags=["Evaluation & Demo"])
+@router.get("/demo-scenarios", tags=["Evaluation & Demo"])
 async def list_scenarios():
     """Returns metadata for the 8 canonical evaluation scenarios (S1-S8)."""
     return {

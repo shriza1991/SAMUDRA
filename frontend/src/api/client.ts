@@ -55,10 +55,10 @@ export interface DemoScenario {
 
 export async function getDemoScenarios(): Promise<DemoScenario[]> {
   try {
-    const res = await request<any>('/demo-scenarios');
+    const res = await request<any>('/scenarios');
     return Array.isArray(res) ? res : (res?.scenarios || []);
   } catch {
-    const res = await request<any>('/scenarios');
+    const res = await request<any>('/demo-scenarios').catch(() => []);
     return Array.isArray(res) ? res : (res?.scenarios || []);
   }
 }

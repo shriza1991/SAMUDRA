@@ -24,6 +24,7 @@ export default function MapView({ layers, theme = 'light' }: MapViewProps) {
   const [layerVisibility, setLayerVisibility] = useState<Record<string, boolean>>({});
 
   const activeStyle = theme === 'dark' ? MAP_STYLE_DARK : MAP_STYLE_LIGHT;
+  const currentStyleRef = useRef(activeStyle);
 
   // Initialize map
   useEffect(() => {
@@ -48,11 +49,14 @@ export default function MapView({ layers, theme = 'light' }: MapViewProps) {
     };
   }, []);
 
-  // Update map style when theme changes
+  // Update map style ONLY when theme actually changes after initial mount
   useEffect(() => {
     const map = mapRef.current;
-    if (!map) return;
-    map.setStyle(activeStyle);
+    if (!map || currentStyleRef.current === activeStyle) return;
+
+    currentStyleRef.current = activeStyle;
+    // Disabling diff avoids MapLibre error when switching completely different styles
+    map.setStyle(activeStyle, { diff: false });
   }, [activeStyle]);
 
   // Manage GeoJSON layers dynamically
@@ -84,7 +88,7 @@ export default function MapView({ layers, theme = 'light' }: MapViewProps) {
           hasCoordinates = true;
         });
 
-        const color = layer.style?.color || '#38bdf8';
+        const color = layer.style?.color || '#0284c7';
         const opacity = layer.style?.opacity ?? 0.6;
         const lineWidth = layer.style?.line_width ?? 2;
 
@@ -155,7 +159,7 @@ export default function MapView({ layers, theme = 'light' }: MapViewProps) {
 
           new maplibregl.Popup({ closeButton: true, maxWidth: '300px' })
             .setLngLat(e.lngLat)
-            .setHTML(`<div class="map-popup"><h5 style="margin:0 0 6px;color:#38bdf8">${layer.name}</h5>${html}</div>`)
+            .setHTML(`<div class="map-popup"><h5 style="margin:0 0 6px;color:#0284c7">${layer.name}</h5>${html}</div>`)
             .addTo(map);
         });
 
@@ -179,9 +183,10 @@ export default function MapView({ layers, theme = 'light' }: MapViewProps) {
     if (map.isStyleLoaded()) {
       addLayers();
     } else {
-      map.on('load', addLayers);
+      map.once('load', addLayers);
+      map.once('style.load', addLayers);
     }
-  }, [layers]);
+  }, [layers, activeStyle]);
 
   const toggleLayer = useCallback((layerId: string) => {
     const map = mapRef.current;
