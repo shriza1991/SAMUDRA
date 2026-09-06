@@ -3,18 +3,18 @@ import { sendMessage, getHealth, getDemoScenarios, ApiError } from './client';
 import { MOCK_SAFETY_RESPONSE } from './mock-data';
 
 describe('API Client', () => {
-  const originalFetch = global.fetch;
+  const originalFetch = globalThis.fetch;
 
   beforeEach(() => {
-    global.fetch = vi.fn();
+    globalThis.fetch = vi.fn();
   });
 
   afterEach(() => {
-    global.fetch = originalFetch;
+    globalThis.fetch = originalFetch;
   });
 
   it('sends chat message and returns typed ChatResponse', async () => {
-    (global.fetch as any).mockResolvedValueOnce({
+    (globalThis.fetch as any).mockResolvedValueOnce({
       ok: true,
       json: async () => MOCK_SAFETY_RESPONSE,
     });
@@ -29,7 +29,7 @@ describe('API Client', () => {
       },
     });
 
-    expect(global.fetch).toHaveBeenCalledWith('/api/v1/chat', expect.objectContaining({
+    expect(globalThis.fetch).toHaveBeenCalledWith('/api/v1/chat', expect.objectContaining({
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: expect.stringContaining('Ratnagiri'),
@@ -39,7 +39,7 @@ describe('API Client', () => {
   });
 
   it('throws ApiError on non-200 responses', async () => {
-    (global.fetch as any).mockResolvedValueOnce({
+    (globalThis.fetch as any).mockResolvedValueOnce({
       ok: false,
       status: 503,
       statusText: 'Service Unavailable',
@@ -50,7 +50,7 @@ describe('API Client', () => {
   });
 
   it('fetches health status successfully', async () => {
-    (global.fetch as any).mockResolvedValueOnce({
+    (globalThis.fetch as any).mockResolvedValueOnce({
       ok: true,
       json: async () => ({
         status: 'healthy',
@@ -70,7 +70,7 @@ describe('API Client', () => {
       { id: 's1', name: 'Normal Safe', description: 'Safe conditions', query: 'Is it safe?' },
       { id: 's2', name: 'Elevated Sea', description: 'Caution wave heights', query: 'Wave alert?' },
     ];
-    (global.fetch as any).mockResolvedValueOnce({
+    (globalThis.fetch as any).mockResolvedValueOnce({
       ok: true,
       json: async () => mockScenarios,
     });
