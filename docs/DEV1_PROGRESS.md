@@ -86,6 +86,10 @@ frontend/src/
 
 - [x] **Zero Hard-coding Rule:** No mock intercepts in runtime (`USE_MOCK` eliminated). Frontend interacts directly with backend endpoints (`/api/v1/chat`, `/api/v1/health`, `/api/v1/demo-scenarios`). Mock data is restricted exclusively to Vitest test fixtures.
 - [x] **Dynamic Geospatial Bounding:** Map automatically fits bounds to whatever GeoJSON geometries are returned in the response rather than using a static viewport.
+- [x] **Full Multilingual Translations:** End-to-end translation into Hindi and Marathi covering operational summaries, decisive factors, warnings, next actions, and suggested followup chips.
+- [x] **Scrollable & Responsive Workspace:** Fixed flexbox/grid constraints enabling smooth internal message scrolling without viewport clipping on desktop and mobile.
+- [x] **Navigation & Reset:** Back button and New Chat reset buttons on chat panel for fast workflow restarts.
+- [x] **GeoJSON Contract Testing:** Dedicated test suite validating Points, LineStrings, Polygons, and layer toggles.
 
 ---
 
@@ -103,5 +107,9 @@ frontend/src/
 10. `3b3bc0a` — `style(frontend): remove prototype disclaimer footer and SIH/ISRO badge from header`
 11. `20b02db` — `feat(frontend): set clean Light Mode as default theme and add theme toggle`
 12. `81dbc6b` — `fix(map): prevent MapLibre style diff error and alias demo-scenarios`
-13. `feat(frontend): add responsive mobile view switcher and adaptive layout`
+13. `26f5ae9` — `feat(frontend): add responsive mobile view switcher and adaptive layout`
+14. `55aa1bc` — `feat(frontend+backend): add chat back button and dynamic multilingual translation for messages`
+15. `8549d11` — `fix(frontend): make chat panel scrollable with flex and grid constraints`
+16. `3896777` — `feat(i18n): full end-to-end translation for operational summaries, factors, followups, and directives in Hindi and Marathi`
+17. `test(map): add map-layer contract tests for Point, LineString, and Polygon GeoJSON`
 
