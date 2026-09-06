@@ -30,3 +30,6 @@ langchain-core>=0.2.0,<1.0.0
 pytest>=8.2.0
 pytest-asyncio>=0.23.0
 pytest-cov>=5.0.0
+
+# Speech-to-Text
+faster-whisper>=1.2.0
