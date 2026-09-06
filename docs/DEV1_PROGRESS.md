@@ -100,3 +100,4 @@ frontend/src/
 7. `91f543e` — `docs(dev1): document frontend architecture, components, and update roadmap`
 8. `0ef7802` — `refactor(frontend): eliminate all hardcoded mocks and connect dynamically to backend API`
 9. `84a9dac` — `feat(frontend): add comprehensive multilingual i18n support for Hindi and Marathi`
+10. `3b3bc0a` — `style(frontend): remove prototype disclaimer footer and SIH/ISRO badge from header`
