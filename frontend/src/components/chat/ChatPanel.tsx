@@ -6,7 +6,7 @@ import ChatMessage from './ChatMessage';
 import ChatInput from './ChatInput';
 import SamplePrompts from './SamplePrompts';
 import RecommendationBanner from '../recommendation/RecommendationBanner';
-import { Anchor } from 'lucide-react';
+import { Anchor, ArrowLeft, RotateCcw } from 'lucide-react';
 
 interface ChatPanelProps {
   language: SupportedLanguage;
@@ -14,6 +14,8 @@ interface ChatPanelProps {
   activeResponse: ChatResponse | null;
   isLoading: boolean;
   onSend: (text: string) => void;
+  onBack?: () => void;
+  onReset?: () => void;
   onEvidenceClick?: () => void;
 }
 
@@ -23,6 +25,8 @@ export default function ChatPanel({
   activeResponse,
   isLoading,
   onSend,
+  onBack,
+  onReset,
   onEvidenceClick,
 }: ChatPanelProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -36,6 +40,34 @@ export default function ChatPanel({
 
   return (
     <section className="chat-panel" aria-label="Chat interface">
+      <div className="chat-panel-topbar">
+        <button
+          type="button"
+          className="chat-back-btn"
+          onClick={onBack}
+          title={t.backToStart}
+          aria-label={t.backToStart}
+        >
+          <ArrowLeft size={16} />
+          <span>{t.back}</span>
+        </button>
+
+        <span className="chat-panel-title">{t.chatTitle}</span>
+
+        {messages.length > 0 && onReset && (
+          <button
+            type="button"
+            className="chat-reset-btn"
+            onClick={onReset}
+            title={t.newChat}
+            aria-label={t.newChat}
+          >
+            <RotateCcw size={14} />
+            <span>{t.newChat}</span>
+          </button>
+        )}
+      </div>
+
       <div className="chat-messages" role="log" aria-live="polite">
         {showWelcome && (
           <div className="chat-welcome">

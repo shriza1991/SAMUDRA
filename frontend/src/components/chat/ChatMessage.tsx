@@ -1,6 +1,6 @@
 import type { ChatMessage as ChatMessageType } from '../../hooks/useChat';
 import { AlertTriangle, Bot, User } from 'lucide-react';
-import { TRANSLATIONS, type SupportedLanguage } from '../../i18n/translations';
+import { TRANSLATIONS, translateChatMessage, translateText, type SupportedLanguage } from '../../i18n/translations';
 
 interface ChatMessageProps {
   message: ChatMessageType;
@@ -11,6 +11,7 @@ interface ChatMessageProps {
 export default function ChatMessage({ message, language = 'en', onEvidenceClick }: ChatMessageProps) {
   const isUser = message.role === 'user';
   const t = TRANSLATIONS[language] || TRANSLATIONS.en;
+  const displayContent = translateChatMessage(message.content, language, message.response?.intent);
 
   if (message.isLoading) {
     return (
@@ -37,7 +38,7 @@ export default function ChatMessage({ message, language = 'en', onEvidenceClick 
           <AlertTriangle size={16} />
         </div>
         <div className="chat-message-content">
-          <p className="chat-error-text">{message.error}</p>
+          <p className="chat-error-text">{translateText(message.error, language)}</p>
         </div>
       </div>
     );
@@ -49,7 +50,7 @@ export default function ChatMessage({ message, language = 'en', onEvidenceClick 
         {isUser ? <User size={16} /> : <Bot size={16} />}
       </div>
       <div className="chat-message-content">
-        <p style={{ whiteSpace: 'pre-line' }}>{message.content}</p>
+        <p style={{ whiteSpace: 'pre-line' }}>{displayContent}</p>
         {!isUser && message.response && message.response.evidence.length > 0 && (
           <button className="evidence-link" onClick={onEvidenceClick}>
             {t.viewEvidenceBtn(message.response.evidence.length)}
@@ -58,7 +59,9 @@ export default function ChatMessage({ message, language = 'en', onEvidenceClick 
         {!isUser && message.response?.suggested_followups && message.response.suggested_followups.length > 0 && (
           <div className="suggested-followups">
             {message.response.suggested_followups.map((followup, i) => (
-              <span key={i} className="followup-chip">{followup}</span>
+              <span key={i} className="followup-chip">
+                {translateText(followup, language)}
+              </span>
             ))}
           </div>
         )}

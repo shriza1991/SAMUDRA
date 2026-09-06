@@ -1,6 +1,6 @@
 import type { Recommendation, Confidence } from '../../types/contracts';
 import { ShieldCheck, ShieldAlert, ShieldX, ShieldQuestion, Info, ChevronRight, AlertTriangle } from 'lucide-react';
-import { TRANSLATIONS, type SupportedLanguage } from '../../i18n/translations';
+import { TRANSLATIONS, translateText, type SupportedLanguage } from '../../i18n/translations';
 
 interface RecommendationBannerProps {
   recommendation: Recommendation;
@@ -56,7 +56,7 @@ export default function RecommendationBanner({
       </div>
 
       {recommendation.summary && (
-        <p className="recommendation-summary">{recommendation.summary}</p>
+        <p className="recommendation-summary">{translateText(recommendation.summary, language)}</p>
       )}
 
       {recommendation.decisive_factors && recommendation.decisive_factors.length > 0 && (
@@ -66,7 +66,7 @@ export default function RecommendationBanner({
             {recommendation.decisive_factors.map((factor, i) => (
               <li key={i} className="factor-item">
                 <ChevronRight size={12} />
-                <span>{factor}</span>
+                <span>{translateText(factor, language)}</span>
               </li>
             ))}
           </ul>
@@ -75,7 +75,7 @@ export default function RecommendationBanner({
 
       {recommendation.next_action && (
         <div className="next-action">
-          <strong>{t.nextActionLabel}:</strong> {recommendation.next_action}
+          <strong>{t.nextActionLabel}:</strong> {translateText(recommendation.next_action, language)}
         </div>
       )}
 

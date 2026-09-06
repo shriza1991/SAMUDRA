@@ -38,7 +38,13 @@ def create_app() -> FastAPI:
     app.include_router(api_v1_router)
 
     # Configure persistence
-    memory_manager.set_store(SQLAlchemyConversationStore())
+    try:
+        from backend.app.db.models import Base
+        from backend.app.db.session import engine
+        Base.metadata.create_all(bind=engine)
+        memory_manager.set_store(SQLAlchemyConversationStore())
+    except Exception as e:
+        logger.warning("Database init skipped or unavailable on startup: %s", e)
 
     @app.get("/", tags=["System"])
     async def root():

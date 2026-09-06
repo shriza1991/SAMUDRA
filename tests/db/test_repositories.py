@@ -48,7 +48,6 @@ def test_engine():
         conn.commit()
     Base.metadata.create_all(bind=engine)
     yield engine
-    Base.metadata.drop_all(bind=engine)
 
 @pytest.fixture
 def db_session(test_engine):

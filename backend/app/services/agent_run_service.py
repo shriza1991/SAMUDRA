@@ -213,11 +213,11 @@ class AgentRunService:
             Schema-valid response; always a ChatResponse — never raises.
         """
         # ------------------------------------------------------------------
-        # DATA_MODE guard — LIVE/HYBRID not yet ready
+        # DATA_MODE guard — LIVE not yet ready, HYBRID falls back to snapshot
         # ------------------------------------------------------------------
-        if self._data_mode in ("LIVE", "HYBRID"):
+        if self._data_mode == "LIVE":
             logger.warning(
-                "AgentRunService: DATA_MODE=%s requested but LIVE/HYBRID providers "
+                "AgentRunService: DATA_MODE=%s requested but LIVE providers "
                 "are not yet implemented. Returning 503.",
                 self._data_mode,
             )

@@ -495,7 +495,11 @@ def intent_locale_node(state: ORCAState) -> Dict[str, Any]:
 
     # M9: Normalization & Language Detection
     norm = normalize_maritime_entities(raw_msg, context_language=thread_ctx.preferred_language)
-    lang = state.get("language") or norm.detected_language
+    user_pref_lang = (state.get("user_profile") or {}).get("language_preference")
+    if user_pref_lang in ("en", "hi", "mr"):
+        lang = user_pref_lang
+    else:
+        lang = state.get("language") or norm.detected_language
     msg_lower = raw_msg.lower()
 
     explicit_harbor = norm.origin_harbor
@@ -2158,11 +2162,15 @@ def run_orca_graph(
     else:
         active_provider = llm_provider
 
+    pref_lang = (user_context or {}).get("language_preference")
+    init_lang = pref_lang if pref_lang in ("en", "hi", "mr") else None
+
     initial_state: ORCAState = {
         "request_id": f"req-{uuid.uuid4().hex[:8]}",
         "thread_id": thread_id,
         "user_message": user_message,
         "user_profile": (user_context or {}).copy(),
+        "language": init_lang,
         "tool_mode": tool_mode,
         "llm_provider": active_provider,
         "trace": [],

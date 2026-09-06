@@ -32,6 +32,14 @@ export default function App() {
   const traceItems = chat.activeResponse?.trace ?? [];
   const layerCount = chat.activeResponse?.map_layers?.length ?? 0;
 
+  const handleBack = () => {
+    if (chat.messages.length > 0) {
+      chat.clearChat();
+    } else if (mobileView === 'chat') {
+      setMobileView('map');
+    }
+  };
+
   return (
     <div className="app-container">
       {/* Top Navigation & Status Header */}
@@ -76,6 +84,8 @@ export default function App() {
           activeResponse={chat.activeResponse}
           isLoading={chat.isLoading}
           onSend={chat.send}
+          onBack={handleBack}
+          onReset={chat.clearChat}
           onEvidenceClick={() => setIsDrawerOpen(true)}
         />
 
