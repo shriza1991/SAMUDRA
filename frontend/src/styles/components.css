@@ -1213,7 +1213,65 @@
   line-height: 1.5;
 }
 
-/* ============ Responsive Layout (1366x768 & Mobile) ============ */
+/* ============ Mobile Segmented View Switcher ============ */
+.mobile-view-tabs {
+  display: none;
+  background: var(--color-bg-secondary);
+  border-bottom: 1px solid var(--color-border);
+  padding: 6px var(--space-md);
+  gap: var(--space-xs);
+  z-index: 10;
+  flex-shrink: 0;
+}
+
+.mobile-tab-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--color-text-muted);
+  transition: all var(--transition-fast);
+  min-height: 38px;
+}
+
+.mobile-tab-btn:hover {
+  color: var(--color-text-primary);
+  background: var(--color-bg-tertiary);
+}
+
+.mobile-tab-btn.active {
+  background: var(--color-accent);
+  color: #ffffff;
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.mobile-tab-badge {
+  background: rgba(255, 255, 255, 0.3);
+  padding: 1px 7px;
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.mobile-tab-btn:not(.active) .mobile-tab-badge {
+  background: var(--color-bg-tertiary);
+  color: var(--color-accent);
+}
+
+/* ============ Responsive Layout Breakpoints ============ */
+@media (min-width: 769px) {
+  .mobile-view-tabs {
+    display: none !important;
+  }
+}
+
 @media (max-width: 1024px) {
   .app-main {
     grid-template-columns: 360px 1fr;
@@ -1221,38 +1279,113 @@
 }
 
 @media (max-width: 768px) {
-  .app-main {
+  .mobile-view-tabs {
     display: flex;
-    flex-direction: column-reverse;
   }
 
-  .chat-panel {
+  .app-main {
+    display: block;
+    position: relative;
+    height: calc(100vh - var(--header-height) - 51px);
+    overflow: hidden;
+  }
+
+  .app-main.view-chat .chat-panel {
+    display: flex;
+    width: 100%;
+    height: 100%;
     border-right: none;
-    border-top: 1px solid var(--color-border);
-    height: 50%;
   }
 
-  .map-view {
-    height: 50%;
+  .app-main.view-chat .map-view {
+    display: none !important;
+  }
+
+  .app-main.view-map .chat-panel {
+    display: none !important;
+  }
+
+  .app-main.view-map .map-view {
+    display: flex;
+    width: 100%;
+    height: 100%;
   }
 
   .app-header {
     padding: var(--space-sm) var(--space-md);
-    flex-direction: column;
+    flex-direction: row;
     height: auto;
+    min-height: 52px;
     gap: var(--space-xs);
-    align-items: flex-start;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .app-title {
+    font-size: var(--font-size-lg);
+  }
+
+  .app-tagline {
+    display: none;
   }
 
   .app-header-right {
-    width: 100%;
-    justify-content: space-between;
+    gap: var(--space-xs);
+    align-items: center;
     flex-wrap: wrap;
+  }
+
+  .pilot-badge {
+    display: none;
   }
 
   .evidence-drawer {
     width: 100%;
+    max-width: 100vw;
+  }
+
+  .chat-messages {
+    padding: var(--space-md);
+  }
+
+  .chat-message-content {
+    max-width: 92%;
+  }
+
+  .chat-input-container {
+    padding: var(--space-sm) var(--space-md) max(var(--space-md), env(safe-area-inset-bottom));
   }
 }
+
+@media (max-width: 480px) {
+  .app-header {
+    padding: var(--space-xs) var(--space-sm);
+  }
+
+  .theme-label {
+    display: none;
+  }
+
+  .theme-toggle-btn {
+    padding: 5px 6px;
+  }
+
+  .evidence-toggle-btn span:last-child {
+    display: none;
+  }
+
+  .evidence-toggle-btn {
+    padding: 5px 8px;
+  }
+
+  .data-mode-indicator .mode-badge span:last-child {
+    display: none;
+  }
+
+  .data-mode-indicator .mode-badge {
+    padding: 4px 6px;
+  }
+}
+
 
 
