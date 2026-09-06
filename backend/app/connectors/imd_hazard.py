@@ -33,28 +33,29 @@ import httpx
 
 from backend.app.agents.integrations.contracts import ToolInvocationContext
 from backend.app.agents.integrations.dev2 import HazardBulletinPayload
-from backend.app.connectors import BaseConnector
+from backend.app.connectors.base import BaseLiveConnector
 from backend.app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
 
-class ImdHazardConnector(BaseConnector):
-    """Connector for IMD Cyclone Warning Division hazard bulletins.
+class ImdHazardConnector(BaseLiveConnector):
+    """Connector for IMD Cyclone and Severe Weather Bulletins.
 
     Implements:
     - HazardBulletinsProvider — `get_hazard_bulletin`
 
-    HYBRID failure semantics: returns NORMAL severity so Dev 4 can
-    evaluate with conservative defaults. Callers should propagate the
-    DEGRADED warning through quality_flags.
+    HYBRID fallback strategy:
+    1. Try live IMD REST endpoint
+    2. Fall back to returning a SAFE empty payload if no key/offline.
+    (Open-Meteo does not provide narrative hazard bulletins)
     """
 
-    IMD_HAZARD_URL = "https://mausam.imd.gov.in/hazards"
-    IMD_HAZARD_API_PATH = "https://mausam.imd.gov.in/api/hazard/bulletin"
+    SOURCE_URL = "https://mausam.imd.gov.in/api/cyclone_bulletin"
 
     def __init__(self) -> None:
-        super().__init__(data_mode=settings.DATA_MODE)
+        super().__init__()
+        self.data_mode = settings.DATA_MODE
 
     def get_hazard_bulletin(self, context: ToolInvocationContext) -> HazardBulletinPayload:
         """Fetch active cyclone / storm / squall warnings.

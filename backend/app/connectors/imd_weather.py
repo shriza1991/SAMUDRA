@@ -28,27 +28,30 @@ import httpx
 
 from backend.app.agents.integrations.contracts import ToolInvocationContext
 from backend.app.agents.integrations.dev2 import WeatherConditionsPayload
-from backend.app.connectors import BaseConnector
+from backend.app.connectors.base import BaseLiveConnector
 from backend.app.connectors.open_meteo import OpenMeteoConnector
 from backend.app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
 
-class ImdWeatherConnector(BaseConnector):
+class ImdWeatherConnector(BaseLiveConnector):
     """Connector for IMD Coastal Weather Bulletins.
 
     Implements:
     - WeatherConditionsProvider — `get_weather_conditions`
 
-    HYBRID mode: IMD live → Open-Meteo fallback → DEGRADED payload.
+    HYBRID fallback strategy:
+    1. Try live IMD REST endpoint
+    2. Fall back to Open-Meteo Global Weather API (free, no key)
+    3. Return DEGRADED payload
     """
 
-    IMD_COASTAL_URL = "https://mausam.imd.gov.in"
-    IMD_BULLETIN_URL = "https://mausam.imd.gov.in/api/coastal/weather"
+    SOURCE_URL = "https://mausam.imd.gov.in/api/coastal_bulletin"
 
     def __init__(self) -> None:
-        super().__init__(data_mode=settings.DATA_MODE)
+        super().__init__()
+        self.data_mode = settings.DATA_MODE
         self._fallback = OpenMeteoConnector()
 
     def get_weather_conditions(self, context: ToolInvocationContext) -> WeatherConditionsPayload:

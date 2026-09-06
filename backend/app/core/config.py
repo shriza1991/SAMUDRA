@@ -45,6 +45,7 @@ class Settings(BaseSettings):
     MOSDAC_API_BASE_URL: str = "https://mosdac.gov.in/api/placeholder"
     MOSDAC_API_KEY: str = ""
     OPEN_METEO_BASE_URL: str = "https://marine-api.open-meteo.com/v1/marine"
+    OPEN_METEO_CACHE_TTL_SECONDS: int = 3600
 
     # LLM Settings
     LLM_PROVIDER: str = "openai"

@@ -38,14 +38,14 @@ from backend.app.agents.integrations.dev2 import (
     MarineConditionsPayload,
     PFZSourceDataPayload,
 )
-from backend.app.connectors import BaseConnector
+from backend.app.connectors.base import BaseLiveConnector
 from backend.app.connectors.open_meteo import OpenMeteoConnector
 from backend.app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
 
-class IncoisOceanStateConnector(BaseConnector):
+class IncoisOceanStateConnector(BaseLiveConnector):
     """Connector for INCOIS Ocean State Forecast and PFZ advisories.
 
     Implements:
@@ -62,7 +62,8 @@ class IncoisOceanStateConnector(BaseConnector):
     OSF_SOURCE_URL = "https://incois.gov.in/portal/osf"
 
     def __init__(self) -> None:
-        super().__init__(data_mode=settings.DATA_MODE)
+        super().__init__()
+        self.data_mode = settings.DATA_MODE
         self._fallback = OpenMeteoConnector()
 
     # ------------------------------------------------------------------

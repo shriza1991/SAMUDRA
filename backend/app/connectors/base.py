@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Tuple
 
 import httpx
 
@@ -47,11 +47,18 @@ def validate_coordinates(lon: float, lat: float) -> None:
         raise ValueError(f"Latitude {lat} out of bounds [-90, 90]")
 
 
+import time
+from backend.app.core.config import settings
+
 class BaseLiveConnector:
     """Base class for real (live) network connectors.
 
     Uses synchronous httpx.Client and maps exceptions to normalized ConnectorErrors.
+    Implements a basic memory cache and a single retry for transient failures.
     """
+    
+    # Simple in-memory cache shared across instances: dict[url_with_params, tuple[expiry_timestamp, data]]
+    _cache: Dict[str, Tuple[float, Dict[str, Any]]] = {}
 
     def __init__(self, timeout: Optional[httpx.Timeout] = None) -> None:
         # Default 4-second bounded timeout
@@ -61,29 +68,60 @@ class BaseLiveConnector:
             write=2.0,
             pool=2.0,
         )
+        self._cache_ttl = getattr(settings, "OPEN_METEO_CACHE_TTL_SECONDS", 3600)
 
     def _get(self, url: str, headers: Optional[Dict[str, str]] = None, **params: Any) -> Dict[str, Any]:
-        """Synchronous HTTPX GET mapping exceptions to Dev 2 ConnectorErrors."""
-        try:
-            with httpx.Client(timeout=self._timeout) as client:
-                response = client.get(url, headers=headers or {}, params=params)
-                response.raise_for_status()
-                return response.json()  # type: ignore[no-any-return]
+        """Synchronous HTTPX GET with caching, 1 retry, and exception mapping."""
+        from urllib.parse import urlencode
+        
+        # Build cache key
+        query_string = urlencode(params, doseq=True) if params else ""
+        cache_key = f"{url}?{query_string}"
+        
+        # Check cache
+        now = time.time()
+        if cache_key in self._cache:
+            expiry, cached_data = self._cache[cache_key]
+            if now < expiry:
+                return cached_data
+            else:
+                del self._cache[cache_key]
+                
+        # Attempt request with max 1 retry for transient errors
+        attempts = 2
+        for attempt in range(attempts):
+            try:
+                with httpx.Client(timeout=self._timeout) as client:
+                    response = client.get(url, headers=headers or {}, params=params)
+                    response.raise_for_status()
+                    data = response.json()  # type: ignore[no-any-return]
+                    
+                    # Store in cache
+                    self._cache[cache_key] = (time.time() + self._cache_ttl, data)
+                    return data
 
-        except httpx.TimeoutException as exc:
-            raise ConnectorTimeoutError(f"Timeout reaching {url}") from exc
-        except httpx.HTTPStatusError as exc:
-            status = exc.response.status_code
-            if status in (401, 403):
-                raise ConnectorAuthenticationError(f"Authentication failed for {url}") from exc
-            if status == 429:
-                raise ConnectorRateLimitError(f"Rate limited by {url}") from exc
-            if status >= 500:
-                raise ConnectorUpstreamUnavailableError(f"Upstream {url} returned {status}") from exc
-            # Other client errors (e.g., 400, 404)
-            raise ConnectorMalformedResponseError(f"Upstream {url} returned bad status {status}") from exc
-        except httpx.RequestError as exc:
-            raise ConnectorUpstreamUnavailableError(f"Network error reaching {url}") from exc
-        except ValueError as exc:
-            # json() parsing failure
-            raise ConnectorMalformedResponseError(f"Malformed JSON from {url}") from exc
+            except httpx.TimeoutException as exc:
+                if attempt < attempts - 1:
+                    continue
+                raise ConnectorTimeoutError(f"Timeout reaching {url}") from exc
+            except httpx.HTTPStatusError as exc:
+                status = exc.response.status_code
+                if status in (502, 503, 504) and attempt < attempts - 1:
+                    continue
+                if status in (401, 403):
+                    raise ConnectorAuthenticationError(f"Authentication failed for {url}") from exc
+                if status == 429:
+                    raise ConnectorRateLimitError(f"Rate limited by {url}") from exc
+                if status >= 500:
+                    raise ConnectorUpstreamUnavailableError(f"Upstream {url} returned {status}") from exc
+                # Other client errors (e.g., 400, 404)
+                raise ConnectorMalformedResponseError(f"Upstream {url} returned bad status {status}") from exc
+            except httpx.RequestError as exc:
+                if attempt < attempts - 1:
+                    continue
+                raise ConnectorUpstreamUnavailableError(f"Network error reaching {url}") from exc
+            except ValueError as exc:
+                # json() parsing failure
+                raise ConnectorMalformedResponseError(f"Malformed JSON from {url}") from exc
+        
+        raise ConnectorUpstreamUnavailableError(f"Failed to reach {url} after {attempts} attempts")

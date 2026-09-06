@@ -2,6 +2,11 @@ import json
 import pytest
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+import sys
+from unittest.mock import MagicMock
+
+sys.modules['langgraph'] = MagicMock()
+sys.modules['langgraph.graph'] = MagicMock()
 
 # Avoid importing from backend.app.agents directly if it causes langgraph import errors.
 class MockContext:
