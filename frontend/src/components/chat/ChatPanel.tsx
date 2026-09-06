@@ -34,7 +34,7 @@ export default function ChatPanel({
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+  }, [messages, activeResponse, isLoading]);
 
   const showWelcome = messages.length === 0;
 
