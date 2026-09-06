@@ -1,0 +1,36 @@
+{
+  "metadata": {
+    "snapshot_id": "SNAP-PFZ_ADVISORIES",
+    "provider": "INCOIS",
+    "source_name": "INCOIS PFZ Snapshot",
+    "captured_at": "2026-09-06T04:20:06.304636+00:00",
+    "valid_from": "2026-09-06T04:20:06.304636+00:00",
+    "valid_to": "2026-09-09T04:20:06.304636+00:00",
+    "schema_version": "1.0.0",
+    "checksum": "2c7d7d01e894078d4e6c1265b7a413bdf4be7f2a5479636199b651a4bfcd184d",
+    "reference_url": "https://example.com/snapshot",
+    "status": "SIMULATED"
+  },
+  "payload": {
+    "features": [
+      {
+        "id": "PFZ-SNAP-01",
+        "lat": 16.92,
+        "lon": 73.15,
+        "sst_grad": 0.8,
+        "chlorophyll": 1.4
+      },
+      {
+        "id": "PFZ-SNAP-02",
+        "lat": 17.05,
+        "lon": 73.05,
+        "sst_grad": 1.1,
+        "chlorophyll": 1.9
+      }
+    ],
+    "bulletin_date": "2026-09-06T04:20:06.304636+00:00",
+    "valid_to": "2026-09-09T04:20:06.304636+00:00",
+    "source_name": "INCOIS PFZ Mission Snapshot Fixture",
+    "source_url": "https://incois.gov.in/portal/pfz"
+  }
+}
