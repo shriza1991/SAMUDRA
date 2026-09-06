@@ -32,20 +32,33 @@ export async function sendMessage(req: ChatRequest): Promise<ChatResponse> {
   });
 }
 
-export async function getHealth(): Promise<{
+export interface HealthResponse {
   status: string;
-  data_mode: string;
-  database: string;
-  timestamp: string;
-}> {
-  return request('/health');
+  app_name?: string;
+  app_env?: string;
+  data_mode?: string;
+  database?: string;
+  timestamp?: string;
 }
 
-export async function getDemoScenarios(): Promise<Array<{
+export async function getHealth(): Promise<HealthResponse> {
+  return request<HealthResponse>('/health');
+}
+
+export interface DemoScenario {
   id: string;
   name: string;
-  description: string;
-  query: string;
-}>> {
-  return request('/scenarios');
+  intent?: string;
+  description?: string;
+  query?: string;
+}
+
+export async function getDemoScenarios(): Promise<DemoScenario[]> {
+  try {
+    const res = await request<any>('/demo-scenarios');
+    return Array.isArray(res) ? res : (res?.scenarios || []);
+  } catch {
+    const res = await request<any>('/scenarios');
+    return Array.isArray(res) ? res : (res?.scenarios || []);
+  }
 }

@@ -57,6 +57,7 @@ export default function ChatPanel({
             <RecommendationBanner
               recommendation={activeResponse.recommendation}
               confidence={activeResponse.confidence}
+              warnings={activeResponse.warnings}
             />
           </div>
         )}

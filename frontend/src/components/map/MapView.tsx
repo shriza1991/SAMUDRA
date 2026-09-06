@@ -4,11 +4,11 @@ import type { MapLayer } from '../../types/contracts';
 import LayerManager from './LayerManager';
 import { Layers } from 'lucide-react';
 
-/** Ratnagiri, Maharashtra — pilot demo center */
-const DEFAULT_CENTER: [number, number] = [73.28, 16.99];
-const DEFAULT_ZOOM = 8;
+/** Initial fallback center (Indian coastal waters) */
+const INITIAL_CENTER: [number, number] = [73.28, 16.99];
+const INITIAL_ZOOM = 7;
 
-/** Free vector tile source for MapLibre */
+/** CartoDB Dark Matter style */
 const MAP_STYLE = 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json';
 
 interface MapViewProps {
@@ -28,8 +28,8 @@ export default function MapView({ layers }: MapViewProps) {
     const map = new maplibregl.Map({
       container: containerRef.current,
       style: MAP_STYLE,
-      center: DEFAULT_CENTER,
-      zoom: DEFAULT_ZOOM,
+      center: INITIAL_CENTER,
+      zoom: INITIAL_ZOOM,
       attributionControl: false,
     });
 
@@ -44,21 +44,22 @@ export default function MapView({ layers }: MapViewProps) {
     };
   }, []);
 
-  // Manage GeoJSON layers
+  // Manage GeoJSON layers dynamically
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
 
     const addLayers = () => {
-      // Initialize visibility state
       const vis: Record<string, boolean> = {};
+      const bounds = new maplibregl.LngLatBounds();
+      let hasCoordinates = false;
 
       for (const layer of layers) {
         const sourceId = `src-${layer.layer_id}`;
         const layerId = layer.layer_id;
         vis[layerId] = layer.visible;
 
-        // Remove existing layer/source if present
+        // Clean up previous instances of this layer if updating
         if (map.getLayer(layerId)) map.removeLayer(layerId);
         if (map.getLayer(`${layerId}-outline`)) map.removeLayer(`${layerId}-outline`);
         if (map.getLayer(`${layerId}-circle`)) map.removeLayer(`${layerId}-circle`);
@@ -67,11 +68,15 @@ export default function MapView({ layers }: MapViewProps) {
         const geojson = layer.geojson;
         map.addSource(sourceId, { type: 'geojson', data: geojson as GeoJSON.GeoJSON });
 
+        // Collect bounds dynamically from GeoJSON coordinates
+        collectBounds(geojson, bounds, () => {
+          hasCoordinates = true;
+        });
+
         const color = layer.style?.color || '#38bdf8';
         const opacity = layer.style?.opacity ?? 0.6;
         const lineWidth = layer.style?.line_width ?? 2;
 
-        // Detect geometry type and add appropriate layer
         const geomType = getGeometryType(geojson);
 
         if (geomType === 'Polygon' || geomType === 'MultiPolygon') {
@@ -124,24 +129,22 @@ export default function MapView({ layers }: MapViewProps) {
           });
         }
 
-        // Add popup on click
+        // Add dynamic popup on click
         map.on('click', layerId, (e) => {
           if (!e.features?.length) return;
           const feature = e.features[0];
           const props = feature.properties || {};
 
-          const html = Object.entries(props)
-            .filter(([k]) => k !== 'label')
-            .map(([k, v]) => `<strong>${k}:</strong> ${v}`)
-            .join('<br/>');
+          const entries = Object.entries(props);
+          const html = entries.length > 0
+            ? entries
+                .map(([k, v]) => `<div><strong>${k.replace(/_/g, ' ')}:</strong> ${formatPropValue(v)}</div>`)
+                .join('')
+            : `<div><em>${layer.name}</em></div>`;
 
-          const popupContent = props.label
-            ? `<div class="map-popup"><strong>${props.label}</strong><br/>${html}</div>`
-            : `<div class="map-popup">${html}</div>`;
-
-          new maplibregl.Popup({ closeButton: true, maxWidth: '280px' })
+          new maplibregl.Popup({ closeButton: true, maxWidth: '300px' })
             .setLngLat(e.lngLat)
-            .setHTML(popupContent)
+            .setHTML(`<div class="map-popup"><h5 style="margin:0 0 6px;color:#38bdf8">${layer.name}</h5>${html}</div>`)
             .addTo(map);
         });
 
@@ -151,6 +154,15 @@ export default function MapView({ layers }: MapViewProps) {
       }
 
       setLayerVisibility(vis);
+
+      // Dynamically fit map bounds to the received GeoJSON layers
+      if (hasCoordinates && !bounds.isEmpty()) {
+        try {
+          map.fitBounds(bounds, { padding: 50, maxZoom: 13, duration: 1000 });
+        } catch {
+          // Fallback if bounds are a single point
+        }
+      }
     };
 
     if (map.isStyleLoaded()) {
@@ -193,7 +205,7 @@ export default function MapView({ layers }: MapViewProps) {
           aria-label="Toggle layer panel"
         >
           <Layers size={18} />
-          <span>{layers.length}</span>
+          <span>{layers.length} Layers</span>
         </button>
       )}
 
@@ -209,7 +221,36 @@ export default function MapView({ layers }: MapViewProps) {
   );
 }
 
-/** Extract the primary geometry type from a GeoJSON object */
+/** Recursively traverse GeoJSON and expand bounds */
+function collectBounds(geojson: any, bounds: maplibregl.LngLatBounds, onCoord: () => void) {
+  if (!geojson) return;
+
+  const traverseCoords = (coords: any) => {
+    if (!Array.isArray(coords)) return;
+    if (coords.length >= 2 && typeof coords[0] === 'number' && typeof coords[1] === 'number') {
+      bounds.extend([coords[0], coords[1]]);
+      onCoord();
+    } else {
+      for (const item of coords) {
+        traverseCoords(item);
+      }
+    }
+  };
+
+  if (geojson.type === 'FeatureCollection' && Array.isArray(geojson.features)) {
+    for (const f of geojson.features) {
+      if (f.geometry?.coordinates) {
+        traverseCoords(f.geometry.coordinates);
+      }
+    }
+  } else if (geojson.type === 'Feature' && geojson.geometry?.coordinates) {
+    traverseCoords(geojson.geometry.coordinates);
+  } else if (geojson.coordinates) {
+    traverseCoords(geojson.coordinates);
+  }
+}
+
+/** Extract primary geometry type from GeoJSON */
 function getGeometryType(geojson: MapLayer['geojson']): string {
   if (geojson.type === 'FeatureCollection' && geojson.features?.length) {
     return geojson.features[0].geometry?.type || 'Point';
@@ -217,5 +258,11 @@ function getGeometryType(geojson: MapLayer['geojson']): string {
   if (geojson.type === 'Feature') {
     return (geojson as GeoJSON.Feature).geometry?.type || 'Point';
   }
-  return 'Point';
+  return (geojson as any)?.geometry?.type || 'Point';
+}
+
+function formatPropValue(val: unknown): string {
+  if (val === null || val === undefined) return '—';
+  if (typeof val === 'object') return JSON.stringify(val);
+  return String(val);
 }

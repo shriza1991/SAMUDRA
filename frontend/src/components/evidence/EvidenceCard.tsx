@@ -62,17 +62,29 @@ export default function EvidenceCard({ evidence }: EvidenceCardProps) {
   );
 }
 
-function FreshnessBadge({ freshness }: { freshness: 'fresh' | 'aging' | 'stale' }) {
+function FreshnessBadge({ freshness }: { freshness: string }) {
+  const norm = freshness.toLowerCase();
+  const badgeClass = norm.includes('fresh') || norm.includes('real-time')
+    ? 'freshness-fresh'
+    : norm.includes('stale')
+    ? 'freshness-stale'
+    : 'freshness-aging';
+
   return (
-    <span className={`freshness-badge freshness-${freshness}`}>
+    <span className={`freshness-badge ${badgeClass}`}>
       {freshness}
     </span>
   );
 }
 
-function getFreshness(evidence: EvidenceItem): 'fresh' | 'aging' | 'stale' {
-  if (evidence.quality_flags.includes('stale')) return 'stale';
-  if (!evidence.retrieved_at) return 'aging';
+function getFreshness(evidence: EvidenceItem): string {
+  // Check if quality_flags already contains freshness labels
+  const directFlag = evidence.quality_flags?.find(f =>
+    ['fresh', 'stale', 'aging', 'official_source', 'snapshot', 'simulated', 'live'].includes(f.toLowerCase())
+  );
+  if (directFlag) return directFlag;
+
+  if (!evidence.retrieved_at) return 'active';
   const ageMs = Date.now() - new Date(evidence.retrieved_at).getTime();
   const hours = ageMs / (1000 * 60 * 60);
   if (hours < 6) return 'fresh';

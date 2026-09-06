@@ -29,7 +29,7 @@ export default function Header({
 
       <div className="app-header-right">
         <LanguageSelector language={language} onChange={onLanguageChange} />
-        <DataModeIndicator mode="HYBRID" />
+        <DataModeIndicator />
         {evidenceCount > 0 && (
           <button
             className="evidence-toggle-btn"

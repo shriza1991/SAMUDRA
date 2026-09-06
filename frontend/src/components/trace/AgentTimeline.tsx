@@ -19,8 +19,11 @@ export default function AgentTimeline({ trace }: AgentTimelineProps) {
 }
 
 function TraceStep({ item, isLast }: { item: AgentTraceItem; isLast: boolean }) {
-  const StatusIcon = item.status === 'completed' ? CheckCircle
-    : item.status === 'failed' ? XCircle
+  const normStatus = (item.status || '').toLowerCase();
+  const StatusIcon = normStatus === 'completed' || normStatus === 'ok' || normStatus === 'success'
+    ? CheckCircle
+    : normStatus === 'failed' || normStatus === 'error'
+    ? XCircle
     : Loader;
 
   return (

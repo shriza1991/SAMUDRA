@@ -1,7 +1,6 @@
 import { useState, useCallback } from 'react';
 import type { ChatRequest, ChatResponse } from '../types/contracts';
 import { sendMessage, ApiError } from '../api/client';
-import { MOCK_SAFETY_RESPONSE, MOCK_PFZ_RESPONSE } from '../api/mock-data';
 
 export interface ChatMessage {
   id: string;
@@ -13,18 +12,8 @@ export interface ChatMessage {
   error?: string;
 }
 
-const USE_MOCK = true; // Toggle to false when backend is available
-
 function generateId(): string {
   return `msg_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
-}
-
-function getMockResponse(message: string): ChatResponse {
-  const lower = message.toLowerCase();
-  if (lower.includes('pfz') || lower.includes('fishing zone')) {
-    return { ...MOCK_PFZ_RESPONSE, run_id: `run_${Date.now()}` };
-  }
-  return { ...MOCK_SAFETY_RESPONSE, run_id: `run_${Date.now()}` };
 }
 
 export function useChat() {
@@ -54,24 +43,18 @@ export function useChat() {
     setIsLoading(true);
 
     try {
-      let response: ChatResponse;
+      const req: ChatRequest = {
+        conversation_id: conversationId ?? undefined,
+        message: text,
+        user_context: {
+          language_preference: language,
+        },
+      };
 
-      if (USE_MOCK) {
-        // Simulate network delay
-        await new Promise(r => setTimeout(r, 800 + Math.random() * 700));
-        response = getMockResponse(text);
-      } else {
-        const req: ChatRequest = {
-          conversation_id: conversationId ?? undefined,
-          message: text,
-          user_context: {
-            language_preference: language === 'en' ? 'auto' : language,
-          },
-        };
-        response = await sendMessage(req);
-      }
+      // Always call the live backend API
+      const response = await sendMessage(req);
 
-      if (!conversationId) {
+      if (!conversationId && response.conversation_id) {
         setConversationId(response.conversation_id);
       }
 
@@ -86,9 +69,18 @@ export function useChat() {
       setMessages(prev => prev.map(m => m.id === loadingMsg.id ? assistantMsg : m));
       setActiveResponse(response);
     } catch (err) {
-      const errorMsg = err instanceof ApiError
-        ? `Server error (${err.status}): ${err.statusText}`
-        : 'Failed to connect to SAMUDRA backend. Please check if the server is running.';
+      let errorMsg = 'Failed to connect to SAMUDRA backend.';
+      if (err instanceof ApiError) {
+        if (typeof err.body === 'object' && err.body !== null && 'detail' in err.body) {
+          errorMsg = String((err.body as Record<string, unknown>).detail);
+        } else if (typeof err.body === 'object' && err.body !== null && 'message' in err.body) {
+          errorMsg = String((err.body as Record<string, unknown>).message);
+        } else {
+          errorMsg = `API Error (${err.status}): ${err.statusText}`;
+        }
+      } else if (err instanceof Error) {
+        errorMsg = err.message;
+      }
 
       setMessages(prev => prev.map(m =>
         m.id === loadingMsg.id
