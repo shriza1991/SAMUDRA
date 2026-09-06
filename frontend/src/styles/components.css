@@ -543,6 +543,18 @@
   color: var(--color-text-muted);
 }
 
+.pilot-badge.db-connected {
+  color: var(--color-go);
+  background: rgba(34, 197, 94, 0.12);
+  border-color: rgba(34, 197, 94, 0.3);
+}
+
+.pilot-badge.db-offline {
+  color: var(--color-caution);
+  background: rgba(234, 179, 8, 0.12);
+  border-color: rgba(234, 179, 8, 0.3);
+}
+
 .evidence-toggle-btn {
   display: flex;
   align-items: center;

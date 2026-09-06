@@ -63,9 +63,12 @@ export default function DataModeIndicator({ initialHealth }: DataModeIndicatorPr
         <span>Mode: {mode}</span>
       </span>
       {health?.database && (
-        <span className="pilot-badge" title="Database Connection Status">
+        <span
+          className={`pilot-badge ${health.database === 'connected' ? 'db-connected' : 'db-offline'}`}
+          title={health.database === 'connected' ? 'PostgreSQL Database Connected' : 'PostgreSQL Database Offline (Operating in in-memory snapshot mode)'}
+        >
           <ShieldCheck size={12} />
-          <span>DB: {health.database}</span>
+          <span>DB: {health.database === 'connected' ? 'Connected' : 'Offline'}</span>
         </span>
       )}
     </div>

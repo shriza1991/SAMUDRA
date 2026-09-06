@@ -138,7 +138,8 @@ async def health_check():
             session.execute(text("SELECT 1"))
             db_status = "connected"
     except Exception as e:
-        db_status = f"disconnected ({e})"
+        logger.debug("Database health check failed (service offline): %s", e)
+        db_status = "disconnected"
 
     return {
         "status": "healthy",
