@@ -475,9 +475,10 @@ def get_llm_provider(provider_type: Optional[str] = None) -> Optional[LLMProvide
             timeout_seconds=float(settings.LLM_REQUEST_TIMEOUT_SECONDS or 10.0),
         )
     elif choice == "openai":
-        if not settings.LLM_API_KEY:
+        placeholder_keys = {"", "your_llm_api_key_here", "placeholder", "mock"}
+        if not settings.LLM_API_KEY or settings.LLM_API_KEY.strip() in placeholder_keys or settings.LLM_API_KEY.startswith("your_"):
             # No API key provided, fall back cleanly to deterministic without error
-            logger.info("LLM_PROVIDER is 'openai' but LLM_API_KEY is empty; using deterministic fallback.")
+            logger.info("LLM_PROVIDER is 'openai' but LLM_API_KEY is empty or placeholder; using deterministic fallback.")
             return None
         return OpenAILLMProvider(
             api_key=settings.LLM_API_KEY,
