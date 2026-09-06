@@ -84,12 +84,8 @@ frontend/src/
 
 ## 4. Quality & Compliance Checklist
 
-- [x] **No Direct Third-Party Calls:** Frontend communicates exclusively through `/api/v1` backend endpoints. No browser-side scraping or direct INCOIS/IMD queries.
-- [x] **Strict Type Safety:** All components strictly adhere to `src/types/contracts.ts` (direct translation of backend Pydantic models). `npx tsc --noEmit` passes with 0 errors.
-- [x] **Automated Testing:** 7 Vitest unit tests covering API fetch, error states, contract schema validation, and canonical journey query coverage.
-- [x] **Production Bundle Verification:** `npm run build` generates production bundle in 4.5s.
-- [x] **Responsive Demoware:** Tested for 1366x768 laptop projection with flexible column stacking for mobile viewports.
-- [x] **Disclaimers:** Prototype warning banner permanently displayed per SIH / ISRO safety rules.
+- [x] **Zero Hard-coding Rule:** No mock intercepts in runtime (`USE_MOCK` eliminated). Frontend interacts directly with backend endpoints (`/api/v1/chat`, `/api/v1/health`, `/api/v1/demo-scenarios`). Mock data is restricted exclusively to Vitest test fixtures.
+- [x] **Dynamic Geospatial Bounding:** Map automatically fits bounds to whatever GeoJSON geometries are returned in the response rather than using a static viewport.
 
 ---
 
@@ -100,3 +96,6 @@ frontend/src/
 3. `41d07ab` — `feat(frontend): add MapLibre GL JS map with GeoJSON layer rendering`
 4. `820f541` — `feat(frontend): add evidence drawer, agent timeline, header, language selector, and responsive layout`
 5. `5e9f79e` — `test(frontend): add contract integrity and API client unit tests`
+6. `6d754d8` — `fix(frontend): use globalThis in client.test.ts for DOM lib compatibility`
+7. `91f543e` — `docs(dev1): document frontend architecture, components, and update roadmap`
+8. `0ef7802` — `refactor(frontend): eliminate all hardcoded mocks and connect dynamically to backend API`
