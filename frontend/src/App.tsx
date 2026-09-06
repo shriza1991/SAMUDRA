@@ -1,4 +1,5 @@
 import ChatPanel from './components/chat/ChatPanel';
+import MapView from './components/map/MapView';
 import { useChat } from './hooks/useChat';
 
 /**
@@ -40,16 +41,7 @@ export default function App() {
         />
 
         {/* Right Panel: MapLibre Geospatial Viewport */}
-        <section className="map-placeholder" aria-label="Map viewport">
-          <div className="map-placeholder-content">
-            <div className="map-placeholder-icon">🗺️</div>
-            <h3 className="map-placeholder-title">MapLibre GL JS Canvas</h3>
-            <p className="map-placeholder-text">
-              Vector map canvas will render here with PFZ zones, warning sectors,
-              geofences, and route candidates.
-            </p>
-          </div>
-        </section>
+        <MapView layers={chat.activeResponse?.map_layers ?? []} />
       </main>
 
       {/* Prototype Disclaimer */}
