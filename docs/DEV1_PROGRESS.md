@@ -99,3 +99,4 @@ frontend/src/
 6. `6d754d8` — `fix(frontend): use globalThis in client.test.ts for DOM lib compatibility`
 7. `91f543e` — `docs(dev1): document frontend architecture, components, and update roadmap`
 8. `0ef7802` — `refactor(frontend): eliminate all hardcoded mocks and connect dynamically to backend API`
+9. `84a9dac` — `feat(frontend): add comprehensive multilingual i18n support for Hindi and Marathi`
