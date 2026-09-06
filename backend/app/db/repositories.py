@@ -74,12 +74,15 @@ class RunRepository(BaseRepository):
     def get_by_id(self, run_id: uuid.UUID) -> Optional[Run]:
         return self.session.query(Run).filter_by(id=run_id).first()
 
-    def create(self, thread_id: str, metadata_json: Dict[str, Any] = None) -> Run:
+    def create(self, thread_id: str, metadata_json: Dict[str, Any] = None, run_id: Optional[uuid.UUID] = None) -> Run:
         run = Run(
             thread_id=thread_id,
             metadata_json=metadata_json or {},
             run_status=RunStatus.PENDING,
         )
+        if run_id:
+            run.id = run_id
+            
         self.session.add(run)
         try:
             self.session.commit()

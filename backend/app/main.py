@@ -40,6 +40,16 @@ def create_app() -> FastAPI:
     # Configure persistence
     memory_manager.set_store(SQLAlchemyConversationStore())
 
+    # Register Dev 2 providers
+    from backend.app.agents.tools import tool_registry
+    from backend.app.connectors.registration import register_dev2_provider_tools
+    from backend.app.connectors.manager import ConnectorManager
+    from backend.app.connectors.snapshot import SnapshotConnector
+    
+    snapshot_connector = SnapshotConnector()
+    manager = ConnectorManager(settings.DATA_MODE, snapshot_connector)
+    register_dev2_provider_tools(tool_registry, manager)
+
     @app.get("/", tags=["System"])
     async def root():
         return {

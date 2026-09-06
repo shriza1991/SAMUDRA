@@ -33,6 +33,8 @@ from backend.app.services.agent_run_service import (
     Dev2ErrorEnvelope,
     _AgentRuntimeUnavailableError,
     _LiveModeNotReadyError,
+    _DuplicateRunError,
+    _AgentExecutionError,
     agent_run_service,
 )
 
@@ -214,11 +216,37 @@ async def chat_endpoint(request: ChatRequest) -> ChatResponse:
     user_context = _build_user_context(request)
 
     try:
-        return await agent_run_service.run_snapshot(
+        return await agent_run_service.run_agent(
             user_message=request.message,
             conversation_id=conversation_id,
             run_id=run_id,
             user_context=user_context,
+        )
+
+    except _DuplicateRunError as exc:
+        envelope = Dev2ErrorEnvelope(
+            code="DUPLICATE_RUN",
+            message=f"Run ID {exc.run_id} already exists.",
+            hint="Generate a new UUID for each chat request.",
+            run_id=exc.run_id,
+        )
+        logger.warning("chat: Duplicate run — run_id=%s", exc.run_id)
+        return JSONResponse(
+            status_code=status.HTTP_409_CONFLICT,
+            content=envelope.to_dict(),
+        )
+
+    except _AgentExecutionError as exc:
+        envelope = Dev2ErrorEnvelope(
+            code="AGENT_EXECUTION_FAILED",
+            message="SAMUDRA encountered an internal error while processing your query.",
+            hint="Please try again or contact support. Do not make any voyage decisions based on this response.",
+            run_id=exc.run_id,
+        )
+        logger.error("chat: Agent execution failed — run_id=%s: %s", exc.run_id, exc.original_exc)
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content=envelope.to_dict(),
         )
 
     except _LiveModeNotReadyError as exc:
@@ -254,6 +282,73 @@ async def chat_endpoint(request: ChatRequest) -> ChatResponse:
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             content=envelope.to_dict(),
         )
+
+
+@router.get(
+    "/runs/{run_id}",
+    tags=["Agentic Chat"],
+    summary="Get Run details",
+)
+async def get_run(run_id: str):
+    """Retrieve details for a specific ORCA agent run."""
+    import uuid
+    from backend.app.db.session import SessionLocal
+    from backend.app.db.repositories import RunRepository
+    
+    try:
+        run_uuid = uuid.UUID(run_id)
+    except ValueError:
+        return JSONResponse(status_code=400, content={"error": "Invalid run_id format"})
+
+    with SessionLocal() as session:
+        run = RunRepository(session).get_by_id(run_uuid)
+        if not run:
+            return JSONResponse(status_code=404, content={"error": "Run not found"})
+        
+        return {
+            "id": str(run.id),
+            "thread_id": run.thread_id,
+            "status": run.run_status.value,
+            "started_at": run.started_at.isoformat() if run.started_at else None,
+            "error_message": run.error_message,
+        }
+
+
+@router.get(
+    "/map/layers/{layer_id}",
+    tags=["Map"],
+    summary="Get Map Layer",
+)
+async def get_map_layer(layer_id: str):
+    """Retrieve a specific Map Layer by ID."""
+    import uuid
+    from backend.app.db.session import SessionLocal
+    from backend.app.db.models import MapLayer
+    import json
+    from geoalchemy2.shape import to_shape
+    from shapely.geometry import mapping
+    
+    try:
+        layer_uuid = uuid.UUID(layer_id)
+    except ValueError:
+        return JSONResponse(status_code=400, content={"error": "Invalid layer_id format"})
+
+    with SessionLocal() as session:
+        layer = session.query(MapLayer).filter_by(id=layer_uuid).first()
+        if not layer:
+            return JSONResponse(status_code=404, content={"error": "Map layer not found"})
+            
+        geom_shape = to_shape(layer.geometry)
+        geojson_geom = mapping(geom_shape)
+        
+        return {
+            "id": str(layer.id),
+            "run_id": str(layer.run_id),
+            "layer_type": layer.layer_type,
+            "geometry": geojson_geom,
+            "properties": layer.properties,
+            "created_at": layer.created_at.isoformat() if layer.created_at else None,
+        }
 
 
 @router.get(
