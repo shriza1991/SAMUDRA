@@ -25,7 +25,6 @@ export interface LocaleContent {
   drawerTitleTrace: string;
   drawerEmptyEvidence: string;
   drawerEmptyTrace: string;
-  disclaimerText: string;
   prompts: PromptTemplate[];
 }
 
@@ -59,7 +58,6 @@ export const TRANSLATIONS: Record<SupportedLanguage, LocaleContent> = {
     drawerTitleTrace: 'Agent Activity & Audit Trail',
     drawerEmptyEvidence: 'No evidence records attached to this response.',
     drawerEmptyTrace: 'No agent trace events logged.',
-    disclaimerText: '⚠️ Prototype only — not an operational marine-navigation or life-safety system',
     prompts: [
       {
         id: 'pfz',
@@ -112,7 +110,6 @@ export const TRANSLATIONS: Record<SupportedLanguage, LocaleContent> = {
     drawerTitleTrace: 'एजेंट गतिविधि एवं ऑडिट ट्रेल',
     drawerEmptyEvidence: 'इस उत्तर के साथ कोई साक्ष्य संलग्न नहीं है।',
     drawerEmptyTrace: 'कोई एजेंट ट्रेस रिकॉर्ड उपलब्ध नहीं है।',
-    disclaimerText: '⚠️ केवल प्रोटोटाइप — वास्तविक नौवहन या जीवन सुरक्षा प्रणाली नहीं',
     prompts: [
       {
         id: 'pfz',
@@ -165,7 +162,6 @@ export const TRANSLATIONS: Record<SupportedLanguage, LocaleContent> = {
     drawerTitleTrace: 'एजंट कृती इतिहास व ऑडिट ट्रेल',
     drawerEmptyEvidence: 'या सल्ल्यासोबत कोणताही पुरावा जोडलेला नाही.',
     drawerEmptyTrace: 'कोणतीही एजंट नोंद उपलब्ध नाही.',
-    disclaimerText: '⚠️ केवळ प्रोटोटाइप — प्रत्यक्ष सागरी दिशादर्शन किंवा जीवरक्षक प्रणाली नाही',
     prompts: [
       {
         id: 'pfz',

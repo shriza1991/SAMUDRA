@@ -21,10 +21,7 @@ export default function Header({
   return (
     <header className="app-header">
       <div className="app-header-left">
-        <h1 className="app-title">
-          SAMUDRA{' '}
-          <span className="app-subtitle">| SIH 2026 PS 26176 (ISRO)</span>
-        </h1>
+        <h1 className="app-title">SAMUDRA</h1>
         <p className="app-tagline">
           {t.appTagline}
         </p>

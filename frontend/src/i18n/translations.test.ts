@@ -15,7 +15,6 @@ describe('Multilingual i18n Dictionary', () => {
     expect(t.samplePromptsTitle).toBeTruthy();
     expect(t.decisiveFactorsTitle).toBeTruthy();
     expect(t.nextActionLabel).toBeTruthy();
-    expect(t.disclaimerText).toBeTruthy();
 
     // Check all standard recommendation statuses have localized labels
     const expectedStatuses = ['GO', 'CAUTION', 'NO_GO', 'UNKNOWN', 'INFORMATIONAL'];

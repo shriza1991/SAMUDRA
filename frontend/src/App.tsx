@@ -4,7 +4,6 @@ import ChatPanel from './components/chat/ChatPanel';
 import MapView from './components/map/MapView';
 import EvidenceDrawer from './components/evidence/EvidenceDrawer';
 import { useChat } from './hooks/useChat';
-import { TRANSLATIONS } from './i18n/translations';
 
 /**
  * SAMUDRA Main Application Shell
@@ -18,7 +17,6 @@ export default function App() {
 
   const evidenceItems = chat.activeResponse?.evidence ?? [];
   const traceItems = chat.activeResponse?.trace ?? [];
-  const t = TRANSLATIONS[chat.language] || TRANSLATIONS.en;
 
   return (
     <div className="app-container">
@@ -54,11 +52,6 @@ export default function App() {
         trace={traceItems}
         language={chat.language}
       />
-
-      {/* Persistent Prototype Disclaimer */}
-      <footer className="prototype-disclaimer" role="contentinfo">
-        {t.disclaimerText}
-      </footer>
     </div>
   );
 }

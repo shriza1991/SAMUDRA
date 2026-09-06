@@ -444,12 +444,6 @@
   color: var(--color-accent);
 }
 
-.app-subtitle {
-  font-size: var(--font-size-base);
-  font-weight: 400;
-  color: var(--color-text-muted);
-}
-
 .app-tagline {
   margin: 2px 0 0;
   font-size: var(--font-size-sm);
@@ -761,16 +755,6 @@
 
 .map-popup strong {
   color: var(--color-text-primary);
-}
-
-/* Prototype Disclaimer */
-.prototype-disclaimer {
-  padding: var(--space-xs) var(--space-lg);
-  text-align: center;
-  font-size: var(--font-size-xs);
-  color: var(--color-caution);
-  background: rgba(234, 179, 8, 0.05);
-  border-top: 1px solid rgba(234, 179, 8, 0.15);
 }
 
 /* ============ Evidence Drawer ============ */
