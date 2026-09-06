@@ -1,0 +1,124 @@
+"""IMD Hazard / Cyclone Warning Bulletin Connector.
+
+Owned by Dev 2 (Backend Platform).
+
+IMD Cyclone Warning Division issues:
+- Tropical cyclone bulletins
+- Severe weather depressions
+- Squall and gale warnings for coastal waters
+
+HYBRID mode strategy:
+1. Try live IMD hazard endpoint
+2. On failure: return severity=NORMAL, cyclone_warning_active=False
+   (safe minimum — stale hazard data must never become a GO signal)
+
+This connector MUST NOT classify risk severity or recommend action.
+That is Dev 4 domain.
+
+Dev 3 integration contract:
+- Implements `HazardBulletinsProvider` from agents/integrations/dev2.py
+
+Dev 2 mandate (DEV2_IMPLEMENTATION_GUIDE.md):
+- Timeout ≤ 4 s
+- All timestamps as ISO-8601 UTC strings
+- No safety calculations
+"""
+
+from __future__ import annotations
+
+import logging
+from datetime import datetime, timedelta, timezone
+
+import httpx
+
+from backend.app.agents.integrations.contracts import ToolInvocationContext
+from backend.app.agents.integrations.dev2 import HazardBulletinPayload
+from backend.app.connectors import BaseConnector
+from backend.app.core.config import settings
+
+logger = logging.getLogger(__name__)
+
+
+class ImdHazardConnector(BaseConnector):
+    """Connector for IMD Cyclone Warning Division hazard bulletins.
+
+    Implements:
+    - HazardBulletinsProvider — `get_hazard_bulletin`
+
+    HYBRID failure semantics: returns NORMAL severity so Dev 4 can
+    evaluate with conservative defaults. Callers should propagate the
+    DEGRADED warning through quality_flags.
+    """
+
+    IMD_HAZARD_URL = "https://mausam.imd.gov.in/hazards"
+    IMD_HAZARD_API_PATH = "https://mausam.imd.gov.in/api/hazard/bulletin"
+
+    def __init__(self) -> None:
+        super().__init__(data_mode=settings.DATA_MODE)
+
+    def get_hazard_bulletin(self, context: ToolInvocationContext) -> HazardBulletinPayload:
+        """Fetch active cyclone / storm / squall warnings.
+
+        Failure returns severity=NORMAL with explicit DEGRADED label so
+        the orchestrator can communicate caveat to the user.
+        """
+        harbor = context.origin_harbor or "Ratnagiri"
+
+        if self.data_mode == "SNAPSHOT":
+            return self._make_normal_payload(harbor, "SNAPSHOT_REDIRECT")
+
+        if self.data_mode in ("LIVE", "HYBRID") and settings.IMD_API_KEY:
+            try:
+                return self._fetch_imd_hazard(harbor, context)
+            except Exception as exc:
+                logger.warning("IMD hazard live fetch failed (%s). Returning NORMAL.", exc)
+
+        # Key absent or HYBRID fallback: return NORMAL (conservative default)
+        return self._make_normal_payload(harbor, "LIVE_UNAVAILABLE")
+
+    def _fetch_imd_hazard(
+        self, harbor: str, context: ToolInvocationContext
+    ) -> HazardBulletinPayload:
+        """Attempt live IMD hazard bulletin REST call."""
+        headers = {"x-api-key": settings.IMD_API_KEY}
+        try:
+            raw = self._get(
+                self.IMD_HAZARD_API_PATH,
+                headers=headers,
+                harbor=harbor,
+            )
+        except httpx.TimeoutException as exc:
+            raise RuntimeError(f"IMD hazard timeout: {exc}") from exc
+        except httpx.HTTPStatusError as exc:
+            raise RuntimeError(f"IMD hazard HTTP {exc.response.status_code}") from exc
+
+        now_utc = datetime.now(timezone.utc)
+        return HazardBulletinPayload(
+            harbor=harbor,
+            cyclone_warning_active=bool(raw.get("cyclone_alert", False)),
+            squall_alert=bool(raw.get("squall_alert", False)),
+            bulletin_id=raw.get("bulletin_id"),
+            severity=raw.get("severity", "NORMAL"),
+            headline=raw.get("headline"),
+            valid_from=raw.get("valid_from", now_utc.isoformat()),
+            valid_to=raw.get("valid_to", (now_utc + timedelta(hours=24)).isoformat()),
+            source_name="IMD Cyclone Warning Division",
+            source_url=self.IMD_HAZARD_URL,
+        )
+
+    @staticmethod
+    def _make_normal_payload(harbor: str, reason: str) -> HazardBulletinPayload:
+        """Return NORMAL hazard bulletin payload used on live data failure."""
+        now_utc = datetime.now(timezone.utc)
+        return HazardBulletinPayload(
+            harbor=harbor,
+            cyclone_warning_active=False,
+            squall_alert=False,
+            bulletin_id=None,
+            severity="NORMAL",
+            headline=f"No active hazard (live bulletin unavailable — {reason})",
+            valid_from=now_utc.isoformat(),
+            valid_to=(now_utc + timedelta(hours=24)).isoformat(),
+            source_name=f"IMD Cyclone Warning Division (DEGRADED — {reason})",
+            source_url=None,
+        )
