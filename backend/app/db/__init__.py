@@ -1,10 +1,10 @@
 """Database Package for SAMUDRA.
 
 Owned by Dev 2 (Backend Platform).
-Provides async SQLAlchemy engine factory and declarative base.
+Provides sync SQLAlchemy engine factory and declarative base.
 """
 
-from backend.app.db.session import AsyncSessionLocal, engine, get_db
-from backend.app.db.base import Base
+from backend.app.db.session import SessionLocal, engine, get_db, Base
+from backend.app.db.models import ConversationThread, Run, EvidenceItem, MapLayer, ConnectorSnapshot, ConnectorStatus
 
-__all__ = ["AsyncSessionLocal", "engine", "get_db", "Base"]
+__all__ = ["SessionLocal", "engine", "get_db", "Base"]

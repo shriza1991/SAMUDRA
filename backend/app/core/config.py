@@ -32,6 +32,7 @@ class Settings(BaseSettings):
 
     # Database
     DATABASE_URL: str = "postgresql+asyncpg://samudra_user:samudra_password_placeholder@localhost:5432/samudra_db"
+    SYNC_DATABASE_URL: str = "postgresql+psycopg2://samudra_user:samudra_password_placeholder@localhost:5432/samudra_db"
 
     # Data Strategy
     DATA_MODE: str = "HYBRID"  # LIVE | HYBRID | SNAPSHOT

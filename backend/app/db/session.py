@@ -1,67 +1,30 @@
-"""Async SQLAlchemy Session Factory for SAMUDRA.
+"""Database session management.
 
 Owned by Dev 2 (Backend Platform).
-
-Creates a single async engine from DATABASE_URL and exposes:
-- `engine`            — AsyncEngine (used in migrations and startup checks)
-- `AsyncSessionLocal` — sessionmaker bound to the engine
-- `get_db`            — FastAPI dependency yielding an async session
-
-The engine is created lazily; if the database is unavailable at startup the
-application still starts in SNAPSHOT mode without crashing.
+Provides synchronous SQLAlchemy engine and sessionmaker.
 """
 
-from typing import AsyncGenerator
-
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker, declarative_base
 
 from backend.app.core.config import settings
 
-
-# ---------------------------------------------------------------------------
-# Engine
-# ---------------------------------------------------------------------------
-
-# echo=False in production; SQLAlchemy logs are too verbose for demo mode.
-# pool_pre_ping ensures stale connections are detected before use.
-engine = create_async_engine(
-    settings.DATABASE_URL,
-    echo=False,
+# Use SYNC_DATABASE_URL to ensure no async loops are accidentally crossed
+engine = create_engine(
+    settings.SYNC_DATABASE_URL,
     pool_pre_ping=True,
-    pool_size=5,
-    max_overflow=10,
+    pool_size=10,
+    max_overflow=20,
 )
 
-# ---------------------------------------------------------------------------
-# Session factory
-# ---------------------------------------------------------------------------
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-AsyncSessionLocal: async_sessionmaker[AsyncSession] = async_sessionmaker(
-    bind=engine,
-    expire_on_commit=False,
-    autoflush=False,
-    autocommit=False,
-)
+Base = declarative_base()
 
-
-# ---------------------------------------------------------------------------
-# FastAPI dependency
-# ---------------------------------------------------------------------------
-
-async def get_db() -> AsyncGenerator[AsyncSession, None]:
-    """Yield a database session, closing it on exit.
-
-    Usage::
-
-        @router.get("/example")
-        async def example(db: AsyncSession = Depends(get_db)):
-            ...
-    """
-    async with AsyncSessionLocal() as session:
-        try:
-            yield session
-        except Exception:
-            await session.rollback()
-            raise
-        finally:
-            await session.close()
+def get_db():
+    """Dependency to yield a synchronous DB session."""
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()

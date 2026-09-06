@@ -129,11 +129,23 @@ _CHAT_RESPONSE_EXAMPLE: Dict[str, Any] = {
 @router.get("/health", tags=["System"])
 async def health_check():
     """System health check and operational mode discovery."""
+    from backend.app.db.session import SessionLocal
+    from sqlalchemy import text
+    
+    db_status = "unknown"
+    try:
+        with SessionLocal() as session:
+            session.execute(text("SELECT 1"))
+            db_status = "connected"
+    except Exception as e:
+        db_status = f"disconnected ({e})"
+
     return {
         "status": "healthy",
         "app_name": settings.APP_NAME,
         "app_env": settings.APP_ENV,
         "data_mode": settings.DATA_MODE,
+        "database": db_status,
         "timestamp": datetime.now(timezone.utc).isoformat(),
     }
 

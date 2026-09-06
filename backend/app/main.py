@@ -8,6 +8,8 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from backend.app.api.v1.routes import router as api_v1_router
 from backend.app.core.config import settings
+from backend.app.agents.memory import memory_manager
+from backend.app.db.store import SQLAlchemyConversationStore
 
 
 def create_app() -> FastAPI:
@@ -34,6 +36,9 @@ def create_app() -> FastAPI:
 
     # Register API Routers
     app.include_router(api_v1_router)
+
+    # Configure persistence
+    memory_manager.set_store(SQLAlchemyConversationStore())
 
     @app.get("/", tags=["System"])
     async def root():
