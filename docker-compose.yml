@@ -22,7 +22,8 @@ services:
 
   # ============================================================================
   # Backend API Service (FastAPI + LangGraph)
-  # Uncomment/build when backend code dependencies are ready
+  # Uncomment to run the full backend stack with Docker.
+  # Dev 2 owner: backend/Dockerfile
   # ============================================================================
   # backend:
   #   build:
@@ -30,19 +31,28 @@ services:
   #     dockerfile: Dockerfile
   #   container_name: samudra_backend
   #   restart: unless-stopped
+  #   env_file:
+  #     - .env
   #   environment:
   #     - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-samudra_user}:${POSTGRES_PASSWORD:-samudra_password_placeholder}@db:5432/${POSTGRES_DB:-samudra_db}
   #     - DATA_MODE=${DATA_MODE:-HYBRID}
   #     - LLM_PROVIDER=${LLM_PROVIDER:-openai}
   #     - LLM_API_KEY=${LLM_API_KEY}
+  #     - INCOIS_API_KEY=${INCOIS_API_KEY:-}
+  #     - IMD_API_KEY=${IMD_API_KEY:-}
   #   ports:
   #     - "${BACKEND_PORT:-8000}:8000"
   #   volumes:
-  #     - ./backend:/app
-  #     - ./data/fixtures:/data/fixtures
+  #     - ./data/fixtures:/data/fixtures:ro
   #   depends_on:
   #     db:
   #       condition: service_healthy
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "python -c \"import httpx; httpx.get('http://localhost:8000/api/v1/health', timeout=5)\""]
+  #     interval: 30s
+  #     timeout: 10s
+  #     start_period: 15s
+  #     retries: 3
 
   # ============================================================================
   # Frontend Web Service (Vite + React + MapLibre GL JS)
@@ -64,3 +74,4 @@ services:
 volumes:
   postgres_data:
     driver: local
+

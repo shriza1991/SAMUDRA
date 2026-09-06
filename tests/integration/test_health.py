@@ -25,11 +25,60 @@ def test_scenarios_listing_endpoint(client: TestClient):
     assert "S8" in scenario_ids
 
 
-def test_chat_placeholder_returns_501(client: TestClient):
-    """POST /api/v1/chat should return 501 Not Implemented during foundation phase."""
+def test_chat_endpoint_is_wired(client: TestClient):
+    """POST /api/v1/chat must no longer return 501.
+
+    The endpoint is now wired to the LangGraph ORCA pipeline.
+    Acceptable responses:
+    - 200 with a valid ChatResponse body (agent ran successfully)
+    - 503 if the agent runtime is missing a required dependency (CI environment)
+
+    The original 501 scaffold placeholder has been replaced.
+    """
     response = client.post(
         "/api/v1/chat",
-        json={"message": "Is it safe to leave Ratnagiri?"},
+        json={
+            "message": "Is it safe to leave Ratnagiri tomorrow?",
+            "user_context": {
+                "origin_harbor": "Ratnagiri",
+                "craft_profile": "motorized_boat",
+            },
+        },
     )
-    assert response.status_code == 501
-    assert "scaffolded" in response.json()["detail"].lower()
+    # Must NOT be 501 (that was the pre-wiring placeholder)
+    assert response.status_code != 501, (
+        "Chat endpoint returned 501 — wiring to agent graph did not succeed."
+    )
+    # Accept 200 (success) or 503 (missing LLM/graph dependency in CI)
+    assert response.status_code in (200, 503), (
+        f"Unexpected status code {response.status_code}: {response.text[:200]}"
+    )
+
+
+def test_chat_response_schema_on_success(client: TestClient):
+    """When chat returns 200, the body must conform to ChatResponse schema."""
+    response = client.post(
+        "/api/v1/chat",
+        json={
+            "message": "What are the current wave conditions at Ratnagiri?",
+            "user_context": {
+                "origin_harbor": "Ratnagiri",
+                "craft_profile": "motorized_boat",
+            },
+        },
+    )
+    if response.status_code == 503:
+        # Agent graph dependency unavailable in CI — skip schema check
+        return
+
+    assert response.status_code == 200
+    data = response.json()
+    # Core required fields
+    assert "run_id" in data
+    assert "conversation_id" in data
+    assert "answer" in data
+    assert "recommendation" in data
+    assert "confidence" in data
+    assert "evidence" in data
+    # Recommendation status must be a known value
+    assert data["recommendation"]["status"] in ("GO", "CAUTION", "NO_GO", "UNKNOWN", "INFORMATIONAL")

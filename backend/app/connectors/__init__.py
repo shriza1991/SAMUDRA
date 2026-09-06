@@ -1,26 +1,45 @@
-"""External Data Connectors Package.
+"""External Data Connectors Package for SAMUDRA.
 
 Owned by Dev 2 (Backend Platform).
-Responsible for:
-- INCOIS PFZ and Ocean State Forecast (OSF) connectors
-- IMD Marine Warning Bulletin connector
-- MOSDAC Earth Observation context adapter
-- Open-Meteo Marine fallback connector
-- DATA_MODE routing (LIVE -> HYBRID fallback -> SNAPSHOT)
 
-Must NOT contain:
-- LLM prompt logic or agent state
-- Risk threshold business logic
+Provides typed connector implementations.
 """
 
-from typing import Dict, Any
+from __future__ import annotations
 
+from backend.app.connectors.base import BaseLiveConnector, validate_iso8601, validate_coordinates
+from backend.app.connectors.errors import (
+    ConnectorError,
+    ConnectorTimeoutError,
+    ConnectorAuthenticationError,
+    ConnectorRateLimitError,
+    ConnectorUpstreamUnavailableError,
+    ConnectorMalformedResponseError,
+    ConnectorInvalidConfigurationError,
+    ConnectorMissingSnapshotError,
+    ConnectorStaleSnapshotError,
+)
+from backend.app.connectors.health import get_connector_health
+from backend.app.connectors.manager import ConnectorManager
+from backend.app.connectors.modes import DataMode
+from backend.app.connectors.snapshot import SnapshotConnector, SnapshotMetadata
 
-class BaseConnector:
-    """Abstract base class for external data source adapters."""
-
-    def __init__(self, data_mode: str = "HYBRID"):
-        self.data_mode = data_mode
-
-    async def fetch(self, **kwargs) -> Dict[str, Any]:
-        raise NotImplementedError
+__all__ = [
+    "BaseLiveConnector",
+    "ConnectorError",
+    "ConnectorTimeoutError",
+    "ConnectorAuthenticationError",
+    "ConnectorRateLimitError",
+    "ConnectorUpstreamUnavailableError",
+    "ConnectorMalformedResponseError",
+    "ConnectorInvalidConfigurationError",
+    "ConnectorMissingSnapshotError",
+    "ConnectorStaleSnapshotError",
+    "ConnectorManager",
+    "DataMode",
+    "SnapshotConnector",
+    "SnapshotMetadata",
+    "get_connector_health",
+    "validate_iso8601",
+    "validate_coordinates",
+]

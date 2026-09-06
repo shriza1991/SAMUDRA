@@ -13,10 +13,11 @@ Dev 3 consumes these through adapters that normalize them into ToolResult.
 ===============================================================================
 """
 
-from typing import Any, Dict, List, Optional, Protocol, runtime_checkable
+from typing import Any, Dict, List, Optional, Protocol, runtime_checkable, TYPE_CHECKING
 from pydantic import BaseModel, Field
 
-from backend.app.agents.integrations.contracts import ToolInvocationContext
+if TYPE_CHECKING:
+    from backend.app.agents.integrations.contracts import ToolInvocationContext
 
 
 # =============================================================================
@@ -88,7 +89,7 @@ class PFZSourceDataPayload(BaseModel):
 class MarineConditionsProvider(Protocol):
     """Interface that Dev 2's marine connector module must implement."""
 
-    def get_marine_conditions(self, context: ToolInvocationContext) -> MarineConditionsPayload:
+    def get_marine_conditions(self, context: 'ToolInvocationContext') -> MarineConditionsPayload:
         """Fetches ocean state observations for the given operational context."""
         ...
 
@@ -97,7 +98,7 @@ class MarineConditionsProvider(Protocol):
 class WeatherConditionsProvider(Protocol):
     """Interface that Dev 2's weather connector module must implement."""
 
-    def get_weather_conditions(self, context: ToolInvocationContext) -> WeatherConditionsPayload:
+    def get_weather_conditions(self, context: 'ToolInvocationContext') -> WeatherConditionsPayload:
         """Fetches coastal atmospheric conditions for the given operational context."""
         ...
 
@@ -106,7 +107,7 @@ class WeatherConditionsProvider(Protocol):
 class HazardBulletinsProvider(Protocol):
     """Interface that Dev 2's hazard/bulletin connector module must implement."""
 
-    def get_hazard_bulletin(self, context: ToolInvocationContext) -> HazardBulletinPayload:
+    def get_hazard_bulletin(self, context: 'ToolInvocationContext') -> HazardBulletinPayload:
         """Fetches active storm, depression, and squall alerts for the given harbor."""
         ...
 
@@ -115,6 +116,6 @@ class HazardBulletinsProvider(Protocol):
 class PFZSourceDataProvider(Protocol):
     """Interface that Dev 2's PFZ connector module must implement."""
 
-    def get_pfz_raw_advisories(self, context: ToolInvocationContext) -> PFZSourceDataPayload:
+    def get_pfz_raw_advisories(self, context: 'ToolInvocationContext') -> PFZSourceDataPayload:
         """Fetches raw INCOIS PFZ advisories for maritime analysis."""
         ...
