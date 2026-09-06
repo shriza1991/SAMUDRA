@@ -63,7 +63,7 @@ class ORCAState(TypedDict, total=False):
     """Temporal window of voyage: departure_time, duration_hours, valid_until."""
 
     tool_mode: Optional[str]
-    """Execution mode for specialist tools: 'demo' (M1 stubs) or 'contract_mock' (M2 mocks)."""
+    """Execution mode for specialist tools: 'demo' (M1 stubs), 'contract_mock' (M2 mocks), or 'provider' (live/hybrid/snapshot registered providers)."""
 
     capability_error: Optional[str]
     """Recorded capability failure if a required provider is unavailable."""

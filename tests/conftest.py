@@ -13,12 +13,11 @@ if str(root_dir) not in sys.path:
 if str(backend_dir) not in sys.path:
     sys.path.insert(0, str(backend_dir))
 
-from unittest.mock import MagicMock
-sys.modules['langgraph'] = MagicMock()
-sys.modules['langgraph.graph'] = MagicMock()
-
 from backend.app.main import app
+from backend.app.agents.memory import memory_manager, InMemoryConversationStore
 
+# Force in-memory store for all agent evaluations so they don't require Postgres
+memory_manager.set_store(InMemoryConversationStore())
 
 @pytest.fixture
 def client():

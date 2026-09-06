@@ -665,7 +665,7 @@ def supervisor_node(state: ORCAState) -> Dict[str, Any]:
     intent_val = state.get("intent", IntentCategory.UNSUPPORTED.value)
     tool_mode = state.get("tool_mode", "demo")
 
-    if tool_mode == "contract_mock":
+    if tool_mode in ("contract_mock", "provider"):
         # 1. Capability requirements by intent
         msg_lower = state.get("user_message", "").lower()
         destination = state.get("destination")
@@ -1367,8 +1367,8 @@ def response_composer_node(state: ORCAState) -> Dict[str, Any]:
         destination = state.get("destination")
         lang = state.get("language", "en")
 
-        if tool_mode == "contract_mock":
-            # Read only Dev 4 authoritative output fields
+        if tool_mode in ("contract_mock", "provider"):
+            # Rely strictly on Dev 4 authoritative decision output fields
             route_comparison = obs.get("route_comparison", {})
             route_candidates_data = route_comparison.get("candidates", [])
             recommended_id = route_comparison.get("recommended_route_id", "")
@@ -1575,7 +1575,7 @@ def response_composer_node(state: ORCAState) -> Dict[str, Any]:
         destination = state.get("destination")
         lang = state.get("language", "en")
 
-        if tool_mode == "contract_mock":
+        if tool_mode in ("contract_mock", "provider"):
             has_hazard_tool = "hazard_search" in task_plan
             has_geofence_tool = "geospatial_hazard" in task_plan
             has_route_tool = "route_analysis" in task_plan
@@ -1929,7 +1929,7 @@ def response_composer_node(state: ORCAState) -> Dict[str, Any]:
             )
             # Fall back to deterministic template
 
-    # Generate suggested follow-ups for user
+    # Generate suggested followups for user
     suggested_followups = state.get("suggested_followups")
     if not suggested_followups:
         suggested_followups = ResponseComposer.generate_suggested_followups(
