@@ -437,3 +437,51 @@ async def list_scenarios():
 async def list_demo_scenarios():
     """Canonical alias for /scenarios — returns the same 8 scenario descriptors."""
     return await list_scenarios()
+
+
+@router.get(
+    "/chat/{conversation_id}/history",
+    tags=["Agentic Chat"],
+    summary="Get conversation history",
+)
+async def get_conversation_history(conversation_id: str):
+    """Retrieve chat history for a specific conversation ID."""
+    from backend.app.db.repositories import RunRepository
+    from backend.app.db.session import SessionLocal
+    
+    with SessionLocal() as session:
+        runs = RunRepository(session).get_all_by_thread(conversation_id)
+        if not runs:
+            return JSONResponse(status_code=404, content={"error": "Conversation not found"})
+        
+        history = []
+        for run in runs:
+            history.append({
+                "id": str(run.id),
+                "status": run.run_status.value,
+                "started_at": run.started_at.isoformat() if run.started_at else None,
+            })
+        return {"conversation_id": conversation_id, "history": history}
+
+
+@router.get(
+    "/layers/base",
+    tags=["Map"],
+    summary="Get static base layers",
+)
+async def get_base_layers():
+    """Returns static operational polygons (e.g. IMBL, restricted zones) as GeoJSON."""
+    import json
+    from pathlib import Path
+    
+    # We can load these from data/fixtures/geospatial/ or similar if they exist.
+    # For prototype, if not available, return empty feature collection.
+    base_file = Path("data/fixtures/geospatial/restricted_zones.geojson")
+    if base_file.exists():
+        try:
+            with open(base_file, encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            pass
+            
+    return {"type": "FeatureCollection", "features": []}

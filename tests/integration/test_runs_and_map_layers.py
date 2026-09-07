@@ -223,3 +223,36 @@ def test_hybrid_provider_execution(client: TestClient):
         assert data["error"]["code"] == "DATA_MODE_NOT_READY"
     finally:
         svc_module.agent_run_service._data_mode = original
+
+
+def test_get_conversation_history(client: TestClient):
+    """Test /api/v1/chat/{conversation_id}/history retrieval."""
+    conv_id = str(uuid.uuid4())
+    resp = _post_chat(client, {
+        "conversation_id": conv_id,
+        "message": "First message"
+    })
+    assert resp.status_code == 200
+    
+    hist_resp = client.get(f"/api/v1/chat/{conv_id}/history")
+    assert hist_resp.status_code == 200
+    
+    data = hist_resp.json()
+    assert data["conversation_id"] == conv_id
+    assert len(data["history"]) >= 1
+    assert data["history"][0]["id"] == resp.json()["run_id"]
+    
+    # Test unknown ID
+    bad_id = str(uuid.uuid4())
+    bad_resp = client.get(f"/api/v1/chat/{bad_id}/history")
+    assert bad_resp.status_code == 404
+
+
+def test_get_base_layers(client: TestClient):
+    """Test /api/v1/layers/base retrieval."""
+    resp = client.get("/api/v1/layers/base")
+    assert resp.status_code == 200
+    
+    data = resp.json()
+    assert data["type"] == "FeatureCollection"
+    assert "features" in data
