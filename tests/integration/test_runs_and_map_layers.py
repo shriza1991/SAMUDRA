@@ -6,7 +6,7 @@ Owned by Dev 2 (Backend Platform).
 from __future__ import annotations
 
 import uuid
-from typing import Any, Dict
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -31,7 +31,7 @@ pytestmark = pytest.mark.skipif(
 )
 
 
-def _post_chat(client: TestClient, payload: Dict[str, Any]):
+def _post_chat(client: TestClient, payload: dict[str, Any]):
     return client.post("/api/v1/chat", json=payload)
 
 
@@ -65,7 +65,13 @@ def test_partial_run(client: TestClient):
     """Test a partial run that has warnings."""
     # We can trigger a partial run by simulating a condition that generates warnings.
     with patch("backend.app.services.state_mapper.map_state_to_response") as mock_mapper:
-        from backend.app.contracts.chat import ChatResponse, Recommendation, RecommendationStatus, Confidence, ConfidenceLevel
+        from backend.app.contracts.chat import (
+            ChatResponse,
+            Confidence,
+            ConfidenceLevel,
+            Recommendation,
+            RecommendationStatus,
+        )
         mock_mapper.return_value = ChatResponse(
             run_id=str(uuid.uuid4()),
             conversation_id=str(uuid.uuid4()),
