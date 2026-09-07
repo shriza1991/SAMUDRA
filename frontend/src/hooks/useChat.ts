@@ -23,7 +23,12 @@ export function useChat() {
   const [activeResponse, setActiveResponse] = useState<ChatResponse | null>(null);
   const [language, setLanguage] = useState<'en' | 'hi' | 'mr'>('en');
 
-  const send = useCallback(async (text: string) => {
+  const send = useCallback(async (text: string, languageOverride?: 'en' | 'hi' | 'mr') => {
+    const targetLanguage = languageOverride || language;
+    if (languageOverride && languageOverride !== language) {
+      setLanguage(languageOverride);
+    }
+
     const userMsg: ChatMessage = {
       id: generateId(),
       role: 'user',
@@ -47,7 +52,7 @@ export function useChat() {
         conversation_id: conversationId ?? undefined,
         message: text,
         user_context: {
-          language_preference: language,
+          language_preference: targetLanguage,
         },
       };
 
@@ -57,6 +62,7 @@ export function useChat() {
       if (!conversationId && response.conversation_id) {
         setConversationId(response.conversation_id);
       }
+
 
       const assistantMsg: ChatMessage = {
         id: loadingMsg.id,

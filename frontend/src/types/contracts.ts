@@ -86,3 +86,10 @@ export interface ChatResponse {
   warnings: string[];
   suggested_followups: string[];
 }
+
+export interface TranscribeResponse {
+  transcript: string;
+  language: string;
+  normalized_language: string;
+}
+

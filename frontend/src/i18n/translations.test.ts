@@ -19,6 +19,12 @@ describe('Multilingual i18n Dictionary', () => {
     expect(t.backToStart).toBeTruthy();
     expect(t.newChat).toBeTruthy();
     expect(t.chatTitle).toBeTruthy();
+    expect(t.micBtnAria).toBeTruthy();
+    expect(t.micRecordingAria).toBeTruthy();
+    expect(t.micTranscribingAria).toBeTruthy();
+    expect(t.recordingIndicator).toBeTruthy();
+    expect(t.transcribingIndicator).toBeTruthy();
+
 
     // Check all standard recommendation statuses have localized labels
     const expectedStatuses = ['GO', 'CAUTION', 'NO_GO', 'UNKNOWN', 'INFORMATIONAL'];

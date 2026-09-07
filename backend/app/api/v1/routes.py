@@ -20,12 +20,13 @@ import uuid
 from datetime import UTC, datetime
 from typing import Any
 
-from fastapi import APIRouter, status
+from fastapi import APIRouter, File, UploadFile, status
 from fastapi.responses import JSONResponse
 
 from backend.app.contracts.chat import (
     ChatRequest,
     ChatResponse,
+    TranscribeResponse,
 )
 from backend.app.core.config import settings
 from backend.app.db.session import SessionLocal
@@ -37,10 +38,16 @@ from backend.app.services.agent_run_service import (
     _LiveModeNotReadyError,
     agent_run_service,
 )
+from backend.app.services.stt_service import (
+    STTConfigurationError,
+    STTServiceError,
+    transcribe_audio_bytes,
+)
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/v1")
+
 
 
 # ---------------------------------------------------------------------------
@@ -494,3 +501,54 @@ async def get_base_layers():
             pass
 
     return {"type": "FeatureCollection", "features": []}
+ 
+ 
+@router.post(
+    "/voice/transcribe",
+    response_model=TranscribeResponse,
+    status_code=status.HTTP_200_OK,
+    tags=["Voice & STT"],
+    summary="Transcribe mariner audio to text using Sarvam STT",
+    description=(
+        "Accepts multipart audio recordings (wav/webm/mp4), transcribes them using "
+        "Sarvam AI's saaras:v4 model, and returns the transcript, raw language code, "
+        "and normalized ISO-639-1 language code (e.g., 'mr', 'hi', 'en')."
+    ),
+)
+async def transcribe_voice_endpoint(file: UploadFile = File(...)):
+    """Transcribes an uploaded audio file using Sarvam STT."""
+    try:
+        audio_bytes = await file.read()
+        filename = file.filename or "audio.wav"
+        content_type = file.content_type
+
+        result = transcribe_audio_bytes(
+            audio_bytes=audio_bytes,
+            filename=filename,
+            content_type=content_type,
+        )
+
+        return TranscribeResponse(
+            transcript=result["transcript"],
+            language=result["language"],
+            normalized_language=result["normalized_language"],
+        )
+    except STTConfigurationError as exc:
+        logger.warning("Voice transcription unconfigured: %s", exc)
+        return JSONResponse(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            content={"error": "STT_UNCONFIGURED", "detail": exc.message},
+        )
+    except STTServiceError as exc:
+        logger.error("Voice transcription service error: %s", exc)
+        return JSONResponse(
+            status_code=exc.status_code,
+            content={"error": "STT_ERROR", "detail": exc.message},
+        )
+    except Exception as exc:
+        logger.exception("Unexpected error in voice transcription: %s", exc)
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={"error": "TRANSCRIPTION_FAILED", "detail": "An internal error occurred during audio transcription."},
+        )
+

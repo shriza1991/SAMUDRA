@@ -171,3 +171,10 @@ class ChatResponse(BaseModel):
     suggested_followups: List[str] = Field(
         default_factory=list, description="Contextual quick-reply suggestions for the user"
     )
+
+
+class TranscribeResponse(BaseModel):
+    transcript: str = Field(..., description="Transcribed text from speech")
+    language: str = Field(..., description="Raw language code returned by STT (e.g., 'mr-IN', 'hi-IN', 'en-IN')")
+    normalized_language: str = Field(..., description="Normalized ISO-639-1 language code (e.g., 'mr', 'hi', 'en')")
+

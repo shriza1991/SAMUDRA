@@ -13,11 +13,12 @@ interface ChatPanelProps {
   messages: ChatMessageType[];
   activeResponse: ChatResponse | null;
   isLoading: boolean;
-  onSend: (text: string) => void;
+  onSend: (text: string, languageOverride?: 'en' | 'hi' | 'mr') => void;
   onBack?: () => void;
   onReset?: () => void;
   onEvidenceClick?: () => void;
 }
+
 
 export default function ChatPanel({
   language,

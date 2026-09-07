@@ -30,7 +30,13 @@ export interface LocaleContent {
   backToStart: string;
   newChat: string;
   chatTitle: string;
+  micBtnAria: string;
+  micRecordingAria: string;
+  micTranscribingAria: string;
+  recordingIndicator: string;
+  transcribingIndicator: string;
 }
+
 
 export const TRANSLATIONS: Record<SupportedLanguage, LocaleContent> = {
   en: {
@@ -88,6 +94,11 @@ export const TRANSLATIONS: Record<SupportedLanguage, LocaleContent> = {
     backToStart: 'Back to Start',
     newChat: 'New Query',
     chatTitle: 'Maritime Consultation',
+    micBtnAria: 'Record voice query',
+    micRecordingAria: 'Stop recording and transcribe',
+    micTranscribingAria: 'Transcribing voice audio...',
+    recordingIndicator: 'Recording voice...',
+    transcribingIndicator: 'Transcribing...',
   },
   hi: {
     appTagline: 'स्मार्ट स्वायत्त सागरी समझ, निर्णय और जोखिम सहायक',
@@ -144,6 +155,11 @@ export const TRANSLATIONS: Record<SupportedLanguage, LocaleContent> = {
     backToStart: 'शुरुआत पर वापस',
     newChat: 'नया प्रश्न',
     chatTitle: 'सागरीय परामर्श',
+    micBtnAria: 'आवाज इनपुट (वॉयस रिकॉर्ड)',
+    micRecordingAria: 'रिकॉर्डिंग रोकें और रूपांतरित करें',
+    micTranscribingAria: 'आवाज रूपांतरित हो रही है...',
+    recordingIndicator: 'आवाज रिकॉर्ड हो रही है...',
+    transcribingIndicator: 'पहचाना जा रहा है...',
   },
   mr: {
     appTagline: 'स्मार्ट स्वायत्त सागरी आकलन, निर्णय आणि जोखीम सहाय्यक',
@@ -200,8 +216,14 @@ export const TRANSLATIONS: Record<SupportedLanguage, LocaleContent> = {
     backToStart: 'सुरुवातीस जा',
     newChat: 'नवीन प्रश्न',
     chatTitle: 'सागरी सल्लागार',
+    micBtnAria: 'आवाज इनपुट (व्हॉइस रेकॉर्ड)',
+    micRecordingAria: 'रेकॉर्डिंग थांबवा आणि पाठवा',
+    micTranscribingAria: 'आवाज रूपांतरित होत आहे...',
+    recordingIndicator: 'आवाज रेकॉर्ड होत आहे...',
+    transcribingIndicator: 'ओळखले जात आहे...',
   },
 };
+
 
 /**
  * Canonical phrase mapping dictionary for cross-lingual message translation.

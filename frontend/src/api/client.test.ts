@@ -79,4 +79,43 @@ describe('API Client', () => {
     expect(scenarios).toHaveLength(2);
     expect(scenarios[0].id).toBe('s1');
   });
+
+  it('transcribes audio via POST /api/v1/voice/transcribe', async () => {
+    const mockTranscribeResult = {
+      transcript: 'उद्या रत्नागिरीहून जाणे सुरक्षित आहे का?',
+      language: 'mr-IN',
+      normalized_language: 'mr',
+    };
+
+    (globalThis.fetch as any).mockResolvedValueOnce({
+      ok: true,
+      json: async () => mockTranscribeResult,
+    });
+
+    const blob = new Blob(['mock-audio-data'], { type: 'audio/webm' });
+    const { transcribeAudio } = await import('./client');
+    const result = await transcribeAudio(blob);
+
+    expect(globalThis.fetch).toHaveBeenCalledWith('/api/v1/voice/transcribe', expect.objectContaining({
+      method: 'POST',
+      body: expect.any(FormData),
+    }));
+    expect(result.transcript).toBe('उद्या रत्नागिरीहून जाणे सुरक्षित आहे का?');
+    expect(result.language).toBe('mr-IN');
+    expect(result.normalized_language).toBe('mr');
+  });
+
+  it('throws ApiError when voice transcription fails', async () => {
+    (globalThis.fetch as any).mockResolvedValueOnce({
+      ok: false,
+      status: 503,
+      statusText: 'Service Unavailable',
+      json: async () => ({ detail: 'Sarvam STT key not configured' }),
+    });
+
+    const blob = new Blob(['mock-audio-data'], { type: 'audio/webm' });
+    const { transcribeAudio } = await import('./client');
+    await expect(transcribeAudio(blob)).rejects.toThrow(ApiError);
+  });
 });
+

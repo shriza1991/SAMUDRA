@@ -1,4 +1,4 @@
-import type { ChatRequest, ChatResponse } from '../types/contracts';
+import type { ChatRequest, ChatResponse, TranscribeResponse } from '../types/contracts';
 
 const API_BASE = '/api/v1';
 
@@ -31,6 +31,24 @@ export async function sendMessage(req: ChatRequest): Promise<ChatResponse> {
     body: JSON.stringify(req),
   });
 }
+
+export async function transcribeAudio(audioBlob: Blob): Promise<TranscribeResponse> {
+  const formData = new FormData();
+  formData.append('file', audioBlob, 'voice_recording.webm');
+
+  const res = await fetch(`${API_BASE}/voice/transcribe`, {
+    method: 'POST',
+    body: formData,
+  });
+
+  if (!res.ok) {
+    const body = await res.json().catch(() => null);
+    throw new ApiError(res.status, res.statusText, body);
+  }
+
+  return res.json();
+}
+
 
 export interface HealthResponse {
   status: string;
