@@ -3,11 +3,10 @@
 Owned by Dev 2 (Backend Platform).
 """
 
-from typing import Dict, Any
-from backend.app.connectors.modes import DataMode
+from typing import Any
 
 
-def get_connector_health(manager: Any) -> Dict[str, Any]:
+def get_connector_health(manager: Any) -> dict[str, Any]:
     """Returns the operational status of the ConnectorManager and its modes."""
     return {
         "mode": getattr(manager.mode, "value", manager.mode),

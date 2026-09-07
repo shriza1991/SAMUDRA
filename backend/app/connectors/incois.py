@@ -28,8 +28,8 @@ Dev 2 mandate (DEV2_IMPLEMENTATION_GUIDE.md):
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timedelta, timezone
-from typing import Any, Dict, List, Optional
+from datetime import UTC, datetime, timedelta
+from typing import Any
 
 import httpx
 
@@ -119,7 +119,7 @@ class IncoisOceanStateConnector(BaseLiveConnector):
         except httpx.HTTPStatusError as exc:
             raise RuntimeError(f"INCOIS OSF HTTP {exc.response.status_code}") from exc
 
-        now_utc = datetime.now(timezone.utc)
+        now_utc = datetime.now(UTC)
         return MarineConditionsPayload(
             harbor=harbor,
             significant_wave_height_m=float(raw.get("swh", 1.0)),
@@ -136,7 +136,7 @@ class IncoisOceanStateConnector(BaseLiveConnector):
     @staticmethod
     def _make_degraded_marine_payload(harbor: str, reason: str) -> MarineConditionsPayload:
         """Produce a clearly-labelled UNKNOWN/DEGRADED payload for total failure."""
-        now_utc = datetime.now(timezone.utc)
+        now_utc = datetime.now(UTC)
         return MarineConditionsPayload(
             harbor=harbor,
             significant_wave_height_m=0.0,
@@ -161,7 +161,7 @@ class IncoisOceanStateConnector(BaseLiveConnector):
         valid API key, returns an empty feature set with appropriate labels
         so downstream PFZ ranking (Dev 4) can handle gracefully.
         """
-        now_utc = datetime.now(timezone.utc)
+        now_utc = datetime.now(UTC)
         valid_to = (now_utc + timedelta(hours=24)).isoformat()
 
         if self.data_mode == "SNAPSHOT":
@@ -193,8 +193,8 @@ class IncoisOceanStateConnector(BaseLiveConnector):
         url = f"{settings.INCOIS_API_BASE_URL}/pfz"
         headers = {"Authorization": f"Bearer {settings.INCOIS_API_KEY}"}
         raw = self._get(url, headers=headers)
-        now_utc = datetime.now(timezone.utc)
-        features: List[Dict[str, Any]] = raw.get("features", [])
+        now_utc = datetime.now(UTC)
+        features: list[dict[str, Any]] = raw.get("features", [])
         return PFZSourceDataPayload(
             features=features,
             bulletin_date=raw.get("bulletin_date", now_utc.isoformat()),

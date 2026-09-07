@@ -16,8 +16,9 @@ Design notes
 
 from __future__ import annotations
 
+import pytest
+
 import uuid
-from tests.conftest import IN_MEMORY_CONVERSATION_STORE_ID
 from backend.app.core.config import settings
 
 # Test connection handling
@@ -37,7 +38,6 @@ pytestmark = pytest.mark.skipif(
 
 from typing import Any, Dict
 
-import pytest
 from fastapi.testclient import TestClient
 
 

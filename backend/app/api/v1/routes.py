@@ -17,8 +17,8 @@ from __future__ import annotations
 
 import logging
 import uuid
-from datetime import datetime, timezone
-from typing import Any, Dict
+from datetime import UTC, datetime
+from typing import Any
 
 from fastapi import APIRouter, status
 from fastapi.responses import JSONResponse
@@ -29,12 +29,11 @@ from backend.app.contracts.chat import (
 )
 from backend.app.core.config import settings
 from backend.app.services.agent_run_service import (
-    AgentRunService,
     Dev2ErrorEnvelope,
-    _AgentRuntimeUnavailableError,
-    _LiveModeNotReadyError,
-    _DuplicateRunError,
     _AgentExecutionError,
+    _AgentRuntimeUnavailableError,
+    _DuplicateRunError,
+    _LiveModeNotReadyError,
     agent_run_service,
 )
 
@@ -47,7 +46,7 @@ router = APIRouter(prefix="/api/v1")
 # Helpers
 # ---------------------------------------------------------------------------
 
-def _build_user_context(request: ChatRequest) -> Dict[str, Any]:
+def _build_user_context(request: ChatRequest) -> dict[str, Any]:
     """Convert ChatRequest.user_context to the dict expected by ORCAState."""
     if request.user_context is None:
         return {}
@@ -64,7 +63,7 @@ def _build_user_context(request: ChatRequest) -> Dict[str, Any]:
 # OpenAPI examples — used on the /chat endpoint
 # ---------------------------------------------------------------------------
 
-_CHAT_REQUEST_EXAMPLE: Dict[str, Any] = {
+_CHAT_REQUEST_EXAMPLE: dict[str, Any] = {
     "summary": "Safety check from Ratnagiri (SNAPSHOT mode)",
     "description": (
         "Typical safety-of-departure query in English. "
@@ -81,7 +80,7 @@ _CHAT_REQUEST_EXAMPLE: Dict[str, Any] = {
     },
 }
 
-_CHAT_REQUEST_EXAMPLE_HINDI: Dict[str, Any] = {
+_CHAT_REQUEST_EXAMPLE_HINDI: dict[str, Any] = {
     "summary": "Hindi safety query (multi-lingual)",
     "value": {
         "message": "क्या कल सुबह रत्नागिरि से निकलना सुरक्षित है?",
@@ -93,7 +92,7 @@ _CHAT_REQUEST_EXAMPLE_HINDI: Dict[str, Any] = {
     },
 }
 
-_CHAT_RESPONSE_EXAMPLE: Dict[str, Any] = {
+_CHAT_RESPONSE_EXAMPLE: dict[str, Any] = {
     "summary": "Successful CAUTION response (SNAPSHOT / contract-mock)",
     "value": {
         "run_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
@@ -131,24 +130,41 @@ _CHAT_RESPONSE_EXAMPLE: Dict[str, Any] = {
 @router.get("/health", tags=["System"])
 async def health_check():
     """System health check and operational mode discovery."""
-    from backend.app.db.session import SessionLocal
     from sqlalchemy import text
+
+    from backend.app.db.models import ConnectorStatus
+    from backend.app.db.session import SessionLocal
     
     db_status = "unknown"
+    global_status = "healthy"
+    
     try:
         with SessionLocal() as session:
             session.execute(text("SELECT 1"))
             db_status = "connected"
+            
+            # Check connector health
+            connectors = session.query(ConnectorStatus).all()
+            if any(not c.is_online for c in connectors):
+                global_status = "degraded"
+                
     except Exception as e:
         db_status = f"disconnected ({e})"
+        global_status = "unavailable"
+
+    # If DB is up, but ALL live connectors we track are down, we might be unavailable or degraded.
+    # In SNAPSHOT mode, we are always healthy if DB is connected.
+    if settings.DATA_MODE != "SNAPSHOT" and db_status == "connected":
+        if connectors and all(not c.is_online for c in connectors):
+            global_status = "unavailable"
 
     return {
-        "status": "healthy",
+        "status": global_status,
         "app_name": settings.APP_NAME,
         "app_env": settings.APP_ENV,
         "data_mode": settings.DATA_MODE,
         "database": db_status,
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
     }
 
 
@@ -237,15 +253,49 @@ async def chat_endpoint(request: ChatRequest) -> ChatResponse:
         )
 
     except _AgentExecutionError as exc:
+        from backend.app.connectors.errors import (
+            ConnectorAuthenticationError,
+            ConnectorMalformedResponseError,
+            ConnectorRateLimitError,
+            ConnectorTimeoutError,
+            ConnectorUpstreamUnavailableError,
+        )
+
+        error_code = "AGENT_EXECUTION_FAILED"
+        status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+        msg = "SAMUDRA encountered an internal error while processing your query."
+        
+        # Mask raw error messages for public consumption
+        if isinstance(exc.original_exc, ConnectorTimeoutError):
+            error_code = "UPSTREAM_TIMEOUT"
+            status_code = status.HTTP_504_GATEWAY_TIMEOUT
+            msg = "A live marine data provider took too long to respond."
+        elif isinstance(exc.original_exc, ConnectorRateLimitError):
+            error_code = "UPSTREAM_RATE_LIMIT"
+            status_code = status.HTTP_429_TOO_MANY_REQUESTS
+            msg = "Too many requests to marine data providers. Please try again later."
+        elif isinstance(exc.original_exc, ConnectorAuthenticationError):
+            error_code = "UPSTREAM_AUTH_FAILED"
+            status_code = status.HTTP_503_SERVICE_UNAVAILABLE
+            msg = "SAMUDRA is temporarily unable to authenticate with marine data providers."
+        elif isinstance(exc.original_exc, ConnectorMalformedResponseError):
+            error_code = "UPSTREAM_MALFORMED_DATA"
+            status_code = status.HTTP_502_BAD_GATEWAY
+            msg = "Received invalid or unparseable data from a marine data provider."
+        elif isinstance(exc.original_exc, ConnectorUpstreamUnavailableError):
+            error_code = "UPSTREAM_UNAVAILABLE"
+            status_code = status.HTTP_502_BAD_GATEWAY
+            msg = "A critical marine data provider is currently offline or unreachable."
+            
         envelope = Dev2ErrorEnvelope(
-            code="AGENT_EXECUTION_FAILED",
-            message="SAMUDRA encountered an internal error while processing your query.",
+            code=error_code,
+            message=msg,
             hint="Please try again or contact support. Do not make any voyage decisions based on this response.",
             run_id=exc.run_id,
         )
         logger.error("chat: Agent execution failed — run_id=%s: %s", exc.run_id, exc.original_exc)
         return JSONResponse(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status_code=status_code,
             content=envelope.to_dict(),
         )
 
@@ -292,8 +342,9 @@ async def chat_endpoint(request: ChatRequest) -> ChatResponse:
 async def get_run(run_id: str):
     """Retrieve details for a specific ORCA agent run."""
     import uuid
-    from backend.app.db.session import SessionLocal
+
     from backend.app.db.repositories import RunRepository
+    from backend.app.db.session import SessionLocal
     
     try:
         run_uuid = uuid.UUID(run_id)
@@ -322,11 +373,12 @@ async def get_run(run_id: str):
 async def get_map_layer(layer_id: str):
     """Retrieve a specific Map Layer by ID."""
     import uuid
-    from backend.app.db.session import SessionLocal
-    from backend.app.db.models import MapLayer
-    import json
+
     from geoalchemy2.shape import to_shape
     from shapely.geometry import mapping
+
+    from backend.app.db.models import MapLayer
+    from backend.app.db.session import SessionLocal
     
     try:
         layer_uuid = uuid.UUID(layer_id)

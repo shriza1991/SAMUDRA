@@ -4,20 +4,20 @@ Owned by Dev 2 (Backend Platform).
 Encapsulates SQLAlchemy queries and transaction lifecycle.
 """
 
-from typing import Any, Dict, List, Optional
 import uuid
+from typing import Any
 
-from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.orm import Session
 
 from backend.app.db.models import (
-    ConversationThread,
-    Run,
-    RunStatus,
-    EvidenceItem,
-    MapLayer,
     ConnectorSnapshot,
     ConnectorStatus,
+    ConversationThread,
+    EvidenceItem,
+    MapLayer,
+    Run,
+    RunStatus,
 )
 
 
@@ -27,10 +27,10 @@ class BaseRepository:
 
 
 class ConversationRepository(BaseRepository):
-    def get_by_thread_id(self, thread_id: str) -> Optional[ConversationThread]:
+    def get_by_thread_id(self, thread_id: str) -> ConversationThread | None:
         return self.session.query(ConversationThread).filter_by(thread_id=thread_id).first()
 
-    def create(self, thread_id: str, context_json: Dict[str, Any], schema_version: int = 1) -> ConversationThread:
+    def create(self, thread_id: str, context_json: dict[str, Any], schema_version: int = 1) -> ConversationThread:
         thread = ConversationThread(
             thread_id=thread_id,
             context_json=context_json,
@@ -45,7 +45,7 @@ class ConversationRepository(BaseRepository):
             self.session.rollback()
             raise
 
-    def update(self, thread_id: str, context_json: Dict[str, Any]) -> Optional[ConversationThread]:
+    def update(self, thread_id: str, context_json: dict[str, Any]) -> ConversationThread | None:
         thread = self.get_by_thread_id(thread_id)
         if thread:
             thread.context_json = context_json
@@ -71,10 +71,10 @@ class ConversationRepository(BaseRepository):
 
 
 class RunRepository(BaseRepository):
-    def get_by_id(self, run_id: uuid.UUID) -> Optional[Run]:
+    def get_by_id(self, run_id: uuid.UUID) -> Run | None:
         return self.session.query(Run).filter_by(id=run_id).first()
 
-    def create(self, thread_id: str, metadata_json: Dict[str, Any] = None, run_id: Optional[uuid.UUID] = None) -> Run:
+    def create(self, thread_id: str, metadata_json: dict[str, Any] = None, run_id: uuid.UUID | None = None) -> Run:
         run = Run(
             thread_id=thread_id,
             metadata_json=metadata_json or {},
@@ -92,7 +92,7 @@ class RunRepository(BaseRepository):
             self.session.rollback()
             raise
 
-    def update_status(self, run_id: uuid.UUID, status: RunStatus, error_message: str = None) -> Optional[Run]:
+    def update_status(self, run_id: uuid.UUID, status: RunStatus, error_message: str = None) -> Run | None:
         run = self.get_by_id(run_id)
         if run:
             run.run_status = status
@@ -148,11 +148,14 @@ class MapLayerRepository(BaseRepository):
             self.session.rollback()
             raise
 
-    def get_by_run_id(self, run_id: uuid.UUID) -> List[MapLayer]:
+    def get_by_run_id(self, run_id: uuid.UUID) -> list[MapLayer]:
         return self.session.query(MapLayer).filter_by(run_id=run_id).all()
 
 
 class ConnectorSnapshotRepository(BaseRepository):
+    def get_by_source(self, source_name: str) -> ConnectorSnapshot | None:
+        return self.session.query(ConnectorSnapshot).filter_by(source_name=source_name).first()
+
     def create(self, source_name: str, payload: dict, validity_window: str = None) -> ConnectorSnapshot:
         snap = ConnectorSnapshot(
             source_name=source_name,

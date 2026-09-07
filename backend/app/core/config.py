@@ -4,7 +4,7 @@ Loads from environment variables and .env file.
 Owned by Dev 2 (Backend Platform).
 """
 
-from typing import List
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -27,8 +27,11 @@ class Settings(BaseSettings):
     CORS_ORIGINS: str = "http://localhost:5173,http://127.0.0.1:5173"
 
     @property
-    def cors_origins_list(self) -> List[str]:
-        return [origin.strip() for origin in self.CORS_ORIGINS.split(",") if origin.strip()]
+    def cors_origins_list(self) -> list[str]:
+        origins = [origin.strip() for origin in self.CORS_ORIGINS.split(",") if origin.strip()]
+        if any(o == "*" for o in origins):
+            raise ValueError("Wildcard CORS (*) is not safe. Specify precise origins.")
+        return origins
 
     # Database
     DATABASE_URL: str = "postgresql+asyncpg://samudra_user:samudra_password_placeholder@localhost:5432/samudra_db"
@@ -36,6 +39,14 @@ class Settings(BaseSettings):
 
     # Data Strategy
     DATA_MODE: str = "HYBRID"  # LIVE | HYBRID | SNAPSHOT
+
+    @property
+    def validated_data_mode(self) -> str:
+        mode = self.DATA_MODE.upper()
+        if mode not in ("LIVE", "HYBRID", "SNAPSHOT"):
+            raise ValueError(f"Invalid DATA_MODE: {mode}. Must be LIVE, HYBRID, or SNAPSHOT.")
+        return mode
+
     DATA_FIXTURES_PATH: str = "./data/fixtures"
 
     # External APIs

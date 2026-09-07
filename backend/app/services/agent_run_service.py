@@ -62,7 +62,7 @@ from __future__ import annotations
 import logging
 import uuid
 from functools import partial
-from typing import Any, Dict, Optional
+from typing import Any
 
 import anyio
 
@@ -96,14 +96,14 @@ class Dev2ErrorEnvelope:
         code: str,
         message: str,
         hint: str = "",
-        run_id: Optional[str] = None,
+        run_id: str | None = None,
     ) -> None:
         self.code = code
         self.message = message
         self.hint = hint
         self.run_id = run_id or str(uuid.uuid4())
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "error": {
                 "code": self.code,
@@ -171,7 +171,7 @@ class AgentRunService:
     Instantiate once at application startup and inject into route handlers.
     """
 
-    def __init__(self, data_mode: Optional[str] = None) -> None:
+    def __init__(self, data_mode: str | None = None) -> None:
         self._data_mode = data_mode or settings.DATA_MODE
 
     async def run_agent(
@@ -180,18 +180,19 @@ class AgentRunService:
         user_message: str,
         conversation_id: str,
         run_id: str,
-        user_context: Optional[Dict[str, Any]] = None,
+        user_context: dict[str, Any] | None = None,
     ) -> ChatResponse:
         """Run the ORCA graph in provider mode and persist the results.
         """
         import uuid
-        from backend.app.db.session import SessionLocal
+
+        from backend.app.db.models import RunStatus
         from backend.app.db.repositories import (
-            RunRepository,
             EvidenceRepository,
             MapLayerRepository,
+            RunRepository,
         )
-        from backend.app.db.models import RunStatus
+        from backend.app.db.session import SessionLocal
 
         try:
             from backend.app.agents.graph import run_orca_graph
@@ -344,7 +345,7 @@ class _AgentExecutionError(Exception):
     def __init__(self, run_id: str, exc: Exception) -> None:
         self.run_id = run_id
         self.original_exc = exc
-        super().__init__(f"Agent execution failed: {str(exc)}")
+        super().__init__(f"Agent execution failed: {exc!s}")
 
 
 # ---------------------------------------------------------------------------

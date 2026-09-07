@@ -6,7 +6,7 @@ Owned by Dev 2 (Backend Platform).
 from __future__ import annotations
 
 import logging
-from typing import Any, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from backend.app.agents.integrations.contracts import ToolInvocationContext
@@ -53,6 +53,15 @@ class ConnectorManager:
         self.hazard_live = hazard_live
         self.pfz_live = pfz_live
 
+    def _track_health(self, source: str, is_online: bool, error: str = None) -> None:
+        try:
+            from backend.app.db.repositories import ConnectorStatusRepository
+            from backend.app.db.session import SessionLocal
+            with SessionLocal() as session:
+                ConnectorStatusRepository(session).upsert_status(source, is_online, error)
+        except Exception as exc:
+            logger.debug(f"Failed to track health for {source}: {exc}")
+
     def _execute(
         self,
         live_provider: Any,
@@ -65,7 +74,13 @@ class ConnectorManager:
         if self.mode == DataMode.LIVE:
             if not live_provider:
                 raise RuntimeError(f"Live provider not configured for {snapshot_method}")
-            return getattr(live_provider, snapshot_method)(context)
+            try:
+                res = getattr(live_provider, snapshot_method)(context)
+                self._track_health(snapshot_method, True)
+                return res
+            except Exception as exc:
+                self._track_health(snapshot_method, False, str(exc))
+                raise
 
         if self.mode == DataMode.HYBRID:
             if not live_provider:
@@ -75,12 +90,15 @@ class ConnectorManager:
                 return payload
 
             try:
-                return getattr(live_provider, snapshot_method)(context)
+                res = getattr(live_provider, snapshot_method)(context)
+                self._track_health(snapshot_method, True)
+                return res
             except (
                 ConnectorTimeoutError,
                 ConnectorUpstreamUnavailableError,
                 ConnectorRateLimitError,
             ) as exc:
+                self._track_health(snapshot_method, False, str(exc))
                 logger.warning(
                     "Transient error %s on live provider for %s. Falling back to snapshot.",
                     exc, snapshot_method
@@ -88,7 +106,9 @@ class ConnectorManager:
                 payload = getattr(self.snapshot, snapshot_method)(context)
                 payload.source_name += " [HYBRID Fallback - Transient Error]"
                 return payload
-            # Permanent errors (Authentication, Malformed, Invalid Configuration) propagate up.
+            except Exception as exc:
+                self._track_health(snapshot_method, False, str(exc))
+                raise
 
         raise ValueError(f"Unknown DataMode: {self.mode}")
 

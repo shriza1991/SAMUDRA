@@ -12,7 +12,7 @@ from backend.app.agents.integrations.contracts import (
     ToolInvocationContext,
     ToolOwner,
 )
-from backend.app.agents.tools import AgentToolRegistry, ToolDefinition, ToolParameter
+from backend.app.agents.tools import AgentToolRegistry, ToolDefinition
 from backend.app.connectors.manager import ConnectorManager
 
 
