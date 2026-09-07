@@ -3,18 +3,34 @@
 Owned by Dev 2 (Backend Platform Lead).
 """
 
+import logging
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from backend.app.api.v1.routes import router as api_v1_router
-from backend.app.core.config import settings
+logger = logging.getLogger(__name__)
+
 from backend.app.agents.memory import memory_manager
+from backend.app.api.v1.routes import router as api_v1_router
+from backend.app.connectors.client import connector_http_client
+from backend.app.core.config import settings
+from backend.app.core.logging import setup_logging
 from backend.app.db.store import SQLAlchemyConversationStore
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    yield
+    connector_http_client.close()
 
 
 def create_app() -> FastAPI:
     """Application factory for SAMUDRA."""
+    setup_logging(settings.LOG_LEVEL)
+    
     app = FastAPI(
+        lifespan=lifespan,
         title=settings.APP_NAME,
         description=(
             "Smart Autonomous Marine Understanding, Decision & Risk Assistant (SAMUDRA)\n"
@@ -34,6 +50,10 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
 
+    from backend.app.api.middleware import RequestIDMiddleware, RequestSizeLimitMiddleware
+    app.add_middleware(RequestIDMiddleware)
+    app.add_middleware(RequestSizeLimitMiddleware, max_upload_size=1048576)
+
     # Register API Routers
     app.include_router(api_v1_router)
 
@@ -45,6 +65,16 @@ def create_app() -> FastAPI:
         memory_manager.set_store(SQLAlchemyConversationStore())
     except Exception as e:
         logger.warning("Database init skipped or unavailable on startup: %s", e)
+
+    # Register Dev 2 providers
+    from backend.app.agents.tools import tool_registry
+    from backend.app.connectors.manager import ConnectorManager
+    from backend.app.connectors.registration import register_dev2_provider_tools
+    from backend.app.connectors.snapshot import SnapshotConnector
+    
+    snapshot_connector = SnapshotConnector()
+    manager = ConnectorManager(settings.DATA_MODE, snapshot_connector)
+    register_dev2_provider_tools(tool_registry, manager)
 
     @app.get("/", tags=["System"])
     async def root():

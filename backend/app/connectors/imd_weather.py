@@ -22,7 +22,7 @@ Dev 2 mandate (DEV2_IMPLEMENTATION_GUIDE.md):
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import httpx
 
@@ -104,7 +104,7 @@ class ImdWeatherConnector(BaseLiveConnector):
         except httpx.HTTPStatusError as exc:
             raise RuntimeError(f"IMD weather HTTP {exc.response.status_code}") from exc
 
-        now_utc = datetime.now(timezone.utc)
+        now_utc = datetime.now(UTC)
         return WeatherConditionsPayload(
             harbor=harbor,
             wind_speed_knots=float(raw.get("wind_speed", 0.0)),
@@ -120,7 +120,7 @@ class ImdWeatherConnector(BaseLiveConnector):
     @staticmethod
     def _make_degraded_payload(harbor: str, reason: str) -> WeatherConditionsPayload:
         """Return a clearly-labelled DEGRADED payload on total failure."""
-        now_utc = datetime.now(timezone.utc)
+        now_utc = datetime.now(UTC)
         return WeatherConditionsPayload(
             harbor=harbor,
             wind_speed_knots=0.0,

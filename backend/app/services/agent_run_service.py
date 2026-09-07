@@ -62,7 +62,7 @@ from __future__ import annotations
 import logging
 import uuid
 from functools import partial
-from typing import Any, Dict, Optional
+from typing import Any
 
 import anyio
 
@@ -83,6 +83,7 @@ logger = logging.getLogger(__name__)
 # Structured Dev 2 error envelope (also importable by the route layer)
 # ---------------------------------------------------------------------------
 
+
 class Dev2ErrorEnvelope:
     """Structured error body returned when the agent service cannot proceed.
 
@@ -96,14 +97,14 @@ class Dev2ErrorEnvelope:
         code: str,
         message: str,
         hint: str = "",
-        run_id: Optional[str] = None,
+        run_id: str | None = None,
     ) -> None:
         self.code = code
         self.message = message
         self.hint = hint
         self.run_id = run_id or str(uuid.uuid4())
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "error": {
                 "code": self.code,
@@ -117,6 +118,7 @@ class Dev2ErrorEnvelope:
 # ---------------------------------------------------------------------------
 # Degraded ChatResponse builder (agent exception path)
 # ---------------------------------------------------------------------------
+
 
 def _build_degraded_response(
     run_id: str,
@@ -165,59 +167,31 @@ def _build_degraded_response(
 # Main service
 # ---------------------------------------------------------------------------
 
+
 class AgentRunService:
     """DATA_MODE-aware dispatcher for the ORCA LangGraph pipeline.
 
     Instantiate once at application startup and inject into route handlers.
-
-    Methods
-    -------
-    run_snapshot : async
-        Execute the graph in SNAPSHOT mode using M2 contract mocks.
     """
 
-    def __init__(self, data_mode: Optional[str] = None) -> None:
+    def __init__(self, data_mode: str | None = None) -> None:
         self._data_mode = data_mode or settings.DATA_MODE
 
-    # ------------------------------------------------------------------
-    # SNAPSHOT mode — the only production-ready path in this milestone
-    # ------------------------------------------------------------------
-
-    async def run_snapshot(
+    async def run_agent(
         self,
         *,
         user_message: str,
         conversation_id: str,
         run_id: str,
-        user_context: Optional[Dict[str, Any]] = None,
+        user_context: dict[str, Any] | None = None,
     ) -> ChatResponse:
-        """Run the ORCA graph in SNAPSHOT / contract-mock mode.
-
-        Offloads the synchronous ``run_orca_graph`` call to anyio's default
-        thread pool so the asyncio event loop is never blocked.
-
-        Parameters
-        ----------
-        user_message:
-            Raw natural-language query from the client.
-        conversation_id:
-            Session UUID (from client or generated server-side).
-        run_id:
-            Unique per-request UUID for telemetry.
-        user_context:
-            Optional dict built from ``ChatRequest.user_context``.
-
-        Returns
-        -------
-        ChatResponse
-            Schema-valid response; always a ChatResponse — never raises.
-        """
+        """Run the ORCA graph in provider mode and persist the results."""
         # ------------------------------------------------------------------
-        # DATA_MODE guard — LIVE not yet ready, HYBRID falls back to snapshot
+        # DATA_MODE guard — LIVE/HYBRID not yet ready
         # ------------------------------------------------------------------
-        if self._data_mode == "LIVE":
+        if self._data_mode in ("LIVE", "HYBRID"):
             logger.warning(
-                "AgentRunService: DATA_MODE=%s requested but LIVE providers "
+                "AgentRunService: DATA_MODE=%s requested but LIVE/HYBRID providers "
                 "are not yet implemented. Returning 503.",
                 self._data_mode,
             )
@@ -227,23 +201,50 @@ class AgentRunService:
                 run_id=run_id,
             )
 
-        # ------------------------------------------------------------------
-        # Import guard — langgraph may not be installed in all environments
-        # ------------------------------------------------------------------
+        import uuid
+
+        from backend.app.db.models import RunStatus
+        from backend.app.db.repositories import (
+            EvidenceRepository,
+            MapLayerRepository,
+            RunRepository,
+        )
+        from backend.app.db.session import SessionLocal
+
         try:
-            from backend.app.agents.graph import run_orca_graph  # Dev 3 owned
+            from backend.app.agents.graph import run_orca_graph
         except ImportError as exc:
-            logger.error(
-                "AgentRunService: langgraph not installed — run_orca_graph unavailable: %s",
-                exc,
-            )
+            logger.error("AgentRunService: langgraph not installed: %s", exc)
             raise _AgentRuntimeUnavailableError(run_id=run_id) from exc
 
-        # ------------------------------------------------------------------
-        # Offload synchronous graph execution to thread pool
-        # ------------------------------------------------------------------
+        run_uuid = uuid.UUID(run_id)
+
+        # 1. Create RUNNING record (prevent duplicate runs for same thread)
+        with SessionLocal() as session:
+            from backend.app.db.models import Run
+
+            run_repo = RunRepository(session)
+
+            # Check for concurrent running requests in the same conversation
+            active_run = (
+                session.query(Run)
+                .filter_by(thread_id=conversation_id, run_status=RunStatus.RUNNING)
+                .first()
+            )
+            if active_run:
+                raise _DuplicateRunError(run_id=str(active_run.id))
+
+            # Generate request ID (per instructions)
+            request_id = str(uuid.uuid4())
+            metadata = {"request_id": request_id}
+
+            run_repo.create(thread_id=conversation_id, metadata_json=metadata, run_id=run_uuid)
+
+            # Update to RUNNING
+            run_repo.update_status(run_uuid, RunStatus.RUNNING)
+
         logger.info(
-            "AgentRunService: run_id=%s conversation_id=%s data_mode=%s tool_mode=contract_mock",
+            "AgentRunService: run_id=%s conversation_id=%s data_mode=%s tool_mode=provider",
             run_id,
             conversation_id,
             self._data_mode,
@@ -254,21 +255,94 @@ class AgentRunService:
             user_message=user_message,
             thread_id=conversation_id,
             user_context=user_context or {},
-            tool_mode="contract_mock",   # M2 typed contract mocks for SNAPSHOT
-            llm_mode="deterministic",    # No LLM provider key required
+            tool_mode="provider",  # Use registered providers
+            llm_mode="deterministic",  # No LLM provider key required
         )
 
         try:
             final_state = await anyio.to_thread.run_sync(_run)
+        except anyio.get_cancelled_exc_class():
+            with SessionLocal() as session:
+                RunRepository(session).update_status(run_uuid, RunStatus.CANCELLED)
+            raise
         except Exception as exc:
-            return _build_degraded_response(run_id, conversation_id, exc)
+            with SessionLocal() as session:
+                RunRepository(session).update_status(
+                    run_uuid, RunStatus.FAILED, error_message=str(exc)
+                )
+            raise _AgentExecutionError(run_id=run_id, exc=exc)
 
-        return map_state_to_response(final_state, run_id, conversation_id)
+        # Map state to response
+        response = map_state_to_response(final_state, run_id, conversation_id)
+
+        # Determine run status
+        has_warnings = any(
+            "failure" in w.lower() or "error" in w.lower() or "degraded" in w.lower()
+            for w in response.warnings
+        )
+        final_status = RunStatus.PARTIAL if has_warnings else RunStatus.COMPLETED
+
+        # Persist results
+        with SessionLocal() as session:
+            run_repo = RunRepository(session)
+            evidence_repo = EvidenceRepository(session)
+            map_repo = MapLayerRepository(session)
+
+            # Add trace to metadata
+            # Get existing run to preserve request_id
+            existing_run = run_repo.get_by_id(run_uuid)
+            updated_metadata = existing_run.metadata_json if existing_run else {}
+            updated_metadata["trace"] = [
+                t.model_dump() if hasattr(t, "model_dump") else t for t in response.trace
+            ]
+
+            run_repo.update_status(
+                run_uuid,
+                final_status,
+                error_message="|".join(response.warnings) if has_warnings else None,
+            )
+            # We don't have a direct method to update metadata in RunRepository,
+            # but since we're in a session, we can just modify the model and commit.
+            if existing_run:
+                existing_run.metadata_json = updated_metadata
+                session.add(existing_run)
+                session.commit()
+
+            # Persist Evidence
+            for ev in response.evidence:
+                evidence_repo.create(
+                    run_id=run_uuid,
+                    source=ev.source,
+                    raw_data={"evidence_id": ev.evidence_id, "quality_flags": ev.quality_flags},
+                    extracted_entities=ev.extracted_entities,
+                )
+
+            # Persist Map Layers
+            for layer in response.map_layers:
+                # We expect layer geometries to be valid GeoJSON dicts in properties or similar
+                # If layer is a dict, we extract geom and props. If it's a model, we dump it.
+                layer_dict = layer.model_dump() if hasattr(layer, "model_dump") else layer
+                geom = layer_dict.get("geometry", {})
+                props = layer_dict.get("properties", {})
+                ltype = layer_dict.get("layer_type", "feature")
+                if geom:
+                    map_repo.create_from_geojson(
+                        run_id=run_uuid,
+                        layer_type=ltype,
+                        geojson_geom=geom,
+                        properties=props,
+                    )
+
+        return response
+
+    # Backward compatibility alias
+    run_snapshot = run_agent
 
 
 # ---------------------------------------------------------------------------
 # Internal sentinel exceptions (never surfaced to clients)
 # ---------------------------------------------------------------------------
+
 
 class _LiveModeNotReadyError(Exception):
     """Raised when DATA_MODE is LIVE or HYBRID before providers are wired."""
@@ -285,6 +359,23 @@ class _AgentRuntimeUnavailableError(Exception):
     def __init__(self, run_id: str) -> None:
         self.run_id = run_id
         super().__init__("langgraph not installed")
+
+
+class _DuplicateRunError(Exception):
+    """Raised when a run_id already exists in the database."""
+
+    def __init__(self, run_id: str) -> None:
+        self.run_id = run_id
+        super().__init__(f"Run ID {run_id} already exists")
+
+
+class _AgentExecutionError(Exception):
+    """Raised when the agent graph execution fails unexpectedly."""
+
+    def __init__(self, run_id: str, exc: Exception) -> None:
+        self.run_id = run_id
+        self.original_exc = exc
+        super().__init__(f"Agent execution failed: {exc!s}")
 
 
 # ---------------------------------------------------------------------------

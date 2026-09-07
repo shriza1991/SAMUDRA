@@ -6,14 +6,14 @@ Provides a deterministic mapping from coastal harbor names to standard EPSG:4326
 Used as a fallback when context lacks explicit coordinates.
 """
 
-from typing import TYPE_CHECKING, Tuple
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from backend.app.agents.integrations.contracts import ToolInvocationContext
 
 
 # Standard reference coordinates for major Indian coastal harbors
-HARBOR_COORDINATES: dict[str, Tuple[float, float]] = {
+HARBOR_COORDINATES: dict[str, tuple[float, float]] = {
     "ratnagiri": (16.99, 73.28),
     "mumbai": (19.076, 72.877),
     "goa": (15.299, 73.911),
@@ -31,7 +31,7 @@ _DEFAULT_LAT = 16.99
 _DEFAULT_LON = 73.28  # Ratnagiri
 
 
-def resolve_coordinates(context: 'ToolInvocationContext') -> Tuple[float, float]:
+def resolve_coordinates(context: 'ToolInvocationContext') -> tuple[float, float]:
     """Resolve latitude/longitude from context, with harbor lookup fallback.
     
     Returns:

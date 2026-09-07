@@ -1,5 +1,5 @@
 import pytest
-import respx
+respx = pytest.importorskip("respx")
 import httpx
 from datetime import datetime, timezone
 import time

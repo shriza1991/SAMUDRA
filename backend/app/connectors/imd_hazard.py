@@ -27,7 +27,7 @@ Dev 2 mandate (DEV2_IMPLEMENTATION_GUIDE.md):
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import httpx
 
@@ -93,7 +93,7 @@ class ImdHazardConnector(BaseLiveConnector):
         except httpx.HTTPStatusError as exc:
             raise RuntimeError(f"IMD hazard HTTP {exc.response.status_code}") from exc
 
-        now_utc = datetime.now(timezone.utc)
+        now_utc = datetime.now(UTC)
         return HazardBulletinPayload(
             harbor=harbor,
             cyclone_warning_active=bool(raw.get("cyclone_alert", False)),
@@ -110,7 +110,7 @@ class ImdHazardConnector(BaseLiveConnector):
     @staticmethod
     def _make_normal_payload(harbor: str, reason: str) -> HazardBulletinPayload:
         """Return NORMAL hazard bulletin payload used on live data failure."""
-        now_utc = datetime.now(timezone.utc)
+        now_utc = datetime.now(UTC)
         return HazardBulletinPayload(
             harbor=harbor,
             cyclone_warning_active=False,

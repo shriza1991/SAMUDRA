@@ -9,8 +9,8 @@ live data source.
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timedelta, timezone
-from typing import TYPE_CHECKING, Optional, List
+from datetime import UTC, datetime, timedelta
+from typing import TYPE_CHECKING
 
 from backend.app.connectors.base import BaseLiveConnector
 from backend.app.connectors.harbors import resolve_coordinates
@@ -39,7 +39,7 @@ class OpenMeteoConnector(BaseLiveConnector):
     def __init__(self) -> None:
         super().__init__()
 
-    def get_marine_conditions(self, context: 'ToolInvocationContext') -> 'MarineConditionsPayload':
+    def get_marine_conditions(self, context: ToolInvocationContext) -> MarineConditionsPayload:
         from backend.app.agents.integrations.dev2 import MarineConditionsPayload
         lat, lon = resolve_coordinates(context)
         harbor = context.origin_harbor or "Unknown"
@@ -58,10 +58,10 @@ class OpenMeteoConnector(BaseLiveConnector):
         )
 
         hourly = data.get("hourly", {})
-        now_utc = datetime.now(timezone.utc)
+        now_utc = datetime.now(UTC)
         valid_to = (now_utc + timedelta(hours=24)).isoformat()
 
-        def _first(key: str) -> Optional[float]:
+        def _first(key: str) -> float | None:
             values = hourly.get(key)
             if not values:
                 return None
@@ -96,7 +96,7 @@ class OpenMeteoConnector(BaseLiveConnector):
             source_url="https://open-meteo.com/en/docs/marine-weather-api",
         )
 
-    def get_weather_conditions(self, context: 'ToolInvocationContext') -> 'WeatherConditionsPayload':
+    def get_weather_conditions(self, context: ToolInvocationContext) -> WeatherConditionsPayload:
         from backend.app.agents.integrations.dev2 import WeatherConditionsPayload
         lat, lon = resolve_coordinates(context)
         harbor = context.origin_harbor or "Unknown"
@@ -112,10 +112,10 @@ class OpenMeteoConnector(BaseLiveConnector):
         )
 
         hourly = data.get("hourly", {})
-        now_utc = datetime.now(timezone.utc)
+        now_utc = datetime.now(UTC)
         valid_to = (now_utc + timedelta(hours=24)).isoformat()
 
-        def _first(key: str) -> Optional[float]:
+        def _first(key: str) -> float | None:
             values = hourly.get(key)
             if not values:
                 return None

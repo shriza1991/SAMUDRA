@@ -237,14 +237,18 @@ class EvidenceValidator:
         return False
 
     @staticmethod
-    def detect_conflicts(evidence_items: List[EvidenceItem]) -> Dict[str, List[EvidenceItem]]:
+    def detect_conflicts(
+        evidence_items: List[EvidenceItem],
+        now_iso: Optional[str] = None,
+    ) -> Dict[str, List[EvidenceItem]]:
         """Detects unresolvable conflicting evidence for the same metric.
 
         Returns a dictionary mapping metric_name to the list of conflicting items.
         """
         by_metric: Dict[str, List[EvidenceItem]] = {}
         for ev in evidence_items:
-            if ev.metric_name and ev.metric_value is not None and not EvidenceValidator.is_evidence_stale(ev):
+            is_stale = "stale" in ev.quality_flags or (now_iso is not None and EvidenceValidator.is_evidence_stale(ev, now_iso=now_iso))
+            if ev.metric_name and ev.metric_value is not None and not is_stale:
                 # Map to canonical metric group
                 canonical_group = ev.metric_name
                 for group, aliases in METRIC_ALIASES.items():
@@ -584,7 +588,7 @@ class EvidenceValidator:
         2. If no explicit ID cited:
            - Must match a valid, fresh, unconflicted EvidenceItem
         """
-        conflicts = EvidenceValidator.detect_conflicts(evidence_items)
+        conflicts = EvidenceValidator.detect_conflicts(evidence_items, now_iso=now_iso)
 
         # Build evidence indexes
         by_id: Dict[str, EvidenceItem] = {}

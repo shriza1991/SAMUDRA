@@ -16,10 +16,28 @@ Design notes
 
 from __future__ import annotations
 
+import pytest
+
 import uuid
+from backend.app.core.config import settings
+
+# Test connection handling
+try:
+    from sqlalchemy import create_engine
+    from sqlalchemy.exc import OperationalError
+    engine = create_engine(settings.SYNC_DATABASE_URL)
+    with engine.connect():
+        db_available = True
+except OperationalError:
+    db_available = False
+
+pytestmark = pytest.mark.skipif(
+    not db_available,
+    reason="PostgreSQL/PostGIS server is unavailable. Integration tests skipped."
+)
+
 from typing import Any, Dict
 
-import pytest
 from fastapi.testclient import TestClient
 
 
