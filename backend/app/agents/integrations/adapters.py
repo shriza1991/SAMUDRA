@@ -38,6 +38,7 @@ from backend.app.contracts.chat import (
     EvidenceItem,
     Recommendation,
 )
+from backend.app.connectors.errors import ConnectorError
 from backend.app.contracts.tools import ToolResult, ToolStatus
 
 
@@ -93,13 +94,23 @@ class ProviderToolAdapter:
                     )
                 )
 
+            warnings = []
+            if payload.source_name and (
+                "[HYBRID" in payload.source_name
+                or "Fallback" in payload.source_name
+                or "Transient Error" in payload.source_name
+            ):
+                warnings.append(f"Data source degraded: {payload.source_name}")
+
             return ToolResult(
                 status=ToolStatus.OK,
                 data=payload.model_dump(),
                 evidence=evidence,
-                warnings=[],
+                warnings=warnings,
             )
 
+        except ConnectorError:
+            raise
         except Exception as exc:
             return ToolResult(
                 status=ToolStatus.FAILED,
@@ -143,13 +154,23 @@ class ProviderToolAdapter:
                 )
             ]
 
+            warnings = []
+            if payload.source_name and (
+                "[HYBRID" in payload.source_name
+                or "Fallback" in payload.source_name
+                or "Transient Error" in payload.source_name
+            ):
+                warnings.append(f"Data source degraded: {payload.source_name}")
+
             return ToolResult(
                 status=ToolStatus.OK,
                 data=payload.model_dump(),
                 evidence=evidence,
-                warnings=[],
+                warnings=warnings,
             )
 
+        except ConnectorError:
+            raise
         except Exception as exc:
             return ToolResult(
                 status=ToolStatus.FAILED,
@@ -192,13 +213,23 @@ class ProviderToolAdapter:
                 )
             ]
 
+            warnings = []
+            if payload.source_name and (
+                "[HYBRID" in payload.source_name
+                or "Fallback" in payload.source_name
+                or "Transient Error" in payload.source_name
+            ):
+                warnings.append(f"Data source degraded: {payload.source_name}")
+
             return ToolResult(
                 status=ToolStatus.OK,
                 data=payload.model_dump(),
                 evidence=evidence,
-                warnings=[],
+                warnings=warnings,
             )
 
+        except ConnectorError:
+            raise
         except Exception as exc:
             return ToolResult(
                 status=ToolStatus.FAILED,

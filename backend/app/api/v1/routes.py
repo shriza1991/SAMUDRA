@@ -28,6 +28,7 @@ from backend.app.contracts.chat import (
     ChatResponse,
 )
 from backend.app.core.config import settings
+from backend.app.db.session import SessionLocal
 from backend.app.services.agent_run_service import (
     Dev2ErrorEnvelope,
     _AgentExecutionError,
@@ -135,7 +136,6 @@ async def health_check():
     from sqlalchemy import text
 
     from backend.app.db.models import ConnectorStatus
-    from backend.app.db.session import SessionLocal
 
     db_status = "unknown"
     global_status = "healthy"
@@ -147,20 +147,17 @@ async def health_check():
             db_status = "connected"
 
             # Check connector health
-            connectors = session.query(ConnectorStatus).all()
-            if any(not c.is_online for c in connectors):
-                global_status = "degraded"
+            if settings.DATA_MODE != "SNAPSHOT":
+                connectors = session.query(ConnectorStatus).all()
+                if any(not c.is_online for c in connectors):
+                    global_status = "degraded"
+                if connectors and all(not c.is_online for c in connectors):
+                    global_status = "unavailable"
 
     except Exception as e:
         logger.debug("Database health check failed (service offline): %s", e)
         db_status = f"disconnected ({e})"
         global_status = "unavailable"
-
-    # If DB is up, but ALL live connectors we track are down, we might be unavailable or degraded.
-    # In SNAPSHOT mode, we are always healthy if DB is connected.
-    if settings.DATA_MODE != "SNAPSHOT" and db_status == "connected":
-        if connectors and all(not c.is_online for c in connectors):
-            global_status = "unavailable"
 
     return {
         "status": global_status,
@@ -260,7 +257,9 @@ async def chat_endpoint(request: ChatRequest) -> ChatResponse:
         from backend.app.connectors.errors import (
             ConnectorAuthenticationError,
             ConnectorMalformedResponseError,
+            ConnectorMissingSnapshotError,
             ConnectorRateLimitError,
+            ConnectorStaleSnapshotError,
             ConnectorTimeoutError,
             ConnectorUpstreamUnavailableError,
         )
@@ -286,7 +285,14 @@ async def chat_endpoint(request: ChatRequest) -> ChatResponse:
             error_code = "UPSTREAM_MALFORMED_DATA"
             status_code = status.HTTP_502_BAD_GATEWAY
             msg = "Received invalid or unparseable data from a marine data provider."
-        elif isinstance(exc.original_exc, ConnectorUpstreamUnavailableError):
+        elif isinstance(
+            exc.original_exc,
+            (
+                ConnectorUpstreamUnavailableError,
+                ConnectorMissingSnapshotError,
+                ConnectorStaleSnapshotError,
+            ),
+        ):
             error_code = "UPSTREAM_UNAVAILABLE"
             status_code = status.HTTP_502_BAD_GATEWAY
             msg = "A critical marine data provider is currently offline or unreachable."
@@ -449,7 +455,6 @@ async def list_demo_scenarios():
 async def get_conversation_history(conversation_id: str):
     """Retrieve chat history for a specific conversation ID."""
     from backend.app.db.repositories import RunRepository
-    from backend.app.db.session import SessionLocal
 
     with SessionLocal() as session:
         runs = RunRepository(session).get_all_by_thread(conversation_id)

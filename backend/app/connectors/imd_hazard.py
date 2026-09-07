@@ -53,9 +53,17 @@ class ImdHazardConnector(BaseLiveConnector):
 
     SOURCE_URL = "https://mausam.imd.gov.in/api/cyclone_bulletin"
 
-    def __init__(self) -> None:
+    def __init__(self, data_mode: str | None = None) -> None:
         super().__init__()
-        self.data_mode = settings.DATA_MODE
+        self._data_mode = data_mode
+
+    @property
+    def data_mode(self) -> str:
+        return self._data_mode if self._data_mode is not None else settings.DATA_MODE
+
+    @data_mode.setter
+    def data_mode(self, value: str) -> None:
+        self._data_mode = value
 
     def get_hazard_bulletin(self, context: ToolInvocationContext) -> HazardBulletinPayload:
         """Fetch active cyclone / storm / squall warnings.

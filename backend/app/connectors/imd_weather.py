@@ -24,8 +24,6 @@ from __future__ import annotations
 import logging
 from datetime import UTC, datetime, timedelta
 
-import httpx
-
 from backend.app.agents.integrations.contracts import ToolInvocationContext
 from backend.app.agents.integrations.dev2 import WeatherConditionsPayload
 from backend.app.connectors.base import BaseLiveConnector
@@ -49,10 +47,18 @@ class ImdWeatherConnector(BaseLiveConnector):
 
     SOURCE_URL = "https://mausam.imd.gov.in/api/coastal_bulletin"
 
-    def __init__(self) -> None:
+    def __init__(self, data_mode: str | None = None) -> None:
         super().__init__()
-        self.data_mode = settings.DATA_MODE
+        self._data_mode = data_mode
         self._fallback = OpenMeteoConnector()
+
+    @property
+    def data_mode(self) -> str:
+        return self._data_mode if self._data_mode is not None else settings.DATA_MODE
+
+    @data_mode.setter
+    def data_mode(self, value: str) -> None:
+        self._data_mode = value
 
     def get_weather_conditions(self, context: ToolInvocationContext) -> WeatherConditionsPayload:
         """Fetch coastal wind speed, gust, direction, and visibility.
@@ -75,16 +81,8 @@ class ImdWeatherConnector(BaseLiveConnector):
                         "IMD weather live fetch failed (%s), falling back to Open-Meteo.", exc
                     )
 
-            # HYBRID / key absent: fall back to Open-Meteo
-            if self.data_mode == "HYBRID":
-                try:
-                    payload = self._fallback.get_weather_conditions(context)
-                    logger.info("IMD fallback: Open-Meteo weather conditions retrieved.")
-                    return payload
-                except Exception as exc2:
-                    logger.warning(
-                        "Open-Meteo weather fallback also failed (%s). Returning DEGRADED.", exc2
-                    )
+            # Fall back to Open-Meteo
+            return self._fallback.get_weather_conditions(context)
 
         return self._make_degraded_payload(harbor, "ALL_SOURCES_FAILED")
 
@@ -93,16 +91,11 @@ class ImdWeatherConnector(BaseLiveConnector):
     ) -> WeatherConditionsPayload:
         """Attempt live IMD coastal weather bulletin REST call."""
         headers = {"x-api-key": settings.IMD_API_KEY}
-        try:
-            raw = self._get(
-                settings.IMD_API_BASE_URL,
-                headers=headers,
-                harbor=harbor,
-            )
-        except httpx.TimeoutException as exc:
-            raise RuntimeError(f"IMD weather timeout: {exc}") from exc
-        except httpx.HTTPStatusError as exc:
-            raise RuntimeError(f"IMD weather HTTP {exc.response.status_code}") from exc
+        raw = self._get(
+            settings.IMD_API_BASE_URL,
+            headers=headers,
+            harbor=harbor,
+        )
 
         now_utc = datetime.now(UTC)
         return WeatherConditionsPayload(

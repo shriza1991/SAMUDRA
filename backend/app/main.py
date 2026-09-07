@@ -9,14 +9,14 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-logger = logging.getLogger(__name__)
-
 from backend.app.agents.memory import memory_manager
 from backend.app.api.v1.routes import router as api_v1_router
 from backend.app.connectors.client import connector_http_client
 from backend.app.core.config import settings
 from backend.app.core.logging import setup_logging
 from backend.app.db.store import SQLAlchemyConversationStore
+
+logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
@@ -67,14 +67,31 @@ def create_app() -> FastAPI:
         logger.warning("Database init skipped or unavailable on startup: %s", e)
 
     # Register Dev 2 providers
+    from backend.app.agents.integrations.mocks import register_m2_contract_mocks
     from backend.app.agents.tools import tool_registry
+    from backend.app.connectors.imd_hazard import ImdHazardConnector
+    from backend.app.connectors.imd_weather import ImdWeatherConnector
+    from backend.app.connectors.incois import IncoisOceanStateConnector
     from backend.app.connectors.manager import ConnectorManager
     from backend.app.connectors.registration import register_dev2_provider_tools
     from backend.app.connectors.snapshot import SnapshotConnector
-    
+
     snapshot_connector = SnapshotConnector()
-    manager = ConnectorManager(settings.DATA_MODE, snapshot_connector)
+    marine_live = IncoisOceanStateConnector()
+    weather_live = ImdWeatherConnector()
+    hazard_live = ImdHazardConnector()
+    pfz_live = marine_live
+
+    manager = ConnectorManager(
+        None,
+        snapshot_connector=snapshot_connector,
+        marine_live=marine_live,
+        weather_live=weather_live,
+        hazard_live=hazard_live,
+        pfz_live=pfz_live,
+    )
     register_dev2_provider_tools(tool_registry, manager)
+    register_m2_contract_mocks(tool_registry, override=False)
 
     @app.get("/", tags=["System"])
     async def root():

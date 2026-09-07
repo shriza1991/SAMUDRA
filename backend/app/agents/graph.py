@@ -2165,6 +2165,31 @@ def run_orca_graph(
     if tool_mode == "contract_mock":
         from backend.app.agents.integrations.mocks import register_m2_contract_mocks
         register_m2_contract_mocks(tool_registry)
+    elif tool_mode == "provider":
+        from backend.app.agents.integrations.mocks import register_m2_contract_mocks
+        from backend.app.connectors.imd_hazard import ImdHazardConnector
+        from backend.app.connectors.imd_weather import ImdWeatherConnector
+        from backend.app.connectors.incois import IncoisOceanStateConnector
+        from backend.app.connectors.manager import ConnectorManager
+        from backend.app.connectors.registration import register_dev2_provider_tools
+        from backend.app.connectors.snapshot import SnapshotConnector
+
+        snapshot_connector = SnapshotConnector()
+        marine_live = IncoisOceanStateConnector()
+        weather_live = ImdWeatherConnector()
+        hazard_live = ImdHazardConnector()
+        pfz_live = marine_live
+
+        manager = ConnectorManager(
+            None,
+            snapshot_connector=snapshot_connector,
+            marine_live=marine_live,
+            weather_live=weather_live,
+            hazard_live=hazard_live,
+            pfz_live=pfz_live,
+        )
+        register_dev2_provider_tools(tool_registry, manager)
+        register_m2_contract_mocks(tool_registry, override=False)
 
     # Determine LLM provider instance based on mode
     active_provider: Optional[LLMProvider] = None

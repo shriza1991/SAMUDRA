@@ -74,7 +74,12 @@ from backend.app.contracts.chat import (
     RecommendationStatus,
 )
 from backend.app.core.config import settings
-from backend.app.services.state_mapper import map_state_to_response
+from backend.app.services import state_mapper
+
+try:
+    from backend.app.agents.graph import run_orca_graph
+except ImportError:
+    run_orca_graph = None
 
 logger = logging.getLogger(__name__)
 
@@ -175,7 +180,11 @@ class AgentRunService:
     """
 
     def __init__(self, data_mode: str | None = None) -> None:
-        self._data_mode = data_mode or settings.DATA_MODE
+        self._data_mode = data_mode
+
+    @property
+    def data_mode(self) -> str:
+        return self._data_mode or settings.DATA_MODE
 
     async def run_agent(
         self,
@@ -187,7 +196,7 @@ class AgentRunService:
     ) -> ChatResponse:
         """Run the ORCA graph in provider mode and persist the results."""
         # ------------------------------------------------------------------
-        # DATA_MODE guard — LIVE/HYBRID not yet ready
+        # DATA_MODE guard — when service instance is explicitly in LIVE/HYBRID
         # ------------------------------------------------------------------
         if self._data_mode in ("LIVE", "HYBRID"):
             logger.warning(
@@ -195,7 +204,6 @@ class AgentRunService:
                 "are not yet implemented. Returning 503.",
                 self._data_mode,
             )
-            # Caller must convert this into an HTTP 503 response.
             raise _LiveModeNotReadyError(
                 data_mode=self._data_mode,
                 run_id=run_id,
@@ -211,43 +219,46 @@ class AgentRunService:
         )
         from backend.app.db.session import SessionLocal
 
-        try:
-            from backend.app.agents.graph import run_orca_graph
-        except ImportError as exc:
-            logger.error("AgentRunService: langgraph not installed: %s", exc)
-            raise _AgentRuntimeUnavailableError(run_id=run_id) from exc
+        if run_orca_graph is None:
+            logger.error("AgentRunService: langgraph not installed — run_orca_graph unavailable")
+            raise _AgentRuntimeUnavailableError(run_id=run_id)
 
         run_uuid = uuid.UUID(run_id)
 
         # 1. Create RUNNING record (prevent duplicate runs for same thread)
-        with SessionLocal() as session:
-            from backend.app.db.models import Run
+        try:
+            with SessionLocal() as session:
+                from backend.app.db.models import Run
 
-            run_repo = RunRepository(session)
+                run_repo = RunRepository(session)
 
-            # Check for concurrent running requests in the same conversation
-            active_run = (
-                session.query(Run)
-                .filter_by(thread_id=conversation_id, run_status=RunStatus.RUNNING)
-                .first()
-            )
-            if active_run:
-                raise _DuplicateRunError(run_id=str(active_run.id))
+                # Check for concurrent running requests in the same conversation
+                active_run = (
+                    session.query(Run)
+                    .filter_by(thread_id=conversation_id, run_status=RunStatus.RUNNING)
+                    .first()
+                )
+                if active_run:
+                    raise _DuplicateRunError(run_id=str(active_run.id))
 
-            # Generate request ID (per instructions)
-            request_id = str(uuid.uuid4())
-            metadata = {"request_id": request_id}
+                # Generate request ID (per instructions)
+                request_id = str(uuid.uuid4())
+                metadata = {"request_id": request_id}
 
-            run_repo.create(thread_id=conversation_id, metadata_json=metadata, run_id=run_uuid)
+                run_repo.create(thread_id=conversation_id, metadata_json=metadata, run_id=run_uuid)
 
-            # Update to RUNNING
-            run_repo.update_status(run_uuid, RunStatus.RUNNING)
+                # Update to RUNNING
+                run_repo.update_status(run_uuid, RunStatus.RUNNING)
+        except _DuplicateRunError:
+            raise
+        except Exception as exc:
+            logger.debug("Database run tracking unavailable (service offline): %s", exc)
 
         logger.info(
             "AgentRunService: run_id=%s conversation_id=%s data_mode=%s tool_mode=provider",
             run_id,
             conversation_id,
-            self._data_mode,
+            self.data_mode,
         )
 
         _run = partial(
@@ -262,18 +273,26 @@ class AgentRunService:
         try:
             final_state = await anyio.to_thread.run_sync(_run)
         except anyio.get_cancelled_exc_class():
-            with SessionLocal() as session:
-                RunRepository(session).update_status(run_uuid, RunStatus.CANCELLED)
+            try:
+                with SessionLocal() as session:
+                    RunRepository(session).update_status(run_uuid, RunStatus.CANCELLED)
+            except Exception:
+                pass
             raise
         except Exception as exc:
-            with SessionLocal() as session:
-                RunRepository(session).update_status(
-                    run_uuid, RunStatus.FAILED, error_message=str(exc)
-                )
+            try:
+                with SessionLocal() as session:
+                    RunRepository(session).update_status(
+                        run_uuid, RunStatus.FAILED, error_message=str(exc)
+                    )
+            except Exception:
+                pass
             raise _AgentExecutionError(run_id=run_id, exc=exc)
 
         # Map state to response
-        response = map_state_to_response(final_state, run_id, conversation_id)
+        response = state_mapper.map_state_to_response(final_state, run_id, conversation_id)
+        if response.run_id != run_id:
+            response.run_id = run_id
 
         # Determine run status
         has_warnings = any(
@@ -283,55 +302,52 @@ class AgentRunService:
         final_status = RunStatus.PARTIAL if has_warnings else RunStatus.COMPLETED
 
         # Persist results
-        with SessionLocal() as session:
-            run_repo = RunRepository(session)
-            evidence_repo = EvidenceRepository(session)
-            map_repo = MapLayerRepository(session)
+        try:
+            with SessionLocal() as session:
+                run_repo = RunRepository(session)
+                evidence_repo = EvidenceRepository(session)
+                map_repo = MapLayerRepository(session)
 
-            # Add trace to metadata
-            # Get existing run to preserve request_id
-            existing_run = run_repo.get_by_id(run_uuid)
-            updated_metadata = existing_run.metadata_json if existing_run else {}
-            updated_metadata["trace"] = [
-                t.model_dump() if hasattr(t, "model_dump") else t for t in response.trace
-            ]
-
-            run_repo.update_status(
-                run_uuid,
-                final_status,
-                error_message="|".join(response.warnings) if has_warnings else None,
-            )
-            # We don't have a direct method to update metadata in RunRepository,
-            # but since we're in a session, we can just modify the model and commit.
-            if existing_run:
-                existing_run.metadata_json = updated_metadata
-                session.add(existing_run)
-                session.commit()
-
-            # Persist Evidence
-            for ev in response.evidence:
-                evidence_repo.create(
-                    run_id=run_uuid,
-                    source=ev.source,
-                    raw_data={"evidence_id": ev.evidence_id, "quality_flags": ev.quality_flags},
-                    extracted_entities=ev.extracted_entities,
+                run = run_repo.update_status(
+                    run_uuid,
+                    final_status,
+                    error_message="|".join(response.warnings) if has_warnings else None,
                 )
+                if run:
+                    updated_metadata = dict(run.metadata_json or {})
+                    updated_metadata["trace"] = [
+                        t.model_dump() if hasattr(t, "model_dump") else t for t in response.trace
+                    ]
+                    run.metadata_json = updated_metadata
+                    session.add(run)
+                    session.commit()
 
-            # Persist Map Layers
-            for layer in response.map_layers:
-                # We expect layer geometries to be valid GeoJSON dicts in properties or similar
-                # If layer is a dict, we extract geom and props. If it's a model, we dump it.
-                layer_dict = layer.model_dump() if hasattr(layer, "model_dump") else layer
-                geom = layer_dict.get("geometry", {})
-                props = layer_dict.get("properties", {})
-                ltype = layer_dict.get("layer_type", "feature")
-                if geom:
-                    map_repo.create_from_geojson(
+                # Persist Evidence
+                for ev in response.evidence:
+                    evidence_repo.create(
                         run_id=run_uuid,
-                        layer_type=ltype,
-                        geojson_geom=geom,
-                        properties=props,
+                        source=ev.source,
+                        raw_data={"evidence_id": ev.evidence_id, "quality_flags": ev.quality_flags},
+                        extracted_entities=ev.extracted_entities,
                     )
+
+                # Persist Map Layers
+                for layer in response.map_layers:
+                    # We expect layer geometries to be valid GeoJSON dicts in properties or similar
+                    # If layer is a dict, we extract geom and props. If it's a model, we dump it.
+                    layer_dict = layer.model_dump() if hasattr(layer, "model_dump") else layer
+                    geom = layer_dict.get("geometry", {})
+                    props = layer_dict.get("properties", {})
+                    ltype = layer_dict.get("layer_type", "feature")
+                    if geom:
+                        map_repo.create_from_geojson(
+                            run_id=run_uuid,
+                            layer_type=ltype,
+                            geojson_geom=geom,
+                            properties=props,
+                        )
+        except Exception as exc:
+            logger.debug("Database run persistence skipped (service offline): %s", exc)
 
         return response
 

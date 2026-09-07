@@ -38,6 +38,7 @@ from backend.app.agents.integrations.contracts import (
 )
 from backend.app.contracts.chat import EvidenceItem
 from backend.app.contracts.tools import ToolResult, ToolStatus
+from backend.app.connectors.errors import ConnectorError
 
 
 class ExecutionTelemetry(BaseModel):
@@ -197,6 +198,8 @@ def execute_with_reliability(
             else:
                 res = handler(**params)
 
+        except ConnectorError:
+            raise
         except Exception as exc:
             err_name = type(exc).__name__
             res = ToolResult(

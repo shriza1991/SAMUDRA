@@ -23,6 +23,7 @@ from backend.app.connectors.errors import (
 )
 from backend.app.connectors.modes import DataMode
 from backend.app.connectors.snapshot import SnapshotConnector
+from backend.app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -39,19 +40,37 @@ class ConnectorManager:
 
     def __init__(
         self,
-        mode: DataMode,
+        mode: DataMode | str | None,
         snapshot_connector: SnapshotConnector,
         marine_live: Any = None,
         weather_live: Any = None,
         hazard_live: Any = None,
         pfz_live: Any = None,
     ) -> None:
-        self.mode = mode
+        self._mode = mode
         self.snapshot = snapshot_connector
         self.marine_live = marine_live
         self.weather_live = weather_live
         self.hazard_live = hazard_live
         self.pfz_live = pfz_live
+
+    @property
+    def mode(self) -> DataMode:
+        target = self._mode if self._mode is not None else settings.DATA_MODE
+        if isinstance(target, DataMode):
+            return target
+        try:
+            return DataMode(target) if target else DataMode.SNAPSHOT
+        except ValueError:
+            return DataMode.SNAPSHOT
+
+    @mode.setter
+    def mode(self, val: DataMode | str) -> None:
+        self._mode = val
+
+    @property
+    def current_mode(self) -> DataMode:
+        return self.mode
 
     def _track_health(self, source: str, is_online: bool, error: str = None) -> None:
         try:
@@ -68,10 +87,11 @@ class ConnectorManager:
         snapshot_method: str,
         context: ToolInvocationContext,
     ) -> Any:
-        if self.mode == DataMode.SNAPSHOT:
+        mode = self.current_mode
+        if mode == DataMode.SNAPSHOT:
             return getattr(self.snapshot, snapshot_method)(context)
 
-        if self.mode == DataMode.LIVE:
+        if mode == DataMode.LIVE:
             if not live_provider:
                 raise RuntimeError(f"Live provider not configured for {snapshot_method}")
             try:
@@ -82,7 +102,7 @@ class ConnectorManager:
                 self._track_health(snapshot_method, False, str(exc))
                 raise
 
-        if self.mode == DataMode.HYBRID:
+        if mode == DataMode.HYBRID:
             if not live_provider:
                 logger.warning("No live provider for %s, falling back to snapshot.", snapshot_method)
                 payload = getattr(self.snapshot, snapshot_method)(context)

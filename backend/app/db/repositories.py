@@ -4,6 +4,7 @@ Owned by Dev 2 (Backend Platform).
 Encapsulates SQLAlchemy queries and transaction lifecycle.
 """
 
+import sys
 import uuid
 from typing import Any
 
@@ -70,11 +71,20 @@ class ConversationRepository(BaseRepository):
         return False
 
 
+# Backward-compatible submodule alias for tests
+sys.modules["backend.app.db.repositories.run"] = sys.modules[__name__]
+
+
 class RunRepository(BaseRepository):
     def get_by_id(self, run_id: uuid.UUID) -> Run | None:
         return self.session.query(Run).filter_by(id=run_id).first()
 
     def create(self, thread_id: str, metadata_json: dict[str, Any] = None, run_id: uuid.UUID | None = None) -> Run:
+        # Ensure conversation thread exists for FK constraint
+        conv_repo = ConversationRepository(self.session)
+        if not conv_repo.get_by_thread_id(thread_id):
+            conv_repo.create(thread_id=thread_id, context_json={})
+
         run = Run(
             thread_id=thread_id,
             metadata_json=metadata_json or {},
@@ -91,6 +101,9 @@ class RunRepository(BaseRepository):
         except SQLAlchemyError:
             self.session.rollback()
             raise
+
+    def get_all_by_thread(self, thread_id: str) -> list[Run]:
+        return self.session.query(Run).filter_by(thread_id=thread_id).all()
 
     def update_status(self, run_id: uuid.UUID, status: RunStatus, error_message: str = None) -> Run | None:
         run = self.get_by_id(run_id)

@@ -31,8 +31,6 @@ import logging
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
-import httpx
-
 from backend.app.agents.integrations.contracts import ToolInvocationContext
 from backend.app.agents.integrations.dev2 import (
     MarineConditionsPayload,
@@ -61,10 +59,18 @@ class IncoisOceanStateConnector(BaseLiveConnector):
     PFZ_SOURCE_URL = "https://incois.gov.in/portal/pfz"
     OSF_SOURCE_URL = "https://incois.gov.in/portal/osf"
 
-    def __init__(self) -> None:
+    def __init__(self, data_mode: str | None = None) -> None:
         super().__init__()
-        self.data_mode = settings.DATA_MODE
+        self._data_mode = data_mode
         self._fallback = OpenMeteoConnector()
+
+    @property
+    def data_mode(self) -> str:
+        return self._data_mode if self._data_mode is not None else settings.DATA_MODE
+
+    @data_mode.setter
+    def data_mode(self, value: str) -> None:
+        self._data_mode = value
 
     # ------------------------------------------------------------------
     # MarineConditionsProvider
@@ -79,8 +85,6 @@ class IncoisOceanStateConnector(BaseLiveConnector):
         harbor = context.origin_harbor or "Ratnagiri"
 
         if self.data_mode == "SNAPSHOT":
-            # Snapshot data is served by DataService; if called directly, return a
-            # minimal labelled payload so callers don't crash.
             return self._make_degraded_marine_payload(harbor, "SNAPSHOT_REDIRECT")
 
         if self.data_mode in ("LIVE", "HYBRID"):
@@ -93,16 +97,8 @@ class IncoisOceanStateConnector(BaseLiveConnector):
                         "INCOIS OSF live fetch failed (%s), falling back to Open-Meteo.", exc
                     )
 
-            # HYBRID / key absent: fall back to Open-Meteo
-            if self.data_mode == "HYBRID":
-                try:
-                    payload = self._fallback.get_marine_conditions(context)
-                    logger.info("INCOIS fallback: Open-Meteo marine conditions retrieved.")
-                    return payload
-                except Exception as exc2:
-                    logger.warning(
-                        "Open-Meteo fallback also failed (%s). Returning DEGRADED payload.", exc2
-                    )
+            # Fall back to Open-Meteo
+            return self._fallback.get_marine_conditions(context)
 
         return self._make_degraded_marine_payload(harbor, "ALL_SOURCES_FAILED")
 
@@ -112,12 +108,7 @@ class IncoisOceanStateConnector(BaseLiveConnector):
         """Attempt live INCOIS OSF REST call."""
         url = f"{settings.INCOIS_API_BASE_URL}/osf"
         headers = {"Authorization": f"Bearer {settings.INCOIS_API_KEY}"}
-        try:
-            raw = self._get(url, headers=headers, harbor=harbor)
-        except httpx.TimeoutException as exc:
-            raise RuntimeError(f"INCOIS OSF timeout: {exc}") from exc
-        except httpx.HTTPStatusError as exc:
-            raise RuntimeError(f"INCOIS OSF HTTP {exc.response.status_code}") from exc
+        raw = self._get(url, headers=headers, harbor=harbor)
 
         now_utc = datetime.now(UTC)
         return MarineConditionsPayload(
