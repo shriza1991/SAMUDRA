@@ -3,6 +3,7 @@ import Header from './components/layout/Header';
 import ChatPanel from './components/chat/ChatPanel';
 import MapView from './components/map/MapView';
 import EvidenceDrawer from './components/evidence/EvidenceDrawer';
+import CallModal from './components/call/CallModal';
 import { useChat } from './hooks/useChat';
 import { MessageSquare, Map as MapIcon } from 'lucide-react';
 
@@ -11,11 +12,12 @@ import { MessageSquare, Map as MapIcon } from 'lucide-react';
  *
  * Owned by Dev 1 (Frontend & Geospatial UX Lead).
  * Default Theme: Light Mode
- * Layout: Header + Responsive Main (Desktop Grid / Mobile View Switcher) + Slide-out Evidence Drawer
+ * Layout: Header + Responsive Main (Desktop Grid / Mobile View Switcher) + Slide-out Evidence Drawer + Call Mode Modal
  */
 export default function App() {
   const chat = useChat();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [isCallModalOpen, setIsCallModalOpen] = useState(false);
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [mobileView, setMobileView] = useState<'chat' | 'map'>('chat');
 
@@ -48,6 +50,7 @@ export default function App() {
         onLanguageChange={chat.setLanguage}
         evidenceCount={evidenceItems.length}
         onOpenEvidence={() => setIsDrawerOpen(true)}
+        onStartCall={() => setIsCallModalOpen(true)}
         theme={theme}
         onThemeToggle={toggleTheme}
       />
@@ -84,6 +87,7 @@ export default function App() {
           activeResponse={chat.activeResponse}
           isLoading={chat.isLoading}
           onSend={chat.send}
+          onStartCall={() => setIsCallModalOpen(true)}
           onBack={handleBack}
           onReset={chat.clearChat}
           onEvidenceClick={() => setIsDrawerOpen(true)}
@@ -104,6 +108,16 @@ export default function App() {
         trace={traceItems}
         language={chat.language}
       />
+
+      {/* Dedicated Phone-Style Call SAMUDRA Modal */}
+      <CallModal
+        isOpen={isCallModalOpen}
+        onClose={() => setIsCallModalOpen(false)}
+        language={chat.language}
+        originHarbor="Ratnagiri"
+        craftProfile="motorized_boat"
+      />
     </div>
   );
 }
+

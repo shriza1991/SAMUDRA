@@ -35,6 +35,23 @@ export interface LocaleContent {
   micTranscribingAria: string;
   recordingIndicator: string;
   transcribingIndicator: string;
+  callSamudraBtn: string;
+  callTitle: string;
+  callStatusConnecting: string;
+  callStatusListening: string;
+  callStatusHearing: string;
+  callStatusProcessing: string;
+  callStatusSpeaking: string;
+  callStatusMuted: string;
+  callTapToFinish: string;
+  callTapToSendNow: string;
+  callEndBtn: string;
+  callRetryBtn: string;
+  callMicDenied: string;
+  callNoSpeech: string;
+  callDetectedLanguage: string;
+  callSubtitleUser: string;
+  callSubtitleSamudra: string;
 }
 
 
@@ -99,6 +116,23 @@ export const TRANSLATIONS: Record<SupportedLanguage, LocaleContent> = {
     micTranscribingAria: 'Transcribing voice audio...',
     recordingIndicator: 'Recording voice...',
     transcribingIndicator: 'Transcribing...',
+    callSamudraBtn: 'Call SAMUDRA',
+    callTitle: 'SAMUDRA Voice Call',
+    callStatusConnecting: 'Connecting call...',
+    callStatusListening: 'Listening... (Speak naturally)',
+    callStatusHearing: 'Hearing you... (Speaking)',
+    callStatusProcessing: 'SAMUDRA is analyzing...',
+    callStatusSpeaking: 'SAMUDRA is speaking...',
+    callStatusMuted: 'Microphone Muted',
+    callTapToFinish: 'Done Speaking',
+    callTapToSendNow: 'Send Now (Skip pause)',
+    callEndBtn: 'End Call',
+    callRetryBtn: 'Try Again',
+    callMicDenied: 'Microphone permission denied. Please allow microphone access to talk with SAMUDRA.',
+    callNoSpeech: 'No speech detected. Please speak into your microphone.',
+    callDetectedLanguage: 'Detected Language',
+    callSubtitleUser: 'You',
+    callSubtitleSamudra: 'SAMUDRA',
   },
   hi: {
     appTagline: 'स्मार्ट स्वायत्त सागरी समझ, निर्णय और जोखिम सहायक',
@@ -138,12 +172,12 @@ export const TRANSLATIONS: Record<SupportedLanguage, LocaleContent> = {
       {
         id: 'safety',
         label: '⚓ प्रस्थान सुरक्षा जांच',
-        query: 'क्या कल सुबह 6 बजे रत्नागिरी से मछली पकड़ने जाना सुरक्षित है?',
+        query: 'क्या कल सुबह ६ बजे रत्नागिरी से प्रस्थान करना सुरक्षित है?',
       },
       {
         id: 'hazard',
-        label: '⚠️ चक्रवात व भू-सीमा चेतावनी',
-        query: 'क्या इस यात्रा में चक्रवात, बिजली या प्रतिबंधित क्षेत्र का कोई खतरा है?',
+        label: '⚠️ समुद्री खतरे एवं अलर्ट',
+        query: 'क्या इस यात्रा में चक्रवात या खराब मौसम का कोई जोखिम है?',
       },
       {
         id: 'route',
@@ -160,6 +194,23 @@ export const TRANSLATIONS: Record<SupportedLanguage, LocaleContent> = {
     micTranscribingAria: 'आवाज रूपांतरित हो रही है...',
     recordingIndicator: 'आवाज रिकॉर्ड हो रही है...',
     transcribingIndicator: 'पहचाना जा रहा है...',
+    callSamudraBtn: 'समुद्र को कॉल करें',
+    callTitle: 'समुद्र (SAMUDRA) वॉयस कॉल',
+    callStatusConnecting: 'कॉल कनेक्ट हो रहा है...',
+    callStatusListening: 'सुन रहा है... (अपनी भाषा में बोलें)',
+    callStatusHearing: 'आपकी आवाज सुनी जा रही है... (बोलते रहें)',
+    callStatusProcessing: 'समुद्र विश्लेषण कर रहा है...',
+    callStatusSpeaking: 'समुद्र उत्तर दे रहा है...',
+    callStatusMuted: 'माइक बंद (Muted)',
+    callTapToFinish: 'बोलना समाप्त',
+    callTapToSendNow: 'तुरंत भेजें',
+    callEndBtn: 'कॉल समाप्त करें',
+    callRetryBtn: 'पुनः प्रयास करें',
+    callMicDenied: 'माइक्रोफ़ोन की अनुमति अस्वीकृत की गई। कृपया माइक्रोफ़ोन की अनुमति दें।',
+    callNoSpeech: 'कोई आवाज नहीं सुनाई दी। कृपया माइक में बोलें।',
+    callDetectedLanguage: 'पहचानी गई भाषा',
+    callSubtitleUser: 'आप',
+    callSubtitleSamudra: 'समुद्र (SAMUDRA)',
   },
   mr: {
     appTagline: 'स्मार्ट स्वायत्त सागरी आकलन, निर्णय आणि जोखीम सहाय्यक',
@@ -199,7 +250,7 @@ export const TRANSLATIONS: Record<SupportedLanguage, LocaleContent> = {
       {
         id: 'safety',
         label: '⚓ प्रस्थान सुरक्षितता तपासणी',
-        query: 'उद्या सकाळी ६ वाजता रत्नागिरीहून मासेमारीसाठी जाणे सुरक्षित आहे का?',
+        query: 'उद्या सकाळी ६ वाजता रत्नागिरीतून मासेमारीला जाणे सुरक्षित आहे का?',
       },
       {
         id: 'hazard',
@@ -221,6 +272,23 @@ export const TRANSLATIONS: Record<SupportedLanguage, LocaleContent> = {
     micTranscribingAria: 'आवाज रूपांतरित होत आहे...',
     recordingIndicator: 'आवाज रेकॉर्ड होत आहे...',
     transcribingIndicator: 'ओळखले जात आहे...',
+    callSamudraBtn: 'समुद्रला कॉल करा',
+    callTitle: 'समुद्र (SAMUDRA) थेट व्हॉइस कॉल',
+    callStatusConnecting: 'कॉल जोडला जात आहे...',
+    callStatusListening: 'ऐकत आहे... (तुमच्या भाषेत बोला)',
+    callStatusHearing: 'तुमचा आवाज ऐकत आहे... (बोलणे सुरू ठेवा)',
+    callStatusProcessing: 'समुद्र माहिती तपासत आहे...',
+    callStatusSpeaking: 'समुद्र उत्तर देत आहे...',
+    callStatusMuted: 'माईक म्यूट (बंद)',
+    callTapToFinish: 'बोलून झाले',
+    callTapToSendNow: 'त्वरीत पाठवा',
+    callEndBtn: 'कॉल संपवा',
+    callRetryBtn: 'पुन्हा प्रयत्न करा',
+    callMicDenied: 'मायक्रोफोनची परवानगी नाकारली आहे. कृपया ब्राउझरमध्ये मायक्रोफोन सुरू करा.',
+    callNoSpeech: 'कोणताही आवाज ऐकू आला नाही. कृपया माईकमध्ये बोला.',
+    callDetectedLanguage: 'ओळखलेली भाषा',
+    callSubtitleUser: 'तुम्ही',
+    callSubtitleSamudra: 'समुद्र (SAMUDRA)',
   },
 };
 

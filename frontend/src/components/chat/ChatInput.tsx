@@ -1,16 +1,17 @@
 import type React from 'react';
 import { useState, useRef, useEffect } from 'react';
-import { Send, Mic, Square, Loader2, X } from 'lucide-react';
+import { Send, Mic, Square, Loader2, X, PhoneCall } from 'lucide-react';
 import { TRANSLATIONS, type SupportedLanguage } from '../../i18n/translations';
 import { useVoiceRecorder } from '../../hooks/useVoiceRecorder';
 
 interface ChatInputProps {
   language?: SupportedLanguage;
   onSend: (message: string, languageOverride?: 'en' | 'hi' | 'mr') => void;
+  onStartCall?: () => void;
   disabled?: boolean;
 }
 
-export default function ChatInput({ language = 'en', onSend, disabled }: ChatInputProps) {
+export default function ChatInput({ language = 'en', onSend, onStartCall, disabled }: ChatInputProps) {
   const [text, setText] = useState('');
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const t = TRANSLATIONS[language] || TRANSLATIONS.en;
@@ -105,6 +106,21 @@ export default function ChatInput({ language = 'en', onSend, disabled }: ChatInp
       </div>
 
       <div className="chat-input-actions">
+        {onStartCall && (
+          <button
+            type="button"
+            className="call-samudra-trigger-btn"
+            onClick={onStartCall}
+            disabled={disabled || isRecording || isTranscribing}
+            title={t.callSamudraBtn}
+            aria-label={t.callSamudraBtn}
+          >
+            <span className="call-trigger-pulse-dot" aria-hidden="true" />
+            <PhoneCall size={14} />
+            <span>{t.callSamudraBtn}</span>
+          </button>
+        )}
+
         <button
           type="button"
           className={`chat-mic-btn ${isRecording ? 'is-recording' : ''} ${isTranscribing ? 'is-transcribing' : ''}`}
@@ -150,3 +166,4 @@ export default function ChatInput({ language = 'en', onSend, disabled }: ChatInp
     </div>
   );
 }
+

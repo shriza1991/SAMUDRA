@@ -105,17 +105,50 @@ describe('API Client', () => {
     expect(result.normalized_language).toBe('mr');
   });
 
-  it('throws ApiError when voice transcription fails', async () => {
+  it('sends voice chat audio via POST /api/v1/voice/chat and receives VoiceChatResponse', async () => {
+    const mockVoiceResponse = {
+      ...MOCK_SAFETY_RESPONSE,
+      transcript: 'रत्नागिरीतून उद्या सकाळी मासेमारीला जाणे सुरक्षित आहे का?',
+      detected_language: 'mr-IN',
+      audio_base64: 'UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=',
+      audio_format: 'audio/wav',
+    };
+
     (globalThis.fetch as any).mockResolvedValueOnce({
-      ok: false,
-      status: 503,
-      statusText: 'Service Unavailable',
-      json: async () => ({ detail: 'Sarvam STT key not configured' }),
+      ok: true,
+      json: async () => mockVoiceResponse,
     });
 
-    const blob = new Blob(['mock-audio-data'], { type: 'audio/webm' });
-    const { transcribeAudio } = await import('./client');
-    await expect(transcribeAudio(blob)).rejects.toThrow(ApiError);
+    const blob = new Blob(['mock-audio-bytes'], { type: 'audio/webm' });
+    const { sendVoiceChat } = await import('./client');
+    const result = await sendVoiceChat(blob, {
+      conversation_id: 'conv-123',
+      origin_harbor: 'Ratnagiri',
+      craft_profile: 'motorized_boat',
+    });
+
+    expect(globalThis.fetch).toHaveBeenCalledWith('/api/v1/voice/chat', expect.objectContaining({
+      method: 'POST',
+      body: expect.any(FormData),
+    }));
+    expect(result.transcript).toBe('रत्नागिरीतून उद्या सकाळी मासेमारीला जाणे सुरक्षित आहे का?');
+    expect(result.detected_language).toBe('mr-IN');
+    expect(result.audio_base64).toBeDefined();
+    expect(result.audio_format).toBe('audio/wav');
+  });
+
+  it('throws ApiError when voice chat endpoint fails', async () => {
+    (globalThis.fetch as any).mockResolvedValueOnce({
+      ok: false,
+      status: 500,
+      statusText: 'Internal Server Error',
+      json: async () => ({ detail: 'Voice pipeline execution failed' }),
+    });
+
+    const blob = new Blob(['mock-audio-bytes'], { type: 'audio/webm' });
+    const { sendVoiceChat } = await import('./client');
+    await expect(sendVoiceChat(blob)).rejects.toThrow(ApiError);
   });
 });
+
 

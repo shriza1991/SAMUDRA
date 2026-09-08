@@ -93,3 +93,10 @@ export interface TranscribeResponse {
   normalized_language: string;
 }
 
+export interface VoiceChatResponse extends ChatResponse {
+  transcript: string;
+  detected_language: string;
+  audio_base64?: string;
+  audio_format?: string;
+}
+

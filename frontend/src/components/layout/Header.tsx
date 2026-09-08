@@ -1,7 +1,7 @@
 import LanguageSelector from './LanguageSelector';
 import DataModeIndicator from './DataModeIndicator';
 import ThemeToggle from './ThemeToggle';
-import { FileText } from 'lucide-react';
+import { FileText, PhoneCall } from 'lucide-react';
 import { TRANSLATIONS, type SupportedLanguage } from '../../i18n/translations';
 
 interface HeaderProps {
@@ -9,6 +9,7 @@ interface HeaderProps {
   onLanguageChange: (lang: SupportedLanguage) => void;
   evidenceCount: number;
   onOpenEvidence: () => void;
+  onStartCall?: () => void;
   theme: 'light' | 'dark';
   onThemeToggle: () => void;
 }
@@ -18,6 +19,7 @@ export default function Header({
   onLanguageChange,
   evidenceCount,
   onOpenEvidence,
+  onStartCall,
   theme,
   onThemeToggle,
 }: HeaderProps) {
@@ -33,6 +35,19 @@ export default function Header({
       </div>
 
       <div className="app-header-right">
+        {onStartCall && (
+          <button
+            type="button"
+            className="call-samudra-trigger-btn"
+            onClick={onStartCall}
+            title={t.callSamudraBtn}
+            aria-label={t.callSamudraBtn}
+          >
+            <span className="call-trigger-pulse-dot" aria-hidden="true" />
+            <PhoneCall size={14} />
+            <span>{t.callSamudraBtn}</span>
+          </button>
+        )}
         <LanguageSelector language={language} onChange={onLanguageChange} />
         <DataModeIndicator />
         <ThemeToggle theme={theme} onToggle={onThemeToggle} />
@@ -50,3 +65,4 @@ export default function Header({
     </header>
   );
 }
+
