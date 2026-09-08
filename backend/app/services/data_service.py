@@ -76,9 +76,18 @@ class DataService:
         LIVE     → IncoisOceanStateConnector (live INCOIS only)
         HYBRID   → IncoisOceanStateConnector (falls back internally to Open-Meteo)
         """
+        harbor = context.origin_harbor or "Ratnagiri"
         if self.data_mode == "SNAPSHOT":
             logger.debug("DataService: SNAPSHOT mode — marine conditions from fixture.")
-            return self._snapshot.get_marine_conditions(context)
+            try:
+                return self._snapshot.get_marine_conditions(context)
+            except Exception as exc:
+                logger.warning("DataService: snapshot load failed (%s). Using in-memory dataset.", exc)
+                from backend.app.domain.marine_dataset import get_marine_record
+
+                raw = get_marine_record(harbor)
+                raw["harbor"] = harbor
+                return MarineConditionsPayload(**raw)
 
         try:
             payload = self._incois.get_marine_conditions(context)
@@ -86,7 +95,15 @@ class DataService:
             return payload
         except Exception as exc:
             logger.warning("DataService: marine provider chain failed (%s). Using snapshot.", exc)
-            return self._snapshot.get_marine_conditions(context)
+            try:
+                return self._snapshot.get_marine_conditions(context)
+            except Exception as snap_exc:
+                logger.warning("DataService: snapshot load failed (%s). Using in-memory dataset.", snap_exc)
+                from backend.app.domain.marine_dataset import get_marine_record
+
+                raw = get_marine_record(harbor)
+                raw["harbor"] = harbor
+                return MarineConditionsPayload(**raw)
 
     # ------------------------------------------------------------------
     # Weather Conditions
@@ -94,9 +111,18 @@ class DataService:
 
     def get_weather_conditions(self, context: ToolInvocationContext) -> WeatherConditionsPayload:
         """Route to the appropriate weather connector based on DATA_MODE."""
+        harbor = context.origin_harbor or "Ratnagiri"
         if self.data_mode == "SNAPSHOT":
             logger.debug("DataService: SNAPSHOT mode — weather conditions from fixture.")
-            return self._snapshot.get_weather_conditions(context)
+            try:
+                return self._snapshot.get_weather_conditions(context)
+            except Exception as exc:
+                logger.warning("DataService: snapshot load failed (%s). Using in-memory dataset.", exc)
+                from backend.app.domain.marine_dataset import get_weather_record
+
+                raw = get_weather_record(harbor)
+                raw["harbor"] = harbor
+                return WeatherConditionsPayload(**raw)
 
         try:
             payload = self._imd_weather.get_weather_conditions(context)
@@ -104,7 +130,15 @@ class DataService:
             return payload
         except Exception as exc:
             logger.warning("DataService: weather provider chain failed (%s). Using snapshot.", exc)
-            return self._snapshot.get_weather_conditions(context)
+            try:
+                return self._snapshot.get_weather_conditions(context)
+            except Exception as snap_exc:
+                logger.warning("DataService: snapshot load failed (%s). Using in-memory dataset.", snap_exc)
+                from backend.app.domain.marine_dataset import get_weather_record
+
+                raw = get_weather_record(harbor)
+                raw["harbor"] = harbor
+                return WeatherConditionsPayload(**raw)
 
     # ------------------------------------------------------------------
     # Hazard Bulletins
@@ -117,9 +151,18 @@ class DataService:
         The ImdHazardConnector already returns severity=NORMAL on failure,
         and the snapshot contains explicitly labelled fixture data.
         """
+        harbor = context.origin_harbor or "Ratnagiri"
         if self.data_mode == "SNAPSHOT":
             logger.debug("DataService: SNAPSHOT mode — hazard bulletin from fixture.")
-            return self._snapshot.get_hazard_bulletin(context)
+            try:
+                return self._snapshot.get_hazard_bulletin(context)
+            except Exception as exc:
+                logger.warning("DataService: snapshot load failed (%s). Using in-memory dataset.", exc)
+                from backend.app.domain.marine_dataset import get_hazard_record
+
+                raw = get_hazard_record(harbor)
+                raw["harbor"] = harbor
+                return HazardBulletinPayload(**raw)
 
         try:
             payload = self._imd_hazard.get_hazard_bulletin(context)
@@ -129,7 +172,15 @@ class DataService:
             logger.warning(
                 "DataService: hazard provider chain failed (%s). Using snapshot.", exc
             )
-            return self._snapshot.get_hazard_bulletin(context)
+            try:
+                return self._snapshot.get_hazard_bulletin(context)
+            except Exception as snap_exc:
+                logger.warning("DataService: snapshot load failed (%s). Using in-memory dataset.", snap_exc)
+                from backend.app.domain.marine_dataset import get_hazard_record
+
+                raw = get_hazard_record(harbor)
+                raw["harbor"] = harbor
+                return HazardBulletinPayload(**raw)
 
     # ------------------------------------------------------------------
     # PFZ Raw Advisories
@@ -139,7 +190,21 @@ class DataService:
         """Route to the appropriate PFZ connector based on DATA_MODE."""
         if self.data_mode == "SNAPSHOT":
             logger.debug("DataService: SNAPSHOT mode — PFZ advisories from fixture.")
-            return self._snapshot.get_pfz_raw_advisories(context)
+            try:
+                return self._snapshot.get_pfz_raw_advisories(context)
+            except Exception as exc:
+                logger.warning("DataService: snapshot load failed (%s). Using fallback PFZ data.", exc)
+                from datetime import datetime, timezone
+                return PFZSourceDataPayload(
+                    features=[
+                        {"id": "PFZ-F1", "lat": 16.92, "lon": 73.15, "sst_grad": 0.8, "chlorophyll": 1.4},
+                        {"id": "PFZ-F2", "lat": 17.05, "lon": 73.05, "sst_grad": 1.1, "chlorophyll": 1.9},
+                    ],
+                    bulletin_date=datetime.now(timezone.utc).isoformat(),
+                    valid_to="2030-01-01T00:00:00Z",
+                    source_name="INCOIS PFZ Connector (In-Memory Dataset)",
+                    source_url="https://incois.gov.in/pfz_source",
+                )
 
         try:
             payload = self._incois.get_pfz_raw_advisories(context)
@@ -149,7 +214,21 @@ class DataService:
             logger.warning(
                 "DataService: PFZ provider chain failed (%s). Using snapshot.", exc
             )
-            return self._snapshot.get_pfz_raw_advisories(context)
+            try:
+                return self._snapshot.get_pfz_raw_advisories(context)
+            except Exception as snap_exc:
+                logger.warning("DataService: snapshot load failed (%s). Using fallback PFZ data.", snap_exc)
+                from datetime import datetime, timezone
+                return PFZSourceDataPayload(
+                    features=[
+                        {"id": "PFZ-F1", "lat": 16.92, "lon": 73.15, "sst_grad": 0.8, "chlorophyll": 1.4},
+                        {"id": "PFZ-F2", "lat": 17.05, "lon": 73.05, "sst_grad": 1.1, "chlorophyll": 1.9},
+                    ],
+                    bulletin_date=datetime.now(timezone.utc).isoformat(),
+                    valid_to="2030-01-01T00:00:00Z",
+                    source_name="INCOIS PFZ Connector (In-Memory Dataset)",
+                    source_url="https://incois.gov.in/pfz_source",
+                )
 
 
 # ---------------------------------------------------------------------------

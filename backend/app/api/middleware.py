@@ -26,21 +26,32 @@ class RequestIDMiddleware(BaseHTTPMiddleware):
 class RequestSizeLimitMiddleware(BaseHTTPMiddleware):
     """Limits incoming request payload size."""
 
-    def __init__(self, app, max_upload_size: int = 1048576) -> None:
-        # Default 1MB limit for chat requests
+    def __init__(
+        self,
+        app,
+        max_upload_size: int = 1048576,
+        max_voice_upload_size: int = 26214400,  # 25 MB for audio recordings
+    ) -> None:
         super().__init__(app)
         self.max_upload_size = max_upload_size
+        self.max_voice_upload_size = max_voice_upload_size
 
     async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
         if request.method in ("POST", "PUT", "PATCH"):
             content_length = request.headers.get("content-length")
             if content_length:
-                if int(content_length) > self.max_upload_size:
+                limit = (
+                    self.max_voice_upload_size
+                    if "/voice/" in request.url.path
+                    else self.max_upload_size
+                )
+                if int(content_length) > limit:
                     return JSONResponse(
                         status_code=413,
                         content={
                             "error": "PayloadTooLarge",
-                            "message": f"Request body exceeds {self.max_upload_size} bytes limit."
-                        }
+                            "message": f"Request body exceeds {limit} bytes limit.",
+                        },
                     )
         return await call_next(request)
+

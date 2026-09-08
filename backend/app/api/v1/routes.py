@@ -20,13 +20,14 @@ import uuid
 from datetime import UTC, datetime
 from typing import Any
 
-from fastapi import APIRouter, File, UploadFile, status
+from fastapi import APIRouter, File, Form, UploadFile, status
 from fastapi.responses import JSONResponse
 
 from backend.app.contracts.chat import (
     ChatRequest,
     ChatResponse,
     TranscribeResponse,
+    VoiceChatResponse,
 )
 from backend.app.core.config import settings
 from backend.app.db.session import SessionLocal
@@ -42,6 +43,11 @@ from backend.app.services.stt_service import (
     STTConfigurationError,
     STTServiceError,
     transcribe_audio_bytes,
+)
+from backend.app.services.tts_service import (
+    TTSConfigurationError,
+    TTSServiceError,
+    synthesize_speech,
 )
 
 logger = logging.getLogger(__name__)
@@ -551,4 +557,197 @@ async def transcribe_voice_endpoint(file: UploadFile = File(...)):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             content={"error": "TRANSCRIPTION_FAILED", "detail": "An internal error occurred during audio transcription."},
         )
+
+
+@router.post(
+    "/voice/chat",
+    response_model=VoiceChatResponse,
+    status_code=status.HTTP_200_OK,
+    tags=["Voice & STT"],
+    summary="End-to-end voice chat endpoint (STT -> ORCA Agent -> TTS)",
+    description=(
+        "Accepts mariner audio recording via multipart form data, transcribes it using Sarvam STT, "
+        "routes the query through the LangGraph ORCA reasoning pipeline, synthesizes the localized "
+        "advisory using Sarvam TTS, and returns a playable base64 audio response alongside full "
+        "safety recommendation, evidence, and trace telemetry."
+    ),
+)
+async def voice_chat_endpoint(
+    file: UploadFile = File(...),
+    conversation_id: str | None = Form(None),
+    origin_harbor: str | None = Form(None),
+    craft_profile: str | None = Form("motorized_boat"),
+    language_preference: str | None = Form("auto"),
+):
+    """End-to-end voice chat adapter around ORCA pipeline."""
+    # 1. Validate audio payload
+    try:
+        audio_bytes = await file.read()
+    except Exception as exc:
+        logger.error("Failed to read uploaded audio file: %s", exc)
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={"error": "INVALID_AUDIO", "detail": "Failed to read uploaded audio file."},
+        )
+
+    if not audio_bytes or len(audio_bytes) == 0:
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={"error": "INVALID_AUDIO", "detail": "Empty audio file provided."},
+        )
+
+    # 2. STT Transcription
+    filename = file.filename or "audio.wav"
+    content_type = file.content_type
+
+    try:
+        stt_result = transcribe_audio_bytes(
+            audio_bytes=audio_bytes,
+            filename=filename,
+            content_type=content_type,
+        )
+    except STTConfigurationError as exc:
+        logger.warning("Voice chat STT unconfigured: %s", exc)
+        return JSONResponse(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            content={"error": "STT_UNCONFIGURED", "detail": exc.message},
+        )
+    except STTServiceError as exc:
+        logger.error("Voice chat STT error: %s", exc)
+        return JSONResponse(
+            status_code=exc.status_code,
+            content={"error": "STT_ERROR", "detail": exc.message},
+        )
+    except Exception as exc:
+        logger.exception("Unexpected error in voice chat STT: %s", exc)
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={"error": "TRANSCRIPTION_FAILED", "detail": "An internal error occurred during STT transcription."},
+        )
+
+    transcript = stt_result.get("transcript", "").strip()
+    raw_language = stt_result.get("language", "unknown")
+    normalized_language = stt_result.get("normalized_language", "en")
+
+    if not transcript:
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={"error": "EMPTY_TRANSCRIPT", "detail": "Could not recognize any speech in the uploaded audio."},
+        )
+
+    # 3. ORCA Agent Pipeline Integration
+    effective_conv_id = conversation_id or str(uuid.uuid4())
+    run_id = str(uuid.uuid4())
+
+    effective_lang = (
+        normalized_language
+        if (language_preference in (None, "", "auto"))
+        else language_preference
+    )
+
+    user_context = {
+        "origin_harbor": origin_harbor,
+        "craft_profile": craft_profile or "motorized_boat",
+        "language_preference": effective_lang,
+    }
+
+    try:
+        chat_response = await agent_run_service.run_agent(
+            user_message=transcript,
+            conversation_id=effective_conv_id,
+            run_id=run_id,
+            user_context=user_context,
+        )
+    except _DuplicateRunError as exc:
+        envelope = Dev2ErrorEnvelope(
+            code="DUPLICATE_RUN",
+            message=f"Run ID {exc.run_id} already exists.",
+            hint="Generate a new UUID for each chat request.",
+            run_id=exc.run_id,
+        )
+        return JSONResponse(
+            status_code=status.HTTP_409_CONFLICT,
+            content=envelope.to_dict(),
+        )
+    except _LiveModeNotReadyError as exc:
+        envelope = Dev2ErrorEnvelope(
+            code="DATA_MODE_NOT_READY",
+            message=f"DATA_MODE={exc.data_mode} is not yet available.",
+            hint="Set DATA_MODE=SNAPSHOT in your environment.",
+            run_id=exc.run_id,
+        )
+        return JSONResponse(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            content=envelope.to_dict(),
+        )
+    except _AgentRuntimeUnavailableError as exc:
+        envelope = Dev2ErrorEnvelope(
+            code="AGENT_RUNTIME_UNAVAILABLE",
+            message="Agent runtime is not available.",
+            run_id=exc.run_id,
+        )
+        return JSONResponse(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            content=envelope.to_dict(),
+        )
+    except _AgentExecutionError as exc:
+        envelope = Dev2ErrorEnvelope(
+            code="AGENT_EXECUTION_FAILED",
+            message="SAMUDRA encountered an internal error while processing your query.",
+            run_id=exc.run_id,
+        )
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content=envelope.to_dict(),
+        )
+    except Exception as exc:
+        logger.exception("Unexpected error in ORCA voice agent execution: %s", exc)
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={"error": "AGENT_EXECUTION_FAILED", "detail": str(exc)},
+        )
+
+    if isinstance(chat_response, JSONResponse):
+        return chat_response
+
+    # 4. TTS Speech Synthesis
+    audio_base64: str | None = None
+    audio_format = "audio/wav"
+    try:
+        tts_result = synthesize_speech(
+            text=chat_response.answer,
+            language_code=chat_response.language or normalized_language,
+        )
+        audio_base64 = tts_result.get("audio_base64")
+        audio_format = tts_result.get("audio_format", "audio/wav")
+    except TTSConfigurationError as exc:
+        logger.warning("Voice chat TTS unconfigured: %s", exc)
+        chat_response.warnings.append(f"[TTS-UNCONFIGURED] Speech synthesis unavailable: {exc.message}")
+    except TTSServiceError as exc:
+        logger.error("Voice chat TTS service error: %s", exc)
+        chat_response.warnings.append(f"[TTS-ERROR] Speech synthesis degraded: {exc.message}")
+    except Exception as exc:
+        logger.exception("Unexpected error in voice chat TTS: %s", exc)
+        chat_response.warnings.append(f"[TTS-FAILED] Speech synthesis failed: {str(exc)}")
+
+    # 5. Return Complete VoiceChatResponse
+    return VoiceChatResponse(
+        run_id=chat_response.run_id,
+        conversation_id=chat_response.conversation_id,
+        language=chat_response.language,
+        intent=chat_response.intent,
+        answer=chat_response.answer,
+        recommendation=chat_response.recommendation,
+        confidence=chat_response.confidence,
+        evidence=chat_response.evidence,
+        map_layers=chat_response.map_layers,
+        trace=chat_response.trace,
+        warnings=chat_response.warnings,
+        suggested_followups=chat_response.suggested_followups,
+        transcript=transcript,
+        detected_language=raw_language,
+        audio_base64=audio_base64,
+        audio_format=audio_format,
+    )
+
 

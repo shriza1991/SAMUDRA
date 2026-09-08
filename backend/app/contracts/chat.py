@@ -178,3 +178,13 @@ class TranscribeResponse(BaseModel):
     language: str = Field(..., description="Raw language code returned by STT (e.g., 'mr-IN', 'hi-IN', 'en-IN')")
     normalized_language: str = Field(..., description="Normalized ISO-639-1 language code (e.g., 'mr', 'hi', 'en')")
 
+
+class VoiceChatResponse(ChatResponse):
+    transcript: str = Field(..., description="Transcribed mariner audio query")
+    detected_language: str = Field("en", description="Raw language code detected by STT")
+    audio_base64: Optional[str] = Field(
+        None, description="Base64-encoded synthesized speech audio (WAV format)"
+    )
+    audio_format: str = Field("audio/wav", description="MIME format of the synthesized audio")
+
+
