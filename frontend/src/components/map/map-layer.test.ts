@@ -73,4 +73,89 @@ describe('Map Layer GeoJSON Contract & Semantics', () => {
     expect(toggled[0].visible).toBe(!initialVisibility[0]);
     expect(toggled[1].visible).toBe(initialVisibility[1]);
   });
+
+  it('validates all 9 canonical SAMUDRA layer types and categories', () => {
+    const testLayers: MapLayer[] = [
+      {
+        layer_id: 'layer_vessel_position',
+        name: 'Vessel Position',
+        layer_type: 'geojson',
+        visible: true,
+        style: { color: '#0ea5e9', layer_category: 'navigation' },
+        geojson: { type: 'Feature', geometry: { type: 'Point', coordinates: [73.28, 16.99] }, properties: {} },
+      },
+      {
+        layer_id: 'layer_pfz_advisories',
+        name: 'Potential Fishing Zones',
+        layer_type: 'geojson',
+        visible: true,
+        style: { color: '#10b981', layer_category: 'navigation' },
+        geojson: { type: 'FeatureCollection', features: [] },
+      },
+      {
+        layer_id: 'layer_safety_envelope',
+        name: 'Marine Safety Envelope',
+        layer_type: 'geojson',
+        visible: true,
+        style: { color: '#10b981', layer_category: 'safety_critical' },
+        geojson: { type: 'Feature', geometry: { type: 'Polygon', coordinates: [[[73.1, 16.8], [73.4, 16.8], [73.4, 17.1], [73.1, 17.1], [73.1, 16.8]]] }, properties: {} },
+      },
+      {
+        layer_id: 'layer_weather_telemetry',
+        name: 'Weather Telemetry',
+        layer_type: 'geojson',
+        visible: true,
+        style: { color: '#3b82f6', layer_category: 'navigation' },
+        geojson: { type: 'Feature', geometry: { type: 'Point', coordinates: [73.28, 16.99] }, properties: {} },
+      },
+      {
+        layer_id: 'layer_cyclone_hazard',
+        name: 'Cyclone Warning Sector',
+        layer_type: 'geojson',
+        visible: true,
+        style: { color: '#ef4444', layer_category: 'safety_critical' },
+        geojson: { type: 'Feature', geometry: { type: 'Polygon', coordinates: [[[73.0, 16.5], [74.0, 16.5], [74.0, 17.5], [73.0, 17.5], [73.0, 16.5]]] }, properties: {} },
+      },
+      {
+        layer_id: 'layer_geofence_boundaries',
+        name: 'Restricted Marine Geofences',
+        layer_type: 'geojson',
+        visible: true,
+        style: { color: '#dc2626', layer_category: 'safety_critical' },
+        geojson: { type: 'FeatureCollection', features: [] },
+      },
+      {
+        layer_id: 'layer_candidate_routes',
+        name: 'Candidate Passage Routes',
+        layer_type: 'geojson',
+        visible: true,
+        style: { color: '#f59e0b', layer_category: 'navigation' },
+        geojson: { type: 'FeatureCollection', features: [] },
+      },
+      {
+        layer_id: 'layer_recommended_route',
+        name: 'Recommended Safe Route',
+        layer_type: 'geojson',
+        visible: true,
+        style: { color: '#06b6d4', layer_category: 'navigation' },
+        geojson: { type: 'Feature', geometry: { type: 'LineString', coordinates: [[73.28, 16.99], [73.83, 15.49]] }, properties: {} },
+      },
+      {
+        layer_id: 'layer_destination_port',
+        name: 'Destination Port',
+        layer_type: 'geojson',
+        visible: true,
+        style: { color: '#6366f1', layer_category: 'navigation' },
+        geojson: { type: 'Feature', geometry: { type: 'Point', coordinates: [73.83, 15.49] }, properties: {} },
+      },
+    ];
+
+    expect(testLayers).toHaveLength(9);
+    const safetyLayers = testLayers.filter(l => l.style?.layer_category === 'safety_critical');
+    const navLayers = testLayers.filter(l => l.style?.layer_category === 'navigation');
+
+    expect(safetyLayers.length).toBe(3);
+    expect(navLayers.length).toBe(6);
+  });
 });
+

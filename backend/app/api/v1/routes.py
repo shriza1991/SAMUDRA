@@ -523,17 +523,46 @@ async def get_base_layers():
     import json
     from pathlib import Path
 
-    # We can load these from data/fixtures/geospatial/ or similar if they exist.
-    # For prototype, if not available, return empty feature collection.
-    base_file = Path("data/fixtures/geospatial/restricted_zones.geojson")
-    if base_file.exists():
-        try:
-            with open(base_file, encoding="utf-8") as f:
-                return json.load(f)
-        except Exception:
-            pass
+    candidate_paths = [
+        Path("data/fixtures/geofences_india.geojson"),
+        Path("data/fixtures/geospatial/restricted_zones.geojson"),
+    ]
+    for path in candidate_paths:
+        if path.exists():
+            try:
+                with open(path, encoding="utf-8") as f:
+                    return json.load(f)
+            except Exception:
+                pass
 
-    return {"type": "FeatureCollection", "features": []}
+    return {
+        "type": "FeatureCollection",
+        "features": [
+            {
+                "type": "Feature",
+                "id": "POLY-NAV-GOA-01",
+                "properties": {
+                    "polygon_id": "POLY-NAV-GOA-01",
+                    "name": "Naval Firing Range Foxtrot (Goa Sector)",
+                    "polygon_type": "NAVAL_FIRING_RANGE",
+                    "is_hard_restriction": True,
+                    "restriction_level": "NO_GO",
+                },
+                "geometry": {
+                    "type": "Polygon",
+                    "coordinates": [
+                        [
+                            [73.15, 15.30],
+                            [73.35, 15.30],
+                            [73.35, 15.55],
+                            [73.15, 15.55],
+                            [73.15, 15.30],
+                        ]
+                    ],
+                },
+            }
+        ],
+    }
  
  
 @router.post(

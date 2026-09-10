@@ -68,6 +68,7 @@ from backend.app.contracts.chat import (
     Recommendation,
     RecommendationStatus,
 )
+from backend.app.domain.map_layers import generate_map_layers
 from backend.app.prompts import load_prompt
 
 
@@ -1997,10 +1998,16 @@ def response_composer_node(state: ORCAState) -> Dict[str, Any]:
         evidence_ids=evidence_ids,
     )
 
+    # Generate canonical GeoJSON map layers for client MapView
+    eval_state = dict(state)
+    eval_state["risk_assessment"] = recommendation
+    map_layers = generate_map_layers(eval_state)
+
     return {
         "response": answer,
         "risk_assessment": recommendation,
         "confidence": confidence,
+        "map_layers": map_layers,
         "suggested_followups": suggested_followups,
         "trace": trace,
     }
