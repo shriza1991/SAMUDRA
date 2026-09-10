@@ -1,0 +1,43 @@
+{
+  "scenario_id": "S2",
+  "name": "Elevated sea state",
+  "harbor": "Veraval",
+  "craft_profile": "motorized_boat",
+  "marine": {
+    "harbor": "Veraval",
+    "significant_wave_height_m": 2.2,
+    "swell_height_m": 1.8,
+    "swell_period_sec": 9.5,
+    "surface_current_knots": 1.8,
+    "sea_surface_temp_c": 27.2,
+    "observed_at": "2026-09-10T06:00:00Z",
+    "valid_to": "2030-01-01T00:00:00Z",
+    "source_name": "INCOIS Ocean State Forecast"
+  },
+  "weather": {
+    "harbor": "Veraval",
+    "wind_speed_knots": 21.0,
+    "wind_gust_knots": 26.0,
+    "wind_direction_deg": 220.0,
+    "visibility_km": 8.0,
+    "observed_at": "2026-09-10T06:00:00Z",
+    "valid_to": "2030-01-01T00:00:00Z",
+    "source_name": "IMD Coastal Weather Bulletin"
+  },
+  "hazard": {
+    "harbor": "Veraval",
+    "cyclone_warning_active": false,
+    "squall_alert": true,
+    "bulletin_id": "IMD-SQUALL-VERAVAL-01",
+    "severity": "ALERT",
+    "headline": "Squally weather watch off Saurashtra coast",
+    "valid_from": "2026-09-10T06:00:00Z",
+    "valid_to": "2030-01-01T00:00:00Z",
+    "source_name": "IMD Hazard Division"
+  },
+  "expected": {
+    "intent": "SAFETY",
+    "status": "CAUTION",
+    "confidence": "HIGH"
+  }
+}

@@ -1,79 +1,151 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "version": "1.0.0",
-  "description": "Registry of the 8 canonical benchmark test scenarios for SAMUDRA",
+  "version": "2.0.0",
+  "description": "Authoritative Registry of the 8 canonical benchmark evaluation scenarios (S1-S8) for SAMUDRA",
   "scenarios": [
     {
       "id": "S1",
       "name": "Normal favorable conditions",
+      "category": "SAFETY",
+      "intent": "SAFETY",
+      "harbor": "Ratnagiri",
       "fixture_file": "s1_normal_conditions.json",
-      "query": "Is it safe to go fishing off Mumbai coast for the next 6 hours?",
-      "harbor": "Mumbai",
+      "query": "Is it safe to go fishing off Ratnagiri coast for the next 6 hours?",
+      "multilingual_queries": {
+        "en": "Is it safe to go fishing off Ratnagiri coast for the next 6 hours?",
+        "mr": "उद्या सकाळी रत्नागिरीवरून समुद्रात मासेमारीसाठी जाणे सुरक्षित आहे का?",
+        "hi": "क्या कल सुबह रत्नागिरी से मछली पकड़ने जाना सुरक्षित है?"
+      },
       "expected_status": "GO",
-      "expected_confidence": "HIGH"
+      "expected_confidence": "HIGH",
+      "description": "Calm sea state (< 1.2m significant wave height) and light winds (< 12 knots) with no active hazards. Evaluates clear GO departure recommendation.",
+      "tags": ["safety", "go", "normal_conditions", "incois", "imd"]
     },
     {
       "id": "S2",
       "name": "Elevated sea state",
+      "category": "SAFETY",
+      "intent": "SAFETY",
+      "harbor": "Veraval",
       "fixture_file": "s2_elevated_sea_state.json",
-      "query": "Leaving Mangalore harbor at 05:00 on motorized fiber boat for 12 hours. Safe?",
-      "harbor": "Mangalore",
+      "query": "What is the sea condition off Veraval tomorrow? Can motorized craft operate?",
+      "multilingual_queries": {
+        "en": "What is the sea condition off Veraval tomorrow? Can motorized craft operate?",
+        "mr": "वेरावळ जवळ उद्या समुद्राची स्थिती कशी आहे? बोट घेऊन जाता येईल का?",
+        "hi": "वेरावल के पास कल समुद्र की स्थिति कैसी है? क्या नाव ले जा सकते हैं?"
+      },
       "expected_status": "CAUTION",
-      "expected_confidence": "HIGH"
+      "expected_confidence": "HIGH",
+      "description": "Moderate wave state (2.2m wave height, 22 kt wind gusts) approaching vessel safety threshold. Evaluates operational CAUTION recommendation.",
+      "tags": ["safety", "caution", "elevated_sea", "wave_threshold"]
     },
     {
       "id": "S3",
       "name": "Severe marine / cyclone alert",
+      "category": "HAZARDS",
+      "intent": "SAFETY",
+      "harbor": "Porbandar",
       "fixture_file": "s3_cyclone_alert.json",
-      "query": "Can we sail out from Paradip port tonight?",
-      "harbor": "Paradip",
+      "query": "क्या कल सुबह पोरबंदर से नाव लेकर निकल सकते हैं? कोई तूफान की चेतावनी है?",
+      "multilingual_queries": {
+        "en": "Can we sail out from Porbandar port tomorrow? Is there any cyclone warning?",
+        "mr": "उद्या पोरबंदर बंदरातून बोट नेणे सुरक्षित आहे का? वादळाचा इशारा आहे का?",
+        "hi": "क्या कल सुबह पोरबंदर से नाव लेकर निकल सकते हैं? कोई तूफान की चेतावनी है?"
+      },
       "expected_status": "NO_GO",
-      "expected_confidence": "HIGH"
+      "expected_confidence": "HIGH",
+      "description": "Active IMD deep depression / cyclonic storm alert with 3.6m waves and 38 kt gale gusts. Evaluates strict NO_GO safety override.",
+      "tags": ["hazard", "cyclone", "no_go", "red_alert", "imd"]
     },
     {
       "id": "S4",
       "name": "Missing / stale critical forecast",
+      "category": "DATA_QUALITY",
+      "intent": "SAFETY",
+      "harbor": "Malpe",
       "fixture_file": "s4_stale_forecast.json",
-      "query": "Is it safe to depart Kavaratti right now?",
-      "harbor": "Kavaratti",
+      "query": "Is it safe to depart from Malpe tomorrow morning on a fishing trip?",
+      "multilingual_queries": {
+        "en": "Is it safe to depart from Malpe tomorrow morning on a fishing trip?",
+        "mr": "उद्या सकाळी मालपेवरून मासेमारीसाठी निघणे सुरक्षित आहे का?",
+        "hi": "क्या कल सुबह मालपे से मछली पकड़ने के लिए निकलना सुरक्षित है?"
+      },
       "expected_status": "UNKNOWN",
-      "expected_confidence": "LOW"
+      "expected_confidence": "LOW",
+      "description": "Sensor telemetry is expired or essential wave data is absent, triggering conservative UNKNOWN recommendation with explicit degradation warnings.",
+      "tags": ["data_quality", "stale_data", "unknown", "degradation_warning"]
     },
     {
       "id": "S5",
       "name": "Nearest Potential Fishing Zone",
-      "fixture_file": "s5_nearest_pfz.json",
-      "query": "Where is the nearest Potential Fishing Zone today from Ratnagiri?",
+      "category": "PFZ",
+      "intent": "PFZ",
       "harbor": "Ratnagiri",
-      "expected_status": "INFORMATIONAL",
-      "expected_confidence": "HIGH"
+      "fixture_file": "s5_nearest_pfz.json",
+      "query": "Where is the nearest potential fishing zone from Ratnagiri today?",
+      "multilingual_queries": {
+        "en": "Where is the nearest potential fishing zone from Ratnagiri today?",
+        "mr": "रत्नागिरीवरून आज सर्वात जवळचा संभाव्य मासेमारी क्षेत्र (PFZ) कुठे आहे?",
+        "hi": "रत्नागिरी से आज सबसे नजदीकी संभावित मत्स्य पालन क्षेत्र (PFZ) कहाँ है?"
+      },
+      "expected_status": "GO",
+      "expected_confidence": "HIGH",
+      "description": "Discovers active INCOIS PFZ line features, calculates geodesic distance, compass bearing, water depth, and verifies passage transit safety.",
+      "tags": ["pfz", "fisheries", "incois", "geodesic_ranking"]
     },
     {
       "id": "S6",
       "name": "Route crosses restricted maritime polygon",
+      "category": "HAZARDS",
+      "intent": "HAZARDS",
+      "harbor": "Panaji",
       "fixture_file": "s6_geofence_breach.json",
-      "query": "Plan a direct fishing trip from Kochi harbor to Sector Delta.",
-      "harbor": "Kochi",
+      "query": "Can we fish near the naval firing range off Goa this weekend?",
+      "multilingual_queries": {
+        "en": "Can we fish near the naval firing range off Goa this weekend?",
+        "mr": "या शनिवार-रविवार आम्ही गोव्याच्या नौदल फायरिंग रेंजजवळ मासेमारी करू शकतो का?",
+        "hi": "क्या हम इस सप्ताहांत गोवा के नौसेना फायरिंग रेंज के पास मछली पकड़ सकते हैं?"
+      },
       "expected_status": "NO_GO",
-      "expected_confidence": "HIGH"
+      "expected_confidence": "HIGH",
+      "description": "Direct route intersects an active Naval Firing Range polygon. Deterministic geospatial engine flags the conflict and enforces NO_GO.",
+      "tags": ["geofence", "naval_range", "hard_restriction", "no_go", "gis"]
     },
     {
       "id": "S7",
       "name": "Safer alternative route comparison",
-      "fixture_file": "s7_safer_routes.json",
-      "query": "Which of these two coastal routes from Veraval to Porbandar has lower wave risk?",
+      "category": "ROUTE",
+      "intent": "ROUTE",
       "harbor": "Veraval",
-      "expected_status": "INFORMATIONAL",
-      "expected_confidence": "HIGH"
+      "fixture_file": "s7_safer_routes.json",
+      "query": "Which passage is safer to reach the outer fishing bank from Veraval?",
+      "multilingual_queries": {
+        "en": "Which passage is safer to reach the outer fishing bank from Veraval?",
+        "mr": "वेरावळवरून बाहेरील मासेमारी क्षेत्राकडे जाण्यासाठी कोणता मार्ग अधिक सुरक्षित आहे?",
+        "hi": "वेरावल से बाहरी मछली पकड़ने के क्षेत्र तक पहुँचने के लिए कौन सा रास्ता अधिक सुरक्षित है?"
+      },
+      "expected_status": "CAUTION",
+      "expected_confidence": "HIGH",
+      "description": "Compares an exposed open-sea passage (Route B, 2.1m waves) with a sheltered inshore channel (Route A, 1.3m waves) and recommends the safer option.",
+      "tags": ["route", "passage_comparison", "exposure_scoring", "navigation"]
     },
     {
       "id": "S8",
       "name": "Multi-lingual multi-turn follow-up",
+      "category": "MULTILINGUAL",
+      "intent": "SAFETY",
+      "harbor": "Ratnagiri",
       "fixture_file": "s8_multilingual_chat.json",
       "query": "रत्नागिरीवरून उद्या सकाळी मासेमारीला जाणे सुरक्षित आहे का?",
-      "harbor": "Ratnagiri",
-      "expected_status": "NO_GO",
-      "expected_confidence": "HIGH"
+      "multilingual_queries": {
+        "en": "Why was the northern passage marked as NO_GO even though wind is low?",
+        "mr": "रत्नागिरीवरून उद्या सकाळी मासेमारीला जाणे सुरक्षित आहे का?",
+        "hi": "क्या कल सुबह रत्नागिरी से समुद्र में जाना सुरक्षित रहेगा? कारण समझाइए।"
+      },
+      "expected_status": "GO",
+      "expected_confidence": "HIGH",
+      "description": "Processes conversational queries in Marathi and Hindi, evaluating language detection, localized response synthesis, and analytical explanation fidelity.",
+      "tags": ["multilingual", "marathi", "hindi", "localization", "multi_turn"]
     }
   ]
 }

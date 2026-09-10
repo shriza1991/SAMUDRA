@@ -1,0 +1,62 @@
+{
+  "scenario_id": "S7",
+  "name": "Safer alternative route comparison",
+  "harbor": "Veraval",
+  "destination": "Outer Bank",
+  "craft_profile": "mechanized_trawler",
+  "marine": {
+    "harbor": "Veraval",
+    "significant_wave_height_m": 1.8,
+    "swell_height_m": 1.4,
+    "swell_period_sec": 8.5,
+    "surface_current_knots": 1.5,
+    "sea_surface_temp_c": 27.8,
+    "observed_at": "2026-09-10T06:00:00Z",
+    "valid_to": "2030-01-01T00:00:00Z",
+    "source_name": "INCOIS Ocean State Forecast"
+  },
+  "weather": {
+    "harbor": "Veraval",
+    "wind_speed_knots": 17.0,
+    "wind_gust_knots": 22.0,
+    "wind_direction_deg": 225.0,
+    "visibility_km": 9.0,
+    "observed_at": "2026-09-10T06:00:00Z",
+    "valid_to": "2030-01-01T00:00:00Z",
+    "source_name": "IMD Coastal Weather Bulletin"
+  },
+  "hazard": {
+    "harbor": "Veraval",
+    "cyclone_warning_active": false,
+    "squall_alert": false,
+    "bulletin_id": "IMD-NORMAL-07",
+    "severity": "NORMAL",
+    "headline": "Moderate Coastal Conditions",
+    "valid_from": "2026-09-10T06:00:00Z",
+    "valid_to": "2030-01-01T00:00:00Z",
+    "source_name": "IMD Hazard Division"
+  },
+  "routes": [
+    {
+      "route_id": "ROUTE-A-INSHORE",
+      "name": "Inshore Sheltered Channel",
+      "distance_km": 26.5,
+      "max_wave_height_m": 1.3,
+      "exposure_score": 2.1,
+      "waypoints": [[73.28, 16.99], [73.20, 16.95]]
+    },
+    {
+      "route_id": "ROUTE-B-DIRECT",
+      "name": "Direct Open-Sea Channel",
+      "distance_km": 20.2,
+      "max_wave_height_m": 2.1,
+      "exposure_score": 4.8,
+      "waypoints": [[73.28, 16.99], [73.10, 16.92]]
+    }
+  ],
+  "expected": {
+    "intent": "ROUTE",
+    "status": "CAUTION",
+    "confidence": "HIGH"
+  }
+}

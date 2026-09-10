@@ -431,18 +431,10 @@ async def get_map_layer(layer_id: str):
 )
 async def list_scenarios():
     """Returns metadata for the 8 canonical evaluation scenarios (S1-S8)."""
-    return {
-        "scenarios": [
-            {"id": "S1", "name": "Normal conditions", "intent": "GO_NO_GO_SAFETY"},
-            {"id": "S2", "name": "Elevated sea state", "intent": "GO_NO_GO_SAFETY"},
-            {"id": "S3", "name": "Severe marine/cyclone warning", "intent": "GO_NO_GO_SAFETY"},
-            {"id": "S4", "name": "Missing/stale critical forecast", "intent": "GO_NO_GO_SAFETY"},
-            {"id": "S5", "name": "Nearest PFZ", "intent": "NEAREST_PFZ"},
-            {"id": "S6", "name": "Route crosses restricted polygon", "intent": "HAZARD_BOUNDARY"},
-            {"id": "S7", "name": "Safer alternative route", "intent": "SAFER_ROUTE"},
-            {"id": "S8", "name": "Hindi/Marathi multi-turn follow-up", "intent": "MULTI_TURN"},
-        ]
-    }
+    from backend.app.scenarios.registry import get_scenario_manifest
+
+    manifest = get_scenario_manifest()
+    return {"scenarios": [item.model_dump() for item in manifest]}
 
 
 @router.get(
@@ -458,6 +450,41 @@ async def list_scenarios():
 async def list_demo_scenarios():
     """Canonical alias for /scenarios — returns the same 8 scenario descriptors."""
     return await list_scenarios()
+
+
+@router.get(
+    "/scenarios/{scenario_id}",
+    tags=["Evaluation & Demo"],
+    summary="Get detailed scenario definition",
+)
+async def get_scenario_details(scenario_id: str):
+    """Retrieve full scenario definition, inputs, and expected outcomes."""
+    from backend.app.scenarios.registry import get_scenario
+
+    try:
+        scenario = get_scenario(scenario_id)
+        return scenario.model_dump()
+    except KeyError:
+        return JSONResponse(status_code=404, content={"error": f"Scenario '{scenario_id}' not found."})
+
+
+@router.post(
+    "/scenarios/{scenario_id}/run",
+    tags=["Evaluation & Demo"],
+    summary="Execute evaluation scenario through SAMUDRA pipeline",
+)
+async def run_scenario_endpoint(scenario_id: str, language: str | None = None):
+    """Executes a scenario deterministically through the LangGraph pipeline and returns the evaluation audit."""
+    from backend.app.scenarios.registry import get_scenario
+    from backend.app.scenarios.runner import ScenarioRunner
+
+    try:
+        scenario = get_scenario(scenario_id)
+    except KeyError:
+        return JSONResponse(status_code=404, content={"error": f"Scenario '{scenario_id}' not found."})
+
+    result = ScenarioRunner.run(scenario, language=language)
+    return result.model_dump()
 
 
 @router.get(

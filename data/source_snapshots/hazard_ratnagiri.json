@@ -4,10 +4,10 @@
     "provider": "IMD",
     "source_name": "IMD Hazard Snapshot",
     "captured_at": "2026-09-06T04:20:06.302168+00:00",
-    "valid_from": "2026-09-06T04:20:06.302168+00:00",
-    "valid_to": "2026-09-09T04:20:06.302168+00:00",
+    "valid_from": "2026-01-01T00:00:00+00:00",
+    "valid_to": "2030-01-01T00:00:00+00:00",
     "schema_version": "1.0.0",
-    "checksum": "a0cd41722ae93654fa086d19c69af0d47e58178f914853e2c0260eb8b2113367",
+    "checksum": "9ee2717379745e64637707da13cbbe9a6c57eb6af975d260c7323f54245f3f92",
     "reference_url": "https://example.com/snapshot",
     "status": "SIMULATED"
   },
@@ -18,8 +18,8 @@
     "bulletin_id": "SNAP-IMD-001",
     "severity": "NORMAL",
     "headline": "No active storm hazard (Snapshot Fixture)",
-    "valid_from": "2026-09-06T04:20:06.302168+00:00",
-    "valid_to": "2026-09-09T04:20:06.302168+00:00",
+    "valid_from": "2026-01-01T00:00:00+00:00",
+    "valid_to": "2030-01-01T00:00:00+00:00",
     "source_name": "IMD Cyclone Warning Division Snapshot Fixture",
     "source_url": "https://mausam.imd.gov.in/hazards"
   }

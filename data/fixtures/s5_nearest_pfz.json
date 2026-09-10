@@ -1,0 +1,56 @@
+{
+  "scenario_id": "S5",
+  "name": "Nearest Potential Fishing Zone",
+  "harbor": "Ratnagiri",
+  "craft_profile": "motorized_boat",
+  "marine": {
+    "harbor": "Ratnagiri",
+    "significant_wave_height_m": 1.0,
+    "swell_height_m": 0.7,
+    "swell_period_sec": 7.0,
+    "surface_current_knots": 0.9,
+    "sea_surface_temp_c": 28.1,
+    "observed_at": "2026-09-10T06:00:00Z",
+    "valid_to": "2030-01-01T00:00:00Z",
+    "source_name": "INCOIS Ocean State Forecast"
+  },
+  "weather": {
+    "harbor": "Ratnagiri",
+    "wind_speed_knots": 11.0,
+    "wind_gust_knots": 14.0,
+    "wind_direction_deg": 240.0,
+    "visibility_km": 10.0,
+    "observed_at": "2026-09-10T06:00:00Z",
+    "valid_to": "2030-01-01T00:00:00Z",
+    "source_name": "IMD Coastal Weather Bulletin"
+  },
+  "hazard": {
+    "harbor": "Ratnagiri",
+    "cyclone_warning_active": false,
+    "squall_alert": false,
+    "bulletin_id": "IMD-NORMAL-05",
+    "severity": "NORMAL",
+    "headline": "Calm Coastal Conditions",
+    "valid_from": "2026-09-10T06:00:00Z",
+    "valid_to": "2030-01-01T00:00:00Z",
+    "source_name": "IMD Hazard Division"
+  },
+  "pfz_features": [
+    {
+      "candidate_id": "PFZ-INCOIS-RTN-01",
+      "latitude": 16.95,
+      "longitude": 73.10,
+      "distance_nautical_miles": 14.2,
+      "bearing_degrees": 278.0,
+      "water_depth_m": 42.0,
+      "sea_surface_temp_c": 28.1,
+      "chlorophyll_mg_m3": 1.65,
+      "rank": 1
+    }
+  ],
+  "expected": {
+    "intent": "PFZ",
+    "status": "GO",
+    "confidence": "HIGH"
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "scenario_id": "S1",
+  "name": "Normal favorable conditions",
+  "harbor": "Ratnagiri",
+  "craft_profile": "motorized_boat",
+  "marine": {
+    "harbor": "Ratnagiri",
+    "significant_wave_height_m": 0.9,
+    "swell_height_m": 0.6,
+    "swell_period_sec": 6.5,
+    "surface_current_knots": 0.8,
+    "sea_surface_temp_c": 28.4,
+    "observed_at": "2026-09-10T06:00:00Z",
+    "valid_to": "2030-01-01T00:00:00Z",
+    "source_name": "INCOIS Ocean State Forecast"
+  },
+  "weather": {
+    "harbor": "Ratnagiri",
+    "wind_speed_knots": 10.0,
+    "wind_gust_knots": 13.0,
+    "wind_direction_deg": 250.0,
+    "visibility_km": 12.0,
+    "observed_at": "2026-09-10T06:00:00Z",
+    "valid_to": "2030-01-01T00:00:00Z",
+    "source_name": "IMD Coastal Weather Bulletin"
+  },
+  "hazard": {
+    "harbor": "Ratnagiri",
+    "cyclone_warning_active": false,
+    "squall_alert": false,
+    "bulletin_id": "IMD-NORMAL-01",
+    "severity": "NORMAL",
+    "headline": "Calm coastal sea state",
+    "valid_from": "2026-09-10T06:00:00Z",
+    "valid_to": "2030-01-01T00:00:00Z",
+    "source_name": "IMD Hazard Division"
+  },
+  "expected": {
+    "intent": "SAFETY",
+    "status": "GO",
+    "confidence": "HIGH"
+  }
+}

@@ -1,0 +1,112 @@
+{
+  "type": "FeatureCollection",
+  "name": "Indian Maritime Geofences & Boundaries",
+  "crs": {
+    "type": "name",
+    "properties": {
+      "name": "urn:ogc:def:crs:OGC:1.3:CRS84"
+    }
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "id": "POLY-NAV-GOA-01",
+      "properties": {
+        "polygon_id": "POLY-NAV-GOA-01",
+        "name": "Naval Firing Range Foxtrot (Goa Sector)",
+        "polygon_type": "NAVAL_FIRING_RANGE",
+        "is_hard_restriction": true,
+        "authority": "Indian Navy / Coast Guard",
+        "restriction_level": "NO_GO",
+        "description": "Active artillery and live-fire defense training sector. All civilian vessels and fishing craft strictly prohibited."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [73.15, 15.30],
+            [73.35, 15.30],
+            [73.35, 15.55],
+            [73.15, 15.55],
+            [73.15, 15.30]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "POLY-MPA-MALVAN-02",
+      "properties": {
+        "polygon_id": "POLY-MPA-MALVAN-02",
+        "name": "Malvan Marine Sanctuary Core Conservation Zone",
+        "polygon_type": "MPA_SANCTUARY_CORE",
+        "is_hard_restriction": true,
+        "authority": "Ministry of Environment, Forest and Climate Change",
+        "restriction_level": "NO_GO_TRAWLING",
+        "description": "Core coral reef and marine ecosystem sanctuary. Commercial bottom trawling and anchoring barred."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [73.40, 16.00],
+            [73.55, 16.00],
+            [73.55, 16.12],
+            [73.40, 16.12],
+            [73.40, 16.00]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "POLY-IMBL-GUJ-01",
+      "properties": {
+        "polygon_id": "POLY-IMBL-GUJ-01",
+        "name": "International Maritime Boundary Line Advisory Zone (Gujarat Sector)",
+        "polygon_type": "IMBL_ADVISORY_BORDER",
+        "is_hard_restriction": false,
+        "authority": "Indian Coast Guard Maritime Surveillance",
+        "restriction_level": "ADVISORY_ALERT",
+        "description": "Sensitive international border proximity corridor. Mariners receive alert to prevent accidental border crossing."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [67.50, 22.00],
+            [68.50, 22.00],
+            [68.50, 23.50],
+            [67.50, 23.50],
+            [67.50, 22.00]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "POLY-EEZ-WEST-01",
+      "properties": {
+        "polygon_id": "POLY-EEZ-WEST-01",
+        "name": "Indian Exclusive Economic Zone (West Coast)",
+        "polygon_type": "EEZ_BOUNDARY",
+        "is_hard_restriction": false,
+        "authority": "Government of India",
+        "restriction_level": "INFORMATIONAL",
+        "description": "Sovereign 200 nm economic advisory boundary for Indian registered vessels."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [68.00, 14.00],
+            [72.00, 14.00],
+            [72.00, 20.00],
+            [68.00, 20.00],
+            [68.00, 14.00]
+          ]
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,43 @@
+{
+  "scenario_id": "S3",
+  "name": "Severe marine / cyclone alert",
+  "harbor": "Porbandar",
+  "craft_profile": "motorized_boat",
+  "marine": {
+    "harbor": "Porbandar",
+    "significant_wave_height_m": 3.6,
+    "swell_height_m": 2.9,
+    "swell_period_sec": 11.0,
+    "surface_current_knots": 2.8,
+    "sea_surface_temp_c": 26.5,
+    "observed_at": "2026-09-10T06:00:00Z",
+    "valid_to": "2030-01-01T00:00:00Z",
+    "source_name": "INCOIS Ocean State Forecast"
+  },
+  "weather": {
+    "harbor": "Porbandar",
+    "wind_speed_knots": 34.0,
+    "wind_gust_knots": 42.0,
+    "wind_direction_deg": 200.0,
+    "visibility_km": 4.0,
+    "observed_at": "2026-09-10T06:00:00Z",
+    "valid_to": "2030-01-01T00:00:00Z",
+    "source_name": "IMD Coastal Weather Bulletin"
+  },
+  "hazard": {
+    "harbor": "Porbandar",
+    "cyclone_warning_active": true,
+    "squall_alert": true,
+    "bulletin_id": "IMD-CYCLONE-ARABIAN-03",
+    "severity": "WARNING",
+    "headline": "Cyclonic Storm Advisory: Red Alert for Gujarat Maritime Coast",
+    "valid_from": "2026-09-10T06:00:00Z",
+    "valid_to": "2030-01-01T00:00:00Z",
+    "source_name": "IMD Cyclone Warning Division"
+  },
+  "expected": {
+    "intent": "SAFETY",
+    "status": "NO_GO",
+    "confidence": "HIGH"
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "scenario_id": "S8",
+  "name": "Multi-lingual multi-turn follow-up",
+  "harbor": "Ratnagiri",
+  "craft_profile": "motorized_boat",
+  "marine": {
+    "harbor": "Ratnagiri",
+    "significant_wave_height_m": 1.0,
+    "swell_height_m": 0.7,
+    "swell_period_sec": 6.5,
+    "surface_current_knots": 0.8,
+    "sea_surface_temp_c": 28.3,
+    "observed_at": "2026-09-10T06:00:00Z",
+    "valid_to": "2030-01-01T00:00:00Z",
+    "source_name": "INCOIS Ocean State Forecast"
+  },
+  "weather": {
+    "harbor": "Ratnagiri",
+    "wind_speed_knots": 10.0,
+    "wind_gust_knots": 13.0,
+    "wind_direction_deg": 250.0,
+    "visibility_km": 11.0,
+    "observed_at": "2026-09-10T06:00:00Z",
+    "valid_to": "2030-01-01T00:00:00Z",
+    "source_name": "IMD Coastal Weather Bulletin"
+  },
+  "hazard": {
+    "harbor": "Ratnagiri",
+    "cyclone_warning_active": false,
+    "squall_alert": false,
+    "bulletin_id": "IMD-NORMAL-08",
+    "severity": "NORMAL",
+    "headline": "Normal Coastal Weather",
+    "valid_from": "2026-09-10T06:00:00Z",
+    "valid_to": "2030-01-01T00:00:00Z",
+    "source_name": "IMD Hazard Division"
+  },
+  "multilingual_queries": {
+    "en": "Why was the northern passage marked as NO_GO even though wind is low?",
+    "mr": "रत्नागिरीवरून उद्या सकाळी मासेमारीला जाणे सुरक्षित आहे का?",
+    "hi": "क्या कल सुबह रत्नागिरी से समुद्र में जाना सुरक्षित रहेगा? कारण समझाइए।"
+  },
+  "expected": {
+    "intent": "SAFETY",
+    "status": "GO",
+    "confidence": "HIGH"
+  }
+}

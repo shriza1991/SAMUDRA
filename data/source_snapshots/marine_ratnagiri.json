@@ -4,10 +4,10 @@
     "provider": "INCOIS",
     "source_name": "INCOIS OSF Snapshot",
     "captured_at": "2026-09-06T04:20:06.297940+00:00",
-    "valid_from": "2026-09-06T04:20:06.297940+00:00",
-    "valid_to": "2026-09-09T04:20:06.297940+00:00",
+    "valid_from": "2026-01-01T00:00:00+00:00",
+    "valid_to": "2030-01-01T00:00:00+00:00",
     "schema_version": "1.0.0",
-    "checksum": "7d19d28cb143fe6b9916b2592591a071787a45f749587e57d3d9a0b4e16c2eb6",
+    "checksum": "6df67a23ddc963bc4be53ca123cc096b2374ae08016e86ec191f841fda57257a",
     "reference_url": "https://example.com/snapshot",
     "status": "SIMULATED"
   },
@@ -19,7 +19,7 @@
     "surface_current_knots": 1.0,
     "sea_surface_temp_c": 28.0,
     "observed_at": "2026-09-06T03:20:06.297940+00:00",
-    "valid_to": "2026-09-09T04:20:06.297940+00:00",
+    "valid_to": "2030-01-01T00:00:00+00:00",
     "source_name": "INCOIS OSF Snapshot Fixture",
     "source_url": "https://incois.gov.in/portal/osf"
   }
