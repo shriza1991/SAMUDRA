@@ -22,11 +22,40 @@ export interface ChatRequest {
   user_context?: UserContext;
 }
 
+export interface ThresholdComparison {
+  metric_name: string;
+  observed_value: any;
+  threshold_value: any;
+  operator: string;
+  unit?: string;
+  exceeded: boolean;
+  impact: string;
+  description: string;
+}
+
+export interface DataProvenance {
+  provider_name: string;
+  source_name: string;
+  source_url?: string;
+  observed_time?: string;
+  valid_from?: string;
+  valid_to?: string;
+  data_mode?: string;
+  is_stale?: boolean;
+  quality_flags?: string[];
+}
+
 export interface Recommendation {
   status: RecommendationStatus;
   summary: string;
   decisive_factors: string[];
+  non_decisive_factors?: string[];
+  threshold_comparisons?: ThresholdComparison[];
   next_action: string;
+  confidence?: Confidence;
+  provenance?: DataProvenance[];
+  evidence_ids?: string[];
+  warnings?: string[];
 }
 
 export interface Confidence {

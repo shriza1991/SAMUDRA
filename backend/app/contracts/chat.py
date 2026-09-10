@@ -50,6 +50,42 @@ class ChatRequest(BaseModel):
     )
 
 
+class ThresholdComparison(BaseModel):
+    """Deterministic threshold check performed by domain risk engine."""
+
+    metric_name: str = Field(..., description="Environmental or physical parameter identifier")
+    observed_value: Any = Field(..., description="Numerical or boolean value observed from sensors/forecasts")
+    threshold_value: Any = Field(..., description="Operational safety limit for craft profile")
+    operator: str = Field(">", description="Comparison operator applied (e.g., '>', '>=', '==', '<=')")
+    unit: Optional[str] = Field(None, description="Physical unit of measurement")
+    exceeded: bool = Field(False, description="True if observed parameter breaches the safe operating limit")
+    impact: str = Field("SAFE", description="Decision consequence: 'NO_GO_TRIGGER', 'CAUTION_TRIGGER', 'SAFE', or 'UNKNOWN'")
+    description: str = Field("", description="Human-readable explanation of threshold comparison")
+
+
+class DataProvenance(BaseModel):
+    """Data provenance and validity envelope for underlying feeds."""
+
+    provider_name: str = Field(..., description="Originating agency (e.g., 'INCOIS', 'IMD', 'SAMUDRA')")
+    source_name: str = Field(..., description="Specific feed, bulletin, or model designation")
+    source_url: Optional[str] = Field(None, description="Direct URL to official bulletin or portal")
+    observed_time: Optional[str] = Field(None, description="Observation / telemetry timestamp (ISO-8601 UTC)")
+    valid_from: Optional[str] = Field(None, description="Validity start timestamp (ISO-8601 UTC)")
+    valid_to: Optional[str] = Field(None, description="Validity expiration timestamp (ISO-8601 UTC)")
+    data_mode: Optional[str] = Field("SNAPSHOT", description="Data resolution mode: 'LIVE', 'HYBRID', 'SNAPSHOT', 'M2_CONTRACT_MOCK'")
+    is_stale: bool = Field(False, description="True if observation time or valid_to window indicates stale data")
+    quality_flags: List[str] = Field(default_factory=list, description="Quality and verification badges")
+
+
+class Confidence(BaseModel):
+    level: ConfidenceLevel = Field(
+        ..., description="Derived confidence based on source availability and freshness"
+    )
+    reasons: List[str] = Field(
+        default_factory=list, description="Justification for confidence rating"
+    )
+
+
 class Recommendation(BaseModel):
     status: RecommendationStatus = Field(
         ..., description="Deterministic safety evaluation state"
@@ -59,17 +95,31 @@ class Recommendation(BaseModel):
         default_factory=list,
         description="List of key numerical or environmental drivers behind the status",
     )
+    non_decisive_factors: List[str] = Field(
+        default_factory=list,
+        description="Relevant contextual parameters that remained within safe limits",
+    )
+    threshold_comparisons: List[ThresholdComparison] = Field(
+        default_factory=list,
+        description="Structured threshold comparisons driving the decision",
+    )
     next_action: str = Field(
         ..., description="Direct actionable directive for the mariner or user"
     )
-
-
-class Confidence(BaseModel):
-    level: ConfidenceLevel = Field(
-        ..., description="Derived confidence based on source availability and freshness"
+    confidence: Optional[Confidence] = Field(
+        None, description="Derived confidence based on source availability and freshness"
     )
-    reasons: List[str] = Field(
-        default_factory=list, description="Justification for confidence rating"
+    provenance: List[DataProvenance] = Field(
+        default_factory=list,
+        description="Origin, timestamps, and validity windows for underlying data feeds",
+    )
+    evidence_ids: List[str] = Field(
+        default_factory=list,
+        description="IDs of linked evidence items supporting this decision",
+    )
+    warnings: List[str] = Field(
+        default_factory=list,
+        description="Warnings when critical data is missing, degraded, or stale",
     )
 
 

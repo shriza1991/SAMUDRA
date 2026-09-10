@@ -257,15 +257,22 @@ class ProviderToolAdapter:
                 status=payload.status,
                 summary=payload.summary,
                 decisive_factors=payload.decisive_factors,
+                non_decisive_factors=payload.non_decisive_factors,
+                threshold_comparisons=payload.threshold_comparisons,
                 next_action=payload.recommended_action,
+                provenance=payload.provenance,
+                evidence_ids=payload.evidence_ids,
+                warnings=payload.warnings,
             )
             confidence = Confidence(
                 level=payload.confidence_level,
                 reasons=payload.confidence_reasons,
             )
+            rec.confidence = confidence
 
             evidence = [
                 EvidenceItem(
+                    evidence_id="EV-RISK-STATUS-01",
                     source_name="SAMUDRA Risk Engine (Dev 4)",
                     retrieved_at=datetime.now(timezone.utc).isoformat(),
                     metric_name="risk_status",

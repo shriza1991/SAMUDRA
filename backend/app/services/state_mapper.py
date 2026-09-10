@@ -76,8 +76,9 @@ def map_state_to_response(
     # ------------------------------------------------------------------
     # Recommendation — SAFETY INVARIANT: default to UNKNOWN, never GO
     # ------------------------------------------------------------------
-    recommendation: Recommendation = state.get("risk_assessment")  # type: ignore[assignment]
-    if recommendation is None:
+    raw_risk = state.get("risk_assessment")
+    recommendation: Recommendation
+    if raw_risk is None:
         recommendation = Recommendation(
             status=RecommendationStatus.UNKNOWN,
             summary=(
@@ -85,10 +86,37 @@ def map_state_to_response(
                 "No authoritative assessment is available for this query."
             ),
             decisive_factors=["Insufficient data to evaluate departure safety."],
+            non_decisive_factors=[],
+            threshold_comparisons=[],
             next_action=(
                 "Hold departure until authoritative marine and weather data "
                 "can be retrieved and evaluated."
             ),
+            warnings=state.get("warnings") or [],
+        )
+    elif isinstance(raw_risk, Recommendation):
+        recommendation = raw_risk
+    elif hasattr(raw_risk, "status") and hasattr(raw_risk, "recommended_action"):
+        # Convert RiskAssessmentPayload to Recommendation
+        recommendation = Recommendation(
+            status=raw_risk.status,
+            summary=raw_risk.summary,
+            decisive_factors=raw_risk.decisive_factors,
+            non_decisive_factors=getattr(raw_risk, "non_decisive_factors", []),
+            threshold_comparisons=getattr(raw_risk, "threshold_comparisons", []),
+            next_action=raw_risk.recommended_action,
+            provenance=getattr(raw_risk, "provenance", []),
+            evidence_ids=getattr(raw_risk, "evidence_ids", []),
+            warnings=getattr(raw_risk, "warnings", []),
+        )
+    elif isinstance(raw_risk, dict):
+        recommendation = Recommendation(**raw_risk)
+    else:
+        recommendation = Recommendation(
+            status=RecommendationStatus.UNKNOWN,
+            summary="Unrecognized risk evaluation format.",
+            decisive_factors=["Internal schema conversion fallback."],
+            next_action="Hold departure and verify with official coastal sources.",
         )
 
     # ------------------------------------------------------------------

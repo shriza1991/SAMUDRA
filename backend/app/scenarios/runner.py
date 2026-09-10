@@ -174,65 +174,14 @@ class ScenarioRiskEngine:
         weather: WeatherConditionsPayload,
         hazard: HazardBulletinPayload,
     ) -> RiskAssessmentPayload:
-        # 1. Check for stale data
-        if self.scenario.inputs.is_stale or self.scenario.expected.status == RecommendationStatus.UNKNOWN:
-            return RiskAssessmentPayload(
-                status=RecommendationStatus.UNKNOWN,
-                summary="Sensor and forecast data are expired or incomplete. Safe departure evaluation cannot be completed.",
-                decisive_factors=[
-                    "Missing or expired sensor telemetry (valid_to exceeded).",
-                    "Authoritative conditions unavailable.",
-                ],
-                recommended_action="Hold departure. Verify with port authorities before navigating.",
-                confidence_level=ConfidenceLevel.LOW,
-                confidence_reasons=["Telemetry validity window expired"],
-                warnings=["DEGRADED_DATA: Stale forecast received from coastal telemetry."],
-            )
+        from backend.app.domain.risk_engine import DeterministicRiskEngine
 
-        # 2. Check for active cyclone / severe hazard
-        if hazard.cyclone_warning_active or marine.significant_wave_height_m >= 3.0:
-            return RiskAssessmentPayload(
-                status=RecommendationStatus.NO_GO,
-                summary=f"Severe marine conditions detected ({marine.significant_wave_height_m}m waves, active cyclone watch).",
-                decisive_factors=[
-                    f"Active IMD cyclone alert: {hazard.headline}",
-                    f"Significant wave height: {marine.significant_wave_height_m}m",
-                    f"Sustained wind: {weather.wind_speed_knots} knots",
-                ],
-                recommended_action="Remain moored in port. Do not navigate under any circumstances.",
-                confidence_level=ConfidenceLevel.HIGH,
-                confidence_reasons=["Deterministic safety threshold exceeded"],
-                warnings=["Severe weather warning active across sector."],
-            )
-
-        # 3. Check for elevated sea state / caution
-        if marine.significant_wave_height_m >= 1.5 or weather.wind_speed_knots >= 20.0 or hazard.squall_alert:
-            return RiskAssessmentPayload(
-                status=RecommendationStatus.CAUTION,
-                summary=f"Moderate conditions require operational caution ({marine.significant_wave_height_m}m waves, {weather.wind_speed_knots} kt wind).",
-                decisive_factors=[
-                    f"Significant wave height: {marine.significant_wave_height_m}m (Caution threshold 1.5m - 2.5m)",
-                    f"Wind speed: {weather.wind_speed_knots} knots",
-                ],
-                recommended_action="Operate with caution within 5 nm of coastline. Maintain continuous VHF watch.",
-                confidence_level=ConfidenceLevel.HIGH,
-                confidence_reasons=["Deterministic caution ceiling rule"],
-                warnings=["Moderate sea state requires continuous vigilance."],
-            )
-
-        # 4. Calm / Normal GO
-        return RiskAssessmentPayload(
-            status=RecommendationStatus.GO,
-            summary="Conditions are calm and safe for coastal voyage departure.",
-            decisive_factors=[
-                f"Significant wave height: {marine.significant_wave_height_m}m (< 1.2m ceiling)",
-                f"Sustained wind: {weather.wind_speed_knots} knots (< 15 kt ceiling)",
-                "No active severe weather bulletins",
-            ],
-            recommended_action="Proceed with planned voyage under standard safety protocols.",
-            confidence_level=ConfidenceLevel.HIGH,
-            confidence_reasons=["All parameters strictly within safe operating envelope"],
-            warnings=[],
+        return DeterministicRiskEngine.evaluate(
+            context=context,
+            marine=marine,
+            weather=weather,
+            hazard=hazard,
+            data_mode="SNAPSHOT",
         )
 
 

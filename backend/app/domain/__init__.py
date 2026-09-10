@@ -11,3 +11,28 @@ Must NOT implement:
 - Frontend UI components
 - LLM prompts
 """
+
+from backend.app.connectors.harbors import HARBOR_COORDINATES
+from backend.app.domain.marine_dataset import (
+    IN_MEMORY_MARINE_DATASET,
+    get_hazard_record,
+    get_marine_record,
+    get_weather_record,
+)
+from backend.app.domain.risk_engine import (
+    CRAFT_THRESHOLDS,
+    DeterministicRiskEngine,
+    evaluate_deterministic_risk,
+)
+
+__all__ = [
+    "HARBOR_COORDINATES",
+    "IN_MEMORY_MARINE_DATASET",
+    "get_marine_record",
+    "get_weather_record",
+    "get_hazard_record",
+    "CRAFT_THRESHOLDS",
+    "DeterministicRiskEngine",
+    "evaluate_deterministic_risk",
+]
+

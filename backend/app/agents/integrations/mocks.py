@@ -34,7 +34,12 @@ from backend.app.agents.integrations.dev4 import (
     RiskAssessmentPayload,
     RouteExposurePayload,
 )
-from backend.app.contracts.chat import ConfidenceLevel, RecommendationStatus
+from backend.app.contracts.chat import (
+    ConfidenceLevel,
+    DataProvenance,
+    RecommendationStatus,
+    ThresholdComparison,
+)
 
 
 # =============================================================================
@@ -58,7 +63,7 @@ class MockMarineConditionsProvider:
             surface_current_knots=1.2,
             sea_surface_temp_c=28.2,
             observed_at=now_iso,
-            valid_to="2026-09-08T18:00:00Z",
+            valid_to="2030-01-01T00:00:00Z",
             source_name="INCOIS OSF Connector (M2 Contract Mock)",
             source_url="https://incois.gov.in/portal/osf_contract_mock",
         )
@@ -80,7 +85,7 @@ class MockWeatherProvider:
             wind_direction_deg=245.0,
             visibility_km=10.0,
             observed_at=now_iso,
-            valid_to="2026-09-08T18:00:00Z",
+            valid_to="2030-01-01T00:00:00Z",
             source_name="IMD Weather Connector (M2 Contract Mock)",
             source_url="https://mausam.imd.gov.in/contract_mock",
         )
@@ -112,7 +117,7 @@ class MockHazardProvider:
             severity=severity,
             headline="Simulated Coastal Weather Watch",
             valid_from=now_iso,
-            valid_to="2026-09-08T18:00:00Z",
+            valid_to="2030-01-01T00:00:00Z",
             source_name="IMD Hazard Division (M2 Contract Mock)",
             source_url="https://mausam.imd.gov.in/hazard_mock",
         )
@@ -129,7 +134,7 @@ class MockPFZSourceProvider:
                 {"id": "PFZ-F2", "lat": 17.05, "lon": 73.05, "sst_grad": 1.1, "chlorophyll": 1.9},
             ],
             bulletin_date=now_iso,
-            valid_to="2026-09-08T18:00:00Z",
+            valid_to="2030-01-01T00:00:00Z",
             source_name="INCOIS PFZ Connector (M2 Contract Mock)",
             source_url="https://incois.gov.in/pfz_source_mock",
         )
@@ -174,42 +179,37 @@ class MockRiskEngine:
                     f"Authoritative evaluation status: {status.value}",
                     f"Vessel profile: {context.craft_profile}",
                 ],
+                non_decisive_factors=[],
+                threshold_comparisons=[
+                    ThresholdComparison(
+                        metric_name="override_status",
+                        observed_value=status.value,
+                        threshold_value=status.value,
+                        operator="==",
+                        unit="status",
+                        exceeded=(status in (RecommendationStatus.NO_GO, RecommendationStatus.CAUTION)),
+                        impact=f"{status.value}_TRIGGER",
+                        description=f"Status explicitly set to {status.value} for test fixture.",
+                    )
+                ],
                 recommended_action=action,
                 confidence_level=ConfidenceLevel.LOW if status == RecommendationStatus.UNKNOWN else ConfidenceLevel.HIGH,
                 confidence_reasons=["Deterministic Dev 4 test double evaluation"],
+                provenance=[
+                    DataProvenance(
+                        provider_name="SAMUDRA Risk Engine",
+                        source_name="Dev 4 Deterministic Engine (Mock)",
+                        data_mode="M2_CONTRACT_MOCK",
+                    )
+                ],
+                evidence_ids=["EV-RISK-STATUS-01"],
                 warnings=["M2 Contract Mock evaluation — not for real navigation."],
             )
 
-        # Deterministic rules matching Dev 4 expected logic
-        if hazard.cyclone_warning_active or marine.significant_wave_height_m > 2.5:
-            status = RecommendationStatus.NO_GO
-            summary = f"Simulated conditions exceed safety ceiling: wave height {marine.significant_wave_height_m}m."
-            action = "Remain moored in port (Simulation only)."
-        elif marine.significant_wave_height_m >= 1.5 or weather.wind_speed_knots >= 20.0:
-            status = RecommendationStatus.CAUTION
-            summary = f"Moderate wave state ({marine.significant_wave_height_m}m) requires caution for {context.craft_profile}."
-            action = "Operate within 5 nm of coastline (Simulation only)."
-        else:
-            status = RecommendationStatus.GO
-            summary = "Simulated conditions are calm and safe for departure."
-            action = "Proceed with voyage under standard VHF watch (Simulation only)."
+        from backend.app.domain.risk_engine import DeterministicRiskEngine
 
-        factors = [
-            f"Significant wave height: {marine.significant_wave_height_m}m",
-            f"Sustained wind: {weather.wind_speed_knots} knots",
-            f"Vessel profile: {context.craft_profile}",
-        ]
-        if hazard.cyclone_warning_active:
-            factors.append("Active simulated cyclone alert")
-
-        return RiskAssessmentPayload(
-            status=status,
-            summary=summary,
-            decisive_factors=factors,
-            recommended_action=action,
-            confidence_level=ConfidenceLevel.HIGH,
-            confidence_reasons=["Evaluated against M2 mock threshold ceilings"],
-            warnings=["M2 Contract Mock evaluation — not for real navigation."],
+        return DeterministicRiskEngine.evaluate(
+            context, marine, weather, hazard, data_mode="M2_CONTRACT_MOCK"
         )
 
 

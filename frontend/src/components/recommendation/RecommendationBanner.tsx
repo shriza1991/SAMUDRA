@@ -73,9 +73,54 @@ export default function RecommendationBanner({
         </div>
       )}
 
+      {recommendation.threshold_comparisons && recommendation.threshold_comparisons.length > 0 && (
+        <div className="threshold-checks" style={{ margin: '8px 0', padding: '8px', background: 'rgba(255,255,255,0.04)', borderRadius: '6px' }}>
+          <h6 style={{ margin: '0 0 6px', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--color-text-secondary)' }}>
+            Deterministic Threshold Verification
+          </h6>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            {recommendation.threshold_comparisons.map((tc, i) => (
+              <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px' }}>
+                <span style={{ color: 'var(--color-text-primary)' }}>{tc.description || tc.metric_name}</span>
+                <span style={{
+                  padding: '1px 6px',
+                  borderRadius: '4px',
+                  fontSize: '10px',
+                  fontWeight: 600,
+                  background: tc.impact === 'NO_GO_TRIGGER' ? 'rgba(239, 68, 68, 0.2)' : tc.impact === 'CAUTION_TRIGGER' ? 'rgba(245, 158, 11, 0.2)' : tc.impact === 'UNKNOWN_TRIGGER' ? 'rgba(100, 116, 139, 0.2)' : 'rgba(16, 185, 129, 0.2)',
+                  color: tc.impact === 'NO_GO_TRIGGER' ? '#ef4444' : tc.impact === 'CAUTION_TRIGGER' ? '#f59e0b' : tc.impact === 'UNKNOWN_TRIGGER' ? '#94a3b8' : '#10b981',
+                }}>
+                  {tc.impact.replace('_TRIGGER', '')}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {recommendation.non_decisive_factors && recommendation.non_decisive_factors.length > 0 && (
+        <div className="non-decisive-factors" style={{ margin: '6px 0', fontSize: '11px', color: 'var(--color-text-secondary)' }}>
+          <ul style={{ margin: 0, paddingLeft: '14px' }}>
+            {recommendation.non_decisive_factors.map((factor, i) => (
+              <li key={i}>{translateText(factor, language)}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       {recommendation.next_action && (
         <div className="next-action">
           <strong>{t.nextActionLabel}:</strong> {translateText(recommendation.next_action, language)}
+        </div>
+      )}
+
+      {recommendation.provenance && recommendation.provenance.length > 0 && (
+        <div className="data-provenance" style={{ marginTop: '8px', paddingTop: '6px', borderTop: '1px solid rgba(255,255,255,0.06)', display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+          {recommendation.provenance.map((prov, i) => (
+            <span key={i} style={{ fontSize: '10px', color: 'var(--color-text-secondary)', background: 'rgba(255,255,255,0.05)', padding: '2px 6px', borderRadius: '4px' }}>
+              {prov.provider_name} • {prov.source_name} {prov.valid_to ? `(Valid to ${prov.valid_to.slice(0, 16).replace('T', ' ')} UTC)` : ''}
+            </span>
+          ))}
         </div>
       )}
 
@@ -87,12 +132,12 @@ export default function RecommendationBanner({
         </div>
       )}
 
-      {warnings && warnings.length > 0 && (
+      {((warnings && warnings.length > 0) || (recommendation.warnings && recommendation.warnings.length > 0)) && (
         <div className="banner-warnings" style={{ marginTop: '8px' }}>
           <h6 style={{ margin: '0 0 4px', fontSize: '11px', color: '#f59e0b', textTransform: 'uppercase' }}>
             {t.warningsTitle}
           </h6>
-          {warnings.map((warn, i) => (
+          {(warnings || recommendation.warnings || []).map((warn, i) => (
             <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: '#f59e0b' }}>
               <AlertTriangle size={12} />
               <span>{translateText(warn, language)}</span>

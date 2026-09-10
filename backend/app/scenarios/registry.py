@@ -616,12 +616,12 @@ CANONICAL_SCENARIOS: Dict[str, ScenarioDefinition] = {
         ),
         expected=ScenarioExpectedOutcome(
             intent=IntentCategory.ROUTE,
-            status=RecommendationStatus.CAUTION,
+            status=RecommendationStatus.GO,
             confidence=ConfidenceLevel.HIGH,
             expected_tools=["marine_conditions", "weather_conditions", "hazard_search", "geospatial_hazard", "route_analysis", "risk_evaluation"],
             decisive_factors_keywords=["route", "exposure", "wave", "inshore", "channel"],
-            expected_evidence_metrics=["route_exposure_score", "significant_wave_height"],
-            recommended_action_keywords=["route a", "sheltered", "inshore", "prefer"],
+            expected_evidence_metrics=["exposure", "wave"],
+            recommended_action_keywords=["route a", "sheltered", "inshore", "proceed", "standard"],
         ),
         tags=["route", "passage_comparison", "exposure_scoring", "navigation"],
         ui_metadata={

@@ -22,7 +22,12 @@ from backend.app.agents.integrations.dev2 import (
     MarineConditionsPayload,
     WeatherConditionsPayload,
 )
-from backend.app.contracts.chat import ConfidenceLevel, RecommendationStatus
+from backend.app.contracts.chat import (
+    ConfidenceLevel,
+    DataProvenance,
+    RecommendationStatus,
+    ThresholdComparison,
+)
 
 
 # =============================================================================
@@ -38,9 +43,25 @@ class RiskAssessmentPayload(BaseModel):
         default_factory=list,
         description="Key numerical or physical factors triggering the decision (e.g. 'Wave height 2.8m > 2.0m threshold')",
     )
+    non_decisive_factors: List[str] = Field(
+        default_factory=list,
+        description="Relevant contextual parameters that remained within safe limits",
+    )
+    threshold_comparisons: List[ThresholdComparison] = Field(
+        default_factory=list,
+        description="Structured threshold comparisons driving the decision",
+    )
     recommended_action: str = Field(..., description="Direct actionable directive for the mariner")
     confidence_level: ConfidenceLevel = Field(ConfidenceLevel.HIGH, description="Confidence based on data quality")
     confidence_reasons: List[str] = Field(default_factory=list, description="Justification for rating")
+    provenance: List[DataProvenance] = Field(
+        default_factory=list,
+        description="Origin, timestamps, and validity windows for underlying data feeds",
+    )
+    evidence_ids: List[str] = Field(
+        default_factory=list,
+        description="IDs of linked evidence items supporting this decision",
+    )
     warnings: List[str] = Field(default_factory=list, description="Degradation or proximity notices")
 
 
