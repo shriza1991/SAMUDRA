@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import maplibregl from 'maplibre-gl';
 import type { MapLayer } from '../../types/contracts';
 import LayerManager from './LayerManager';
+import MissionMapBrief from './MissionMapBrief';
 import { Layers } from 'lucide-react';
 
 /** Initial fallback center (Indian coastal waters) */
@@ -217,6 +218,8 @@ export default function MapView({ layers, theme = 'light' }: MapViewProps) {
   return (
     <section className="map-view" aria-label="Geospatial map viewport">
       <div ref={containerRef} className="map-container" />
+
+      <MissionMapBrief layers={layers} />
 
       {layers.length > 0 && (
         <button
