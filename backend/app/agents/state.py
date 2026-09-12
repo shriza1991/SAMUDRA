@@ -17,6 +17,7 @@ from backend.app.contracts.chat import (
     MapLayer,
     Recommendation,
 )
+from backend.app.contracts.observation import ObservationBundle
 
 
 class ORCAState(TypedDict, total=False):
@@ -101,6 +102,9 @@ class ORCAState(TypedDict, total=False):
     # -------------------------------------------------------------------------
     # 4. Domain Data & Observations (Supplied by Dev 4 Tools / Dev 2 Connectors)
     # -------------------------------------------------------------------------
+    observation_bundle: Optional[ObservationBundle]
+    """Authoritative snapshot bundle of normalized observations for one analysis run."""
+
     observations: Dict[str, Any]
     """Normalized marine and weather measurements (wave height, wind, swell, etc.)."""
 

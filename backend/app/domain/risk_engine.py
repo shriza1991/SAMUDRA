@@ -23,6 +23,7 @@ from backend.app.agents.integrations.dev2 import (
     MarineConditionsPayload,
     WeatherConditionsPayload,
 )
+from backend.app.contracts.observation import ObservationBundle
 from backend.app.agents.integrations.dev4 import RiskAssessmentPayload
 from backend.app.contracts.chat import (
     ConfidenceLevel,
@@ -85,12 +86,23 @@ class DeterministicRiskEngine:
     def evaluate(
         cls,
         context: ToolInvocationContext,
-        marine: Optional[MarineConditionsPayload],
-        weather: Optional[WeatherConditionsPayload],
-        hazard: Optional[HazardBulletinPayload],
+        marine: Optional[MarineConditionsPayload] = None,
+        weather: Optional[WeatherConditionsPayload] = None,
+        hazard: Optional[HazardBulletinPayload] = None,
+        bundle: Optional[ObservationBundle] = None,
         data_mode: str = "SNAPSHOT",
     ) -> RiskAssessmentPayload:
         """Computes a deterministic, explainable safety decision from domain observations."""
+        if bundle is not None:
+            if marine is None:
+                marine = bundle.marine
+            if weather is None:
+                weather = bundle.weather
+            if hazard is None:
+                hazard = bundle.hazard
+            if bundle.data_mode:
+                data_mode = bundle.data_mode
+
         craft_profile = (context.craft_profile or DEFAULT_CRAFT_PROFILE).strip().lower()
         limits = CRAFT_THRESHOLDS.get(craft_profile, CRAFT_THRESHOLDS[DEFAULT_CRAFT_PROFILE])
 
@@ -396,10 +408,13 @@ class DeterministicRiskEngine:
 
 def evaluate_deterministic_risk(
     context: ToolInvocationContext,
-    marine: Optional[MarineConditionsPayload],
-    weather: Optional[WeatherConditionsPayload],
-    hazard: Optional[HazardBulletinPayload],
+    marine: Optional[MarineConditionsPayload] = None,
+    weather: Optional[WeatherConditionsPayload] = None,
+    hazard: Optional[HazardBulletinPayload] = None,
+    bundle: Optional[ObservationBundle] = None,
     data_mode: str = "SNAPSHOT",
 ) -> RiskAssessmentPayload:
     """Convenience helper to evaluate risk through the deterministic engine."""
-    return DeterministicRiskEngine.evaluate(context, marine, weather, hazard, data_mode=data_mode)
+    return DeterministicRiskEngine.evaluate(
+        context, marine=marine, weather=weather, hazard=hazard, bundle=bundle, data_mode=data_mode
+    )

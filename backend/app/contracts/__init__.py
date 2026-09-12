@@ -12,6 +12,7 @@ from backend.app.contracts.chat import (
     RecommendationStatus,
     UserContext,
 )
+from backend.app.contracts.observation import ObservationBundle
 from backend.app.contracts.tools import ToolResult, ToolStatus
 
 __all__ = [
@@ -22,6 +23,7 @@ __all__ = [
     "ConfidenceLevel",
     "EvidenceItem",
     "MapLayer",
+    "ObservationBundle",
     "Recommendation",
     "RecommendationStatus",
     "UserContext",

@@ -36,6 +36,7 @@ from backend.app.agents.integrations.dev2 import (
     PFZSourceDataPayload,
     WeatherConditionsPayload,
 )
+from backend.app.contracts.observation import ObservationBundle
 from backend.app.connectors.imd_hazard import ImdHazardConnector
 from backend.app.connectors.imd_weather import ImdWeatherConnector
 from backend.app.connectors.incois import IncoisOceanStateConnector
@@ -286,6 +287,35 @@ class DataService:
                     source_name="INCOIS PFZ Connector (In-Memory Dataset)",
                     source_url="https://incois.gov.in/pfz_source",
                 )
+
+    # ------------------------------------------------------------------
+    # Observation Bundle (Single Analysis Snapshot)
+    # ------------------------------------------------------------------
+
+    def get_observation_bundle(self, context: ToolInvocationContext) -> ObservationBundle:
+        """Retrieve and assemble the authoritative observation bundle for one analysis run.
+
+        Fetches marine, weather, and hazard observations via the configured DATA_MODE
+        and returns a unified, immutable ObservationBundle ensuring single-source-of-truth
+        lineage throughout the agent graph and deterministic risk engine.
+        """
+        from datetime import datetime, timezone
+
+        marine = self.get_marine_conditions(context)
+        weather = self.get_weather_conditions(context)
+        hazard = self.get_hazard_bulletin(context)
+
+        return ObservationBundle(
+            marine=marine,
+            weather=weather,
+            hazard=hazard,
+            captured_at=datetime.now(timezone.utc).isoformat(),
+            data_mode=self.data_mode,
+            source_metadata={
+                "harbor": context.origin_harbor or "Ratnagiri",
+                "craft_profile": context.craft_profile or "motorized_boat",
+            },
+        )
 
     # ------------------------------------------------------------------
     # Synthetic Demo Dataset Accessors

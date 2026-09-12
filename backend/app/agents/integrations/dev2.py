@@ -119,3 +119,4 @@ class PFZSourceDataProvider(Protocol):
     def get_pfz_raw_advisories(self, context: 'ToolInvocationContext') -> PFZSourceDataPayload:
         """Fetches raw INCOIS PFZ advisories for maritime analysis."""
         ...
+

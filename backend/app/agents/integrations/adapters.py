@@ -15,8 +15,10 @@ Adapters sit between external providers (Dev 2 / Dev 4) and the LangGraph graph:
 ===============================================================================
 """
 
+from __future__ import annotations
+
 from datetime import datetime, timezone
-from typing import Any, Callable, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional
 
 from backend.app.agents.integrations.contracts import (
     ToolErrorCode,
@@ -27,6 +29,8 @@ from backend.app.agents.integrations.dev2 import (
     MarineConditionsPayload,
     WeatherConditionsPayload,
 )
+if TYPE_CHECKING:
+    from backend.app.contracts.observation import ObservationBundle
 from backend.app.agents.integrations.dev4 import (
     GeospatialHazardPayload,
     PFZRankingPayload,
@@ -241,16 +245,25 @@ class ProviderToolAdapter:
 
     @staticmethod
     def adapt_risk_evaluation(
-        engine_fn: Callable[[ToolInvocationContext, MarineConditionsPayload, WeatherConditionsPayload, HazardBulletinPayload], RiskAssessmentPayload],
+        engine_fn: Callable[..., RiskAssessmentPayload],
         context: ToolInvocationContext,
-        marine: MarineConditionsPayload,
-        weather: WeatherConditionsPayload,
-        hazard: HazardBulletinPayload,
+        marine: Optional[MarineConditionsPayload] = None,
+        weather: Optional[WeatherConditionsPayload] = None,
+        hazard: Optional[HazardBulletinPayload] = None,
+        bundle: Optional[ObservationBundle] = None,
         is_mock: bool = False,
     ) -> ToolResult:
         """Adapts Dev 4 RiskEvaluationEngine output into normalized ToolResult."""
         try:
-            payload = engine_fn(context, marine, weather, hazard)
+            if bundle is not None:
+                if marine is None:
+                    marine = bundle.marine
+                if weather is None:
+                    weather = bundle.weather
+                if hazard is None:
+                    hazard = bundle.hazard
+
+            payload = engine_fn(context, marine=marine, weather=weather, hazard=hazard, bundle=bundle)
             quality_flags = ["M2_CONTRACT_MOCK", "SIMULATED"] if is_mock else ["REAL_SOURCE", "DETERMINISTIC_EVAL"]
 
             rec = Recommendation(

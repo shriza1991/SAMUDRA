@@ -54,6 +54,12 @@ from backend.app.agents.localization import (
     localize_operational_text,
     normalize_maritime_entities,
 )
+from backend.app.agents.integrations.dev2 import (
+    HazardBulletinPayload,
+    MarineConditionsPayload,
+    WeatherConditionsPayload,
+)
+from backend.app.contracts.observation import ObservationBundle
 from backend.app.agents.memory import memory_manager
 from backend.app.agents.response import ResponseComposer, ResponseCompositionInput
 from backend.app.agents.security import PromptInjectionGuard
@@ -891,6 +897,7 @@ def specialist_tools_node(state: ORCAState) -> Dict[str, Any]:
     trace = list(state.get("trace", []))
     route_candidates: List[Dict[str, Any]] = list(state.get("route_candidates") or [])
 
+    observation_bundle: Optional[ObservationBundle] = state.get("observation_bundle")
     destination = state.get("destination")
 
     failed_tools = set()
@@ -957,6 +964,33 @@ def specialist_tools_node(state: ORCAState) -> Dict[str, Any]:
                 "origin_harbor": harbor,
                 "craft_profile": craft_type,
             }
+            if observation_bundle is not None:
+                params["observation_bundle"] = observation_bundle
+            else:
+                marine_payload = (
+                    MarineConditionsPayload(**tool_results["marine_conditions"])
+                    if "marine_conditions" in tool_results and tool_results["marine_conditions"]
+                    else None
+                )
+                weather_payload = (
+                    WeatherConditionsPayload(**tool_results["weather_conditions"])
+                    if "weather_conditions" in tool_results and tool_results["weather_conditions"]
+                    else None
+                )
+                hazard_payload = (
+                    HazardBulletinPayload(**tool_results["hazard_search"])
+                    if "hazard_search" in tool_results and tool_results["hazard_search"]
+                    else None
+                )
+                if marine_payload or weather_payload or hazard_payload:
+                    observation_bundle = ObservationBundle(
+                        marine=marine_payload,
+                        weather=weather_payload,
+                        hazard=hazard_payload,
+                        data_mode="SYNTHETIC",
+                        source_metadata={"harbor": harbor, "craft_profile": craft_type},
+                    )
+                    params["observation_bundle"] = observation_bundle
         elif tool_name in ["route_stub", "route_analysis"]:
             params["origin_harbor"] = harbor
             params["destination"] = destination or "Outer Bank"
@@ -1097,6 +1131,7 @@ def specialist_tools_node(state: ORCAState) -> Dict[str, Any]:
         observations["route_comparison"] = _compare_route_candidates(route_candidates, observations)
 
     return {
+        "observation_bundle": observation_bundle,
         "tool_results": tool_results,
         "observations": observations,
         "evidence": collected_evidence,
