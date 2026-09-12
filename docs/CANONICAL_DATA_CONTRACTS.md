@@ -161,6 +161,90 @@ class PFZRankingPayload(BaseModel):
 
 ---
 
+### 2.5 Vessel Safety Advisory Services (`svas_advisory`)
+*Issuing Authorities*: INCOIS SVAS (Small Vessel Advisory Services)
+
+```python
+class SVASAdvisoryPayload(BaseModel):
+    harbor: str                              # Target coastal station or harbor
+    craft_profile: str                       # traditional_non_motorized | motorized_boat | mechanized_trawler
+    advisory_status: str                     # "SAFE" | "CAUTION" | "DANGER" | "NO_SAILING"
+    safety_index: Optional[float]            # Dimensionless composite risk index (0.0 - 10.0)
+    capsizing_risk: Optional[str]            # "LOW" | "MODERATE" | "HIGH" | "VERY_HIGH"
+    warning_statement: str                   # Official vernacular-ready safety advisory
+    issued_at: str                           # Advisory release timestamp (ISO-8601 UTC)
+    valid_to: str                            # Advisory expiration timestamp (ISO-8601 UTC)
+    source_name: str = "INCOIS SVAS"         # Official issuing authority
+    source_url: Optional[str]
+```
+
+---
+
+### 2.6 Disaster Alerts & Emergency Bulletins (`disaster_alert`)
+*Issuing Authorities*: NDMA SACHET / CAP (Common Alerting Protocol), IMD
+
+```python
+class DisasterAlertPayload(BaseModel):
+    alert_id: str                            # SACHET CAP identifier
+    category: str                            # "MET" (Meteorological), "SAFETY", "RESCUE"
+    urgency: str                             # "Immediate" | "Expected" | "Future"
+    severity: str                            # "Extreme" | "Severe" | "Moderate" | "Minor"
+    certainty: str                           # "Observed" | "Likely" | "Possible"
+    event_headline: str                      # Warning headline (e.g., "Very Severe Cyclonic Storm Warning")
+    instruction: Optional[str]               # Prescribed emergency action
+    area_description: str                    # Target coastal districts or marine sectors
+    polygon_coordinates: Optional[List[List[float]]] # Boundary perimeter if available
+    effective_from: str                      # ISO-8601 UTC
+    expires_at: str                          # ISO-8601 UTC
+    source_name: str = "NDMA SACHET / CAP"   # Alert authority
+    source_url: Optional[str]
+```
+
+---
+
+### 2.7 Canonical Reference Datasets (`reference_data`)
+*Issuing Authorities*: State Fisheries Departments, CMFRI, MoEFCC, Indian Navy
+
+#### A. Landing Centre Reference (`LandingCentreRecord`)
+```python
+class LandingCentreRecord(BaseModel):
+    id: str                                  # "HARB-RAT-01"
+    name: str                                # "Ratnagiri"
+    state: str                               # "Maharashtra"
+    latitude: float                          # 16.99
+    longitude: float                         # 73.28
+    source: str                              # "Department of Fisheries"
+    updated_at: str                          # ISO-8601 UTC
+```
+
+#### B. Vessel Safety Profile Reference (`VesselProfileRecord`)
+```python
+class VesselLimits(BaseModel):
+    wave_caution_m: float
+    wave_nogo_m: float
+    wind_caution_knots: float
+    wind_nogo_knots: float
+    gust_caution_knots: float
+    gust_nogo_knots: float
+    swell_caution_m: float
+    swell_nogo_m: float
+
+class VesselProfileRecord(BaseModel):
+    profile_id: str                          # "motorized_boat"
+    category: str                            # "FRP Motorized Fishing Boat"
+    length_overall_m: float                  # 9.5
+    beam_m: float                            # 2.1
+    draft_m: float                           # 0.9
+    engine_type: str                         # "Outboard Motor"
+    operational_range_nm: float              # 25.0
+    max_crew: int                            # 6
+    safety_limits: VesselLimits
+    source: str                              # "INCOIS SVAS / CMFRI"
+    version: str                             # "2026.1"
+```
+
+---
+
 ## 3. Downstream Consumption Contract Matrix
 
 | Consumer Tier | Consumed Models | Guarantees & Constraints |

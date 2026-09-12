@@ -81,6 +81,21 @@ class PFZSourceDataPayload(BaseModel):
     source_url: Optional[str] = Field(None, description="Direct URL to PFZ geospatial layer")
 
 
+class SVASAdvisoryPayload(BaseModel):
+    """Normalized Small Vessel Advisory Services (SVAS) data retrieved by Dev 2 connectors (INCOIS)."""
+
+    harbor: str = Field(..., description="Target coastal station or harbor")
+    craft_profile: str = Field(..., description="Vessel class: traditional_non_motorized | motorized_boat | mechanized_trawler")
+    advisory_status: str = Field("SAFE", description="Advisory status: SAFE | CAUTION | DANGER | NO_SAILING")
+    safety_index: Optional[float] = Field(None, ge=0.0, le=10.0, description="Dimensionless composite risk index (0.0 - 10.0)")
+    capsizing_risk: Optional[str] = Field("LOW", description="Capsizing risk rating: LOW | MODERATE | HIGH | VERY_HIGH")
+    warning_statement: str = Field(..., description="Official safety advisory statement")
+    issued_at: str = Field(..., description="Advisory release timestamp (ISO-8601 UTC)")
+    valid_to: str = Field(..., description="Advisory expiration timestamp (ISO-8601 UTC)")
+    source_name: str = Field("INCOIS SVAS", description="Official issuing authority")
+    source_url: Optional[str] = Field(None, description="Direct URL to official SVAS bulletin")
+
+
 # =============================================================================
 # 2. Dev 2 Interface Protocols
 # =============================================================================
@@ -119,3 +134,13 @@ class PFZSourceDataProvider(Protocol):
     def get_pfz_raw_advisories(self, context: 'ToolInvocationContext') -> PFZSourceDataPayload:
         """Fetches raw INCOIS PFZ advisories for maritime analysis."""
         ...
+
+
+@runtime_checkable
+class SVASAdvisoryProvider(Protocol):
+    """Interface that Dev 2's SVAS connector module must implement."""
+
+    def get_svas_advisories(self, context: 'ToolInvocationContext') -> SVASAdvisoryPayload:
+        """Fetches INCOIS Small Vessel Advisory Services advisory for vessel craft and harbor."""
+        ...
+

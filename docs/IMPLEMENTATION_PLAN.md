@@ -26,7 +26,16 @@ M4 domain: normalized models, risk interface, geospatial/tool interfaces.
 Integration: one fixture-backed request flows UI -> API -> graph -> deterministic tool -> response.
 Release: `v0.2.0-platform`
 
-## Phase 2 — Deterministic Marine Core
+## Phase 2 — Deterministic Marine Core (P0 Data Integrations)
+Integrates approved P0 MVP sources:
+- INCOIS Ocean State Forecast (OSF): SWH, swell, currents, SST
+- INCOIS Potential Fishing Zones (PFZ): candidate coordinates, fronts
+- INCOIS SVAS: small vessel safety advisory indices
+- IMD Marine: sea/coastal bulletins, port warnings, cyclone alerts
+- Pilot-Region GIS: geofences, naval firing zones, MPAs, IMBL
+- Open-Meteo Marine: real-time fallback/redundancy adapter
+- Landing centres and vessel profiles reference catalogs
+
 M1: map/recommendation UI.
 M2: repository/data adapters and LIVE/HYBRID/SNAPSHOT controller.
 M3: intent/context extraction and planner.

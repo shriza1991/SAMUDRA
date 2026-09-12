@@ -8,7 +8,7 @@ from __future__ import annotations
 import hashlib
 import json
 import logging
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -20,6 +20,7 @@ from backend.app.agents.integrations.dev2 import (
     HazardBulletinPayload,
     MarineConditionsPayload,
     PFZSourceDataPayload,
+    SVASAdvisoryPayload,
     WeatherConditionsPayload,
 )
 from backend.app.connectors.base import validate_iso8601
@@ -151,3 +152,22 @@ class SnapshotConnector:
     def get_pfz_raw_advisories(self, context: ToolInvocationContext) -> PFZSourceDataPayload:
         raw = self._load_snapshot("pfz_advisories.json")
         return PFZSourceDataPayload(**raw)
+
+    def get_svas_advisories(self, context: ToolInvocationContext) -> SVASAdvisoryPayload:
+        harbor = context.origin_harbor or "Ratnagiri"
+        craft = context.craft_profile or "motorized_boat"
+        now_utc = datetime.now(UTC)
+        valid_to = (now_utc + timedelta(hours=24)).isoformat()
+        return SVASAdvisoryPayload(
+            harbor=harbor,
+            craft_profile=craft,
+            advisory_status="SAFE",
+            safety_index=2.0,
+            capsizing_risk="LOW",
+            warning_statement="Snapshot SVAS: sea state within safe craft operating parameters.",
+            issued_at=now_utc.isoformat(),
+            valid_to=valid_to,
+            source_name="INCOIS SVAS (Snapshot Archive)",
+            source_url="https://incois.gov.in/portal/svas",
+        )
+

@@ -25,6 +25,7 @@ from backend.app.agents.integrations.contracts import (
 from backend.app.agents.integrations.dev2 import (
     HazardBulletinPayload,
     MarineConditionsPayload,
+    SVASAdvisoryPayload,
     WeatherConditionsPayload,
 )
 from backend.app.agents.integrations.dev4 import (
@@ -238,6 +239,67 @@ class ProviderToolAdapter:
                 warnings=[f"Hazard bulletins provider failed: {str(exc)}"],
                 error_code=ToolErrorCode.UPSTREAM_FAILURE.value,
             )
+
+    @staticmethod
+    def adapt_svas_advisory(
+        provider_fn: Callable[[ToolInvocationContext], SVASAdvisoryPayload],
+        context: ToolInvocationContext,
+        is_mock: bool = False,
+    ) -> ToolResult:
+        """Adapts Dev 2 SVASAdvisoryProvider output into normalized ToolResult."""
+        if not context.origin_harbor:
+            return ToolResult(
+                status=ToolStatus.FAILED,
+                data={},
+                evidence=[],
+                warnings=["Missing required origin harbor in context."],
+                error_code=ToolErrorCode.MISSING_CONTEXT.value,
+            )
+
+        try:
+            payload = provider_fn(context)
+            quality_flags = ["M2_CONTRACT_MOCK", "SIMULATED"] if is_mock else ["REAL_SOURCE", "OFFICIAL"]
+
+            evidence = [
+                EvidenceItem(
+                    source_name=payload.source_name,
+                    source_url=payload.source_url,
+                    observed_time=payload.issued_at,
+                    valid_to=payload.valid_to,
+                    retrieved_at=datetime.now(timezone.utc).isoformat(),
+                    metric_name="svas_safety_index",
+                    metric_value=payload.safety_index if payload.safety_index is not None else 0.0,
+                    quality_flags=quality_flags,
+                )
+            ]
+
+            warnings = []
+            if payload.source_name and (
+                "[HYBRID" in payload.source_name
+                or "Fallback" in payload.source_name
+                or "CACHED_REAL" in payload.source_name
+                or "Transient Error" in payload.source_name
+            ):
+                warnings.append(f"Data source degraded: {payload.source_name}")
+
+            return ToolResult(
+                status=ToolStatus.OK,
+                data=payload.model_dump(),
+                evidence=evidence,
+                warnings=warnings,
+            )
+
+        except ConnectorError:
+            raise
+        except Exception as exc:
+            return ToolResult(
+                status=ToolStatus.FAILED,
+                data={},
+                evidence=[],
+                warnings=[f"SVAS advisory provider failed: {str(exc)}"],
+                error_code=ToolErrorCode.UPSTREAM_FAILURE.value,
+            )
+
 
     @staticmethod
     def adapt_risk_evaluation(

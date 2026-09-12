@@ -101,6 +101,12 @@ class TestSnapshotConnectorProtocolConformance:
             "SnapshotConnector must satisfy PFZSourceDataProvider"
         )
 
+    def test_svas_advisory_provider_protocol(self, snapshot_connector):
+        from backend.app.agents.integrations.dev2 import SVASAdvisoryProvider
+        assert isinstance(snapshot_connector, SVASAdvisoryProvider), (
+            "SnapshotConnector must satisfy SVASAdvisoryProvider"
+        )
+
 
 # ---------------------------------------------------------------------------
 # 2. Protocol Conformance — INCOIS / IMD connectors
@@ -117,6 +123,11 @@ class TestProductionConnectorProtocolConformance:
         connector = IncoisOceanStateConnector()
         assert isinstance(connector, PFZSourceDataProvider)
 
+    def test_incois_svas_provider_protocol(self):
+        from backend.app.agents.integrations.dev2 import SVASAdvisoryProvider
+        connector = IncoisOceanStateConnector()
+        assert isinstance(connector, SVASAdvisoryProvider)
+
     def test_imd_weather_provider_protocol(self):
         connector = ImdWeatherConnector()
         assert isinstance(connector, WeatherConditionsProvider)
@@ -124,6 +135,7 @@ class TestProductionConnectorProtocolConformance:
     def test_imd_hazard_provider_protocol(self):
         connector = ImdHazardConnector()
         assert isinstance(connector, HazardBulletinsProvider)
+
 
 
 # ---------------------------------------------------------------------------
@@ -246,3 +258,11 @@ class TestPayloadSerialization:
         dumped = payload.model_dump()
         assert "features" in dumped
         assert isinstance(dumped["features"], list)
+
+    def test_svas_payload_serializable(self, snapshot_connector, ratnagiri_context):
+        payload = snapshot_connector.get_svas_advisories(ratnagiri_context)
+        dumped = payload.model_dump()
+        assert "advisory_status" in dumped
+        assert "safety_index" in dumped
+        assert "capsizing_risk" in dumped
+

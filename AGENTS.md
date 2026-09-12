@@ -111,3 +111,42 @@ Stop and ask for clarification when:
 - ownership is unclear
 - the repository differs materially from the documented baseline
 - the requested implementation requires changing another team's boundary
+
+## AI DEVELOPMENT GUARDRAILS
+
+### No Context Bloat
+AI agents MUST NOT create a new markdown file when the information belongs in an existing canonical document.
+Before creating documentation:
+1. Search `docs/`
+2. Identify the existing owner
+3. Update it instead
+Create a new document only when it represents a genuinely distinct long-lived responsibility.
+
+### No Duplicate Code
+Before creating a connector/service/model:
+1. Search for an existing implementation
+2. Reuse or extend it
+3. Do not create parallel alternatives
+
+### No Stale Claims
+Never write "implemented", "verified", "LIVE", "production-ready", or "tests passing" unless actually verified in the current repository.
+
+### No Giant Plans
+Plans must be concise and phase-oriented. Do not create a new roadmap for each feature.
+
+### No Diary Documentation
+`docs/PROGRESS.md` stores current state, not a chronological narrative.
+
+### Decision Discipline
+`docs/DECISIONS.md` stores architectural decisions, not task history.
+
+### Evidence Before Refactor
+Do not refactor merely because code "could be cleaner." Refactor only when it reduces duplication, fixes a defect, or materially improves maintainability/performance.
+
+### AI Task Completion
+Before finishing:
+- inspect diff
+- run tests
+- update progress
+- mention remaining risks
+

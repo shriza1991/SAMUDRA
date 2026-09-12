@@ -120,16 +120,22 @@ sequenceDiagram
 
 ---
 
-## 7. Current Marine Data Integrations Status
+## 7. Approved Marine Data Ecosystem & Integration Status
 
-| Data Source | Operational Purpose | Implementation Files | Data Mode Behavior | Verified Status |
-| :--- | :--- | :--- | :--- | :--- |
-| **INCOIS OSF** | Wave height, swell, currents, sea surface temperature | `connectors/incois.py` | Live URL configured; falls back to Open-Meteo in HYBRID mode; fixtures in SNAPSHOT | **VERIFIED (Hybrid/Fallback)** |
-| **INCOIS PFZ** | Potential Fishing Zones, bearing, distance, SST gradients | `connectors/incois.py`, `domain/map_layers.py` | Ingests official INCOIS advisories; falls back to snapshot fixtures | **VERIFIED (Snapshot/Stub)** |
-| **IMD Weather** | Wind speed, gust, squall warnings, cyclone alerts | `connectors/imd_weather.py`, `connectors/imd_hazard.py` | Bulletin parser with automated Red/Orange/Yellow alert extraction | **VERIFIED (Hybrid/Snapshot)** |
-| **Open-Meteo Marine** | High-resolution wave height, swell period, wind fallback | `connectors/open_meteo.py` | Live HTTP client with 1-hour cache and retry logic | **VERIFIED (Live Active)** |
-| **Curated Geofences** | Indian EEZ, MPAs (Malvan), Naval Firing Ranges (Goa), IMBL | `data/fixtures/geofences_india.geojson`, `api/v1/routes.py` | Geospatial GeoJSON fixtures queried via Shapely | **VERIFIED (Deterministic)** |
-| **ISRO MOSDAC** | Satellite Earth Observation (Chlorophyll, SST rasters) | Referenced in `docs/DATA_SOURCES.md`, `config.py` | Endpoint placeholders declared; raster ingestion pending | **PLANNED ONLY** |
+| Priority | Data Source | Operational Purpose | Implementation Files | Data Mode Behavior | Source Status |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **P0** | **INCOIS OSF** | Wave height, swell, currents, sea surface temperature | `connectors/incois.py` | Live URL configured; falls back to Open-Meteo in HYBRID mode; fixtures in SNAPSHOT | `LIMITED / CACHED_REAL` |
+| **P0** | **INCOIS PFZ** | Potential Fishing Zones, bearing, distance, SST gradients | `connectors/incois.py`, `domain/map_layers.py` | Ingests official INCOIS advisories; falls back to snapshot fixtures | `CACHED_REAL` |
+| **P0** | **INCOIS SVAS** | Small Vessel Advisory Services, capsizing risk, craft ceilings | `contracts dev2/`, `domain/risk_engine.py` | Crafts limits evaluated in Python; live portal adapter scheduled | `CACHED_REAL / MOCK` |
+| **P0** | **IMD Marine Weather** | Wind speed, gust, visibility, coastal sea bulletins | `connectors/imd_weather.py` | Bulletin parser with automated alert extraction; snapshot fallback | `LIMITED / CACHED_REAL` |
+| **P0** | **IMD Hazards & Cyclone**| Squall alerts, depression tracks, port warning signals | `connectors/imd_hazard.py` | Bulletin parser; triggers hard-stops on active cyclone/squall alerts | `LIMITED / CACHED_REAL` |
+| **P0** | **Open-Meteo Marine** | High-resolution wave height, swell period, wind fallback | `connectors/open_meteo.py` | Live HTTP client with 1-hour cache and retry logic (unauthoritative fallback) | `LIVE` |
+| **P0** | **Pilot-Region GIS** | Indian EEZ, MPAs (Malvan), Naval Firing Ranges (Goa), IMBL | `data/fixtures/geofences_india.geojson`, `data/reference/marine_restrictions.geojson` | Geospatial GeoJSON fixtures queried via Shapely | `CACHED_REAL` |
+| **P0** | **Landing & Craft Ref**| Coastal landing centres and calibrated vessel profiles | `data/reference/landing_centres.json`, `data/reference/vessel_profiles.json` | Static authoritative catalogs for harbor coordinates and vessel dimensions | `CACHED_REAL` |
+| **P1** | **NDMA SACHET / CAP** | Independent disaster alerts, coastal evacuation notices | Scheduled in `connectors/sachet.py` | CAP XML/JSON feed corroboration; alerts layer in Phase 6 | `PLANNED` |
+| **P1** | **ISRO MOSDAC** | Satellite Earth Observation (Chlorophyll, SST rasters) | Referenced in `config.py`, scheduled in `connectors/mosdac.py` | OGC WMS/WFS/REST raster layers for UI overlays in Phase 11 | `PLANNED` |
+| **P2** | **INCOIS SARAT** | Search and Rescue Aid-Tool drift trajectories | Scheduled in `connectors/sarat.py` | Dedicated Search-and-Rescue mission mode in Phase 11 | `PLANNED` |
+| **P2** | **VCSS / Nabhmitra** | Two-way satellite vessel communication context | Optional Phase 11 integration | Authorized vessel tracking; hardware dongle serial ingestion | `PLANNED` |
 
 ---
 
@@ -190,8 +196,17 @@ SAMUDRA/ (ORCA)
 │   ├── package.json                     # Frontend dependencies
 │   └── vite.config.ts                   # Vite bundler configuration
 ├── data/
-│   ├── fixtures/                        # S1–S8 scenario test data & geofences_india.geojson
-│   └── source_snapshots/                # Cached snapshots for offline zero-latency demo
+│   ├── fixtures/                        # S1–S8 scenario test data & geofences
+│   │   ├── scenarios/                   # Canonical evaluation scenario files
+│   │   └── geofences/                   # Static boundary geometries
+│   ├── source_snapshots/                # Cached snapshots for offline zero-latency demo
+│   │   ├── incois/                      # Real pre-captured OSF and PFZ bulletins
+│   │   ├── imd/                         # Real pre-captured weather and hazard alerts
+│   │   └── open_meteo/                  # Real pre-captured marine weather responses
+│   └── reference/                       # Canonical baseline static catalogs
+│       ├── landing_centres.json         # Authoritative landing centres & coordinates
+│       ├── vessel_profiles.json         # Calibrated vessel parameters & limits
+│       └── marine_restrictions.geojson  # Naval, MPA, and international buffer zones
 ├── docs/                                # Canonical system documentation
 └── tests/                               # 526 automated test cases across backend & agents
 ```

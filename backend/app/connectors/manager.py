@@ -14,6 +14,7 @@ if TYPE_CHECKING:
         HazardBulletinPayload,
         MarineConditionsPayload,
         PFZSourceDataPayload,
+        SVASAdvisoryPayload,
         WeatherConditionsPayload,
     )
 from backend.app.connectors.errors import (
@@ -36,6 +37,7 @@ class ConnectorManager:
     - WeatherConditionsProvider
     - HazardBulletinsProvider
     - PFZSourceDataProvider
+    - SVASAdvisoryProvider
     """
 
     def __init__(
@@ -46,6 +48,7 @@ class ConnectorManager:
         weather_live: Any = None,
         hazard_live: Any = None,
         pfz_live: Any = None,
+        svas_live: Any = None,
     ) -> None:
         self._mode = mode
         self.snapshot = snapshot_connector
@@ -53,6 +56,7 @@ class ConnectorManager:
         self.weather_live = weather_live
         self.hazard_live = hazard_live
         self.pfz_live = pfz_live
+        self.svas_live = svas_live
 
     @property
     def mode(self) -> DataMode:
@@ -143,3 +147,7 @@ class ConnectorManager:
 
     def get_pfz_raw_advisories(self, context: ToolInvocationContext) -> PFZSourceDataPayload:
         return self._execute(self.pfz_live, "get_pfz_raw_advisories", context)
+
+    def get_svas_advisories(self, context: ToolInvocationContext) -> SVASAdvisoryPayload:
+        return self._execute(self.svas_live, "get_svas_advisories", context)
+

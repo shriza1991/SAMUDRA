@@ -51,6 +51,45 @@ Status: ACCEPTED
 
 Prove one geography deeply before broadening coverage.
 
+## D010 — Official-Source Precedence Hierarchy
+Status: ACCEPTED
+
+Decision:
+IMD is the supreme authority for severe weather and cyclone alerts. INCOIS is the primary authority for ocean state forecasts and PFZ advisories. Secondary models (Open-Meteo) act strictly as unauthoritative fallback.
+
+Reason:
+Maritime safety requires deterministic, legally defensible, and conservative decisions. Under conflicting telemetry, the system always adopts the conservative hazard state.
+
+Impact:
+Connectors and risk engine always prioritize official bulletins over secondary models.
+
+## D011 — Provider Status Taxonomy
+Status: ACCEPTED
+
+Decision:
+Classify every data source under exactly one status: `LIVE`, `LIMITED`, `CACHED_REAL`, `HISTORICAL`, or `MOCK`. Never mark a source as `LIVE` without verified machine-readable execution at runtime.
+
+Reason:
+Prevents AI agents and developers from conflating declared endpoints with verified live access.
+
+## D012 — Snapshot Fallback and Provenance Tagging Policy
+Status: ACCEPTED
+
+Decision:
+In `HYBRID` mode, when a live provider request times out (>3.5s) or fails, the connector falls back to pre-seeded authoritative snapshots, explicitly flags `[SNAPSHOT-FALLBACK]` in warnings, and downgrades derived confidence.
+
+Reason:
+Ensures zero-crash resilience during operational connectivity drops while maintaining strict transparency.
+
+## D013 — Pilot Geography Scope (Maharashtra / Konkan Coast)
+Status: ACCEPTED
+
+Decision:
+Anchor the P0 MVP implementation around Ratnagiri, Malvan, and the Konkan marine corridor (covering active INCOIS PFZ sectors, Malvan Marine Sanctuary, and Goa naval firing sectors).
+
+Reason:
+Allows deep, end-to-end multi-source validation across real coastal landing centres before scaling nationally.
+
 ## Decision template
 ### D0XX — <title>
 Status: PROPOSED / ACCEPTED / REJECTED
@@ -60,3 +99,4 @@ Alternatives:
 Impact:
 Owner:
 Date:
+

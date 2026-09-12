@@ -92,7 +92,7 @@ class ImdHazardConnector(BaseLiveConnector):
         headers = {"x-api-key": settings.IMD_API_KEY}
         try:
             raw = self._get(
-                self.IMD_HAZARD_API_PATH,
+                settings.IMD_API_BASE_URL,
                 headers=headers,
                 harbor=harbor,
             )
@@ -112,8 +112,9 @@ class ImdHazardConnector(BaseLiveConnector):
             valid_from=raw.get("valid_from", now_utc.isoformat()),
             valid_to=raw.get("valid_to", (now_utc + timedelta(hours=24)).isoformat()),
             source_name="IMD Cyclone Warning Division",
-            source_url=self.IMD_HAZARD_URL,
+            source_url=self.SOURCE_URL,
         )
+
 
     @staticmethod
     def _make_normal_payload(harbor: str, reason: str) -> HazardBulletinPayload:

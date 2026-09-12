@@ -1,42 +1,45 @@
-# ORCA Progress
+# ORCA / SAMUDRA Operational Progress
 
-> Single operational status board. Keep concise and factual.
+> Single operational status board. Strictly factual. No diary narrative.
 
-## Release
-- Current version: `v0.0.1-baseline`
-- Integration branch: `develop`
-- Release branch: `main`
-- Current phase: Phase 0
+## Current Release & Workstream State
+- Current version: `v0.1.0-p0-data-foundation`
+- Active branch: `main`
+- Current milestone: **P0 Marine Data & API Integration Foundation**
+- Completion status: **COMPLETE & OFFLINE VERIFIED**
 
-## Members
-| Member | Branch | Status | Task | Last Commit | Tests | Blocker |
-|---|---|---|---|---|---|---|
-| M1 | `team/frontend` | NOT_STARTED | — | — | — | — |
-| M2 | `team/backend` | NOT_STARTED | — | — | — | — |
-| M3 | `team/agents` | NOT_STARTED | — | — | — | — |
-| M4 | `team/domain` | NOT_STARTED | — | — | — | — |
+---
 
-## Phase status
-- [ ] Phase 0 — Baseline
-- [ ] Phase 1 — Platform
-- [ ] Phase 2 — Domain
-- [ ] Phase 3 — Evidence
-- [ ] Phase 4 — Mission Twin
-- [ ] Phase 5 — Voice/Multilingual
-- [ ] Phase 6 — Adaptive Intelligence
-- [ ] Phase 7 — Demo RC
-- [ ] Phase 8 — Production Platform
-- [ ] Phase 9 — Reliability/Security/Scale
-- [ ] Phase 10 — Pilot
-- [ ] Phase 11 — Ecosystem Integrations
-- [ ] Phase 12 — Advanced Intelligence
+## P0 Marine Data Providers Status Board
 
-## Integration
-- Latest green develop commit: —
-- Latest release tag: —
-- Latest full test run: —
+| Provider / Feed | Protocol / Implementation | Data Mode | Status | Tests | Live Verification State | Blocker / Notes |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **INCOIS OSF** | `MarineConditionsProvider` (`IncoisOceanStateConnector`) | `LIVE` / `HYBRID` / `SNAPSHOT` | `OFFLINE_VERIFIED` | `test_incois.py`, `test_connector_contracts.py` | Requires external `INCOIS_API_KEY`. Normalizes live or falls back to Open-Meteo. | None (Graceful Open-Meteo fallback verified) |
+| **INCOIS PFZ** | `PFZSourceDataProvider` (`IncoisOceanStateConnector`, `DeterministicPFZRankingEngine`) | `LIVE` / `HYBRID` / `SNAPSHOT` | `OFFLINE_VERIFIED` | `test_incois.py`, `test_connector_contracts.py` | Authoritative vectors parsed; Haversine & compass bearing calculated deterministically. | None (Deterministic ranking complete) |
+| **INCOIS SVAS** | `SVASAdvisoryProvider` (`IncoisOceanStateConnector`, `SnapshotConnector`) | `LIVE` / `HYBRID` / `SNAPSHOT` | `OFFLINE_VERIFIED` | `test_incois.py`, `test_registration.py` | In HYBRID without API key returns `CACHED_REAL` / `LIMITED`. | Live government SVAS portal requires clearance |
+| **IMD Coastal Weather** | `WeatherConditionsProvider` (`ImdWeatherConnector`) | `LIVE` / `HYBRID` / `SNAPSHOT` | `OFFLINE_VERIFIED` | `test_imd.py`, `test_connector_contracts.py` | Normalizes live IMD bulletin; fallback to Open-Meteo on failure. | None (Fallback verified) |
+| **IMD Cyclone / Hazard** | `HazardBulletinsProvider` (`ImdHazardConnector`) | `LIVE` / `HYBRID` / `SNAPSHOT` | `OFFLINE_VERIFIED` | `test_imd.py`, `test_connector_contracts.py` | Severe hazard / squall warning triggers NO_GO/CAUTION in risk engine. Conservative NORMAL default when live unavailable. | None (Hard-stop compatibility verified) |
+| **Pilot GIS Restrictions** | `GeospatialHazardEngine` (`DeterministicGeospatialEngine`) | `CACHED_REAL` | `OFFLINE_VERIFIED` | `test_geospatial.py` | Shapely point-in-polygon and route intersection over Malvan MPA, Goa Naval Range, and Gujarat IMBL buffer. | None (Pure Python Shapely offline) |
+| **Open-Meteo Fallback** | `MarineConditionsProvider` & `WeatherConditionsProvider` (`OpenMeteoConnector`) | `LIVE` | `LIVE_VERIFIED` | `test_open_meteo.py` | Public endpoint tested with connection pooling, retries, and bounded timeout. | None (Public access active) |
+| **Reference Catalogs** | `load_landing_centres`, `load_vessel_profiles` (`harbors.py`) | Canonical Files | `OFFLINE_VERIFIED` | `test_harbors.py` | Typed Pydantic validation, deterministic name/ID indexing, missing record safety. | None |
 
-## Update rules
-Update after meaningful task completion, PR/merge, blocker discovery, contract changes, phase completion, or release creation.
+---
 
-Every completion entry must reference a commit and test result.
+## Team Ownership Matrix & Status
+
+| Member | Domain / Workstream | Status | Tasks Completed | Test Suite |
+| :--- | :--- | :--- | :--- | :--- |
+| **M1** | Frontend & UI | READY | MapLayer schema alignment, voice call interface | Vitest (39 passed) |
+| **M2** | Backend Platform & Connectors | OFFLINE_VERIFIED | Harbors loader, INCOIS OSF/PFZ/SVAS, IMD weather/hazard, Open-Meteo fallback, ConnectorManager | pytest connectors & contracts (71 passed) |
+| **M3** | Agent Orchestration & Explainability | OFFLINE_VERIFIED | Tool adapters, capability catalog registration, trace & evidence contracts | pytest agent_eval (371 passed) |
+| **M4** | Marine, Geo, Risk & Route Domain | OFFLINE_VERIFIED | Deterministic risk engine, Shapely geofence evaluation, PFZ Haversine ranking engine | pytest domain (12 passed) |
+
+---
+
+## Phase Status Summary
+- [x] **Phase 0: Baseline Audit & Data Cleansing** (Canonical layout established, duplicate fixtures pruned)
+- [x] **Phase 1: Reference Data Loaders** (`harbors.py` typed loaders & indexing verified)
+- [x] **Phase 2: P0 Connectors & Fallback Foundation** (INCOIS OSF/PFZ/SVAS, IMD, Pilot GIS, Open-Meteo)
+- [ ] **Phase 3: Real Database / PostGIS Integration** (Docker PostgreSQL/PostGIS container deployment)
+- [ ] **Phase 4: Mission Twin Simulation Engine** (P1 — Counterfactual evaluation & temporal forecasting)
+- [ ] **Phase 5: Vernacular Voice & Audio Pipelines** (P1 — Whisper / Sarvam AI integration)

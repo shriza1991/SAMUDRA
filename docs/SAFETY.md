@@ -47,3 +47,31 @@ SAMUDRA rejects arbitrary LLM confidence percentages (e.g., *"I am 94% sure"*). 
 - **`HIGH`**: Both primary government sources (INCOIS + IMD) are online, fresh (<6h), and spatially congruent.
 - **`MEDIUM`**: Primary forecast available, but secondary data relied on Open-Meteo fallback or snapshot cache (<12h old).
 - **`LOW`**: Significant temporal gap (>12h old snapshot), degraded offline fixture, or localized cloud cover obscuring satellite SST/Chlorophyll.
+
+---
+
+## 5. Authoritative Source Precedence Hierarchy
+
+When multiple sources provide data for the same geospatial area or time window:
+
+1. **Safety & Cyclone Bulletins**: `IMD` (Cyclone Warning Division / Coastal Bulletins) has supreme authority over all international or secondary weather models.
+2. **Ocean State Forecasts (Wave/Swell/Currents)**: `INCOIS OSF` holds primary authority. `Open-Meteo Marine` is strictly a secondary fallback.
+3. **Fishing Zones (PFZ)**: `INCOIS PFZ` holds primary authority. Satellite SST/Chlorophyll feeds provide corroboration.
+4. **Disaster Warnings**: `NDMA SACHET / CAP` broadcasts corroborate IMD coastal warnings.
+5. **Maritime Boundaries**: Indian Navy, Coast Guard, and MoEFCC gazette coordinates override all general nautical charts.
+
+---
+
+## 6. Source Conflict & Fallback Resolution Policy
+
+1. **Conservative Safety Default (The Max-Hazard Rule)**:
+   - If IMD reports an active squall warning but a secondary model (e.g. Open-Meteo) indicates calm conditions, the system **MUST adopt the conservative IMD warning** and trigger `NO_GO` or `CAUTION`.
+   - Never resolve a data conflict in favor of higher risk exposure.
+2. **Fallback Degradation Invariants**:
+   - In `HYBRID` mode, if a live primary service times out (>3.5s) or errors, the system falls back to a validated snapshot cache.
+   - The response **MUST** append a degradation warning flag (`[SNAPSHOT-FALLBACK]`) to the `ChatResponse.warnings` array.
+   - A fallback payload can never certify a `GO` status with `HIGH` confidence.
+3. **Stale vs. Conflicting Data**:
+   - Telemetry older than 24 hours is classified as `STALE`.
+   - In the presence of stale data, the decision status degrades to `UNKNOWN` or `CAUTION`, never `GO`.
+
