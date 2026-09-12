@@ -58,7 +58,6 @@ export default function App() {
         onLanguageChange={chat.setLanguage}
         evidenceCount={evidenceItems.length}
         onOpenEvidence={() => setIsDrawerOpen(true)}
-        onStartCall={() => setIsCallModalOpen(true)}
         theme={theme}
         onThemeToggle={toggleTheme}
         currentPortal={portal}
