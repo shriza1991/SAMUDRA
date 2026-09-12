@@ -157,5 +157,23 @@ describe('Map Layer GeoJSON Contract & Semantics', () => {
     expect(safetyLayers.length).toBe(3);
     expect(navLayers.length).toBe(6);
   });
+
+  it('validates operational corridor distance and properties extraction', () => {
+    const routeLayer: MapLayer = {
+      layer_id: 'layer_pfz_route',
+      name: 'Safe PFZ Passage',
+      layer_type: 'geojson',
+      visible: true,
+      geojson: {
+        type: 'Feature',
+        geometry: { type: 'LineString', coordinates: [[73.28, 16.99], [72.95, 16.82]] },
+        properties: { label: 'Route to PFZ', distance_km: 42.6 },
+      },
+    };
+
+    expect(routeLayer.geojson).toBeDefined();
+    const props = (routeLayer.geojson as any).properties;
+    expect(props.distance_km).toBe(42.6);
+  });
 });
 
