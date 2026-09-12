@@ -151,15 +151,15 @@ export default function CallModal({
             <div className={`call-avatar-core ${callState === 'HEARING_YOU' ? 'hearing' : ''}`}>
               <div className="call-avatar-inner">
                 {callState === 'SPEAKING' ? (
-                  <Volume2 size={44} className="call-speaking-icon" />
+                  <Volume2 size={28} className="call-speaking-icon" />
                 ) : callState === 'PROCESSING' ? (
-                  <Loader2 size={44} className="call-processing-icon spin" />
+                  <Loader2 size={28} className="call-processing-icon spin" />
                 ) : callState === 'HEARING_YOU' ? (
-                  <Radio size={44} className="call-hearing-icon pulse" />
+                  <Radio size={28} className="call-hearing-icon pulse" />
                 ) : isMuted ? (
-                  <MicOff size={44} className="call-muted-icon" />
+                  <MicOff size={28} className="call-muted-icon" />
                 ) : (
-                  <Mic size={44} className="call-listening-icon" />
+                  <Mic size={28} className="call-listening-icon" />
                 )}
               </div>
             </div>
@@ -305,7 +305,7 @@ export default function CallModal({
               title={isMuted ? 'Unmute' : 'Mute'}
               aria-label={isMuted ? 'Unmute microphone' : 'Mute microphone'}
             >
-              {isMuted ? <MicOff size={22} /> : <Mic size={22} />}
+              {isMuted ? <MicOff size={18} /> : <Mic size={18} />}
             </button>
 
             {/* End Call Hang-up Button */}
@@ -316,7 +316,7 @@ export default function CallModal({
               title={t.callEndBtn}
               aria-label={t.callEndBtn}
             >
-              <PhoneOff size={26} />
+              <PhoneOff size={20} />
             </button>
           </div>
         </footer>
