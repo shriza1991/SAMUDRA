@@ -6,7 +6,6 @@ import {
   FileCheck2,
   FlaskConical,
   RadioTower,
-  RotateCcw,
   Ship,
 } from 'lucide-react';
 import ChatPanel from '../components/chat/ChatPanel';
@@ -84,20 +83,20 @@ export default function AuthorityPage({
 
   return (
     <div className={`authority-page view-${mobileView}`} role="region" aria-label="Authority Command Deck">
-      {/* Top Authority Command Bar */}
+      {/* Single Unified Authority Command Bar */}
       <section className="authority-command-bar" aria-label="Operational Command Bar">
         <div className="authority-bar-left">
           <div className="authority-title-row">
-            <Building2 size={16} className="authority-brand-icon" />
+            <Building2 size={15} className="authority-brand-icon" />
             <span className="authority-title">{translateText('Authority Command Deck', chat.language)}</span>
           </div>
 
           <label className="authority-sector-selector">
-            <span className="sector-label">{translateText('Sector:', chat.language)}</span>
             <select
               value={selectedSector}
               onChange={(e) => setSelectedSector(e.target.value)}
               className="authority-sector-select"
+              aria-label={translateText('Sector:', chat.language)}
             >
               {SECTORS.map((s) => (
                 <option key={s} value={s}>{s}</option>
@@ -106,8 +105,42 @@ export default function AuthorityPage({
           </label>
         </div>
 
-        {/* Compact KPI Pills in a single clean row */}
-        <div className="authority-kpi-chips">
+        {/* Center: Sleek Segmented Switcher Pill */}
+        <nav className="authority-nav-segmented" role="tablist" aria-label="Authority views">
+          <button
+            type="button"
+            className={`authority-segment-btn ${authorityTab === 'terminal' ? 'active' : ''}`}
+            onClick={() => setAuthorityTab('terminal')}
+            role="tab"
+            aria-selected={authorityTab === 'terminal'}
+          >
+            <RadioTower size={13} />
+            <span>{translateText('Audit Terminal', chat.language)}</span>
+          </button>
+          <button
+            type="button"
+            className={`authority-segment-btn ${authorityTab === 'fleet' ? 'active' : ''}`}
+            onClick={() => setAuthorityTab('fleet')}
+            role="tab"
+            aria-selected={authorityTab === 'fleet'}
+          >
+            <Ship size={13} />
+            <span>{translateText('Fleet Surveillance', chat.language)}</span>
+          </button>
+          <button
+            type="button"
+            className={`authority-segment-btn ${authorityTab === 'benchmarks' ? 'active' : ''}`}
+            onClick={() => setAuthorityTab('benchmarks')}
+            role="tab"
+            aria-selected={authorityTab === 'benchmarks'}
+          >
+            <FlaskConical size={13} />
+            <span>{translateText('Benchmark Runner', chat.language)}</span>
+          </button>
+        </nav>
+
+        {/* Right: Live KPIs & Verified Sources */}
+        <div className="authority-bar-right">
           <div className="authority-kpi-chip">
             <span className="chip-label">{translateText('Verdict:', chat.language)}</span>
             <span className={`status-pill status-${status.toLowerCase().replace('_', '-')}`}>
@@ -120,61 +153,19 @@ export default function AuthorityPage({
             <span><strong>{hazardLayers.length}</strong> {translateText('Hazards', chat.language)}</span>
           </div>
 
-          <div className="authority-kpi-chip">
-            <FileCheck2 size={13} className="status-accent" />
-            <span><strong>{evidenceList.length}</strong> {translateText('Sources', chat.language)}</span>
-          </div>
-
-          <div className="authority-kpi-chip">
-            <Activity size={13} className="status-accent" />
-            <span><strong>{traceList.length}</strong> {translateText('Steps', chat.language)}</span>
-          </div>
+          {evidenceList.length > 0 && (
+            <button
+              type="button"
+              className={`authority-kpi-chip authority-evidence-btn ${authorityTab === 'audit' ? 'active' : ''}`}
+              onClick={() => setAuthorityTab(authorityTab === 'audit' ? 'terminal' : 'audit')}
+              title={translateText('Inspect verified evidence & execution trace', chat.language)}
+            >
+              <FileCheck2 size={13} className="status-accent" />
+              <span><strong>{evidenceList.length}</strong> {translateText('Evidence', chat.language)}</span>
+            </button>
+          )}
         </div>
       </section>
-
-      {/* Authority View Switcher Tabs - Clean & Concise */}
-      <nav className="authority-tab-nav" role="tablist" aria-label="Authority sub-views">
-        <button
-          type="button"
-          className={`authority-tab-btn ${authorityTab === 'terminal' ? 'active' : ''}`}
-          onClick={() => setAuthorityTab('terminal')}
-          role="tab"
-          aria-selected={authorityTab === 'terminal'}
-        >
-          <RadioTower size={13} />
-          <span>{translateText('Audit Terminal', chat.language)}</span>
-        </button>
-        <button
-          type="button"
-          className={`authority-tab-btn ${authorityTab === 'fleet' ? 'active' : ''}`}
-          onClick={() => setAuthorityTab('fleet')}
-          role="tab"
-          aria-selected={authorityTab === 'fleet'}
-        >
-          <Ship size={13} />
-          <span>{translateText('Fleet Surveillance', chat.language)}</span>
-        </button>
-        <button
-          type="button"
-          className={`authority-tab-btn ${authorityTab === 'benchmarks' ? 'active' : ''}`}
-          onClick={() => setAuthorityTab('benchmarks')}
-          role="tab"
-          aria-selected={authorityTab === 'benchmarks'}
-        >
-          <FlaskConical size={13} />
-          <span>{translateText('Benchmark Runner', chat.language)}</span>
-        </button>
-        <button
-          type="button"
-          className={`authority-tab-btn ${authorityTab === 'audit' ? 'active' : ''}`}
-          onClick={() => setAuthorityTab('audit')}
-          role="tab"
-          aria-selected={authorityTab === 'audit'}
-        >
-          <FileCheck2 size={13} />
-          <span>{translateText('Evidence & Trace', chat.language)} ({traceList.length})</span>
-        </button>
-      </nav>
 
       {/* Workspace Body */}
       <div className="authority-body">
@@ -182,18 +173,6 @@ export default function AuthorityPage({
           <div className="authority-workspace-grid">
             {/* Left: Reused ChatPanel in Official Dispatch Terminal Mode */}
             <aside className="authority-terminal-pane" aria-label="Terminal Pane">
-              <div className="authority-terminal-header">
-                <span>{translateText('Surveillance Query Terminal', chat.language)}</span>
-                <button
-                  type="button"
-                  className="authority-reset-btn"
-                  onClick={chat.clearChat}
-                  title="Clear audit session"
-                >
-                  <RotateCcw size={12} /> {translateText('Reset', chat.language)}
-                </button>
-              </div>
-
               <ChatPanel
                 language={chat.language}
                 messages={chat.messages}

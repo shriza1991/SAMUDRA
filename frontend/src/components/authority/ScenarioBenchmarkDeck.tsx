@@ -61,20 +61,20 @@ export default function ScenarioBenchmarkDeck({ language = 'en' }: ScenarioBench
 
   return (
     <div className="scenario-benchmark-deck" aria-label="Canonical Scenario Benchmark Suite">
-      <div className="benchmark-header">
+      <div className="benchmark-deck-header">
         <div>
           <h3>{translateText('Canonical Evaluation Scenarios (S1–S8 Benchmark Runner)', language)}</h3>
-          <p className="benchmark-subtitle">
+          <p className="benchmark-deck-subtitle">
             {translateText('Execute deterministic evaluation pipelines on the LangGraph agent graph to verify safety decisions, evidence grounding, and rule compliance.', language)}
           </p>
         </div>
       </div>
 
-      <div className="benchmark-workspace">
+      <div className="benchmark-workspace-grid">
         {/* Left: Scenarios Selector List */}
-        <aside className="benchmark-scenario-list" aria-label="Scenarios selection">
+        <aside className="benchmark-sidebar-pane" aria-label="Scenarios selection">
           <span className="benchmark-list-label">{translateText('Evaluation Benchmarks', language)} ({scenarios.length})</span>
-          <div className="benchmark-cards-scroll">
+          <div className="benchmark-scenarios-list">
             {scenarios.map((sc) => {
               const isSelected = sc.id === selectedScenarioId;
               const badge = sc.ui_metadata?.badge || sc.expected_status || sc.intent || 'TEST';
@@ -89,18 +89,18 @@ export default function ScenarioBenchmarkDeck({ language = 'en' }: ScenarioBench
                 <button
                   key={sc.id}
                   type="button"
-                  className={`benchmark-scenario-card ${isSelected ? 'active' : ''}`}
+                  className={`scenario-select-card ${isSelected ? 'active' : ''}`}
                   onClick={() => {
                     setSelectedScenarioId(sc.id);
                     setBenchmarkResult(null);
                     setError(null);
                   }}
                 >
-                  <div className="scenario-card-top">
+                  <div className="scenario-card-header">
                     <strong className="scenario-id-tag">{sc.id}</strong>
                     <span className={`status-pill ${badgeColor}`}>{badge}</span>
                   </div>
-                  <div className="scenario-name">{sc.name}</div>
+                  <div className="scenario-card-title">{sc.name}</div>
                   <div className="scenario-harbor">{translateText('Harbor:', language)} {sc.harbor || 'Ratnagiri'}</div>
                 </button>
               );
@@ -109,10 +109,10 @@ export default function ScenarioBenchmarkDeck({ language = 'en' }: ScenarioBench
         </aside>
 
         {/* Right: Scenario Details & Execution Results */}
-        <main className="benchmark-detail-pane">
+        <main className="benchmark-inspector-pane">
           {selectedScenario && (
-            <div className="scenario-spec-box">
-              <div className="scenario-spec-header">
+            <div className="scenario-spec-card">
+              <div className="scenario-spec-top">
                 <div>
                   <span className="scenario-spec-eyebrow">{translateText('Scenario Specification', language)}</span>
                   <h4>{selectedScenario.id}: {selectedScenario.name}</h4>
