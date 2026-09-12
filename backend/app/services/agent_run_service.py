@@ -241,9 +241,17 @@ class AgentRunService:
                 if active_run:
                     raise _DuplicateRunError(run_id=str(active_run.id))
 
-                # Generate request ID (per instructions)
+                # Generate request ID and persist full request envelope
                 request_id = str(uuid.uuid4())
-                metadata = {"request_id": request_id}
+                metadata = {
+                    "request_id": request_id,
+                    "data_mode": self.data_mode,
+                    "request": {
+                        "message": user_message,
+                        "conversation_id": conversation_id,
+                        "user_context": user_context or {},
+                    },
+                }
 
                 run_repo.create(thread_id=conversation_id, metadata_json=metadata, run_id=run_uuid)
 
@@ -302,6 +310,7 @@ class AgentRunService:
         final_status = RunStatus.PARTIAL if has_warnings else RunStatus.COMPLETED
 
         # Persist results
+        persistence_ok = True
         try:
             with SessionLocal() as session:
                 run_repo = RunRepository(session)
@@ -315,6 +324,16 @@ class AgentRunService:
                 )
                 if run:
                     updated_metadata = dict(run.metadata_json or {})
+                    # Full response envelope for round-trip reconstruction
+                    updated_metadata["response"] = {
+                        "answer": response.answer,
+                        "intent": response.intent,
+                        "language": response.language,
+                        "recommendation": response.recommendation.model_dump(),
+                        "confidence": response.confidence.model_dump(),
+                        "warnings": response.warnings,
+                        "suggested_followups": response.suggested_followups,
+                    }
                     updated_metadata["trace"] = [
                         t.model_dump() if hasattr(t, "model_dump") else t for t in response.trace
                     ]
@@ -322,23 +341,55 @@ class AgentRunService:
                     session.add(run)
                     session.commit()
 
-                # Persist Evidence
+                # Persist Evidence — use contract field names
                 for ev in response.evidence:
+                    ev_source = getattr(ev, "source_name", None) or getattr(ev, "source", "unknown")
+                    raw_data = {
+                        "evidence_id": ev.evidence_id,
+                        "metric_name": ev.metric_name,
+                        "metric_value": ev.metric_value,
+                        "metric_unit": ev.metric_unit,
+                        "observed_time": ev.observed_time,
+                        "valid_from": ev.valid_from,
+                        "valid_to": ev.valid_to,
+                        "retrieved_at": ev.retrieved_at,
+                        "source_url": ev.source_url,
+                        "quality_flags": ev.quality_flags,
+                        "geometry": ev.geometry,
+                    }
                     evidence_repo.create(
                         run_id=run_uuid,
-                        source=ev.source,
-                        raw_data={"evidence_id": ev.evidence_id, "quality_flags": ev.quality_flags},
-                        extracted_entities=ev.extracted_entities,
+                        source=ev_source,
+                        raw_data=raw_data,
+                        extracted_entities={},
                     )
 
-                # Persist Map Layers
+                # Persist Map Layers — extract geometry from geojson payload
                 for layer in response.map_layers:
-                    # We expect layer geometries to be valid GeoJSON dicts in properties or similar
-                    # If layer is a dict, we extract geom and props. If it's a model, we dump it.
                     layer_dict = layer.model_dump() if hasattr(layer, "model_dump") else layer
-                    geom = layer_dict.get("geometry", {})
-                    props = layer_dict.get("properties", {})
+                    geojson_payload = layer_dict.get("geojson", {})
                     ltype = layer_dict.get("layer_type", "feature")
+
+                    # Extract geometry from GeoJSON Feature, FeatureCollection, or raw Geometry
+                    geom = None
+                    if geojson_payload.get("type") == "Feature":
+                        geom = geojson_payload.get("geometry")
+                    elif geojson_payload.get("type") == "FeatureCollection":
+                        features = geojson_payload.get("features", [])
+                        if features:
+                            geom = features[0].get("geometry")
+                    elif geojson_payload.get("type") in (
+                        "Point", "LineString", "Polygon",
+                        "MultiPoint", "MultiLineString", "MultiPolygon",
+                    ):
+                        geom = geojson_payload
+
+                    props = {
+                        "layer_id": layer_dict.get("layer_id"),
+                        "name": layer_dict.get("name"),
+                        "visible": layer_dict.get("visible", True),
+                        "style": layer_dict.get("style", {}),
+                    }
                     if geom:
                         map_repo.create_from_geojson(
                             run_id=run_uuid,
@@ -347,7 +398,17 @@ class AgentRunService:
                             properties=props,
                         )
         except Exception as exc:
-            logger.debug("Database run persistence skipped (service offline): %s", exc)
+            persistence_ok = False
+            logger.warning(
+                "Database run persistence failed (analysis was successful): %s", exc
+            )
+
+        # Signal persistence degradation without failing the analysis response
+        if not persistence_ok:
+            response.warnings.append(
+                "[PERSISTENCE-DEGRADED] Analysis completed successfully but could not "
+                "be saved to the database. This response is valid but has not been persisted."
+            )
 
         return response
 

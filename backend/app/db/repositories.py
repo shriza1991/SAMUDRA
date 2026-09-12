@@ -133,6 +133,51 @@ class RunRepository(BaseRepository):
                 raise
         return run
 
+    def get_run_with_details(self, run_id: uuid.UUID) -> dict[str, Any] | None:
+        """Reconstruct full structured run record including evidence and map layers."""
+        run = self.get_by_id(run_id)
+        if not run:
+            return None
+
+        evidence_items = self.session.query(EvidenceItem).filter_by(run_id=run_id).all()
+        map_layers = self.session.query(MapLayer).filter_by(run_id=run_id).all()
+
+        metadata = run.metadata_json or {}
+        return {
+            "id": str(run.id),
+            "thread_id": run.thread_id,
+            "status": run.run_status.value,
+            "started_at": run.started_at.isoformat() if run.started_at else None,
+            "completed_at": run.completed_at.isoformat() if run.completed_at else None,
+            "error_message": run.error_message,
+            "request_id": metadata.get("request_id"),
+            "data_mode": metadata.get("data_mode"),
+            "request": metadata.get("request"),
+            "response": metadata.get("response"),
+            "trace": metadata.get("trace", []),
+            "evidence_count": len(evidence_items),
+            "evidence": [
+                {
+                    "id": str(ev.id),
+                    "source": ev.source,
+                    "raw_data": ev.raw_data,
+                    "extracted_entities": ev.extracted_entities,
+                    "created_at": ev.created_at.isoformat() if ev.created_at else None,
+                }
+                for ev in evidence_items
+            ],
+            "map_layer_count": len(map_layers),
+            "map_layers": [
+                {
+                    "id": str(ml.id),
+                    "layer_type": ml.layer_type,
+                    "properties": ml.properties,
+                    "created_at": ml.created_at.isoformat() if ml.created_at else None,
+                }
+                for ml in map_layers
+            ],
+        }
+
 
 class EvidenceRepository(BaseRepository):
     def create(self, run_id: uuid.UUID, source: str, raw_data: dict, extracted_entities: dict) -> EvidenceItem:
@@ -150,6 +195,9 @@ class EvidenceRepository(BaseRepository):
         except SQLAlchemyError:
             self.session.rollback()
             raise
+
+    def get_by_run_id(self, run_id: uuid.UUID) -> list[EvidenceItem]:
+        return self.session.query(EvidenceItem).filter_by(run_id=run_id).all()
 
 
 class MapLayerRepository(BaseRepository):

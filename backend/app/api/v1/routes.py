@@ -373,17 +373,12 @@ async def get_run(run_id: str):
         return JSONResponse(status_code=400, content={"error": "Invalid run_id format"})
 
     with SessionLocal() as session:
-        run = RunRepository(session).get_by_id(run_uuid)
-        if not run:
+        run_repo = RunRepository(session)
+        details = run_repo.get_run_with_details(run_uuid)
+        if not details:
             return JSONResponse(status_code=404, content={"error": "Run not found"})
 
-        return {
-            "id": str(run.id),
-            "thread_id": run.thread_id,
-            "status": run.run_status.value,
-            "started_at": run.started_at.isoformat() if run.started_at else None,
-            "error_message": run.error_message,
-        }
+        return details
 
 
 @router.get(
@@ -497,19 +492,23 @@ async def get_conversation_history(conversation_id: str):
     from backend.app.db.repositories import RunRepository
 
     with SessionLocal() as session:
-        runs = RunRepository(session).get_all_by_thread(conversation_id)
+        run_repo = RunRepository(session)
+        runs = run_repo.get_all_by_thread(conversation_id)
         if not runs:
             return JSONResponse(status_code=404, content={"error": "Conversation not found"})
 
         history = []
         for run in runs:
-            history.append(
-                {
-                    "id": str(run.id),
-                    "status": run.run_status.value,
-                    "started_at": run.started_at.isoformat() if run.started_at else None,
-                }
-            )
+            metadata = run.metadata_json or {}
+            turn = {
+                "id": str(run.id),
+                "status": run.run_status.value,
+                "started_at": run.started_at.isoformat() if run.started_at else None,
+                "request": metadata.get("request"),
+                "response": metadata.get("response"),
+                "data_mode": metadata.get("data_mode"),
+            }
+            history.append(turn)
         return {"conversation_id": conversation_id, "history": history}
 
 
