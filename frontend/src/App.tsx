@@ -1,12 +1,10 @@
 import { useState, useEffect } from 'react';
 import Header from './components/layout/Header';
-import ChatPanel from './components/chat/ChatPanel';
-import MapView from './components/map/MapView';
+import FisherPage from './pages/FisherPage';
+import AuthorityPage from './pages/AuthorityPage';
 import EvidenceDrawer from './components/evidence/EvidenceDrawer';
 import CallModal from './components/call/CallModal';
 import { useChat } from './hooks/useChat';
-import MissionContextPanel from './components/mission/MissionContextPanel';
-import OperationalSnapshot from './components/mission/OperationalSnapshot';
 import type { OperationalRole } from './types/mission';
 import { MessageSquare, Map as MapIcon } from 'lucide-react';
 
@@ -15,7 +13,10 @@ import { MessageSquare, Map as MapIcon } from 'lucide-react';
  *
  * Owned by Dev 1 (Frontend & Geospatial UX Lead).
  * Default Theme: Light Mode
- * Layout: Header + Responsive Main (Desktop Grid / Mobile View Switcher) + Slide-out Evidence Drawer + Call Mode Modal
+ * Features:
+ *   - Fisher Console Page
+ *   - Authority Command Deck Page
+ *   - Shared Map, Evidence Drawer, and Voice Call Modal
  */
 export default function App() {
   const chat = useChat();
@@ -48,7 +49,7 @@ export default function App() {
 
   return (
     <div className="app-container">
-      {/* Top Navigation & Status Header */}
+      {/* Top Navigation & Status Header with Role Switcher */}
       <Header
         language={chat.language}
         onLanguageChange={chat.setLanguage}
@@ -57,6 +58,8 @@ export default function App() {
         onStartCall={() => setIsCallModalOpen(true)}
         theme={theme}
         onThemeToggle={toggleTheme}
+        activePage={role}
+        onPageChange={setRole}
       />
 
       {/* Mobile Segmented View Tabs (Visible only on <= 768px viewports) */}
@@ -82,45 +85,25 @@ export default function App() {
         </button>
       </nav>
 
-      {/* Main Workspace Layout */}
-      <main className={`app-main view-${mobileView}`} role="main">
-        <div className="mission-workspace">
-          <MissionContextPanel
-            context={chat.missionContext}
-            role={role}
-            currentStatus={chat.activeResponse?.recommendation.status}
-            language={chat.language}
-            isLoading={chat.isLoading}
-            activeDiff={chat.activeDiff}
-            onContextChange={chat.setMissionContext}
-            onRoleChange={setRole}
-            onSimulate={chat.simulateWhatIf}
-          />
-          <OperationalSnapshot
-            role={role}
-            context={chat.missionContext}
-            response={chat.activeResponse}
-            onOpenEvidence={() => setIsDrawerOpen(true)}
-          />
-          <ChatPanel
-            language={chat.language}
-            messages={chat.messages}
-            activeResponse={chat.activeResponse}
-            isLoading={chat.isLoading}
-            onSend={chat.send}
-            onStartCall={() => setIsCallModalOpen(true)}
-            onBack={handleBack}
-            onReset={chat.clearChat}
-            onEvidenceClick={() => setIsDrawerOpen(true)}
-          />
-        </div>
-
-        {/* Right Panel: MapLibre Geospatial Viewport */}
-        <MapView
-          layers={chat.activeResponse?.map_layers ?? []}
+      {/* Persona Pages (Fisher Console vs. Authority Command Deck) */}
+      {role === 'fisher' ? (
+        <FisherPage
+          chat={chat}
           theme={theme}
+          mobileView={mobileView}
+          onStartCall={() => setIsCallModalOpen(true)}
+          onOpenEvidence={() => setIsDrawerOpen(true)}
+          onBack={handleBack}
         />
-      </main>
+      ) : (
+        <AuthorityPage
+          chat={chat}
+          theme={theme}
+          mobileView={mobileView}
+          onOpenEvidence={() => setIsDrawerOpen(true)}
+          onBack={handleBack}
+        />
+      )}
 
       {/* Evidence & Trace Provenance Slide-out Drawer */}
       <EvidenceDrawer

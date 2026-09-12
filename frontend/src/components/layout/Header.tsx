@@ -1,7 +1,7 @@
 import LanguageSelector from './LanguageSelector';
 import DataModeIndicator from './DataModeIndicator';
 import ThemeToggle from './ThemeToggle';
-import { FileText, PhoneCall } from 'lucide-react';
+import { Building2, FileText, Fish, PhoneCall } from 'lucide-react';
 import { TRANSLATIONS, type SupportedLanguage } from '../../i18n/translations';
 
 interface HeaderProps {
@@ -12,6 +12,8 @@ interface HeaderProps {
   onStartCall?: () => void;
   theme: 'light' | 'dark';
   onThemeToggle: () => void;
+  activePage?: 'fisher' | 'authority';
+  onPageChange?: (page: 'fisher' | 'authority') => void;
 }
 
 export default function Header({
@@ -22,6 +24,8 @@ export default function Header({
   onStartCall,
   theme,
   onThemeToggle,
+  activePage = 'fisher',
+  onPageChange,
 }: HeaderProps) {
   const t = TRANSLATIONS[language] || TRANSLATIONS.en;
 
@@ -33,6 +37,31 @@ export default function Header({
           {t.appTagline}
         </p>
       </div>
+
+      {onPageChange && (
+        <nav className="header-page-nav" role="tablist" aria-label="Operational Mode View">
+          <button
+            type="button"
+            className={`header-nav-btn ${activePage === 'fisher' ? 'active' : ''}`}
+            onClick={() => onPageChange('fisher')}
+            role="tab"
+            aria-selected={activePage === 'fisher'}
+          >
+            <Fish size={14} />
+            <span>Fisher Console</span>
+          </button>
+          <button
+            type="button"
+            className={`header-nav-btn ${activePage === 'authority' ? 'active' : ''}`}
+            onClick={() => onPageChange('authority')}
+            role="tab"
+            aria-selected={activePage === 'authority'}
+          >
+            <Building2 size={14} />
+            <span>Authority Deck</span>
+          </button>
+        </nav>
+      )}
 
       <div className="app-header-right">
         {onStartCall && (
