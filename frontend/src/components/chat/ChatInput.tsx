@@ -84,6 +84,13 @@ export default function ChatInput({ language = 'en', onSend, onStartCall, disabl
           <div className="voice-status-pill recording" role="status" aria-live="polite">
             <span className="voice-pulse-dot" />
             <span>{t.recordingIndicator}</span>
+            <div className="voice-waveform-mini" aria-hidden="true">
+              <span className="waveform-bar bar-1" />
+              <span className="waveform-bar bar-2" />
+              <span className="waveform-bar bar-3" />
+              <span className="waveform-bar bar-4" />
+              <span className="waveform-bar bar-5" />
+            </div>
           </div>
         )}
 

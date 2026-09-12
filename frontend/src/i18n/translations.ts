@@ -347,6 +347,43 @@ export const CANONICAL_TRANSLATION_MAP: TranslationEntry[] = [
     mr: 'मार्ग तुलना: किनारपट्टी मार्ग 1 हा सर्वात कमी धोक्याचा शिफारस केलेला मार्ग आहे. खोल समुद्राचा मार्ग उंच लाटांच्या पट्ट्यातून जातो.',
   },
 
+  // Mission Twin & Operational Corridors
+  {
+    en: 'Mission Twin',
+    hi: 'मिशन ट्विन',
+    mr: 'मिशन ट्विन',
+  },
+  {
+    en: 'What-If Simulation',
+    hi: 'काल्पनिक परिस्थिति सिमुलेशन (What-If)',
+    mr: 'पर्यायी परिस्थिती मॉडेलिंग (What-If)',
+  },
+  {
+    en: 'Safest Corridor',
+    hi: 'सुरक्षिततम गलियारा (न्यूनतम जोखिम)',
+    mr: 'सर्वात सुरक्षित सागरी मार्ग (किमान धोका)',
+  },
+  {
+    en: 'Balanced Corridor',
+    hi: 'संतुलित मार्ग',
+    mr: 'संतुलित सागरी मार्ग',
+  },
+  {
+    en: 'Direct Passage',
+    hi: 'सीधा मार्ग',
+    mr: 'थेट जलमार्ग',
+  },
+  {
+    en: 'Run What-If Simulation',
+    hi: 'सिमुलेशन प्रारंभ करें',
+    mr: 'सिम्युलेशन सुरू करा',
+  },
+  {
+    en: 'Counterfactual Decision Impact',
+    hi: 'निर्णय प्रभाव विश्लेषण',
+    mr: 'निर्णयावरील संभाव्य परिणाम',
+  },
+
   // Decisive factors
   {
     en: 'Significant wave height 3.4m exceeds craft safety ceiling (2.5m)',

@@ -468,6 +468,32 @@
   to { opacity: 0.3; transform: scale(0.7); }
 }
 
+.voice-waveform-mini {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  height: 10px;
+  margin-left: 4px;
+}
+
+.waveform-bar {
+  width: 2px;
+  border-radius: 1px;
+  background: #ef4444;
+  animation: waveform-bounce 0.8s ease-in-out infinite alternate;
+}
+
+.waveform-bar.bar-1 { height: 4px; animation-delay: 0.1s; }
+.waveform-bar.bar-2 { height: 8px; animation-delay: 0.25s; }
+.waveform-bar.bar-3 { height: 10px; animation-delay: 0.4s; }
+.waveform-bar.bar-4 { height: 6px; animation-delay: 0.15s; }
+.waveform-bar.bar-5 { height: 3px; animation-delay: 0.3s; }
+
+@keyframes waveform-bounce {
+  0% { transform: scaleY(0.4); opacity: 0.6; }
+  100% { transform: scaleY(1); opacity: 1; }
+}
+
 .spin {
   animation: spin 1s linear infinite;
 }
