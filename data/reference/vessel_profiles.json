@@ -1,0 +1,68 @@
+[
+  {
+    "profile_id": "traditional_non_motorized",
+    "category": "Traditional Canoe / Catamaran",
+    "length_overall_m": 6.5,
+    "beam_m": 1.2,
+    "draft_m": 0.5,
+    "engine_type": "None (Oar / Sail)",
+    "operational_range_nm": 5.0,
+    "max_crew": 3,
+    "safety_limits": {
+      "wave_caution_m": 1.0,
+      "wave_nogo_m": 1.5,
+      "wind_caution_knots": 12.0,
+      "wind_nogo_knots": 18.0,
+      "gust_caution_knots": 16.0,
+      "gust_nogo_knots": 22.0,
+      "swell_caution_m": 1.0,
+      "swell_nogo_m": 1.4
+    },
+    "source": "INCOIS SVAS Marine Safety Guide & CMFRI Craft Classification",
+    "version": "2026.1"
+  },
+  {
+    "profile_id": "motorized_boat",
+    "category": "FRP Motorized Fishing Boat",
+    "length_overall_m": 9.5,
+    "beam_m": 2.1,
+    "draft_m": 0.9,
+    "engine_type": "Outboard Motor (9.9 HP - 25 HP Kerosene/Petrol)",
+    "operational_range_nm": 25.0,
+    "max_crew": 6,
+    "safety_limits": {
+      "wave_caution_m": 1.5,
+      "wave_nogo_m": 2.5,
+      "wind_caution_knots": 18.0,
+      "wind_nogo_knots": 25.0,
+      "gust_caution_knots": 24.0,
+      "gust_nogo_knots": 32.0,
+      "swell_caution_m": 1.6,
+      "swell_nogo_m": 2.2
+    },
+    "source": "INCOIS SVAS Marine Safety Guide & CMFRI Craft Classification",
+    "version": "2026.1"
+  },
+  {
+    "profile_id": "mechanized_trawler",
+    "category": "Mechanized Inboard Trawler / Gillnetter",
+    "length_overall_m": 16.0,
+    "beam_m": 4.5,
+    "draft_m": 2.2,
+    "engine_type": "Inboard Marine Diesel (110 HP - 160 HP)",
+    "operational_range_nm": 100.0,
+    "max_crew": 12,
+    "safety_limits": {
+      "wave_caution_m": 2.2,
+      "wave_nogo_m": 3.5,
+      "wind_caution_knots": 24.0,
+      "wind_nogo_knots": 35.0,
+      "gust_caution_knots": 30.0,
+      "gust_nogo_knots": 42.0,
+      "swell_caution_m": 2.2,
+      "swell_nogo_m": 3.0
+    },
+    "source": "INCOIS SVAS Marine Safety Guide & CMFRI Craft Classification",
+    "version": "2026.1"
+  }
+]

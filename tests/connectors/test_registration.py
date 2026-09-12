@@ -98,3 +98,23 @@ def test_hazard_search_tool_execution(registry, snapshot_manager):
     ev = result.evidence[0]
     assert ev.metric_name == "cyclone_warning_active"
     assert "REAL_SOURCE" in ev.quality_flags
+
+
+def test_svas_advisory_tool_execution(registry, snapshot_manager):
+    register_dev2_provider_tools(registry, snapshot_manager)
+
+    assert registry.is_capability_available("svas_advisory")
+    assert registry.get_tool("svas_advisory") is not None
+
+    result = registry.execute_tool(
+        "svas_advisory", params={"origin_harbor": "Ratnagiri", "craft_profile": "motorized_boat"}
+    )
+    assert result.status == ToolStatus.OK
+    assert "advisory_status" in result.data
+    assert "safety_index" in result.data
+
+    assert len(result.evidence) > 0
+    ev = result.evidence[0]
+    assert ev.metric_name == "svas_safety_index"
+    assert "REAL_SOURCE" in ev.quality_flags
+

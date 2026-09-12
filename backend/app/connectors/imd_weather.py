@@ -107,8 +107,9 @@ class ImdWeatherConnector(BaseLiveConnector):
             observed_at=raw.get("observed_at", now_utc.isoformat()),
             valid_to=raw.get("valid_to", (now_utc + timedelta(hours=12)).isoformat()),
             source_name="IMD Coastal Weather Bulletin",
-            source_url=self.IMD_COASTAL_URL,
+            source_url=self.SOURCE_URL,
         )
+
 
     @staticmethod
     def _make_degraded_payload(harbor: str, reason: str) -> WeatherConditionsPayload:

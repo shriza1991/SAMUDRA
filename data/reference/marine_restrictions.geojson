@@ -1,0 +1,96 @@
+{
+  "type": "FeatureCollection",
+  "name": "Indian Marine Restrictions and Geofences",
+  "crs": {
+    "type": "name",
+    "properties": {
+      "name": "urn:ogc:def:crs:OGC:1.3:CRS84"
+    }
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "id": "REST-NAV-GOA-01",
+      "properties": {
+        "restriction_id": "REST-NAV-GOA-01",
+        "name": "Naval Firing Range Foxtrot (Goa Sector)",
+        "type": "NAVAL_FIRING_RANGE",
+        "authority": "Indian Navy / Directorate of Naval Operations",
+        "valid_from": "2026-01-01T00:00:00Z",
+        "valid_to": "2026-12-31T23:59:59Z",
+        "source": "Notice to Mariners (NoTM) & Indian Coast Guard Advisory",
+        "restriction_level": "NO_GO",
+        "is_hard_restriction": true,
+        "description": "Active artillery and live-fire defense training sector. All civilian vessels and fishing craft strictly prohibited."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [73.15, 15.30],
+            [73.35, 15.30],
+            [73.35, 15.55],
+            [73.15, 15.55],
+            [73.15, 15.30]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "REST-MPA-MALVAN-02",
+      "properties": {
+        "restriction_id": "REST-MPA-MALVAN-02",
+        "name": "Malvan Marine Sanctuary Core Conservation Zone",
+        "type": "MPA_SANCTUARY_CORE",
+        "authority": "Ministry of Environment, Forest and Climate Change (MoEFCC)",
+        "valid_from": "2026-01-01T00:00:00Z",
+        "valid_to": "2026-12-31T23:59:59Z",
+        "source": "Maharashtra Gazette Notification Wildlife Protection Act",
+        "restriction_level": "NO_GO_TRAWLING",
+        "is_hard_restriction": true,
+        "description": "Core coral reef and marine ecosystem sanctuary. Commercial bottom trawling and anchoring barred."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [73.40, 16.00],
+            [73.55, 16.00],
+            [73.55, 16.12],
+            [73.40, 16.12],
+            [73.40, 16.00]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "REST-IMBL-GUJ-03",
+      "properties": {
+        "restriction_id": "REST-IMBL-GUJ-03",
+        "name": "Sir Creek / International Maritime Boundary Line Buffer",
+        "type": "INTERNATIONAL_BOUNDARY_BUFFER",
+        "authority": "Border Security Force (Water Wing) / Indian Coast Guard",
+        "valid_from": "2026-01-01T00:00:00Z",
+        "valid_to": "2026-12-31T23:59:59Z",
+        "source": "Ministry of Defence Border Area Guidelines",
+        "restriction_level": "NO_GO",
+        "is_hard_restriction": true,
+        "description": "Sensitive international boundary security zone. Crossing strictly prohibited."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [68.10, 23.40],
+            [68.50, 23.40],
+            [68.50, 23.80],
+            [68.10, 23.80],
+            [68.10, 23.40]
+          ]
+        ]
+      }
+    }
+  ]
+}

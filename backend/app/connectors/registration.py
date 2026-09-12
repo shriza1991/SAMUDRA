@@ -96,7 +96,30 @@ def register_dev2_provider_tools(
 
     registry.register_tool(hazard_def, handle_hazard, override=True)
 
-    # 4. Availability Check (update registry capability availability)
+    # 4. Register SVAS Advisory
+    svas_cap = CAPABILITIES_CATALOG["svas_advisory"]
+    svas_def = ToolDefinition(
+        name="svas_advisory",
+        description=svas_cap.description,
+        parameters=[],
+        category="marine",
+        owner=ToolOwner.DEV2,
+        capability="svas_advisory",
+        required_context_fields=svas_cap.required_context_fields,
+        dependencies=svas_cap.dependencies,
+        requires_evidence=svas_cap.requires_evidence,
+        is_available=True,
+    )
+
+    def handle_svas(**kwargs: Any) -> Any:
+        context = ToolInvocationContext(**kwargs)
+        return ProviderToolAdapter.adapt_svas_advisory(
+            connector_manager.get_svas_advisories, context, is_mock=is_mock
+        )
+
+    registry.register_tool(svas_def, handle_svas, override=True)
+
+    # 5. Availability Check (update registry capability availability)
     # The requirement is: "Connector availability must update registry capability availability."
     # Since snapshot mode is always available, and hybrid falls back to snapshot,
     # the capability is available if the manager can fulfill it. For now, it's True.
@@ -104,8 +127,10 @@ def register_dev2_provider_tools(
     registry.set_capability_availability("marine_conditions", True)
     registry.set_capability_availability("weather_conditions", True)
     registry.set_capability_availability("hazard_search", True)
+    registry.set_capability_availability("svas_advisory", True)
 
     # PFZ BOUNDARY requirement:
     # Expose the PFZSourceDataProvider implementation for Dev 4.
     # Do not register Dev 4's pfz_search ranking engine.
     # By passing connector_manager, Dev 4 can call connector_manager.get_pfz_raw_advisories()
+
