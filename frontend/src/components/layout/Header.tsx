@@ -1,31 +1,27 @@
-import LanguageSelector from './LanguageSelector';
 import DataModeIndicator from './DataModeIndicator';
-import ThemeToggle from './ThemeToggle';
-import { FileText, LogOut } from 'lucide-react';
-import { TRANSLATIONS, type SupportedLanguage } from '../../i18n/translations';
+import { FileText, LogOut, Settings } from 'lucide-react';
+import { TRANSLATIONS, translateText, type SupportedLanguage } from '../../i18n/translations';
 
 interface HeaderProps {
   language: SupportedLanguage;
-  onLanguageChange: (lang: SupportedLanguage) => void;
   evidenceCount: number;
   onOpenEvidence: () => void;
   theme: 'light' | 'dark';
-  onThemeToggle: () => void;
-  currentPortal?: 'selection' | 'fisher' | 'authority';
+  currentPortal?: 'selection' | 'fisher' | 'authority' | 'settings';
   onLogout?: () => void;
   onReturnToPortal?: () => void;
+  onOpenSettings?: () => void;
 }
 
 export default function Header({
   language,
-  onLanguageChange,
   evidenceCount,
   onOpenEvidence,
   theme,
-  onThemeToggle,
   currentPortal = 'selection',
   onLogout,
   onReturnToPortal,
+  onOpenSettings,
 }: HeaderProps) {
   const t = TRANSLATIONS[language] || TRANSLATIONS.en;
   const handleLogout = onLogout || onReturnToPortal;
@@ -40,9 +36,7 @@ export default function Header({
       </div>
 
       <div className="app-header-right">
-        <LanguageSelector language={language} onChange={onLanguageChange} />
         <DataModeIndicator />
-        <ThemeToggle theme={theme} onToggle={onThemeToggle} />
         {evidenceCount > 0 && (
           <button
             className="evidence-toggle-btn"
@@ -53,7 +47,22 @@ export default function Header({
             <span>{t.evidenceBtn} ({evidenceCount})</span>
           </button>
         )}
-        {currentPortal !== 'selection' && handleLogout && (
+        {onOpenSettings && (
+          <button
+            type="button"
+            className={`header-settings-btn ${currentPortal === 'settings' ? 'active' : ''}`}
+            onClick={onOpenSettings}
+            title={translateText('Settings & Preferences', language)}
+            aria-label={translateText('Settings & Preferences', language)}
+          >
+            <Settings size={14} />
+            <span className="header-settings-label">{translateText('Settings', language)}</span>
+            <span className="header-settings-pill">
+              {language.toUpperCase()} · {theme === 'dark' ? '🌙' : '☀️'}
+            </span>
+          </button>
+        )}
+        {currentPortal !== 'selection' && currentPortal !== 'settings' && handleLogout && (
           <button
             type="button"
             className="header-logout-btn"

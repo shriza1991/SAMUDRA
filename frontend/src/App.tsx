@@ -3,12 +3,13 @@ import Header from './components/layout/Header';
 import PortalPage from './pages/PortalPage';
 import FisherPage from './pages/FisherPage';
 import AuthorityPage from './pages/AuthorityPage';
+import SettingsPage from './pages/SettingsPage';
 import EvidenceDrawer from './components/evidence/EvidenceDrawer';
 import CallModal from './components/call/CallModal';
 import { useChat } from './hooks/useChat';
 import { MessageSquare, Map as MapIcon } from 'lucide-react';
 
-export type PortalMode = 'selection' | 'fisher' | 'authority';
+export type PortalMode = 'selection' | 'fisher' | 'authority' | 'settings';
 
 /**
  * SAMUDRA Main Application Shell
@@ -19,11 +20,13 @@ export type PortalMode = 'selection' | 'fisher' | 'authority';
  *   - Landing Portal Page (Selection between Fisher Console & Authority Deck)
  *   - Fisher Console Page
  *   - Authority Command Deck Page
+ *   - Settings Page (Theme, Language, Mission Context, Voice & Diagnostics)
  *   - Shared Map, Evidence Drawer, and Voice Call Modal
  */
 export default function App() {
   const chat = useChat();
   const [portal, setPortal] = useState<PortalMode>('selection');
+  const [previousPortal, setPreviousPortal] = useState<PortalMode>('selection');
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isCallModalOpen, setIsCallModalOpen] = useState(false);
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
@@ -34,8 +37,13 @@ export default function App() {
     document.documentElement.setAttribute('data-theme', theme);
   }, [theme]);
 
-  const toggleTheme = () => {
-    setTheme(prev => (prev === 'light' ? 'dark' : 'light'));
+  const handleOpenSettings = () => {
+    if (portal !== 'settings') {
+      setPreviousPortal(portal);
+      setPortal('settings');
+    } else {
+      setPortal(previousPortal);
+    }
   };
 
   const evidenceItems = chat.activeResponse?.evidence ?? [];
@@ -55,18 +63,17 @@ export default function App() {
       {/* Top Navigation & Status Header */}
       <Header
         language={chat.language}
-        onLanguageChange={chat.setLanguage}
         evidenceCount={evidenceItems.length}
         onOpenEvidence={() => setIsDrawerOpen(true)}
         theme={theme}
-        onThemeToggle={toggleTheme}
         currentPortal={portal}
         onLogout={() => setPortal('selection')}
         onReturnToPortal={() => setPortal('selection')}
+        onOpenSettings={handleOpenSettings}
       />
 
       {/* Mobile Segmented View Tabs (Visible only on <= 768px viewports when in a role console) */}
-      {portal !== 'selection' && (
+      {portal !== 'selection' && portal !== 'settings' && (
         <nav className="mobile-view-tabs" role="tablist" aria-label="Mobile viewport selection">
           <button
             className={`mobile-tab-btn ${mobileView === 'chat' ? 'active' : ''}`}
@@ -90,7 +97,7 @@ export default function App() {
         </nav>
       )}
 
-      {/* Pages: Portal Selection vs. Fisher Console vs. Authority Command Deck */}
+      {/* Pages: Portal Selection vs. Fisher Console vs. Authority Command Deck vs. Settings */}
       {portal === 'selection' ? (
         <PortalPage onSelectRole={(selected) => setPortal(selected)} language={chat.language} />
       ) : portal === 'fisher' ? (
@@ -102,13 +109,23 @@ export default function App() {
           onOpenEvidence={() => setIsDrawerOpen(true)}
           onBack={handleBack}
         />
-      ) : (
+      ) : portal === 'authority' ? (
         <AuthorityPage
           chat={chat}
           theme={theme}
           mobileView={mobileView}
           onOpenEvidence={() => setIsDrawerOpen(true)}
           onBack={handleBack}
+        />
+      ) : (
+        <SettingsPage
+          theme={theme}
+          onThemeChange={setTheme}
+          language={chat.language}
+          onLanguageChange={chat.setLanguage}
+          missionContext={chat.missionContext}
+          onMissionContextChange={chat.setMissionContext}
+          onBack={() => setPortal(previousPortal)}
         />
       )}
 

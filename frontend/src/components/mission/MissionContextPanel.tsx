@@ -15,9 +15,9 @@ interface MissionContextPanelProps {
   onSimulate?: (params: WhatIfParameters, queryText: string) => void;
 }
 
-const HARBORS = ['Ratnagiri', 'Malvan', 'Panaji', 'Mumbai', 'Veraval', 'Porbandar'];
+export const HARBORS = ['Ratnagiri', 'Malvan', 'Panaji', 'Mumbai', 'Veraval', 'Porbandar'];
 
-const CRAFT_PROFILES = [
+export const CRAFT_PROFILES = [
   { value: 'traditional_non_motorized', label: 'Traditional craft' },
   { value: 'motorized_boat', label: 'Motorized boat' },
   { value: 'mechanized_trawler', label: 'Mechanized trawler' },
