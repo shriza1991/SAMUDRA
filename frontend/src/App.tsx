@@ -6,6 +6,7 @@ import EvidenceDrawer from './components/evidence/EvidenceDrawer';
 import CallModal from './components/call/CallModal';
 import { useChat } from './hooks/useChat';
 import MissionContextPanel from './components/mission/MissionContextPanel';
+import OperationalSnapshot from './components/mission/OperationalSnapshot';
 import type { OperationalRole } from './types/mission';
 import { MessageSquare, Map as MapIcon } from 'lucide-react';
 
@@ -89,6 +90,12 @@ export default function App() {
             role={role}
             onContextChange={chat.setMissionContext}
             onRoleChange={setRole}
+          />
+          <OperationalSnapshot
+            role={role}
+            context={chat.missionContext}
+            response={chat.activeResponse}
+            onOpenEvidence={() => setIsDrawerOpen(true)}
           />
           <ChatPanel
             language={chat.language}
