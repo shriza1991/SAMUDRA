@@ -1475,17 +1475,24 @@
 
 .mission-map-brief {
   position: absolute;
-  z-index: 2;
+  z-index: 5;
   top: 14px;
   left: 14px;
-  width: min(270px, calc(100% - 88px));
-  padding: 10px;
+  width: min(280px, calc(100% - 120px));
+  padding: 10px 12px;
   border: 1px solid color-mix(in srgb, var(--color-border) 88%, transparent);
   border-radius: var(--radius-md);
   color: var(--color-text-primary);
-  background: color-mix(in srgb, var(--color-bg-primary) 92%, transparent);
-  box-shadow: 0 7px 20px rgba(15, 23, 42, .2);
-  backdrop-filter: blur(8px);
+  background: color-mix(in srgb, var(--color-bg-primary) 94%, transparent);
+  box-shadow: 0 7px 22px rgba(15, 23, 42, .3);
+  backdrop-filter: blur(10px);
+  transition: all var(--transition-fast);
+}
+
+.mission-map-brief.collapsed {
+  width: auto;
+  min-width: 180px;
+  padding: 6px 10px;
 }
 
 .mission-map-brief.map-brief-empty {
@@ -1500,10 +1507,43 @@
 .map-brief-heading {
   display: flex;
   align-items: center;
-  gap: 6px;
+  justify-content: space-between;
+  gap: 8px;
   color: var(--color-accent);
   font-size: 12px;
   font-weight: 700;
+}
+
+.map-brief-heading-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.map-brief-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.map-brief-toggle-btn:hover {
+  color: var(--color-text-primary);
+  background: var(--color-bg-tertiary);
+}
+
+.map-brief-collapsed-summary {
+  margin-top: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--color-text-muted);
 }
 
 .mission-map-brief p {
@@ -1651,21 +1691,24 @@
   line-height: 1.6;
 }
 
-/* Map Layer Toggle Button */
+/* Map Layer Toggle Button (Positioned at TOP-RIGHT, next to MapLibre zoom controls) */
 .map-layer-toggle {
   position: absolute;
-  top: var(--space-md);
-  left: var(--space-md);
+  top: 10px;
+  right: 50px;
   display: flex;
   align-items: center;
   gap: var(--space-xs);
-  padding: var(--space-sm) var(--space-md);
-  background: var(--color-bg-secondary);
+  padding: 6px 12px;
+  background: color-mix(in srgb, var(--color-bg-secondary) 94%, transparent);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   color: var(--color-text-secondary);
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
   z-index: 10;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(8px);
   transition: all var(--transition-fast);
   cursor: pointer;
 }
@@ -1673,19 +1716,22 @@
 .map-layer-toggle:hover {
   border-color: var(--color-accent);
   color: var(--color-accent);
+  background: var(--color-bg-secondary);
 }
 
-/* Layer Manager Panel */
+/* Layer Manager Panel (Positioned cleanly on TOP-RIGHT below controls, zero overlap with left brief) */
 .layer-manager {
   position: absolute;
-  top: var(--space-md);
-  left: var(--space-md);
-  width: 240px;
-  max-height: 300px;
-  background: var(--color-bg-secondary);
+  top: 46px;
+  right: 10px;
+  width: 270px;
+  max-height: 420px;
+  background: color-mix(in srgb, var(--color-bg-secondary) 96%, transparent);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  z-index: 11;
+  z-index: 25;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(12px);
   overflow: hidden;
   display: flex;
   flex-direction: column;

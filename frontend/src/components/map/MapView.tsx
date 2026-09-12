@@ -64,6 +64,8 @@ export default function MapView({ layers, theme = 'light', center, zoom, languag
     };
   }, []);
 
+  const activePopupRef = useRef<maplibregl.Popup | null>(null);
+
   // Animate map when programmatic center or zoom changes
   useEffect(() => {
     const map = mapRef.current;
@@ -198,28 +200,43 @@ export default function MapView({ layers, theme = 'light', center, zoom, languag
           }
         }
 
-        // Add dynamic popup on click
-        map.on('click', layerId, (e) => {
-          if (!e.features?.length) return;
-          const feature = e.features[0];
-          const props = feature.properties || {};
+        // Only attach interactive popups to specific zones, points, and routes (NOT the entire sea background EEZ)
+        const isBackgroundZone = layerId.toLowerCase().includes('eez') || layer.style?.layer_category === 'background';
 
-          const entries = Object.entries(props);
-          const html = entries.length > 0
-            ? entries
-                .map(([k, v]) => `<div><strong>${k.replace(/_/g, ' ')}:</strong> ${formatPropValue(v)}</div>`)
-                .join('')
-            : `<div><em>${layer.name}</em></div>`;
+        if (!isBackgroundZone) {
+          map.on('click', layerId, (e) => {
+            if (!e.features?.length) return;
+            const feature = e.features[0];
+            const props = feature.properties || {};
 
-          new maplibregl.Popup({ closeButton: true, maxWidth: '300px' })
-            .setLngLat(e.lngLat)
-            .setHTML(`<div class="map-popup"><h5 style="margin:0 0 6px;color:#0284c7">${layer.name}</h5>${html}</div>`)
-            .addTo(map);
-        });
+            activePopupRef.current?.remove();
 
-        // Change cursor on hover
-        map.on('mouseenter', layerId, () => { map.getCanvas().style.cursor = 'pointer'; });
-        map.on('mouseleave', layerId, () => { map.getCanvas().style.cursor = ''; });
+            const ignoredKeys = new Set([
+              'polygon_id', 'id', 'polygon_type', 'is_hard_restriction', 'objectid', 'object_id',
+              'layer_id', 'layer_type', 'source', 'type', 'geometry_type', 'home_harbor_id'
+            ]);
+
+            const entries = Object.entries(props).filter(([k]) => !ignoredKeys.has(k.toLowerCase()));
+
+            const html = entries.length > 0
+              ? entries
+                  .slice(0, 6)
+                  .map(([k, v]) => `<div style="margin-bottom:2px"><strong>${k.replace(/_/g, ' ')}:</strong> ${formatPropValue(v)}</div>`)
+                  .join('')
+              : `<div><em>${layer.name}</em></div>`;
+
+            const popup = new maplibregl.Popup({ closeButton: true, maxWidth: '280px', offset: 10 })
+              .setLngLat(e.lngLat)
+              .setHTML(`<div class="map-popup"><h5 style="margin:0 0 6px;color:#0284c7;font-size:12px;font-weight:700">${layer.name}</h5>${html}</div>`)
+              .addTo(map);
+
+            activePopupRef.current = popup;
+          });
+
+          // Change cursor on hover for clickable features
+          map.on('mouseenter', layerId, () => { map.getCanvas().style.cursor = 'pointer'; });
+          map.on('mouseleave', layerId, () => { map.getCanvas().style.cursor = ''; });
+        }
       }
 
       activeLayersRef.current = { layers: registeredLayers, sources: registeredSources };

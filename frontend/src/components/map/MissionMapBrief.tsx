@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { AlertTriangle, Compass, Fish, MapPinned, Route, ShieldCheck, Zap } from 'lucide-react';
+import { AlertTriangle, ChevronDown, ChevronUp, Compass, Fish, MapPinned, Route, ShieldCheck, Zap } from 'lucide-react';
 import type { MapLayer } from '../../types/contracts';
 import type { OperationalMode } from '../../types/mission';
 import { translateText, type SupportedLanguage } from '../../i18n/translations';
@@ -49,6 +49,7 @@ export default function MissionMapBrief({
   language = 'en',
 }: MissionMapBriefProps) {
   const [internalMode, setInternalMode] = useState<OperationalMode>('safest');
+  const [isCollapsed, setIsCollapsed] = useState(false);
   const activeMode = controlledMode ?? internalMode;
 
   const handleModeSelect = (mode: OperationalMode) => {
@@ -76,63 +77,70 @@ export default function MissionMapBrief({
   const routeDistance = extractRouteDistance(primaryRoute);
 
   return (
-    <aside className="mission-map-brief" aria-label="Mission map summary and corridor selection">
+    <aside className={`mission-map-brief ${isCollapsed ? 'collapsed' : ''}`} aria-label="Mission map summary and corridor selection">
       <div className="map-brief-heading">
-        <MapPinned size={16} />
-        <span>{translateText('Mission map & corridors', language)}</span>
-      </div>
-
-      <div className="map-brief-stats">
-        <BriefStat icon={<Fish size={14} />} label={translateText('PFZ', language)} count={pfzLayers.length} active={pfzLayers.length > 0} />
-        <BriefStat icon={<Route size={14} />} label={translateText('Routes', language)} count={routeLayers.length} active={routeLayers.length > 0} />
-        <BriefStat icon={<AlertTriangle size={14} />} label={translateText('Hazards', language)} count={hazardLayers.length} active={hazardLayers.length > 0} critical />
-      </div>
-
-      {/* Operational corridor strategy selector when routes or PFZ exist */}
-      {(routeLayers.length > 0 || pfzLayers.length > 0) && (
-        <div className="map-corridor-section">
-          <div className="map-corridor-label">{translateText('Operational Strategy:', language)}</div>
-          <div className="map-corridor-modes" role="radiogroup" aria-label="Operational navigation mode">
-            {OPERATIONAL_MODES.map((m) => (
-              <button
-                key={m.id}
-                type="button"
-                className={`map-corridor-chip ${activeMode === m.id ? 'active' : ''}`}
-                onClick={() => handleModeSelect(m.id)}
-                aria-pressed={activeMode === m.id}
-                title={translateText(m.strategy, language)}
-              >
-                {m.icon}
-                <span>{translateText(m.label, language)}</span>
-                <span className="corridor-badge">{translateText(m.badge, language)}</span>
-              </button>
-            ))}
-          </div>
-
-          <div className="map-corridor-info">
-            <small>{translateText(OPERATIONAL_MODES.find((m) => m.id === activeMode)?.strategy ?? '', language)}</small>
-            {routeDistance && (
-              <span className="map-route-metric">
-                {translateText('Est. Distance:', language)} <strong>{routeDistance} km</strong>
-              </span>
-            )}
-          </div>
+        <div className="map-brief-heading-left">
+          <MapPinned size={15} />
+          <span>{translateText('Mission map & corridors', language)}</span>
         </div>
-      )}
-
-      <div className="map-brief-layer-list">
-        {layers.slice(0, 3).map((layer) => (
-          <span key={layer.layer_id}>
-            <i style={{ backgroundColor: layer.style?.color || '#38bdf8' }} /> {translateText(layer.name, language)}
-          </span>
-        ))}
-        {layers.length > 3 && (
-          <span>
-            +{layers.length - 3}{' '}
-            {language === 'hi' ? 'अधिक परतें' : language === 'mr' ? 'अधिक स्तर' : 'more layers'}
-          </span>
-        )}
+        <button
+          type="button"
+          className="map-brief-toggle-btn"
+          onClick={() => setIsCollapsed(!isCollapsed)}
+          title={isCollapsed ? 'Expand mission brief' : 'Collapse mission brief'}
+          aria-label={isCollapsed ? 'Expand mission brief' : 'Collapse mission brief'}
+        >
+          {isCollapsed ? <ChevronDown size={14} /> : <ChevronUp size={14} />}
+        </button>
       </div>
+
+      {isCollapsed ? (
+        <div className="map-brief-collapsed-summary">
+          <span>{hazardLayers.length} {translateText('Hazards', language)}</span>
+          {routeLayers.length > 0 && <span> · {routeLayers.length} {translateText('Routes', language)}</span>}
+          {pfzLayers.length > 0 && <span> · {pfzLayers.length} {translateText('PFZ', language)}</span>}
+        </div>
+      ) : (
+        <>
+          <div className="map-brief-stats">
+            <BriefStat icon={<Fish size={14} />} label={translateText('PFZ', language)} count={pfzLayers.length} active={pfzLayers.length > 0} />
+            <BriefStat icon={<Route size={14} />} label={translateText('Routes', language)} count={routeLayers.length} active={routeLayers.length > 0} />
+            <BriefStat icon={<AlertTriangle size={14} />} label={translateText('Hazards', language)} count={hazardLayers.length} active={hazardLayers.length > 0} critical />
+          </div>
+
+          {/* Operational corridor strategy selector when routes or PFZ exist */}
+          {(routeLayers.length > 0 || pfzLayers.length > 0) && (
+            <div className="map-corridor-section">
+              <div className="map-corridor-label">{translateText('Operational Strategy:', language)}</div>
+              <div className="map-corridor-modes" role="radiogroup" aria-label="Operational navigation mode">
+                {OPERATIONAL_MODES.map((m) => (
+                  <button
+                    key={m.id}
+                    type="button"
+                    className={`map-corridor-chip ${activeMode === m.id ? 'active' : ''}`}
+                    onClick={() => handleModeSelect(m.id)}
+                    aria-pressed={activeMode === m.id}
+                    title={translateText(m.strategy, language)}
+                  >
+                    {m.icon}
+                    <span>{translateText(m.label, language)}</span>
+                    <span className="corridor-badge">{translateText(m.badge, language)}</span>
+                  </button>
+                ))}
+              </div>
+
+              <div className="map-corridor-info">
+                <small>{translateText(OPERATIONAL_MODES.find((m) => m.id === activeMode)?.strategy ?? '', language)}</small>
+                {routeDistance && (
+                  <span className="map-route-metric">
+                    {translateText('Est. Distance:', language)} <strong>{routeDistance} km</strong>
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
+        </>
+      )}
     </aside>
   );
 }
