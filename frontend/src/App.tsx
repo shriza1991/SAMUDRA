@@ -5,6 +5,8 @@ import MapView from './components/map/MapView';
 import EvidenceDrawer from './components/evidence/EvidenceDrawer';
 import CallModal from './components/call/CallModal';
 import { useChat } from './hooks/useChat';
+import MissionContextPanel from './components/mission/MissionContextPanel';
+import type { OperationalRole } from './types/mission';
 import { MessageSquare, Map as MapIcon } from 'lucide-react';
 
 /**
@@ -20,6 +22,7 @@ export default function App() {
   const [isCallModalOpen, setIsCallModalOpen] = useState(false);
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [mobileView, setMobileView] = useState<'chat' | 'map'>('chat');
+  const [role, setRole] = useState<OperationalRole>('fisher');
 
   // Synchronize theme on HTML element
   useEffect(() => {
@@ -80,18 +83,25 @@ export default function App() {
 
       {/* Main Workspace Layout */}
       <main className={`app-main view-${mobileView}`} role="main">
-        {/* Left Panel: Conversational Interface */}
-        <ChatPanel
-          language={chat.language}
-          messages={chat.messages}
-          activeResponse={chat.activeResponse}
-          isLoading={chat.isLoading}
-          onSend={chat.send}
-          onStartCall={() => setIsCallModalOpen(true)}
-          onBack={handleBack}
-          onReset={chat.clearChat}
-          onEvidenceClick={() => setIsDrawerOpen(true)}
-        />
+        <div className="mission-workspace">
+          <MissionContextPanel
+            context={chat.missionContext}
+            role={role}
+            onContextChange={chat.setMissionContext}
+            onRoleChange={setRole}
+          />
+          <ChatPanel
+            language={chat.language}
+            messages={chat.messages}
+            activeResponse={chat.activeResponse}
+            isLoading={chat.isLoading}
+            onSend={chat.send}
+            onStartCall={() => setIsCallModalOpen(true)}
+            onBack={handleBack}
+            onReset={chat.clearChat}
+            onEvidenceClick={() => setIsDrawerOpen(true)}
+          />
+        </div>
 
         {/* Right Panel: MapLibre Geospatial Viewport */}
         <MapView
@@ -114,8 +124,8 @@ export default function App() {
         isOpen={isCallModalOpen}
         onClose={() => setIsCallModalOpen(false)}
         language={chat.language}
-        originHarbor="Ratnagiri"
-        craftProfile="motorized_boat"
+        originHarbor={chat.missionContext.origin_harbor}
+        craftProfile={chat.missionContext.craft_profile}
       />
     </div>
   );

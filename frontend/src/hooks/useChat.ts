@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import type { ChatRequest, ChatResponse } from '../types/contracts';
 import { sendMessage, ApiError } from '../api/client';
+import { DEFAULT_MISSION_CONTEXT, type MissionContext } from '../types/mission';
 
 export interface ChatMessage {
   id: string;
@@ -22,6 +23,7 @@ export function useChat() {
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [activeResponse, setActiveResponse] = useState<ChatResponse | null>(null);
   const [language, setLanguage] = useState<'en' | 'hi' | 'mr'>('en');
+  const [missionContext, setMissionContext] = useState<MissionContext>(DEFAULT_MISSION_CONTEXT);
 
   const send = useCallback(async (text: string, languageOverride?: 'en' | 'hi' | 'mr') => {
     const targetLanguage = languageOverride || language;
@@ -52,6 +54,7 @@ export function useChat() {
         conversation_id: conversationId ?? undefined,
         message: text,
         user_context: {
+          ...missionContext,
           language_preference: targetLanguage,
         },
       };
@@ -96,7 +99,7 @@ export function useChat() {
     } finally {
       setIsLoading(false);
     }
-  }, [conversationId, language]);
+  }, [conversationId, language, missionContext]);
 
   const clearChat = useCallback(() => {
     setMessages([]);
@@ -111,6 +114,8 @@ export function useChat() {
     activeResponse,
     language,
     setLanguage,
+    missionContext,
+    setMissionContext,
     send,
     clearChat,
   };

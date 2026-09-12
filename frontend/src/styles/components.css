@@ -804,6 +804,116 @@
   overflow: hidden;
 }
 
+/* Mission context and presentation-level role views */
+.mission-workspace {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-right: 1px solid var(--color-border);
+  background: var(--color-bg-primary);
+}
+
+.mission-workspace .chat-panel {
+  flex: 1 1 0%;
+  border-right: none;
+}
+
+.mission-context-panel {
+  flex: 0 0 auto;
+  padding: 12px 14px 10px;
+  border-bottom: 1px solid var(--color-border);
+  background: linear-gradient(135deg, var(--color-bg-secondary), var(--color-bg-primary));
+}
+
+.mission-context-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: var(--color-accent);
+}
+
+.mission-context-heading h2 {
+  margin: 1px 0 0;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-base);
+}
+
+.mission-context-eyebrow {
+  color: var(--color-text-muted);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.role-switcher {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin: 10px 0;
+}
+
+.role-switcher button {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  min-height: 32px;
+  padding: 6px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
+  background: var(--color-bg-tertiary);
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.role-switcher button.active {
+  color: #fff;
+  border-color: var(--color-accent);
+  background: var(--color-accent);
+}
+
+.mission-context-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.mission-context-fields label {
+  display: grid;
+  gap: 4px;
+  color: var(--color-text-muted);
+  font-size: 11px;
+}
+
+.mission-context-fields label > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.mission-context-fields select {
+  width: 100%;
+  min-width: 0;
+  padding: 7px 8px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-primary);
+  background: var(--color-bg-primary);
+  font: inherit;
+  font-size: 12px;
+}
+
+.mission-context-note {
+  margin: 9px 0 0;
+  color: var(--color-text-dim);
+  font-size: 11px;
+  line-height: 1.35;
+}
+
 /* Map View */
 .map-view {
   position: relative;
@@ -1511,6 +1621,16 @@
 
   .app-main.view-map .chat-panel {
     display: none !important;
+  }
+
+  .app-main.view-map .mission-workspace {
+    display: none;
+  }
+
+  .mission-workspace {
+    width: 100%;
+    height: 100%;
+    border-right: none;
   }
 
   .app-main.view-map .map-view {
