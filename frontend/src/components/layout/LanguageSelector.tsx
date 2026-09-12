@@ -1,8 +1,11 @@
 import { Globe } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 interface LanguageSelectorProps {
   language: 'en' | 'hi' | 'mr';
   onChange: (lang: 'en' | 'hi' | 'mr') => void;
+  className?: string;
 }
 
 const LANGUAGES = [
@@ -11,21 +14,34 @@ const LANGUAGES = [
   { code: 'mr' as const, label: 'मराठी' },
 ];
 
-export default function LanguageSelector({ language, onChange }: LanguageSelectorProps) {
+export default function LanguageSelector({ language, onChange, className }: LanguageSelectorProps) {
   return (
-    <div className="language-selector" role="group" aria-label="Language selection">
-      <Globe size={14} className="lang-icon" />
-      <div className="lang-options">
-        {LANGUAGES.map((lang) => (
-          <button
-            key={lang.code}
-            className={`lang-btn ${language === lang.code ? 'active' : ''}`}
-            onClick={() => onChange(lang.code)}
-            aria-pressed={language === lang.code}
-          >
-            {lang.label}
-          </button>
-        ))}
+    <div
+      className={cn('language-selector flex items-center gap-1.5 rounded-lg border border-border/60 bg-card/60 p-0.5', className)}
+      role="group"
+      aria-label="Language selection"
+    >
+      <Globe size={13} className="lang-icon ml-1.5 text-muted-foreground" />
+      <div className="lang-options flex items-center gap-0.5">
+        {LANGUAGES.map((lang) => {
+          const isActive = language === lang.code;
+          return (
+            <Button
+              key={lang.code}
+              type="button"
+              variant={isActive ? 'default' : 'ghost'}
+              size="sm"
+              className={cn(
+                'lang-btn h-6 px-2 text-xs font-medium transition-colors',
+                isActive ? 'shadow-xs' : 'text-muted-foreground hover:text-foreground'
+              )}
+              onClick={() => onChange(lang.code)}
+              aria-pressed={isActive}
+            >
+              {lang.label}
+            </Button>
+          );
+        })}
       </div>
     </div>
   );
