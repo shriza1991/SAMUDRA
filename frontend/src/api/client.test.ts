@@ -149,6 +149,61 @@ describe('API Client', () => {
     const { sendVoiceChat } = await import('./client');
     await expect(sendVoiceChat(blob)).rejects.toThrow(ApiError);
   });
+
+  it('fetches base layers via GET /api/v1/layers/base', async () => {
+    const mockBaseLayers = {
+      type: 'FeatureCollection',
+      features: [{ type: 'Feature', id: 'POLY-NAV-01', properties: { name: 'Naval Range' } }],
+    };
+    (globalThis.fetch as any).mockResolvedValueOnce({
+      ok: true,
+      json: async () => mockBaseLayers,
+    });
+
+    const { getBaseLayers } = await import('./client');
+    const layers = await getBaseLayers();
+    expect(layers.type).toBe('FeatureCollection');
+    expect(layers.features).toHaveLength(1);
+  });
+
+  it('runs scenario benchmark via POST /api/v1/scenarios/{id}/run', async () => {
+    const mockBenchmark = {
+      scenario_id: 'S1',
+      scenario_name: 'Normal Safe',
+      passed: true,
+      actual_status: 'GO',
+      expected_status: 'GO',
+      executed_tools: ['marine_conditions'],
+      evidence_count: 3,
+      evidence_grounded: true,
+      response_text: 'Safe to depart',
+      trace_steps_count: 5,
+      warnings: [],
+      validation_notes: ['Match'],
+    };
+    (globalThis.fetch as any).mockResolvedValueOnce({
+      ok: true,
+      json: async () => mockBenchmark,
+    });
+
+    const { runScenario } = await import('./client');
+    const res = await runScenario('S1');
+    expect(res.passed).toBe(true);
+    expect(res.actual_status).toBe('GO');
+  });
+
+  it('fetches demo vessels and replay positions', async () => {
+    const { getDemoVessels, getDemoVesselReplay, getDemoNotifications } = await import('./client');
+    const vessels = await getDemoVessels();
+    expect(vessels.length).toBeGreaterThan(0);
+
+    const positions = await getDemoVesselReplay('vessel-01');
+    expect(positions.length).toBeGreaterThan(0);
+    expect(positions[0].latitude).toBeCloseTo(16.99, 1);
+
+    const notifs = await getDemoNotifications();
+    expect(notifs.length).toBeGreaterThan(0);
+  });
 });
 
 

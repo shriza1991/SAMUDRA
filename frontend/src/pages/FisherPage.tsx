@@ -1,10 +1,11 @@
-import { useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import ChatPanel from '../components/chat/ChatPanel';
 import MapView from '../components/map/MapView';
 import MissionContextPanel from '../components/mission/MissionContextPanel';
 import OperationalSnapshot from '../components/mission/OperationalSnapshot';
 import type { useChat } from '../hooks/useChat';
-import { createHarborLayer, getHarborCoordinates } from '../utils/geo';
+import type { MapLayer } from '../types/contracts';
+import { createHarborLayer, getHarborCoordinates, fetchAndFormatBaseLayers } from '../utils/geo';
 
 export interface FisherPageProps {
   chat: ReturnType<typeof useChat>;
@@ -32,21 +33,22 @@ export default function FisherPage({
   const originHarbor = chat.missionContext.origin_harbor || 'Ratnagiri';
   const harborCoords = useMemo(() => getHarborCoordinates(originHarbor), [originHarbor]);
   const status = chat.activeResponse?.recommendation.status ?? 'GO';
+  const [baseLayers, setBaseLayers] = useState<MapLayer[]>([]);
 
-  // Construct active layers: Ensure departure harbor station is always visible & interactive
+  useEffect(() => {
+    fetchAndFormatBaseLayers().then(setBaseLayers);
+  }, []);
+
+  // Construct active layers: Ensure departure harbor station and base boundaries are always visible & interactive
   const effectiveLayers = useMemo(() => {
     const responseLayers = chat.activeResponse?.map_layers ?? [];
     const hasOriginLayer = responseLayers.some(
       (l) => l.layer_id.includes('origin') || l.layer_id.includes('vessel_position') || l.layer_id.includes('harbor')
     );
 
-    if (hasOriginLayer) {
-      return responseLayers;
-    }
-
-    const baselineHarborLayer = createHarborLayer(originHarbor, status);
-    return [baselineHarborLayer, ...responseLayers];
-  }, [chat.activeResponse?.map_layers, originHarbor, status]);
+    const baselineHarborLayer = hasOriginLayer ? [] : [createHarborLayer(originHarbor, status)];
+    return [...baseLayers, ...baselineHarborLayer, ...responseLayers];
+  }, [baseLayers, chat.activeResponse?.map_layers, originHarbor, status]);
 
   return (
     <main className={`app-main fisher-page view-${mobileView}`} role="main">

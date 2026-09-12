@@ -201,3 +201,109 @@ export const MOCK_PFZ_RESPONSE: ChatResponse = {
     'Show alternative PFZ options further south',
   ],
 };
+
+export const MOCK_DEMO_VESSELS = [
+  {
+    public_id: 'vessel-01',
+    name: 'Matsya Sagar 01',
+    vessel_type: 'motorized_boat',
+    length_m: 9.5,
+    capacity_tons: 3.0,
+    home_harbor_id: 'Ratnagiri',
+    status: 'OPERATIONAL',
+    metadata_json: { engine_hp: 30, hull_material: 'FRP' },
+  },
+  {
+    public_id: 'vessel-02',
+    name: 'Konkan Pride',
+    vessel_type: 'mechanized_trawler',
+    length_m: 18.0,
+    capacity_tons: 15.0,
+    home_harbor_id: 'Ratnagiri',
+    status: 'OPERATIONAL',
+    metadata_json: { engine_hp: 120, hull_material: 'Wood' },
+  },
+  {
+    public_id: 'vessel-03',
+    name: 'Sindhudurg Queen',
+    vessel_type: 'motorized_boat',
+    length_m: 11.0,
+    capacity_tons: 4.5,
+    home_harbor_id: 'Malvan',
+    status: 'OPERATIONAL',
+    metadata_json: { engine_hp: 45, hull_material: 'FRP' },
+  },
+  {
+    public_id: 'vessel-04',
+    name: 'Goa Wave Rider',
+    vessel_type: 'mechanized_trawler',
+    length_m: 19.5,
+    capacity_tons: 18.0,
+    home_harbor_id: 'Panaji',
+    status: 'OPERATIONAL',
+    metadata_json: { engine_hp: 140, hull_material: 'Steel' },
+  },
+];
+
+export const MOCK_VESSEL_REPLAY: Record<string, Array<{
+  public_id: string;
+  vessel_id: string;
+  trip_id: string;
+  timestamp: string;
+  latitude: number;
+  longitude: number;
+  speed_knots: number;
+  heading_deg: number;
+}>> = {
+  'vessel-01': [
+    { public_id: 'pos-1', vessel_id: 'vessel-01', trip_id: 'trip-01', timestamp: '00:00', latitude: 16.990, longitude: 73.280, speed_knots: 7.5, heading_deg: 235 },
+    { public_id: 'pos-2', vessel_id: 'vessel-01', trip_id: 'trip-01', timestamp: '00:30', latitude: 16.974, longitude: 73.251, speed_knots: 8.0, heading_deg: 238 },
+    { public_id: 'pos-3', vessel_id: 'vessel-01', trip_id: 'trip-01', timestamp: '01:00', latitude: 16.951, longitude: 73.208, speed_knots: 8.2, heading_deg: 240 },
+    { public_id: 'pos-4', vessel_id: 'vessel-01', trip_id: 'trip-01', timestamp: '01:30', latitude: 16.924, longitude: 73.155, speed_knots: 8.1, heading_deg: 242 },
+    { public_id: 'pos-5', vessel_id: 'vessel-01', trip_id: 'trip-01', timestamp: '02:00', latitude: 16.898, longitude: 73.102, speed_knots: 7.9, heading_deg: 245 },
+    { public_id: 'pos-6', vessel_id: 'vessel-01', trip_id: 'trip-01', timestamp: '02:30', latitude: 16.871, longitude: 73.048, speed_knots: 8.0, heading_deg: 245 },
+    { public_id: 'pos-7', vessel_id: 'vessel-01', trip_id: 'trip-01', timestamp: '03:00', latitude: 16.845, longitude: 72.992, speed_knots: 8.1, heading_deg: 246 },
+    { public_id: 'pos-8', vessel_id: 'vessel-01', trip_id: 'trip-01', timestamp: '03:30', latitude: 16.820, longitude: 72.950, speed_knots: 3.2, heading_deg: 245 },
+  ],
+};
+
+export const MOCK_NOTIFICATIONS = [
+  {
+    public_id: 'notif-01',
+    recipient_role: 'fisher',
+    vessel_id: 'vessel-01',
+    title: 'Squall Warning in Sector',
+    message: 'Active cyclone squall advisory issued for Konkan offshore. Wave heights up to 3.4m.',
+    severity: 'WARNING' as const,
+    is_read: false,
+    timestamp: '2026-09-12T05:00:00Z',
+  },
+  {
+    public_id: 'notif-02',
+    recipient_role: 'fisher',
+    vessel_id: 'vessel-02',
+    title: 'Elevated Wave Heights Observed',
+    message: 'Wave heights exceeding 2.8m recorded by INCOIS OSF buoy. Safe harbor return recommended.',
+    severity: 'WARNING' as const,
+    is_read: true,
+    timestamp: '2026-09-12T04:15:00Z',
+  },
+  {
+    public_id: 'notif-03',
+    recipient_role: 'authority',
+    title: 'Naval Live-Firing Exclusion Active',
+    message: 'Sector Foxtrot live exercise active between 08:00 - 16:00. Maintain 5nm safety perimeter.',
+    severity: 'CRITICAL' as const,
+    is_read: false,
+    timestamp: '2026-09-12T03:30:00Z',
+  },
+  {
+    public_id: 'notif-04',
+    recipient_role: 'fisher',
+    title: 'PFZ Advisory Bulletin Available',
+    message: 'INCOIS PFZ update: favorable chlorophyll gradient detected 14.2 nm West of Ratnagiri.',
+    severity: 'INFO' as const,
+    is_read: true,
+    timestamp: '2026-09-12T01:00:00Z',
+  },
+];

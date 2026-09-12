@@ -11,6 +11,8 @@ interface LayerManagerProps {
 export default function LayerManager({ layers, visibility, onToggle, onClose }: LayerManagerProps) {
   const safetyLayers = layers.filter(
     l => l.style?.layer_category === 'safety_critical' ||
+         l.style?.layer_category === 'base_geofence' ||
+         l.layer_id.startsWith('base_') ||
          l.layer_id.includes('hazard') ||
          l.layer_id.includes('geofence') ||
          l.layer_id.includes('safety')

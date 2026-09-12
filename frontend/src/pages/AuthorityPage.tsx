@@ -1,20 +1,25 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
   Activity,
   AlertTriangle,
   Building2,
   FileCheck2,
+  FlaskConical,
   RadioTower,
   RotateCcw,
   ShieldAlert,
   ShieldCheck,
+  Ship,
 } from 'lucide-react';
 import ChatPanel from '../components/chat/ChatPanel';
 import MapView from '../components/map/MapView';
 import EvidenceCard from '../components/evidence/EvidenceCard';
 import AgentTimeline from '../components/trace/AgentTimeline';
+import ScenarioBenchmarkDeck from '../components/authority/ScenarioBenchmarkDeck';
+import FleetTrackingDeck from '../components/authority/FleetTrackingDeck';
 import type { useChat } from '../hooks/useChat';
-import { createSectorLayers, getSectorConfig } from '../utils/geo';
+import type { MapLayer } from '../types/contracts';
+import { createSectorLayers, getSectorConfig, fetchAndFormatBaseLayers } from '../utils/geo';
 
 export interface AuthorityPageProps {
   chat: ReturnType<typeof useChat>;
@@ -23,6 +28,8 @@ export interface AuthorityPageProps {
   onOpenEvidence: () => void;
   onBack: () => void;
 }
+
+export type AuthorityTab = 'terminal' | 'fleet' | 'benchmarks' | 'audit';
 
 const SECTORS = [
   'Ratnagiri Sector (MH-03)',
@@ -37,7 +44,7 @@ const SECTORS = [
  *
  * Tailored for port authorities, fisheries departments, disaster management teams,
  * and maritime enforcement officers.
- * Reuses ChatPanel, MapView, EvidenceCard, and AgentTimeline.
+ * Reuses ChatPanel, MapView, EvidenceCard, AgentTimeline, FleetTrackingDeck, and ScenarioBenchmarkDeck.
  */
 export default function AuthorityPage({
   chat,
@@ -47,16 +54,23 @@ export default function AuthorityPage({
   onBack,
 }: AuthorityPageProps) {
   const [selectedSector, setSelectedSector] = useState(SECTORS[0]);
-  const [authorityTab, setAuthorityTab] = useState<'terminal' | 'audit'>('terminal');
+  const [authorityTab, setAuthorityTab] = useState<AuthorityTab>('terminal');
+  const [replayLayer, setReplayLayer] = useState<MapLayer | null>(null);
+  const [baseLayers, setBaseLayers] = useState<MapLayer[]>([]);
+
+  useEffect(() => {
+    fetchAndFormatBaseLayers().then(setBaseLayers);
+  }, []);
 
   const sectorConfig = useMemo(() => getSectorConfig(selectedSector), [selectedSector]);
 
-  // Combine sector surveillance polygon + radar post with any active query layers
+  // Combine official base boundaries + sector polygon + replay trajectory + active query layers
   const authorityLayers = useMemo(() => {
-    const baseLayers = createSectorLayers(selectedSector);
+    const sectorLayers = createSectorLayers(selectedSector);
     const responseLayers = chat.activeResponse?.map_layers ?? [];
-    return [...baseLayers, ...responseLayers];
-  }, [selectedSector, chat.activeResponse?.map_layers]);
+    const activeReplay = replayLayer ? [replayLayer] : [];
+    return [...baseLayers, ...sectorLayers, ...activeReplay, ...responseLayers];
+  }, [baseLayers, selectedSector, replayLayer, chat.activeResponse?.map_layers]);
 
   const status = chat.activeResponse?.recommendation.status ?? 'READY';
   const evidenceList = chat.activeResponse?.evidence ?? [];
@@ -150,6 +164,26 @@ export default function AuthorityPage({
         </button>
         <button
           type="button"
+          className={`authority-tab-btn ${authorityTab === 'fleet' ? 'active' : ''}`}
+          onClick={() => setAuthorityTab('fleet')}
+          role="tab"
+          aria-selected={authorityTab === 'fleet'}
+        >
+          <Ship size={14} />
+          <span>Fleet Surveillance & Trajectory Replay</span>
+        </button>
+        <button
+          type="button"
+          className={`authority-tab-btn ${authorityTab === 'benchmarks' ? 'active' : ''}`}
+          onClick={() => setAuthorityTab('benchmarks')}
+          role="tab"
+          aria-selected={authorityTab === 'benchmarks'}
+        >
+          <FlaskConical size={14} />
+          <span>Scenario Benchmark Runner (S1–S8)</span>
+        </button>
+        <button
+          type="button"
           className={`authority-tab-btn ${authorityTab === 'audit' ? 'active' : ''}`}
           onClick={() => setAuthorityTab('audit')}
           role="tab"
@@ -162,7 +196,7 @@ export default function AuthorityPage({
 
       {/* Workspace Body */}
       <div className="authority-body">
-        {authorityTab === 'terminal' ? (
+        {authorityTab === 'terminal' && (
           <div className="authority-workspace-grid">
             {/* Left: Reused ChatPanel in Official Dispatch Terminal Mode */}
             <aside className="authority-terminal-pane" aria-label="Terminal Pane">
@@ -200,7 +234,31 @@ export default function AuthorityPage({
               />
             </div>
           </div>
-        ) : (
+        )}
+
+        {authorityTab === 'fleet' && (
+          <div className="authority-workspace-grid authority-fleet-grid">
+            <aside className="authority-fleet-pane" aria-label="Fleet Surveillance Pane">
+              <FleetTrackingDeck onReplayUpdate={setReplayLayer} />
+            </aside>
+            <div className="authority-map-pane">
+              <MapView
+                layers={authorityLayers}
+                theme={theme}
+                center={sectorConfig.center}
+                zoom={sectorConfig.zoom}
+              />
+            </div>
+          </div>
+        )}
+
+        {authorityTab === 'benchmarks' && (
+          <div className="authority-benchmarks-container">
+            <ScenarioBenchmarkDeck language={chat.language} />
+          </div>
+        )}
+
+        {authorityTab === 'audit' && (
           /* Audit View: Direct In-Page Evidence & Agent Trace Logs */
           <div className="authority-audit-view">
             <div className="authority-audit-column">

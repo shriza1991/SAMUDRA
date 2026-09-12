@@ -1,4 +1,5 @@
 import type { MapLayer } from '../types/contracts';
+import { getBaseLayers } from '../api/client';
 
 /**
  * Authoritative Indian Coastal Harbor Coordinates [longitude, latitude] (EPSG:4326)
@@ -203,3 +204,44 @@ export function createSectorLayers(sectorName: string): MapLayer[] {
 
   return [sectorPolygonLayer, sectorStationLayer];
 }
+
+/**
+ * Fetches official base operational boundaries (IMBL, Naval ranges, MPAs)
+ * from GET /api/v1/layers/base and maps them to canonical MapLayers.
+ */
+export async function fetchAndFormatBaseLayers(): Promise<MapLayer[]> {
+  try {
+    const fc = await getBaseLayers();
+    if (!fc || !Array.isArray(fc.features)) return [];
+
+    return fc.features.map((f: any, idx: number) => {
+      const props = f.properties || {};
+      const level = props.restriction_level || 'INFORMATIONAL';
+      const color =
+        level === 'NO_GO'
+          ? '#ef4444'
+          : level === 'NO_GO_TRAWLING'
+          ? '#f97316'
+          : level === 'ADVISORY_ALERT'
+          ? '#eab308'
+          : '#38bdf8';
+
+      return {
+        layer_id: `base_${props.polygon_id || idx}`,
+        name: props.name || `Operational Zone ${idx + 1}`,
+        layer_type: 'geojson' as const,
+        visible: true,
+        style: {
+          color,
+          opacity: 0.22,
+          line_width: 2,
+          layer_category: 'base_geofence',
+        },
+        geojson: f,
+      };
+    });
+  } catch {
+    return [];
+  }
+}
+

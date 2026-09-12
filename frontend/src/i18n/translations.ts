@@ -53,6 +53,8 @@ export interface LocaleContent {
   callSubtitleUser: string;
   callSubtitleSamudra: string;
   logoutBtn: string;
+  listenBtn: string;
+  stopAudioBtn: string;
 }
 
 
@@ -135,6 +137,8 @@ export const TRANSLATIONS: Record<SupportedLanguage, LocaleContent> = {
     callSubtitleUser: 'You',
     callSubtitleSamudra: 'SAMUDRA',
     logoutBtn: 'Logout',
+    listenBtn: 'Listen',
+    stopAudioBtn: 'Stop',
   },
   hi: {
     appTagline: 'स्मार्ट स्वायत्त सागरी समझ, निर्णय और जोखिम सहायक',
@@ -214,6 +218,8 @@ export const TRANSLATIONS: Record<SupportedLanguage, LocaleContent> = {
     callSubtitleUser: 'आप',
     callSubtitleSamudra: 'समुद्र (SAMUDRA)',
     logoutBtn: 'लॉग आउट',
+    listenBtn: 'सुनें',
+    stopAudioBtn: 'रोकें',
   },
   mr: {
     appTagline: 'स्मार्ट स्वायत्त सागरी आकलन, निर्णय आणि जोखीम सहाय्यक',
@@ -293,6 +299,8 @@ export const TRANSLATIONS: Record<SupportedLanguage, LocaleContent> = {
     callSubtitleUser: 'तुम्ही',
     callSubtitleSamudra: 'समुद्र (SAMUDRA)',
     logoutBtn: 'लॉग आउट',
+    listenBtn: 'ऐका',
+    stopAudioBtn: 'थांबवा',
   },
 };
 
