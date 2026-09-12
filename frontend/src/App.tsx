@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
 import Header from './components/layout/Header';
+import PortalPage from './pages/PortalPage';
 import FisherPage from './pages/FisherPage';
 import AuthorityPage from './pages/AuthorityPage';
 import EvidenceDrawer from './components/evidence/EvidenceDrawer';
 import CallModal from './components/call/CallModal';
 import { useChat } from './hooks/useChat';
-import type { OperationalRole } from './types/mission';
 import { MessageSquare, Map as MapIcon } from 'lucide-react';
+
+export type PortalMode = 'selection' | 'fisher' | 'authority';
 
 /**
  * SAMUDRA Main Application Shell
@@ -14,17 +16,18 @@ import { MessageSquare, Map as MapIcon } from 'lucide-react';
  * Owned by Dev 1 (Frontend & Geospatial UX Lead).
  * Default Theme: Light Mode
  * Features:
+ *   - Landing Portal Page (Selection between Fisher Console & Authority Deck)
  *   - Fisher Console Page
  *   - Authority Command Deck Page
  *   - Shared Map, Evidence Drawer, and Voice Call Modal
  */
 export default function App() {
   const chat = useChat();
+  const [portal, setPortal] = useState<PortalMode>('selection');
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isCallModalOpen, setIsCallModalOpen] = useState(false);
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [mobileView, setMobileView] = useState<'chat' | 'map'>('chat');
-  const [role, setRole] = useState<OperationalRole>('fisher');
 
   // Synchronize theme on HTML element
   useEffect(() => {
@@ -49,7 +52,7 @@ export default function App() {
 
   return (
     <div className="app-container">
-      {/* Top Navigation & Status Header with Role Switcher */}
+      {/* Top Navigation & Status Header */}
       <Header
         language={chat.language}
         onLanguageChange={chat.setLanguage}
@@ -58,35 +61,39 @@ export default function App() {
         onStartCall={() => setIsCallModalOpen(true)}
         theme={theme}
         onThemeToggle={toggleTheme}
-        activePage={role}
-        onPageChange={setRole}
+        currentPortal={portal}
+        onReturnToPortal={() => setPortal('selection')}
       />
 
-      {/* Mobile Segmented View Tabs (Visible only on <= 768px viewports) */}
-      <nav className="mobile-view-tabs" role="tablist" aria-label="Mobile viewport selection">
-        <button
-          className={`mobile-tab-btn ${mobileView === 'chat' ? 'active' : ''}`}
-          onClick={() => setMobileView('chat')}
-          role="tab"
-          aria-selected={mobileView === 'chat'}
-        >
-          <MessageSquare size={16} />
-          <span>Chat</span>
-        </button>
-        <button
-          className={`mobile-tab-btn ${mobileView === 'map' ? 'active' : ''}`}
-          onClick={() => setMobileView('map')}
-          role="tab"
-          aria-selected={mobileView === 'map'}
-        >
-          <MapIcon size={16} />
-          <span>Map</span>
-          {layerCount > 0 && <span className="mobile-tab-badge">{layerCount}</span>}
-        </button>
-      </nav>
+      {/* Mobile Segmented View Tabs (Visible only on <= 768px viewports when in a role console) */}
+      {portal !== 'selection' && (
+        <nav className="mobile-view-tabs" role="tablist" aria-label="Mobile viewport selection">
+          <button
+            className={`mobile-tab-btn ${mobileView === 'chat' ? 'active' : ''}`}
+            onClick={() => setMobileView('chat')}
+            role="tab"
+            aria-selected={mobileView === 'chat'}
+          >
+            <MessageSquare size={16} />
+            <span>Chat</span>
+          </button>
+          <button
+            className={`mobile-tab-btn ${mobileView === 'map' ? 'active' : ''}`}
+            onClick={() => setMobileView('map')}
+            role="tab"
+            aria-selected={mobileView === 'map'}
+          >
+            <MapIcon size={16} />
+            <span>Map</span>
+            {layerCount > 0 && <span className="mobile-tab-badge">{layerCount}</span>}
+          </button>
+        </nav>
+      )}
 
-      {/* Persona Pages (Fisher Console vs. Authority Command Deck) */}
-      {role === 'fisher' ? (
+      {/* Pages: Portal Selection vs. Fisher Console vs. Authority Command Deck */}
+      {portal === 'selection' ? (
+        <PortalPage onSelectRole={(selected) => setPortal(selected)} language={chat.language} />
+      ) : portal === 'fisher' ? (
         <FisherPage
           chat={chat}
           theme={theme}

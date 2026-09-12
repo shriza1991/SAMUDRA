@@ -1,8 +1,14 @@
 import { describe, it, expect } from 'vitest';
+import PortalPage from './PortalPage';
 import FisherPage from './FisherPage';
 import AuthorityPage from './AuthorityPage';
 
-describe('Persona Pages: Fisher & Authority Modular Separation', () => {
+describe('Persona Pages: Fisher & Authority Modular Separation with Portal Selection', () => {
+  it('exports PortalPage component cleanly', () => {
+    expect(PortalPage).toBeDefined();
+    expect(typeof PortalPage).toBe('function');
+  });
+
   it('exports FisherPage component cleanly', () => {
     expect(FisherPage).toBeDefined();
     expect(typeof FisherPage).toBe('function');

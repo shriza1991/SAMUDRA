@@ -1,7 +1,7 @@
 import LanguageSelector from './LanguageSelector';
 import DataModeIndicator from './DataModeIndicator';
 import ThemeToggle from './ThemeToggle';
-import { Building2, FileText, Fish, PhoneCall } from 'lucide-react';
+import { ArrowLeft, FileText, PhoneCall } from 'lucide-react';
 import { TRANSLATIONS, type SupportedLanguage } from '../../i18n/translations';
 
 interface HeaderProps {
@@ -12,8 +12,8 @@ interface HeaderProps {
   onStartCall?: () => void;
   theme: 'light' | 'dark';
   onThemeToggle: () => void;
-  activePage?: 'fisher' | 'authority';
-  onPageChange?: (page: 'fisher' | 'authority') => void;
+  currentPortal?: 'selection' | 'fisher' | 'authority';
+  onReturnToPortal?: () => void;
 }
 
 export default function Header({
@@ -24,47 +24,35 @@ export default function Header({
   onStartCall,
   theme,
   onThemeToggle,
-  activePage = 'fisher',
-  onPageChange,
+  currentPortal = 'selection',
+  onReturnToPortal,
 }: HeaderProps) {
   const t = TRANSLATIONS[language] || TRANSLATIONS.en;
 
   return (
     <header className="app-header">
       <div className="app-header-left">
-        <h1 className="app-title">SAMUDRA</h1>
+        <div className="app-title-group">
+          <h1 className="app-title">SAMUDRA</h1>
+          {onReturnToPortal && currentPortal !== 'selection' && (
+            <button
+              type="button"
+              className="header-back-portal-btn"
+              onClick={onReturnToPortal}
+              title="Return to Portal Selection"
+            >
+              <ArrowLeft size={13} />
+              <span>Change Portal</span>
+            </button>
+          )}
+        </div>
         <p className="app-tagline">
           {t.appTagline}
         </p>
       </div>
 
-      {onPageChange && (
-        <nav className="header-page-nav" role="tablist" aria-label="Operational Mode View">
-          <button
-            type="button"
-            className={`header-nav-btn ${activePage === 'fisher' ? 'active' : ''}`}
-            onClick={() => onPageChange('fisher')}
-            role="tab"
-            aria-selected={activePage === 'fisher'}
-          >
-            <Fish size={14} />
-            <span>Fisher Console</span>
-          </button>
-          <button
-            type="button"
-            className={`header-nav-btn ${activePage === 'authority' ? 'active' : ''}`}
-            onClick={() => onPageChange('authority')}
-            role="tab"
-            aria-selected={activePage === 'authority'}
-          >
-            <Building2 size={14} />
-            <span>Authority Deck</span>
-          </button>
-        </nav>
-      )}
-
       <div className="app-header-right">
-        {onStartCall && (
+        {onStartCall && currentPortal === 'fisher' && (
           <button
             type="button"
             className="call-samudra-trigger-btn"
@@ -94,4 +82,3 @@ export default function Header({
     </header>
   );
 }
-
