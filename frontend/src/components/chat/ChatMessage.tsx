@@ -6,9 +6,10 @@ interface ChatMessageProps {
   message: ChatMessageType;
   language?: SupportedLanguage;
   onEvidenceClick?: () => void;
+  onFollowUp?: (message: string) => void;
 }
 
-export default function ChatMessage({ message, language = 'en', onEvidenceClick }: ChatMessageProps) {
+export default function ChatMessage({ message, language = 'en', onEvidenceClick, onFollowUp }: ChatMessageProps) {
   const isUser = message.role === 'user';
   const t = TRANSLATIONS[language] || TRANSLATIONS.en;
   const displayContent = translateChatMessage(message.content, language, message.response?.intent);
@@ -59,9 +60,15 @@ export default function ChatMessage({ message, language = 'en', onEvidenceClick 
         {!isUser && message.response?.suggested_followups && message.response.suggested_followups.length > 0 && (
           <div className="suggested-followups">
             {message.response.suggested_followups.map((followup, i) => (
-              <span key={i} className="followup-chip">
+              <button
+                key={i}
+                type="button"
+                className="followup-chip"
+                onClick={() => onFollowUp?.(followup)}
+                disabled={!onFollowUp}
+              >
                 {translateText(followup, language)}
-              </span>
+              </button>
             ))}
           </div>
         )}

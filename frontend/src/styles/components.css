@@ -221,6 +221,17 @@
   border: 1px solid var(--color-border);
   border-radius: var(--radius-full);
   color: var(--color-text-muted);
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+}
+
+.followup-chip:hover:not(:disabled) {
+  color: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
+.followup-chip:disabled {
   cursor: default;
 }
 

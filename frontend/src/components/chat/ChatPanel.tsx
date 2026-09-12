@@ -105,6 +105,7 @@ export default function ChatPanel({
             message={msg}
             language={language}
             onEvidenceClick={onEvidenceClick}
+            onFollowUp={onSend}
           />
         ))}
 
