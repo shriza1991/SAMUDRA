@@ -99,28 +99,6 @@ export default function FisherPage({
           </button>
         </div>
 
-        {/* Active mission context strip in Advisory Chat view so voyage parameters remain visible */}
-        {sidebarTab === 'chat' && (
-          <div className="fisher-active-context-strip">
-            <div className="context-strip-left">
-              <Anchor size={12} className="context-strip-icon" />
-              <span className="context-strip-label">{translateText('Mission context', chat.language)}:</span>
-              <span className="context-strip-value">
-                {translateText(originHarbor, chat.language)} · {formatCraft(chat.missionContext.craft_profile, chat.language)}
-              </span>
-            </div>
-            <button
-              type="button"
-              className="context-strip-edit-btn"
-              onClick={() => setSidebarTab('voyage')}
-              title={translateText('Toggle voyage settings', chat.language)}
-            >
-              <SlidersHorizontal size={11} />
-              <span>{translateText('Edit Voyage', chat.language)}</span>
-            </button>
-          </div>
-        )}
-
         {/* Tab content: full-height chat or focused voyage configuration */}
         {sidebarTab === 'chat' ? (
           <ChatPanel
