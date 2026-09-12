@@ -17,6 +17,9 @@ import {
 import type { SupportedLanguage } from '../../i18n/translations';
 import { TRANSLATIONS } from '../../i18n/translations';
 import { useCallSession } from '../../hooks/useCallSession';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 
 interface CallModalProps {
   isOpen: boolean;
@@ -62,13 +65,12 @@ export default function CallModal({
   } = useCallSession({
     originHarbor,
     craftProfile,
-    silenceTimeoutMs: 3000, // ~3 seconds silence detection
+    silenceTimeoutMs: 3000,
     speechThreshold: 0.032,
     minSpeechDurationMs: 300,
     onCallEnd: onClose,
   });
 
-  // Start call when opened
   useEffect(() => {
     if (isOpen) {
       startCall();
@@ -77,7 +79,6 @@ export default function CallModal({
     }
   }, [isOpen]);
 
-  // Auto-scroll transcript box
   useEffect(() => {
     transcriptEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [transcriptHistory, callState]);
@@ -87,241 +88,257 @@ export default function CallModal({
   return (
     <Dialog.Root open={isOpen} onOpenChange={(open) => { if (!open) endCall(); }}>
       <Dialog.Portal>
-        <Dialog.Overlay className="call-modal-backdrop" />
+        <Dialog.Overlay className="call-modal-backdrop fixed inset-0 z-50 bg-black/70 backdrop-blur-sm" />
         <Dialog.Content
-          className="call-modal-container"
+          className="call-modal-container fixed left-1/2 top-1/2 z-50 w-full max-w-sm -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-border/80 bg-card p-4 shadow-2xl space-y-4"
           aria-describedby={undefined}
         >
           {/* Top Header */}
-          <header className="call-header">
-            <div className="call-branding">
-              <div className="call-logo-icon">
-                <Anchor size={18} />
+          <header className="call-header flex items-center justify-between border-b border-border/60 pb-3">
+            <div className="call-branding flex items-center gap-2.5">
+              <div className="call-logo-icon flex size-8 items-center justify-center rounded-lg bg-primary/15 text-primary">
+                <Anchor size={16} />
               </div>
               <div>
-                <Dialog.Title className="call-title">{t.callTitle}</Dialog.Title>
-                <div className="call-status-row">
-                  <span className={`call-status-dot ${callState === 'ERROR' ? 'error' : 'active'}`} />
-                  <span className="call-duration-text">{formattedDuration}</span>
-                  <span className="call-harbor-tag">{originHarbor}</span>
+                <Dialog.Title className="call-title text-sm font-bold text-foreground">{t.callTitle}</Dialog.Title>
+                <div className="call-status-row flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <span className={cn('call-status-dot size-1.5 rounded-full', callState === 'ERROR' ? 'bg-destructive' : 'bg-emerald-500 animate-pulse')} />
+                  <span className="call-duration-text font-mono text-[11px]">{formattedDuration}</span>
+                  <Badge variant="outline" className="call-harbor-tag text-[9px] h-3.5 px-1 font-semibold">
+                    {originHarbor}
+                  </Badge>
                 </div>
               </div>
             </div>
 
-            <div className="call-header-right">
+            <div className="call-header-right flex items-center gap-1.5">
               {detectedLanguage && (
-                <div className="call-lang-pill" title={`${t.callDetectedLanguage}: ${langInfo.name}`}>
-                  <Globe size={13} />
+                <Badge variant="secondary" className="call-lang-pill gap-1 text-[10px] font-normal" title={`${t.callDetectedLanguage}: ${langInfo.name}`}>
+                  <Globe size={11} />
                   <span>{langInfo.flag} {langInfo.name}</span>
-                </div>
+                </Badge>
               )}
               <Dialog.Close asChild>
-                <button
+                <Button
                   type="button"
-                  className="call-close-icon-btn"
+                  variant="ghost"
+                  size="sm"
+                  className="call-close-icon-btn size-7 p-0 text-muted-foreground hover:text-foreground"
                   aria-label={t.callEndBtn}
                   title={t.callEndBtn}
                 >
-                  <X size={18} />
-                </button>
+                  <X size={16} />
+                </Button>
               </Dialog.Close>
             </div>
           </header>
 
-        {/* Central Visualizer Section */}
-        <section className="call-visualizer-section">
-          <div className={`call-avatar-wrapper state-${callState.toLowerCase()}`}>
-            {/* Pulsing Ripple Rings */}
-            <div
-              className={`call-pulse-ring ring-1 ${callState === 'HEARING_YOU' ? 'hearing' : ''}`}
-              style={{
-                transform: `scale(${1 + (callState === 'LISTENING' || callState === 'HEARING_YOU' ? volumeLevel * 0.45 : 0.05)})`,
-                opacity: callState === 'HEARING_YOU' ? 0.6 + volumeLevel * 0.4 : callState === 'LISTENING' ? 0.25 + volumeLevel * 0.4 : 0.2,
-              }}
-            />
-            <div
-              className={`call-pulse-ring ring-2 ${callState === 'HEARING_YOU' ? 'hearing' : ''}`}
-              style={{
-                transform: `scale(${1 + (callState === 'LISTENING' || callState === 'HEARING_YOU' ? volumeLevel * 0.9 : 0.1)})`,
-                opacity: callState === 'HEARING_YOU' ? 0.35 + volumeLevel * 0.35 : callState === 'LISTENING' ? 0.12 + volumeLevel * 0.25 : 0.1,
-              }}
-            />
-
-            {/* Main Avatar Core */}
-            <div className={`call-avatar-core ${callState === 'HEARING_YOU' ? 'hearing' : ''}`}>
-              <div className="call-avatar-inner">
-                {callState === 'SPEAKING' ? (
-                  <Volume2 size={44} className="call-speaking-icon" />
-                ) : callState === 'PROCESSING' ? (
-                  <Loader2 size={44} className="call-processing-icon spin" />
-                ) : callState === 'HEARING_YOU' ? (
-                  <Radio size={44} className="call-hearing-icon pulse" />
-                ) : isMuted ? (
-                  <MicOff size={44} className="call-muted-icon" />
-                ) : (
-                  <Mic size={44} className="call-listening-icon" />
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Dynamic Audio Equalizer Bars during SPEAKING / HEARING_YOU / LISTENING */}
-          <div className="call-waveform-bars" aria-hidden="true">
-            {[0.4, 0.7, 1.0, 0.6, 0.9, 0.5, 0.8, 0.3].map((heightMult, i) => (
-              <span
-                key={i}
-                className={`call-wave-bar ${callState.toLowerCase()}`}
+          {/* Central Visualizer Section */}
+          <section className="call-visualizer-section flex flex-col items-center py-2">
+            <div className={cn('call-avatar-wrapper relative flex size-28 items-center justify-center', `state-${callState.toLowerCase()}`)}>
+              <div
+                className={cn('call-pulse-ring ring-1 absolute inset-0 rounded-full border border-primary/40 transition-all duration-300', callState === 'HEARING_YOU' && 'hearing')}
                 style={{
-                  height:
-                    callState === 'SPEAKING'
-                      ? `${14 + heightMult * 22}px`
-                      : callState === 'HEARING_YOU'
-                      ? `${10 + volumeLevel * heightMult * 30}px`
-                      : callState === 'LISTENING'
-                      ? `${5 + volumeLevel * heightMult * 16}px`
-                      : '5px',
-                  animationDelay: `${i * 0.12}s`,
+                  transform: `scale(${1 + (callState === 'LISTENING' || callState === 'HEARING_YOU' ? volumeLevel * 0.45 : 0.05)})`,
+                  opacity: callState === 'HEARING_YOU' ? 0.6 + volumeLevel * 0.4 : callState === 'LISTENING' ? 0.25 + volumeLevel * 0.4 : 0.2,
                 }}
               />
-            ))}
-          </div>
+              <div
+                className={cn('call-pulse-ring ring-2 absolute inset-0 rounded-full border border-primary/20 transition-all duration-300', callState === 'HEARING_YOU' && 'hearing')}
+                style={{
+                  transform: `scale(${1 + (callState === 'LISTENING' || callState === 'HEARING_YOU' ? volumeLevel * 0.9 : 0.1)})`,
+                  opacity: callState === 'HEARING_YOU' ? 0.35 + volumeLevel * 0.35 : callState === 'LISTENING' ? 0.12 + volumeLevel * 0.25 : 0.1,
+                }}
+              />
 
-          {/* Status Label Banner */}
-          <div className="call-state-banner">
-            {callState === 'CONNECTING' && (
-              <span className="call-state-pill connecting">
-                <Radio size={14} className="pulse" />
-                {t.callStatusConnecting}
-              </span>
-            )}
-            {callState === 'LISTENING' && !isMuted && (
-              <span className="call-state-pill listening">
-                <Mic size={14} className="pulse-mic" />
-                {t.callStatusListening}
-              </span>
-            )}
-            {callState === 'HEARING_YOU' && !isMuted && (
-              <span className="call-state-pill hearing">
-                <Sparkles size={14} className="pulse" />
-                {t.callStatusHearing}
-              </span>
-            )}
-            {callState === 'LISTENING' && isMuted && (
-              <span className="call-state-pill muted">
-                <MicOff size={14} />
-                {t.callStatusMuted}
-              </span>
-            )}
-            {callState === 'PROCESSING' && (
-              <span className="call-state-pill processing">
-                <Loader2 size={14} className="spin" />
-                {t.callStatusProcessing}
-              </span>
-            )}
-            {callState === 'SPEAKING' && (
-              <span className="call-state-pill speaking">
-                <Volume2 size={14} className="speaking-wave" />
-                {t.callStatusSpeaking}
-              </span>
-            )}
-            {callState === 'ERROR' && (
-              <span className="call-state-pill error">
-                {error || 'Connection issue'}
-              </span>
-            )}
-          </div>
-        </section>
-
-        {/* Live Conversation Transcript History */}
-        <section className="call-transcript-container" aria-label="Call live transcript">
-          <div className="call-transcript-list">
-            {transcriptHistory.length === 0 ? (
-              <div className="call-transcript-empty">
-                <p className="call-empty-hint">
-                  🎙️ Speak naturally in <strong>मराठी</strong>, <strong>हिन्दी</strong>, or <strong>English</strong>.
-                </p>
-                <p className="call-empty-subhint">
-                  SAMUDRA automatically detects when you speak and pauses for 3 seconds before responding.
-                </p>
-              </div>
-            ) : (
-              transcriptHistory.map(turn => (
-                <div key={turn.id} className={`call-turn-item role-${turn.role}`}>
-                  <div className="call-turn-header">
-                    <span className="call-turn-author">
-                      {turn.role === 'user' ? t.callSubtitleUser : t.callSubtitleSamudra}
-                    </span>
-                    {turn.language && (
-                      <span className="call-turn-lang">
-                        {turn.language.slice(0, 2).toUpperCase()}
-                      </span>
-                    )}
-                  </div>
-                  <div className="call-turn-bubble">
-                    <p>{turn.text}</p>
-                  </div>
+              {/* Main Avatar Core */}
+              <div className={cn('call-avatar-core z-10 flex size-20 items-center justify-center rounded-full bg-primary/15 shadow-inner', callState === 'HEARING_YOU' && 'hearing')}>
+                <div className="call-avatar-inner text-primary">
+                  {callState === 'SPEAKING' ? (
+                    <Volume2 size={36} className="call-speaking-icon animate-bounce" />
+                  ) : callState === 'PROCESSING' ? (
+                    <Loader2 size={36} className="call-processing-icon spin animate-spin" />
+                  ) : callState === 'HEARING_YOU' ? (
+                    <Radio size={36} className="call-hearing-icon pulse animate-pulse" />
+                  ) : isMuted ? (
+                    <MicOff size={36} className="call-muted-icon text-muted-foreground" />
+                  ) : (
+                    <Mic size={36} className="call-listening-icon" />
+                  )}
                 </div>
-              ))
+              </div>
+            </div>
+
+            {/* Audio Waveform Bars */}
+            <div className="call-waveform-bars mt-3 flex items-center justify-center gap-1" aria-hidden="true">
+              {[0.4, 0.7, 1.0, 0.6, 0.9, 0.5, 0.8, 0.3].map((heightMult, i) => (
+                <span
+                  key={i}
+                  className={cn('call-wave-bar w-1 rounded-full bg-primary transition-all duration-150', callState.toLowerCase())}
+                  style={{
+                    height:
+                      callState === 'SPEAKING'
+                        ? `${12 + heightMult * 18}px`
+                        : callState === 'HEARING_YOU'
+                        ? `${8 + volumeLevel * heightMult * 24}px`
+                        : callState === 'LISTENING'
+                        ? `${4 + volumeLevel * heightMult * 14}px`
+                        : '4px',
+                  }}
+                />
+              ))}
+            </div>
+
+            {/* Status Label Banner */}
+            <div className="call-state-banner mt-3">
+              {callState === 'CONNECTING' && (
+                <Badge variant="outline" className="call-state-pill connecting gap-1 text-xs">
+                  <Radio size={12} className="pulse animate-pulse" />
+                  {t.callStatusConnecting}
+                </Badge>
+              )}
+              {callState === 'LISTENING' && !isMuted && (
+                <Badge variant="outline" className="call-state-pill listening gap-1 text-xs border-primary/50 text-primary">
+                  <Mic size={12} className="animate-pulse" />
+                  {t.callStatusListening}
+                </Badge>
+              )}
+              {callState === 'HEARING_YOU' && !isMuted && (
+                <Badge variant="go" className="call-state-pill hearing gap-1 text-xs font-bold">
+                  <Sparkles size={12} className="animate-pulse" />
+                  {t.callStatusHearing}
+                </Badge>
+              )}
+              {callState === 'LISTENING' && isMuted && (
+                <Badge variant="secondary" className="call-state-pill muted gap-1 text-xs">
+                  <MicOff size={12} />
+                  {t.callStatusMuted}
+                </Badge>
+              )}
+              {callState === 'PROCESSING' && (
+                <Badge variant="outline" className="call-state-pill processing gap-1 text-xs border-primary/50 text-primary">
+                  <Loader2 size={12} className="spin animate-spin" />
+                  {t.callStatusProcessing}
+                </Badge>
+              )}
+              {callState === 'SPEAKING' && (
+                <Badge variant="go" className="call-state-pill speaking gap-1 text-xs">
+                  <Volume2 size={12} />
+                  {t.callStatusSpeaking}
+                </Badge>
+              )}
+              {callState === 'ERROR' && (
+                <Badge variant="destructive" className="call-state-pill error text-xs">
+                  {error || 'Connection issue'}
+                </Badge>
+              )}
+            </div>
+          </section>
+
+          {/* Live Conversation Transcript History */}
+          <section className="call-transcript-container rounded-xl border border-border/70 bg-background/60 p-3 h-36 overflow-y-auto" aria-label="Call live transcript">
+            <div className="call-transcript-list space-y-2 text-xs">
+              {transcriptHistory.length === 0 ? (
+                <div className="call-transcript-empty flex flex-col items-center justify-center text-center p-2 text-muted-foreground">
+                  <p className="call-empty-hint font-medium">
+                    🎙️ Speak naturally in <strong>मराठी</strong>, <strong>हिन्दी</strong>, or <strong>English</strong>.
+                  </p>
+                  <p className="call-empty-subhint text-[10px] mt-1 opacity-80">
+                    SAMUDRA automatically detects when you speak and responds.
+                  </p>
+                </div>
+              ) : (
+                transcriptHistory.map(turn => (
+                  <div
+                    key={turn.id}
+                    className={cn('call-turn-item space-y-0.5', turn.role === 'user' ? 'text-right' : 'text-left')}
+                  >
+                    <div className={cn('call-turn-header flex items-center gap-1 text-[10px] text-muted-foreground', turn.role === 'user' && 'justify-end')}>
+                      <span className="call-turn-author font-semibold">
+                        {turn.role === 'user' ? t.callSubtitleUser : t.callSubtitleSamudra}
+                      </span>
+                      {turn.language && (
+                        <Badge variant="outline" className="call-turn-lang h-3 px-1 text-[9px]">
+                          {turn.language.slice(0, 2).toUpperCase()}
+                        </Badge>
+                      )}
+                    </div>
+                    <div
+                      className={cn(
+                        'call-turn-bubble inline-block max-w-[90%] rounded-lg p-2 text-xs',
+                        turn.role === 'user'
+                          ? 'bg-primary text-primary-foreground rounded-tr-xs'
+                          : 'bg-muted text-foreground rounded-tl-xs'
+                      )}
+                    >
+                      <p>{turn.text}</p>
+                    </div>
+                  </div>
+                ))
+              )}
+              <div ref={transcriptEndRef} />
+            </div>
+          </section>
+
+          {/* Bottom Call Action Toolbar */}
+          <footer className="call-toolbar flex flex-col items-center gap-2 pt-1 border-t border-border/40">
+            {(callState === 'HEARING_YOU' || callState === 'LISTENING') && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="call-fallback-send-btn h-6 gap-1 text-[11px] text-muted-foreground hover:text-foreground"
+                onClick={finishSpeakingTurn}
+                aria-label={t.callTapToSendNow}
+                title={t.callTapToSendNow}
+              >
+                <SendHorizontal size={12} />
+                <span>{t.callTapToSendNow}</span>
+              </Button>
             )}
-            <div ref={transcriptEndRef} />
-          </div>
-        </section>
 
-        {/* Bottom Call Action Toolbar */}
-        <footer className="call-toolbar">
-          {/* Subtle Fallback Action: Send Now (allows skipping 3s silence if user prefers) */}
-          {(callState === 'HEARING_YOU' || callState === 'LISTENING') && (
-            <button
-              type="button"
-              className="call-fallback-send-btn"
-              onClick={finishSpeakingTurn}
-              aria-label={t.callTapToSendNow}
-              title={t.callTapToSendNow}
-            >
-              <SendHorizontal size={14} />
-              <span>{t.callTapToSendNow}</span>
-            </button>
-          )}
+            {callState === 'ERROR' && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="call-retry-btn h-7 gap-1.5 text-xs"
+                onClick={retryTurn}
+                aria-label={t.callRetryBtn}
+              >
+                <RefreshCw size={13} />
+                <span>{t.callRetryBtn}</span>
+              </Button>
+            )}
 
-          {/* Retry Button on Error */}
-          {callState === 'ERROR' && (
-            <button
-              type="button"
-              className="call-retry-btn"
-              onClick={retryTurn}
-              aria-label={t.callRetryBtn}
-            >
-              <RefreshCw size={16} />
-              <span>{t.callRetryBtn}</span>
-            </button>
-          )}
+            <div className="call-action-buttons flex items-center justify-center gap-6">
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                className={cn('call-action-circle-btn size-12 rounded-full', isMuted && 'border-destructive text-destructive')}
+                onClick={toggleMute}
+                title={isMuted ? 'Unmute' : 'Mute'}
+                aria-label={isMuted ? 'Unmute microphone' : 'Mute microphone'}
+              >
+                {isMuted ? <MicOff size={20} /> : <Mic size={20} />}
+              </Button>
 
-          <div className="call-action-buttons">
-            {/* Mute Button */}
-            <button
-              type="button"
-              className={`call-action-circle-btn ${isMuted ? 'muted' : ''}`}
-              onClick={toggleMute}
-              title={isMuted ? 'Unmute' : 'Mute'}
-              aria-label={isMuted ? 'Unmute microphone' : 'Mute microphone'}
-            >
-              {isMuted ? <MicOff size={22} /> : <Mic size={22} />}
-            </button>
-
-            {/* End Call Hang-up Button */}
-            <button
-              type="button"
-              className="call-hangup-btn"
-              onClick={endCall}
-              title={t.callEndBtn}
-              aria-label={t.callEndBtn}
-            >
-              <PhoneOff size={26} />
-            </button>
-          </div>
-        </footer>
-      </Dialog.Content>
-    </Dialog.Portal>
-  </Dialog.Root>
-);
+              <Button
+                type="button"
+                variant="destructive"
+                size="icon"
+                className="call-hangup-btn size-12 rounded-full shadow-md hover:bg-destructive/90"
+                onClick={endCall}
+                title={t.callEndBtn}
+                aria-label={t.callEndBtn}
+              >
+                <PhoneOff size={22} />
+              </Button>
+            </div>
+          </footer>
+        </Dialog.Content>
+      </Dialog.Portal>
+    </Dialog.Root>
+  );
 }

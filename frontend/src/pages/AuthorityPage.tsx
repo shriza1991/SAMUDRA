@@ -19,6 +19,17 @@ import type { useChat } from '../hooks/useChat';
 import type { MapLayer } from '../types/contracts';
 import { createSectorLayers, getSectorConfig, fetchAndFormatBaseLayers } from '../utils/geo';
 import { translateText } from '../i18n/translations';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Card } from '@/components/ui/card';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { cn } from '@/lib/utils';
 
 export interface AuthorityPageProps {
   chat: ReturnType<typeof useChat>;
@@ -26,6 +37,7 @@ export interface AuthorityPageProps {
   mobileView: 'chat' | 'map';
   onOpenEvidence: () => void;
   onBack: () => void;
+  className?: string;
 }
 
 export type AuthorityTab = 'terminal' | 'fleet' | 'benchmarks' | 'audit';
@@ -38,19 +50,13 @@ const SECTORS = [
   'Veraval Coastal Zone (GJ-02)',
 ];
 
-/**
- * Authority Command Deck Page
- *
- * Tailored for port authorities, fisheries departments, disaster management teams,
- * and maritime enforcement officers.
- * Reuses ChatPanel, MapView, EvidenceCard, AgentTimeline, FleetTrackingDeck, and ScenarioBenchmarkDeck.
- */
 export default function AuthorityPage({
   chat,
   theme,
   mobileView,
   onOpenEvidence,
   onBack,
+  className,
 }: AuthorityPageProps) {
   const [selectedSector, setSelectedSector] = useState(SECTORS[0]);
   const [authorityTab, setAuthorityTab] = useState<AuthorityTab>('terminal');
@@ -63,7 +69,6 @@ export default function AuthorityPage({
 
   const sectorConfig = useMemo(() => getSectorConfig(selectedSector), [selectedSector]);
 
-  // Combine official base boundaries + sector polygon + replay trajectory + active query layers
   const authorityLayers = useMemo(() => {
     const sectorLayers = createSectorLayers(selectedSector);
     const responseLayers = chat.activeResponse?.map_layers ?? [];
@@ -82,132 +87,155 @@ export default function AuthorityPage({
     `${l.layer_id} ${l.name}`.toLowerCase().includes('sanctuary')
   );
 
+  const getStatusBadgeVariant = (st: string): 'go' | 'caution' | 'noGo' | 'unknown' | 'secondary' => {
+    const s = st.toUpperCase();
+    if (s.includes('GO') && !s.includes('NO')) return 'go';
+    if (s.includes('CAUTION')) return 'caution';
+    if (s.includes('NO')) return 'noGo';
+    if (s.includes('UNKNOWN')) return 'unknown';
+    return 'secondary';
+  };
+
   return (
-    <div className={`authority-page view-${mobileView}`} role="region" aria-label="Authority Command Deck">
+    <div className={cn('authority-page flex-1 flex flex-col overflow-hidden', `view-${mobileView}`, className)} role="region" aria-label="Authority Command Deck">
       {/* Top Authority Command Bar */}
-      <section className="authority-command-bar" aria-label="Operational Command Bar">
-        <div className="authority-bar-left">
-          <div className="authority-title-row">
-            <Building2 size={16} className="authority-brand-icon" />
+      <section className="authority-command-bar flex flex-wrap items-center justify-between border-b border-border bg-card/70 px-4 py-2 gap-3" aria-label="Operational Command Bar">
+        <div className="authority-bar-left flex flex-wrap items-center gap-3">
+          <div className="authority-title-row flex items-center gap-2 font-bold text-xs sm:text-sm text-foreground">
+            <Building2 size={16} className="authority-brand-icon text-primary" />
             <span className="authority-title">{translateText('Authority Command Deck', chat.language)}</span>
           </div>
 
-          <label className="authority-sector-selector">
-            <span className="sector-label">{translateText('Sector:', chat.language)}</span>
-            <select
-              value={selectedSector}
-              onChange={(e) => setSelectedSector(e.target.value)}
-              className="authority-sector-select"
-            >
-              {SECTORS.map((s) => (
-                <option key={s} value={s}>{s}</option>
-              ))}
-            </select>
-          </label>
+          <div className="authority-sector-selector flex items-center gap-1.5">
+            <span className="sector-label text-[11px] font-semibold text-muted-foreground">{translateText('Sector:', chat.language)}</span>
+            <Select value={selectedSector} onValueChange={setSelectedSector}>
+              <SelectTrigger className="authority-sector-select h-7 text-xs bg-background min-w-[200px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {SECTORS.map((s) => (
+                  <SelectItem key={s} value={s} className="text-xs">
+                    {s}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
         {/* Compact KPI Pills in a single clean row */}
-        <div className="authority-kpi-chips">
-          <div className="authority-kpi-chip">
-            <span className="chip-label">{translateText('Verdict:', chat.language)}</span>
-            <span className={`status-pill status-${status.toLowerCase().replace('_', '-')}`}>
-              {status.replace('_', '-')}
-            </span>
-          </div>
+        <div className="authority-kpi-chips flex items-center gap-1.5 flex-wrap">
+          <Badge variant={getStatusBadgeVariant(status)} className="authority-kpi-chip h-6 gap-1 text-[11px] font-bold">
+            <span className="opacity-80 font-normal">{translateText('Verdict:', chat.language)}</span>
+            <span>{status.replace('_', '-')}</span>
+          </Badge>
 
-          <div className="authority-kpi-chip">
-            <AlertTriangle size={13} className={hazardLayers.length > 0 ? 'status-no-go' : ''} />
+          <Badge variant="outline" className="authority-kpi-chip h-6 gap-1 text-[11px]">
+            <AlertTriangle size={12} className={hazardLayers.length > 0 ? 'text-rose-500' : 'text-muted-foreground'} />
             <span><strong>{hazardLayers.length}</strong> {translateText('Hazards', chat.language)}</span>
-          </div>
+          </Badge>
 
-          <div className="authority-kpi-chip">
-            <FileCheck2 size={13} className="status-accent" />
+          <Badge variant="outline" className="authority-kpi-chip h-6 gap-1 text-[11px]">
+            <FileCheck2 size={12} className="text-primary" />
             <span><strong>{evidenceList.length}</strong> {translateText('Sources', chat.language)}</span>
-          </div>
+          </Badge>
 
-          <div className="authority-kpi-chip">
-            <Activity size={13} className="status-accent" />
+          <Badge variant="outline" className="authority-kpi-chip h-6 gap-1 text-[11px]">
+            <Activity size={12} className="text-primary" />
             <span><strong>{traceList.length}</strong> {translateText('Steps', chat.language)}</span>
-          </div>
+          </Badge>
         </div>
       </section>
 
-      {/* Authority View Switcher Tabs - Clean & Concise */}
-      <nav className="authority-tab-nav" role="tablist" aria-label="Authority sub-views">
-        <button
+      {/* Authority View Switcher Tabs */}
+      <nav className="authority-tab-nav flex items-center gap-1 border-b border-border bg-background/50 px-4 py-1.5" role="tablist" aria-label="Authority sub-views">
+        <Button
           type="button"
-          className={`authority-tab-btn ${authorityTab === 'terminal' ? 'active' : ''}`}
+          variant={authorityTab === 'terminal' ? 'default' : 'ghost'}
+          size="sm"
+          className={cn('authority-tab-btn h-7 gap-1.5 px-2.5 text-xs font-semibold', authorityTab === 'terminal' && 'active shadow-xs')}
           onClick={() => setAuthorityTab('terminal')}
           role="tab"
           aria-selected={authorityTab === 'terminal'}
         >
           <RadioTower size={13} />
           <span>{translateText('Audit Terminal', chat.language)}</span>
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
-          className={`authority-tab-btn ${authorityTab === 'fleet' ? 'active' : ''}`}
+          variant={authorityTab === 'fleet' ? 'default' : 'ghost'}
+          size="sm"
+          className={cn('authority-tab-btn h-7 gap-1.5 px-2.5 text-xs font-semibold', authorityTab === 'fleet' && 'active shadow-xs')}
           onClick={() => setAuthorityTab('fleet')}
           role="tab"
           aria-selected={authorityTab === 'fleet'}
         >
           <Ship size={13} />
           <span>{translateText('Fleet Surveillance', chat.language)}</span>
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
-          className={`authority-tab-btn ${authorityTab === 'benchmarks' ? 'active' : ''}`}
+          variant={authorityTab === 'benchmarks' ? 'default' : 'ghost'}
+          size="sm"
+          className={cn('authority-tab-btn h-7 gap-1.5 px-2.5 text-xs font-semibold', authorityTab === 'benchmarks' && 'active shadow-xs')}
           onClick={() => setAuthorityTab('benchmarks')}
           role="tab"
           aria-selected={authorityTab === 'benchmarks'}
         >
           <FlaskConical size={13} />
           <span>{translateText('Benchmark Runner', chat.language)}</span>
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
-          className={`authority-tab-btn ${authorityTab === 'audit' ? 'active' : ''}`}
+          variant={authorityTab === 'audit' ? 'default' : 'ghost'}
+          size="sm"
+          className={cn('authority-tab-btn h-7 gap-1.5 px-2.5 text-xs font-semibold', authorityTab === 'audit' && 'active shadow-xs')}
           onClick={() => setAuthorityTab('audit')}
           role="tab"
           aria-selected={authorityTab === 'audit'}
         >
           <FileCheck2 size={13} />
-          <span>{translateText('Evidence & Trace', chat.language)} ({traceList.length})</span>
-        </button>
+          <span>{translateText('Evidence & Trace', chat.language)}</span>
+          <Badge variant={authorityTab === 'audit' ? 'outline' : 'secondary'} className="h-3.5 px-1 text-[9px]">
+            {traceList.length}
+          </Badge>
+        </Button>
       </nav>
 
       {/* Workspace Body */}
-      <div className="authority-body">
+      <div className="authority-body flex-1 overflow-hidden">
         {authorityTab === 'terminal' && (
-          <div className="authority-workspace-grid">
-            {/* Left: Reused ChatPanel in Official Dispatch Terminal Mode */}
-            <aside className="authority-terminal-pane" aria-label="Terminal Pane">
-              <div className="authority-terminal-header">
+          <div className="authority-workspace-grid flex h-full overflow-hidden">
+            <aside className="authority-terminal-pane flex flex-col border-r border-border bg-card/40 w-full md:w-[460px] lg:w-[480px] shrink-0" aria-label="Terminal Pane">
+              <div className="authority-terminal-header flex items-center justify-between border-b border-border/80 bg-background/50 px-3 py-2 text-xs font-semibold text-foreground">
                 <span>{translateText('Surveillance Query Terminal', chat.language)}</span>
-                <button
+                <Button
                   type="button"
-                  className="authority-reset-btn"
+                  variant="ghost"
+                  size="sm"
+                  className="authority-reset-btn h-6 gap-1 px-2 text-[11px] text-muted-foreground hover:text-foreground"
                   onClick={chat.clearChat}
                   title="Clear audit session"
                 >
                   <RotateCcw size={12} /> {translateText('Reset', chat.language)}
-                </button>
+                </Button>
               </div>
 
-              <ChatPanel
-                language={chat.language}
-                messages={chat.messages}
-                activeResponse={chat.activeResponse}
-                isLoading={chat.isLoading}
-                onSend={chat.send}
-                onBack={onBack}
-                onReset={chat.clearChat}
-                onEvidenceClick={onOpenEvidence}
-              />
+              <div className="flex-1 overflow-hidden">
+                <ChatPanel
+                  language={chat.language}
+                  messages={chat.messages}
+                  activeResponse={chat.activeResponse}
+                  isLoading={chat.isLoading}
+                  onSend={chat.send}
+                  onBack={onBack}
+                  onReset={chat.clearChat}
+                  onEvidenceClick={onOpenEvidence}
+                />
+              </div>
             </aside>
 
-            {/* Right: Reused MapView with live coastal polygons */}
-            <div className="authority-map-pane">
+            <div className="authority-map-pane flex-1 relative">
               <MapView
                 layers={authorityLayers}
                 theme={theme}
@@ -220,11 +248,11 @@ export default function AuthorityPage({
         )}
 
         {authorityTab === 'fleet' && (
-          <div className="authority-workspace-grid authority-fleet-grid">
-            <aside className="authority-fleet-pane" aria-label="Fleet Surveillance Pane">
+          <div className="authority-workspace-grid authority-fleet-grid flex h-full overflow-hidden">
+            <aside className="authority-fleet-pane flex-1 overflow-y-auto p-4 border-r border-border bg-card/30" aria-label="Fleet Surveillance Pane">
               <FleetTrackingDeck onReplayUpdate={setReplayLayer} language={chat.language} />
             </aside>
-            <div className="authority-map-pane">
+            <div className="authority-map-pane flex-1 relative hidden lg:block">
               <MapView
                 layers={authorityLayers}
                 theme={theme}
@@ -237,54 +265,55 @@ export default function AuthorityPage({
         )}
 
         {authorityTab === 'benchmarks' && (
-          <div className="authority-benchmarks-container">
+          <div className="authority-benchmarks-container h-full overflow-y-auto p-4 max-w-6xl mx-auto">
             <ScenarioBenchmarkDeck language={chat.language} />
           </div>
         )}
 
         {authorityTab === 'audit' && (
-          /* Audit View: Direct In-Page Evidence & Agent Trace Logs */
-          <div className="authority-audit-view">
-            <div className="authority-audit-column">
-              <div className="audit-section-header">
-                <FileCheck2 size={16} />
+          <div className="authority-audit-view h-full overflow-y-auto p-4 grid grid-cols-1 md:grid-cols-2 gap-6 max-w-6xl mx-auto">
+            <div className="authority-audit-column space-y-4">
+              <div className="audit-section-header flex items-center gap-2 border-b border-border/80 pb-2 font-bold text-sm text-foreground">
+                <FileCheck2 size={16} className="text-primary" />
                 <h3>{translateText('Verified Official Evidence', chat.language)} ({evidenceList.length})</h3>
               </div>
               {evidenceList.length > 0 ? (
-                <div className="authority-evidence-grid">
+                <div className="authority-evidence-grid space-y-3">
                   {evidenceList.map((ev, idx) => (
                     <EvidenceCard key={idx} evidence={ev} />
                   ))}
                 </div>
               ) : (
-                <p className="authority-empty-note">
+                <p className="authority-empty-note text-xs text-muted-foreground">
                   {translateText('No active evidence items. Run an advisory query to inspect official telemetry.', chat.language)}
                 </p>
               )}
 
               {warningsList.length > 0 && (
-                <div className="authority-warnings-box">
-                  <h4>{translateText('Active System Warnings & Fallbacks', chat.language)}</h4>
-                  <ul>
+                <Card className="authority-warnings-box border-amber-500/30 bg-amber-500/10 p-3 space-y-2">
+                  <h4 className="text-xs font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wide">
+                    {translateText('Active System Warnings & Fallbacks', chat.language)}
+                  </h4>
+                  <ul className="text-xs text-muted-foreground list-disc pl-4 space-y-1">
                     {warningsList.map((w, idx) => (
                       <li key={idx}>{w}</li>
                     ))}
                   </ul>
-                </div>
+                </Card>
               )}
             </div>
 
-            <div className="authority-audit-column">
-              <div className="audit-section-header">
-                <Activity size={16} />
+            <div className="authority-audit-column space-y-4">
+              <div className="audit-section-header flex items-center gap-2 border-b border-border/80 pb-2 font-bold text-sm text-foreground">
+                <Activity size={16} className="text-primary" />
                 <h3>{translateText('Autonomous Agent Execution Trail', chat.language)} ({traceList.length} {translateText('Steps', chat.language)})</h3>
               </div>
               {traceList.length > 0 ? (
-                <div className="authority-timeline-card">
+                <Card className="authority-timeline-card border-border/80 bg-card/60 p-4">
                   <AgentTimeline trace={traceList} />
-                </div>
+                </Card>
               ) : (
-                <p className="authority-empty-note">
+                <p className="authority-empty-note text-xs text-muted-foreground">
                   {translateText('No trace recorded. Queries processed by the cognitive graph will log execution steps here.', chat.language)}
                 </p>
               )}

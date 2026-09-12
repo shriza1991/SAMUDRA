@@ -4,6 +4,7 @@ import * as Popover from '@radix-ui/react-popover';
 import type { MapLayer } from '../../types/contracts';
 import LayerManager from './LayerManager';
 import MissionMapBrief from './MissionMapBrief';
+import { Button } from '@/components/ui/button';
 import { Layers } from 'lucide-react';
 import type { SupportedLanguage } from '../../i18n/translations';
 
@@ -301,16 +302,17 @@ export default function MapView({ layers, theme = 'light', center, zoom, languag
       {layers.length > 0 && (
         <Popover.Root open={showLayerPanel} onOpenChange={setShowLayerPanel}>
           <Popover.Trigger asChild>
-            <button
-              className="map-layer-toggle"
+            <Button
+              variant="secondary"
+              className="map-layer-toggle h-9 gap-2 rounded-lg border border-border/80 bg-card/90 px-3 text-xs font-semibold shadow-md backdrop-blur-sm"
               aria-label="Toggle layer panel"
             >
-              <Layers size={18} />
+              <Layers size={16} className="text-primary" />
               <span>
                 {layers.length}{' '}
                 {language === 'hi' ? 'परतें' : language === 'mr' ? 'स्तर' : 'Layers'}
               </span>
-            </button>
+            </Button>
           </Popover.Trigger>
 
           <Popover.Portal>

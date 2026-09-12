@@ -7,6 +7,8 @@ import type { useChat } from '../hooks/useChat';
 import type { MapLayer } from '../types/contracts';
 import { createHarborLayer, getHarborCoordinates, fetchAndFormatBaseLayers } from '../utils/geo';
 import { translateText } from '../i18n/translations';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 export interface FisherPageProps {
   chat: ReturnType<typeof useChat>;
@@ -15,6 +17,7 @@ export interface FisherPageProps {
   onStartCall: () => void;
   onOpenEvidence: () => void;
   onBack: () => void;
+  className?: string;
 }
 
 function formatCraft(profile: string | undefined, lang: any): string {
@@ -36,6 +39,7 @@ export default function FisherPage({
   onStartCall,
   onOpenEvidence,
   onBack,
+  className,
 }: FisherPageProps) {
   const originHarbor = chat.missionContext.origin_harbor || 'Ratnagiri';
   const harborCoords = useMemo(() => getHarborCoordinates(originHarbor), [originHarbor]);
@@ -59,82 +63,92 @@ export default function FisherPage({
   }, [baseLayers, chat.activeResponse?.map_layers, originHarbor, status]);
 
   return (
-    <main className={`app-main fisher-page view-${mobileView}`} role="main">
-      <div className="mission-workspace">
+    <main className={cn('app-main fisher-page flex-1 flex overflow-hidden', `view-${mobileView}`, className)} role="main">
+      <div className="mission-workspace flex flex-col border-r border-border bg-card/40 w-full md:w-[460px] lg:w-[480px] shrink-0">
         {/* Sleek, minimal sidebar view switcher */}
-        <div className="fisher-sidebar-header">
-          <div className="fisher-tab-switch" role="tablist" aria-label="Fisher console views">
-            <button
+        <div className="fisher-sidebar-header flex items-center justify-between border-b border-border/80 bg-background/50 p-2.5">
+          <div className="fisher-tab-switch flex items-center gap-1 rounded-lg border border-border/60 bg-muted/40 p-0.5" role="tablist" aria-label="Fisher console views">
+            <Button
               type="button"
-              className={`fisher-tab-btn ${sidebarTab === 'chat' ? 'active' : ''}`}
+              variant={sidebarTab === 'chat' ? 'default' : 'ghost'}
+              size="sm"
+              className={cn('fisher-tab-btn h-7 gap-1.5 px-2.5 text-xs font-semibold', sidebarTab === 'chat' && 'active shadow-xs')}
               onClick={() => setSidebarTab('chat')}
               role="tab"
               aria-selected={sidebarTab === 'chat'}
             >
               <MessageSquare size={13} />
               <span>{translateText('Advisory Chat', chat.language)}</span>
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
-              className={`fisher-tab-btn ${sidebarTab === 'voyage' ? 'active' : ''}`}
+              variant={sidebarTab === 'voyage' ? 'default' : 'ghost'}
+              size="sm"
+              className={cn('fisher-tab-btn h-7 gap-1.5 px-2.5 text-xs font-semibold', sidebarTab === 'voyage' && 'active shadow-xs')}
               onClick={() => setSidebarTab('voyage')}
               role="tab"
               aria-selected={sidebarTab === 'voyage'}
             >
               <SlidersHorizontal size={13} />
               <span>{translateText('Voyage Settings', chat.language)}</span>
-            </button>
+            </Button>
           </div>
 
-          <button
+          <Button
             type="button"
-            className="fisher-compact-context-pill"
+            variant="outline"
+            size="sm"
+            className="fisher-compact-context-pill h-7 gap-1.5 px-2 text-[11px] font-medium text-muted-foreground hover:text-foreground"
             onClick={() => setSidebarTab(sidebarTab === 'chat' ? 'voyage' : 'chat')}
             title={translateText('Toggle voyage settings', chat.language)}
           >
-            <Anchor size={11} className="context-pill-icon" />
-            <span className="context-pill-text">
+            <Anchor size={11} className="context-pill-icon text-primary" />
+            <span className="context-pill-text truncate max-w-[140px]">
               {translateText(originHarbor, chat.language)} · {formatCraft(chat.missionContext.craft_profile, chat.language)}
             </span>
-          </button>
+          </Button>
         </div>
 
         {/* Tab content: full-height chat or focused voyage configuration */}
-        {sidebarTab === 'chat' ? (
-          <ChatPanel
-            language={chat.language}
-            messages={chat.messages}
-            activeResponse={chat.activeResponse}
-            isLoading={chat.isLoading}
-            onSend={chat.send}
-            onStartCall={onStartCall}
-            onBack={onBack}
-            onReset={chat.clearChat}
-            onEvidenceClick={onOpenEvidence}
-          />
-        ) : (
-          <div className="fisher-voyage-pane">
-            <MissionContextPanel
-              context={chat.missionContext}
-              role="fisher"
-              currentStatus={chat.activeResponse?.recommendation.status}
+        <div className="flex-1 overflow-hidden">
+          {sidebarTab === 'chat' ? (
+            <ChatPanel
               language={chat.language}
+              messages={chat.messages}
+              activeResponse={chat.activeResponse}
               isLoading={chat.isLoading}
-              activeDiff={chat.activeDiff}
-              onContextChange={chat.setMissionContext}
-              onSimulate={chat.simulateWhatIf}
+              onSend={chat.send}
+              onStartCall={onStartCall}
+              onBack={onBack}
+              onReset={chat.clearChat}
+              onEvidenceClick={onOpenEvidence}
             />
-          </div>
-        )}
+          ) : (
+            <div className="fisher-voyage-pane h-full overflow-y-auto p-4">
+              <MissionContextPanel
+                context={chat.missionContext}
+                role="fisher"
+                currentStatus={chat.activeResponse?.recommendation.status}
+                language={chat.language}
+                isLoading={chat.isLoading}
+                activeDiff={chat.activeDiff}
+                onContextChange={chat.setMissionContext}
+                onSimulate={chat.simulateWhatIf}
+              />
+            </div>
+          )}
+        </div>
       </div>
 
-      <MapView
-        layers={effectiveLayers}
-        theme={theme}
-        center={harborCoords}
-        zoom={9.5}
-        language={chat.language}
-      />
+      <div className="flex-1 relative">
+        <MapView
+          layers={effectiveLayers}
+          theme={theme}
+          center={harborCoords}
+          zoom={9.5}
+          language={chat.language}
+        />
+      </div>
     </main>
   );
 }

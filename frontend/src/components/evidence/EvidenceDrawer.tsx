@@ -1,9 +1,11 @@
 import { useState } from 'react';
-import * as Dialog from '@radix-ui/react-dialog';
+import * as DialogPrimitive from '@radix-ui/react-dialog';
 import type { EvidenceItem, AgentTraceItem } from '../../types/contracts';
 import { TRANSLATIONS, type SupportedLanguage } from '../../i18n/translations';
 import EvidenceCard from './EvidenceCard';
 import AgentTimeline from '../trace/AgentTimeline';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { X, FileText, Activity } from 'lucide-react';
 
 interface EvidenceDrawerProps {
@@ -25,52 +27,67 @@ export default function EvidenceDrawer({
   const t = TRANSLATIONS[language] || TRANSLATIONS.en;
 
   return (
-    <Dialog.Root open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
-      <Dialog.Portal>
-        <Dialog.Overlay className="drawer-overlay" />
-        <Dialog.Content
-          className="evidence-drawer"
+    <DialogPrimitive.Root open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
+      <DialogPrimitive.Portal>
+        <DialogPrimitive.Overlay className="drawer-overlay fixed inset-0 z-50 bg-black/60 backdrop-blur-xs transition-opacity" />
+        <DialogPrimitive.Content
+          className="evidence-drawer fixed inset-y-0 right-0 z-50 flex w-full max-w-md flex-col border-l border-border bg-card shadow-2xl transition-transform"
           aria-describedby={undefined}
         >
-          <div className="drawer-header">
-            <Dialog.Title className="sr-only">
+          <div className="drawer-header flex items-center justify-between border-b border-border/80 p-3">
+            <DialogPrimitive.Title className="sr-only">
               {t.drawerTitleEvidence} & {t.drawerTitleTrace}
-            </Dialog.Title>
-            <div className="drawer-tabs">
-              <button
+            </DialogPrimitive.Title>
+
+            <div className="drawer-tabs flex items-center gap-1">
+              <Button
                 type="button"
-                className={`drawer-tab ${activeTab === 'evidence' ? 'active' : ''}`}
+                variant={activeTab === 'evidence' ? 'default' : 'ghost'}
+                size="sm"
+                className="drawer-tab h-8 gap-1.5 px-3 text-xs font-semibold"
                 onClick={() => setActiveTab('evidence')}
               >
-                <FileText size={16} />
-                <span>{t.drawerTitleEvidence} ({evidence.length})</span>
-              </button>
-              <button
+                <FileText size={14} />
+                <span>{t.drawerTitleEvidence}</span>
+                <Badge variant={activeTab === 'evidence' ? 'outline' : 'secondary'} className="h-4 px-1 text-[10px]">
+                  {evidence.length}
+                </Badge>
+              </Button>
+              <Button
                 type="button"
-                className={`drawer-tab ${activeTab === 'trace' ? 'active' : ''}`}
+                variant={activeTab === 'trace' ? 'default' : 'ghost'}
+                size="sm"
+                className="drawer-tab h-8 gap-1.5 px-3 text-xs font-semibold"
                 onClick={() => setActiveTab('trace')}
               >
-                <Activity size={16} />
-                <span>{t.drawerTitleTrace} ({trace.length})</span>
-              </button>
+                <Activity size={14} />
+                <span>{t.drawerTitleTrace}</span>
+                <Badge variant={activeTab === 'trace' ? 'outline' : 'secondary'} className="h-4 px-1 text-[10px]">
+                  {trace.length}
+                </Badge>
+              </Button>
             </div>
-            <Dialog.Close asChild>
-              <button
+
+            <DialogPrimitive.Close asChild>
+              <Button
                 type="button"
-                className="drawer-close-btn"
+                variant="ghost"
+                size="sm"
+                className="drawer-close-btn size-8 p-0 text-muted-foreground hover:text-foreground"
                 aria-label="Close drawer"
               >
-                <X size={18} />
-              </button>
-            </Dialog.Close>
+                <X size={16} />
+              </Button>
+            </DialogPrimitive.Close>
           </div>
 
-          <div className="drawer-content">
+          <div className="drawer-content flex-1 overflow-y-auto p-4">
             {activeTab === 'evidence' ? (
-              <div className="evidence-list">
+              <div className="evidence-list space-y-3">
                 {evidence.length === 0 ? (
-                  <div className="drawer-empty">
-                    <p>{t.drawerEmptyEvidence}</p>
+                  <div className="drawer-empty flex flex-col items-center justify-center p-8 text-center text-muted-foreground">
+                    <FileText size={28} className="mb-2 opacity-50" />
+                    <p className="text-xs">{t.drawerEmptyEvidence}</p>
                   </div>
                 ) : (
                   evidence.map((item, idx) => (
@@ -79,10 +96,11 @@ export default function EvidenceDrawer({
                 )}
               </div>
             ) : (
-              <div className="trace-container">
+              <div className="trace-container space-y-3">
                 {trace.length === 0 ? (
-                  <div className="drawer-empty">
-                    <p>{t.drawerEmptyTrace}</p>
+                  <div className="drawer-empty flex flex-col items-center justify-center p-8 text-center text-muted-foreground">
+                    <Activity size={28} className="mb-2 opacity-50" />
+                    <p className="text-xs">{t.drawerEmptyTrace}</p>
                   </div>
                 ) : (
                   <AgentTimeline trace={trace} />
@@ -90,9 +108,8 @@ export default function EvidenceDrawer({
               </div>
             )}
           </div>
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog.Root>
+        </DialogPrimitive.Content>
+      </DialogPrimitive.Portal>
+    </DialogPrimitive.Root>
   );
 }
-
