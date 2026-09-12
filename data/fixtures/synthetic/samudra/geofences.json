@@ -1,0 +1,246 @@
+[
+  {
+    "public_id": "geofence-01",
+    "name": "Naval Firing Range Foxtrot (Goa-Konkan Sector)",
+    "polygon_type": "NAVAL_FIRING_RANGE",
+    "restriction_level": "NO_GO",
+    "is_hard_restriction": true,
+    "geometry_geojson": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            73.15,
+            15.3
+          ],
+          [
+            73.35,
+            15.3
+          ],
+          [
+            73.35,
+            15.55
+          ],
+          [
+            73.15,
+            15.55
+          ],
+          [
+            73.15,
+            15.3
+          ]
+        ]
+      ]
+    },
+    "properties_json": {
+      "issuing_agency": "Indian Navy",
+      "active_schedule": "Continuous Live Firing",
+      "penalty": "Confiscation & Detention"
+    },
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_MARITIME_AUTHORITY"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "geofence-02",
+    "name": "Malvan Marine Sanctuary & Coral Conservation Zone",
+    "polygon_type": "MARINE_PROTECTED_AREA",
+    "restriction_level": "NO_GO",
+    "is_hard_restriction": true,
+    "geometry_geojson": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            73.44,
+            16.02
+          ],
+          [
+            73.5,
+            16.02
+          ],
+          [
+            73.5,
+            16.08
+          ],
+          [
+            73.44,
+            16.08
+          ],
+          [
+            73.44,
+            16.02
+          ]
+        ]
+      ]
+    },
+    "properties_json": {
+      "issuing_agency": "Forest & Wildlife Department",
+      "protected_species": [
+        "Corals",
+        "Dolphins",
+        "Sea Turtles"
+      ]
+    },
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_MARITIME_AUTHORITY"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "geofence-03",
+    "name": "Ratnagiri Port Security Perimeter",
+    "polygon_type": "SECURITY_ZONE",
+    "restriction_level": "CAUTION",
+    "is_hard_restriction": false,
+    "geometry_geojson": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            73.25,
+            16.97
+          ],
+          [
+            73.3,
+            16.97
+          ],
+          [
+            73.3,
+            17.02
+          ],
+          [
+            73.25,
+            17.02
+          ],
+          [
+            73.25,
+            16.97
+          ]
+        ]
+      ]
+    },
+    "properties_json": {
+      "issuing_agency": "Port Security Directorate",
+      "speed_limit_knots": 6.0
+    },
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_MARITIME_AUTHORITY"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "geofence-04",
+    "name": "Angria Bank Shallow Shoal Hazard Polygon",
+    "polygon_type": "SHALLOW_SHOAL",
+    "restriction_level": "CAUTION",
+    "is_hard_restriction": false,
+    "geometry_geojson": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            72.0,
+            16.6
+          ],
+          [
+            72.2,
+            16.6
+          ],
+          [
+            72.2,
+            16.8
+          ],
+          [
+            72.0,
+            16.8
+          ],
+          [
+            72.0,
+            16.6
+          ]
+        ]
+      ]
+    },
+    "properties_json": {
+      "min_depth_m": 8.5,
+      "navigational_hazard": "Submerged Coral Shoal"
+    },
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_MARITIME_AUTHORITY"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "geofence-05",
+    "name": "Maharashtra Coastal Baseline Operational Boundary",
+    "polygon_type": "OPERATIONAL_BOUNDARY",
+    "restriction_level": "ADVISORY",
+    "is_hard_restriction": false,
+    "geometry_geojson": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            72.5,
+            15.8
+          ],
+          [
+            73.6,
+            15.8
+          ],
+          [
+            73.6,
+            17.3
+          ],
+          [
+            72.5,
+            17.3
+          ],
+          [
+            72.5,
+            15.8
+          ]
+        ]
+      ]
+    },
+    "properties_json": {
+      "jurisdiction": "State Coastal Police & Coast Guard Sector"
+    },
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_MARITIME_AUTHORITY"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  }
+]

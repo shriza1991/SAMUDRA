@@ -807,3 +807,175 @@ async def voice_chat_endpoint(
     )
 
 
+# ---------------------------------------------------------------------------
+# Synthetic Demo Endpoints (/api/v1/demo/*)
+# ---------------------------------------------------------------------------
+from backend.app.db.repositories import SyntheticDemoRepository
+import pathlib
+import json
+
+
+def _model_to_dict(obj: Any) -> dict[str, Any]:
+    """Helper to convert SQLAlchemy model instance to dictionary."""
+    if obj is None:
+        return {}
+    res = {}
+    for col in obj.__table__.columns:
+        val = getattr(obj, col.name)
+        if isinstance(val, datetime):
+            res[col.name] = val.isoformat()
+        elif isinstance(val, uuid.UUID):
+            res[col.name] = str(val)
+        else:
+            res[col.name] = val
+    return res
+
+
+@router.get("/demo/manifest", tags=["Synthetic Demo"])
+def get_demo_manifest() -> dict[str, Any]:
+    """Retrieve the manifest and metadata for the SAMUDRA synthetic demo dataset."""
+    manifest_path = pathlib.Path(__file__).resolve().parent.parent.parent.parent / "data" / "fixtures" / "synthetic" / "manifest.json"
+    if manifest_path.exists():
+        with open(manifest_path, "r", encoding="utf-8") as f:
+            return json.load(f)
+    return {
+        "dataset_name": "SAMUDRA_DEMO_V1",
+        "description": "Deterministic synthetic marine, weather, EO, and operational demo dataset for SAMUDRA",
+        "status": "active",
+    }
+
+
+@router.get("/demo/stakeholders", tags=["Synthetic Demo"])
+def get_demo_stakeholders(namespace: str = "SAMUDRA_DEMO_V1") -> list[dict[str, Any]]:
+    """List all synthetic demo stakeholders."""
+    with SessionLocal() as session:
+        repo = SyntheticDemoRepository(session)
+        items = repo.get_stakeholders(namespace=namespace)
+        return [_model_to_dict(item) for item in items]
+
+
+@router.get("/demo/harbors", tags=["Synthetic Demo"])
+def get_demo_harbors(namespace: str = "SAMUDRA_DEMO_V1") -> list[dict[str, Any]]:
+    """List all synthetic demo harbors."""
+    with SessionLocal() as session:
+        repo = SyntheticDemoRepository(session)
+        items = repo.get_harbors(namespace=namespace)
+        return [_model_to_dict(item) for item in items]
+
+
+@router.get("/demo/fishers", tags=["Synthetic Demo"])
+def get_demo_fishers(namespace: str = "SAMUDRA_DEMO_V1") -> list[dict[str, Any]]:
+    """List all synthetic demo fishers."""
+    with SessionLocal() as session:
+        repo = SyntheticDemoRepository(session)
+        items = repo.get_fishers(namespace=namespace)
+        return [_model_to_dict(item) for item in items]
+
+
+@router.get("/demo/vessels", tags=["Synthetic Demo"])
+def get_demo_vessels(namespace: str = "SAMUDRA_DEMO_V1") -> list[dict[str, Any]]:
+    """List all synthetic demo vessels."""
+    with SessionLocal() as session:
+        repo = SyntheticDemoRepository(session)
+        items = repo.get_vessels(namespace=namespace)
+        return [_model_to_dict(item) for item in items]
+
+
+@router.get("/demo/trips", tags=["Synthetic Demo"])
+def get_demo_trips(namespace: str = "SAMUDRA_DEMO_V1") -> list[dict[str, Any]]:
+    """List all synthetic demo fishing trips."""
+    with SessionLocal() as session:
+        repo = SyntheticDemoRepository(session)
+        items = repo.get_trips(namespace=namespace)
+        return [_model_to_dict(item) for item in items]
+
+
+@router.get("/demo/marine-observations", tags=["Synthetic Demo"])
+def get_demo_marine_observations(
+    harbor_id: str | None = None, namespace: str = "SAMUDRA_DEMO_V1"
+) -> list[dict[str, Any]]:
+    """List synthetic demo marine observations."""
+    with SessionLocal() as session:
+        repo = SyntheticDemoRepository(session)
+        items = repo.get_marine_observations(namespace=namespace, harbor_id=harbor_id)
+        return [_model_to_dict(item) for item in items]
+
+
+@router.get("/demo/eo-grid-cells", tags=["Synthetic Demo"])
+def get_demo_eo_grid_cells(
+    cell_id: str | None = None, namespace: str = "SAMUDRA_DEMO_V1"
+) -> list[dict[str, Any]]:
+    """List synthetic Earth Observation grid cell data."""
+    with SessionLocal() as session:
+        repo = SyntheticDemoRepository(session)
+        items = repo.get_eo_grid_cells(namespace=namespace, cell_id=cell_id)
+        return [_model_to_dict(item) for item in items]
+
+
+@router.get("/demo/pfz-candidates", tags=["Synthetic Demo"])
+def get_demo_pfz_candidates(
+    valid_only: bool = False, namespace: str = "SAMUDRA_DEMO_V1"
+) -> list[dict[str, Any]]:
+    """List synthetic Potential Fishing Zone (PFZ) advisory candidates."""
+    with SessionLocal() as session:
+        repo = SyntheticDemoRepository(session)
+        items = repo.get_pfz_candidates(namespace=namespace, valid_only=valid_only)
+        return [_model_to_dict(item) for item in items]
+
+
+@router.get("/demo/geofences", tags=["Synthetic Demo"])
+def get_demo_geofences(namespace: str = "SAMUDRA_DEMO_V1") -> list[dict[str, Any]]:
+    """List synthetic demo maritime geofences and restricted zones."""
+    with SessionLocal() as session:
+        repo = SyntheticDemoRepository(session)
+        items = repo.get_geofences(namespace=namespace)
+        return [_model_to_dict(item) for item in items]
+
+
+@router.get("/demo/routes", tags=["Synthetic Demo"])
+def get_demo_routes(namespace: str = "SAMUDRA_DEMO_V1") -> dict[str, Any]:
+    """List synthetic demo maritime route graph (nodes and edges)."""
+    with SessionLocal() as session:
+        repo = SyntheticDemoRepository(session)
+        nodes = repo.get_route_nodes(namespace=namespace)
+        edges = repo.get_route_edges(namespace=namespace)
+        return {
+            "nodes": [_model_to_dict(n) for n in nodes],
+            "edges": [_model_to_dict(e) for e in edges],
+        }
+
+
+@router.get("/demo/hazards", tags=["Synthetic Demo"])
+def get_demo_hazards(
+    status: str | None = None, namespace: str = "SAMUDRA_DEMO_V1"
+) -> list[dict[str, Any]]:
+    """List synthetic demo marine weather hazard advisories."""
+    with SessionLocal() as session:
+        repo = SyntheticDemoRepository(session)
+        items = repo.get_hazards(namespace=namespace, status=status)
+        return [_model_to_dict(item) for item in items]
+
+
+@router.get("/demo/notifications", tags=["Synthetic Demo"])
+def get_demo_notifications(
+    role: str | None = None, is_read: bool | None = None, namespace: str = "SAMUDRA_DEMO_V1"
+) -> list[dict[str, Any]]:
+    """List synthetic demo notifications and safety advisories."""
+    with SessionLocal() as session:
+        repo = SyntheticDemoRepository(session)
+        items = repo.get_notifications(namespace=namespace, role=role, is_read=is_read)
+        return [_model_to_dict(item) for item in items]
+
+
+@router.get("/demo/vessels/{vessel_id}/replay", tags=["Synthetic Demo"])
+def get_demo_vessel_replay(
+    vessel_id: str, namespace: str = "SAMUDRA_DEMO_V1"
+) -> list[dict[str, Any]]:
+    """Get recorded replay track positions for a specific vessel."""
+    with SessionLocal() as session:
+        repo = SyntheticDemoRepository(session)
+        items = repo.get_vessel_replay(namespace=namespace, vessel_id=vessel_id)
+        return [_model_to_dict(item) for item in items]
+
+
+

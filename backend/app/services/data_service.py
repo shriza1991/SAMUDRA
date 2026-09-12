@@ -77,6 +77,21 @@ class DataService:
         HYBRID   → IncoisOceanStateConnector (falls back internally to Open-Meteo)
         """
         harbor = context.origin_harbor or "Ratnagiri"
+        if self.data_mode == "SYNTHETIC":
+            from backend.app.connectors.normalizers.incois import IncoisOSFNormalizer
+            raw = {
+                "harbor": harbor,
+                "swh": 1.4,
+                "swell_height": 0.9,
+                "swell_period": 7.5,
+                "current_speed": 0.8,
+                "sst": 28.3,
+                "observed_at": "2026-09-12T06:00:00Z",
+                "valid_to": "2026-09-13T06:00:00Z",
+                "qc_flag": 0,
+            }
+            return IncoisOSFNormalizer.normalize(raw)
+
         if self.data_mode == "SNAPSHOT":
             logger.debug("DataService: SNAPSHOT mode — marine conditions from fixture.")
             try:
@@ -112,6 +127,19 @@ class DataService:
     def get_weather_conditions(self, context: ToolInvocationContext) -> WeatherConditionsPayload:
         """Route to the appropriate weather connector based on DATA_MODE."""
         harbor = context.origin_harbor or "Ratnagiri"
+        if self.data_mode == "SYNTHETIC":
+            from backend.app.connectors.normalizers.imd import ImdWeatherNormalizer
+            raw = {
+                "harbor": harbor,
+                "wind_speed_knots": 12.0,
+                "gust_speed_knots": 16.0,
+                "wind_direction_deg": 230.0,
+                "visibility_km": 10.0,
+                "observed_at": "2026-09-12T06:00:00Z",
+                "valid_to": "2026-09-12T18:00:00Z",
+            }
+            return ImdWeatherNormalizer.normalize(raw)
+
         if self.data_mode == "SNAPSHOT":
             logger.debug("DataService: SNAPSHOT mode — weather conditions from fixture.")
             try:
@@ -152,6 +180,23 @@ class DataService:
         and the snapshot contains explicitly labelled fixture data.
         """
         harbor = context.origin_harbor or "Ratnagiri"
+        if self.data_mode == "SYNTHETIC":
+            from backend.app.connectors.normalizers.imd import ImdHazardNormalizer
+            raw = {
+                "bulletin_id": "IMD-CWB-2026-09-12-01",
+                "severity": "NORMAL",
+                "event_type": "NONE",
+                "headline": "No active marine weather warnings for coastal Maharashtra.",
+                "valid_from": "2026-09-12T06:00:00Z",
+                "valid_to": "2026-09-13T06:00:00Z",
+                "status": "ACTIVE",
+                "geometry": {
+                    "type": "Polygon",
+                    "coordinates": [[[73.1, 16.8], [73.4, 16.8], [73.4, 17.1], [73.1, 17.1], [73.1, 16.8]]],
+                },
+            }
+            return ImdHazardNormalizer.normalize(raw)
+
         if self.data_mode == "SNAPSHOT":
             logger.debug("DataService: SNAPSHOT mode — hazard bulletin from fixture.")
             try:
@@ -188,6 +233,18 @@ class DataService:
 
     def get_pfz_raw_advisories(self, context: ToolInvocationContext) -> PFZSourceDataPayload:
         """Route to the appropriate PFZ connector based on DATA_MODE."""
+        if self.data_mode == "SYNTHETIC":
+            from backend.app.connectors.normalizers.incois import IncoisPFZNormalizer
+            raw = {
+                "features": [
+                    {"id": "PFZ-F01", "lat": 16.85, "lon": 73.10, "sst_grad": 0.35, "chlorophyll": 1.85, "confidence": "HIGH", "distance_km": 16.5},
+                    {"id": "PFZ-F02", "lat": 17.10, "lon": 73.05, "sst_grad": 0.40, "chlorophyll": 2.10, "confidence": "HIGH", "distance_km": 24.0},
+                ],
+                "bulletin_date": "2026-09-12T06:00:00Z",
+                "valid_to": "2026-09-13T06:00:00Z",
+            }
+            return IncoisPFZNormalizer.normalize(raw)
+
         if self.data_mode == "SNAPSHOT":
             logger.debug("DataService: SNAPSHOT mode — PFZ advisories from fixture.")
             try:
@@ -229,6 +286,55 @@ class DataService:
                     source_name="INCOIS PFZ Connector (In-Memory Dataset)",
                     source_url="https://incois.gov.in/pfz_source",
                 )
+
+    # ------------------------------------------------------------------
+    # Synthetic Demo Dataset Accessors
+    # ------------------------------------------------------------------
+
+    def _get_synthetic_marine(self, lat: float = 16.99, lon: float = 73.28) -> dict:
+        harbor = "Ratnagiri" if abs(lat - 16.99) < abs(lat - 16.06) else "Malvan"
+        harbor_id = f"harbor-{harbor.lower()}"
+        from backend.app.domain.synthetic.generator import generate_marine_observations
+        obs = [o for o in generate_marine_observations() if o["harbor_id"] == harbor_id]
+        return {
+            "mode": "SYNTHETIC",
+            "data_source": "INCOIS-OSF",
+            "harbor": harbor,
+            "hourly_forecast": obs,
+        }
+
+    def _get_synthetic_weather(self, lat: float = 16.99, lon: float = 73.28) -> dict:
+        harbor = "Ratnagiri" if abs(lat - 16.99) < abs(lat - 16.06) else "Malvan"
+        harbor_id = f"harbor-{harbor.lower()}"
+        from backend.app.domain.synthetic.generator import generate_marine_observations
+        obs = [o for o in generate_marine_observations() if o["harbor_id"] == harbor_id]
+        current = obs[0] if obs else {}
+        return {
+            "mode": "SYNTHETIC",
+            "data_source": "IMD",
+            "harbor": harbor,
+            "current": current,
+            "forecast": obs,
+        }
+
+    def _get_synthetic_hazard(self, lat: float = 16.99, lon: float = 73.28) -> dict:
+        from backend.app.domain.synthetic.generator import generate_hazards
+        hazards = generate_hazards()
+        return {
+            "mode": "SYNTHETIC",
+            "data_source": "IMD-Hazard-Bulletin",
+            "advisories": hazards,
+        }
+
+    def _get_synthetic_pfz(self, lat: float = 16.99, lon: float = 73.28) -> dict:
+        from backend.app.domain.synthetic.generator import generate_pfz_candidates
+        candidates = generate_pfz_candidates()
+        return {
+            "mode": "SYNTHETIC",
+            "data_source": "INCOIS-PFZ",
+            "candidates": candidates,
+        }
+
 
 
 # ---------------------------------------------------------------------------

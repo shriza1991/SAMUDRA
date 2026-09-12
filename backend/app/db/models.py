@@ -102,3 +102,261 @@ class ConnectorStatus(Base):
     last_checked = Column(DateTime(timezone=True), default=utcnow, nullable=False)
     error_state = Column(String, nullable=True)
     created_at = Column(DateTime(timezone=True), default=utcnow, nullable=False)
+
+
+# =============================================================================
+# SYNTHETIC DEMO DATASET MODELS (SAMUDRA_DEMO_V1)
+# =============================================================================
+from sqlalchemy import Float, JSON
+
+
+class DemoStakeholder(Base):
+    __tablename__ = "demo_stakeholders"
+
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    public_id = Column(String, unique=True, index=True, nullable=False)
+    role = Column(String, nullable=False, index=True)
+    display_name = Column(String, nullable=False)
+    metadata_json = Column(JSON, nullable=False, default=dict)
+    namespace = Column(String, default="SAMUDRA_DEMO_V1", index=True, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=utcnow, nullable=False)
+
+
+class DemoHarbor(Base):
+    __tablename__ = "demo_harbors"
+
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    public_id = Column(String, unique=True, index=True, nullable=False)
+    name = Column(String, nullable=False)
+    latitude = Column(Float, nullable=False)
+    longitude = Column(Float, nullable=False)
+    state = Column(String, nullable=False)
+    metadata_json = Column(JSON, nullable=False, default=dict)
+    provenance_json = Column(JSON, nullable=False, default=dict)
+    namespace = Column(String, default="SAMUDRA_DEMO_V1", index=True, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=utcnow, nullable=False)
+
+
+class DemoFisher(Base):
+    __tablename__ = "demo_fishers"
+
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    public_id = Column(String, unique=True, index=True, nullable=False)
+    name = Column(String, nullable=False)
+    preferred_language = Column(String, default="en", nullable=False)
+    home_harbor_id = Column(String, ForeignKey("demo_harbors.public_id", ondelete="CASCADE"), nullable=False)
+    craft_profile = Column(String, default="motorized_boat", nullable=False)
+    is_active = Column(Boolean, default=True, nullable=False)
+    metadata_json = Column(JSON, nullable=False, default=dict)
+    provenance_json = Column(JSON, nullable=False, default=dict)
+    namespace = Column(String, default="SAMUDRA_DEMO_V1", index=True, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=utcnow, nullable=False)
+
+
+class DemoVessel(Base):
+    __tablename__ = "demo_vessels"
+
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    public_id = Column(String, unique=True, index=True, nullable=False)
+    name = Column(String, nullable=False)
+    owner_fisher_id = Column(String, ForeignKey("demo_fishers.public_id", ondelete="CASCADE"), nullable=True)
+    vessel_type = Column(String, nullable=False)
+    length_m = Column(Float, nullable=True)
+    capacity_tons = Column(Float, nullable=True)
+    home_harbor_id = Column(String, ForeignKey("demo_harbors.public_id", ondelete="CASCADE"), nullable=False)
+    status = Column(String, default="OPERATIONAL", nullable=False)
+    metadata_json = Column(JSON, nullable=False, default=dict)
+    provenance_json = Column(JSON, nullable=False, default=dict)
+    namespace = Column(String, default="SAMUDRA_DEMO_V1", index=True, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=utcnow, nullable=False)
+
+
+class DemoTrip(Base):
+    __tablename__ = "demo_trips"
+
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    public_id = Column(String, unique=True, index=True, nullable=False)
+    fisher_id = Column(String, ForeignKey("demo_fishers.public_id", ondelete="CASCADE"), nullable=False)
+    vessel_id = Column(String, ForeignKey("demo_vessels.public_id", ondelete="CASCADE"), nullable=False)
+    origin_harbor_id = Column(String, ForeignKey("demo_harbors.public_id", ondelete="CASCADE"), nullable=False)
+    destination_name = Column(String, nullable=False)
+    start_time = Column(DateTime(timezone=True), nullable=False)
+    end_time = Column(DateTime(timezone=True), nullable=True)
+    status = Column(String, default="PLANNED", nullable=False)
+    metadata_json = Column(JSON, nullable=False, default=dict)
+    provenance_json = Column(JSON, nullable=False, default=dict)
+    namespace = Column(String, default="SAMUDRA_DEMO_V1", index=True, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=utcnow, nullable=False)
+
+
+class DemoMarineObservation(Base):
+    __tablename__ = "demo_marine_observations"
+
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    public_id = Column(String, unique=True, index=True, nullable=False)
+    harbor_id = Column(String, ForeignKey("demo_harbors.public_id", ondelete="CASCADE"), nullable=False)
+    observation_time = Column(DateTime(timezone=True), nullable=False, index=True)
+    wind_speed_knots = Column(Float, nullable=True)
+    wind_direction_deg = Column(Float, nullable=True)
+    wind_gust_knots = Column(Float, nullable=True)
+    wave_height_m = Column(Float, nullable=True)
+    wave_period_sec = Column(Float, nullable=True)
+    current_speed_knots = Column(Float, nullable=True)
+    current_direction_deg = Column(Float, nullable=True)
+    tide_level_m = Column(Float, nullable=True)
+    tide_phase = Column(String, nullable=True)
+    sea_surface_temp_c = Column(Float, nullable=True)
+    units_json = Column(JSON, nullable=False, default=dict)
+    tide_datum = Column(String, default="LAT", nullable=False)
+    source_name = Column(String, default="synthetic-demo", nullable=False)
+    source_type = Column(String, default="SYNTHETIC_HOURLY", nullable=False)
+    coverage_metadata = Column(JSON, nullable=False, default=dict)
+    qc_status = Column(String, default="VALID", nullable=False)
+    is_stale = Column(Boolean, default=False, nullable=False)
+    provenance_json = Column(JSON, nullable=False, default=dict)
+    namespace = Column(String, default="SAMUDRA_DEMO_V1", index=True, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=utcnow, nullable=False)
+
+
+class DemoEOGridCell(Base):
+    __tablename__ = "demo_eo_grid_cells"
+
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    public_id = Column(String, unique=True, index=True, nullable=False)
+    cell_id = Column(String, index=True, nullable=False)
+    latitude = Column(Float, nullable=False)
+    longitude = Column(Float, nullable=False)
+    observation_time = Column(DateTime(timezone=True), nullable=False, index=True)
+    sst_c = Column(Float, nullable=True)
+    chlorophyll_mg_m3 = Column(Float, nullable=True)
+    uncertainty = Column(Float, nullable=True)
+    qc_status = Column(String, default="VALID", nullable=False)
+    cloud_fraction = Column(Float, default=0.0, nullable=False)
+    source_name = Column(String, default="synthetic-demo", nullable=False)
+    provenance_json = Column(JSON, nullable=False, default=dict)
+    namespace = Column(String, default="SAMUDRA_DEMO_V1", index=True, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=utcnow, nullable=False)
+
+
+class DemoPFZCandidate(Base):
+    __tablename__ = "demo_pfz_candidates"
+
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    public_id = Column(String, unique=True, index=True, nullable=False)
+    latitude = Column(Float, nullable=False)
+    longitude = Column(Float, nullable=False)
+    detected_at = Column(DateTime(timezone=True), nullable=False)
+    valid_to = Column(DateTime(timezone=True), nullable=False)
+    confidence = Column(String, default="HIGH", nullable=False)
+    sst_gradient = Column(Float, nullable=True)
+    chlorophyll_value = Column(Float, nullable=True)
+    depth_m = Column(Float, nullable=True)
+    bearing_deg = Column(Float, nullable=True)
+    distance_km = Column(Float, nullable=True)
+    qc_status = Column(String, default="VALID", nullable=False)
+    provenance_json = Column(JSON, nullable=False, default=dict)
+    namespace = Column(String, default="SAMUDRA_DEMO_V1", index=True, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=utcnow, nullable=False)
+
+
+class DemoGeofence(Base):
+    __tablename__ = "demo_geofences"
+
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    public_id = Column(String, unique=True, index=True, nullable=False)
+    name = Column(String, nullable=False)
+    polygon_type = Column(String, nullable=False)
+    restriction_level = Column(String, default="NO_GO", nullable=False)
+    is_hard_restriction = Column(Boolean, default=True, nullable=False)
+    geometry_geojson = Column(JSON, nullable=False)
+    properties_json = Column(JSON, nullable=False, default=dict)
+    provenance_json = Column(JSON, nullable=False, default=dict)
+    namespace = Column(String, default="SAMUDRA_DEMO_V1", index=True, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=utcnow, nullable=False)
+
+
+class DemoRouteNode(Base):
+    __tablename__ = "demo_route_nodes"
+
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    public_id = Column(String, unique=True, index=True, nullable=False)
+    node_name = Column(String, nullable=False)
+    latitude = Column(Float, nullable=False)
+    longitude = Column(Float, nullable=False)
+    depth_m = Column(Float, nullable=True)
+    is_sheltered = Column(Boolean, default=False, nullable=False)
+    properties_json = Column(JSON, nullable=False, default=dict)
+    namespace = Column(String, default="SAMUDRA_DEMO_V1", index=True, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=utcnow, nullable=False)
+
+
+class DemoRouteEdge(Base):
+    __tablename__ = "demo_route_edges"
+
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    public_id = Column(String, unique=True, index=True, nullable=False)
+    from_node_id = Column(String, ForeignKey("demo_route_nodes.public_id", ondelete="CASCADE"), nullable=False)
+    to_node_id = Column(String, ForeignKey("demo_route_nodes.public_id", ondelete="CASCADE"), nullable=False)
+    distance_nm = Column(Float, nullable=False)
+    route_name = Column(String, nullable=False)
+    hazard_exposure_score = Column(Float, default=0.0, nullable=False)
+    properties_json = Column(JSON, nullable=False, default=dict)
+    namespace = Column(String, default="SAMUDRA_DEMO_V1", index=True, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=utcnow, nullable=False)
+
+
+class DemoHazardEvent(Base):
+    __tablename__ = "demo_hazard_events"
+
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    public_id = Column(String, unique=True, index=True, nullable=False)
+    event_type = Column(String, nullable=False)
+    severity = Column(String, default="WARNING", nullable=False)
+    headline = Column(String, nullable=False)
+    geometry_geojson = Column(JSON, nullable=False)
+    start_time = Column(DateTime(timezone=True), nullable=False)
+    end_time = Column(DateTime(timezone=True), nullable=False)
+    status = Column(String, default="ACTIVE", nullable=False)
+    provenance_json = Column(JSON, nullable=False, default=dict)
+    namespace = Column(String, default="SAMUDRA_DEMO_V1", index=True, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=utcnow, nullable=False)
+
+
+class DemoNotification(Base):
+    __tablename__ = "demo_notifications"
+
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    public_id = Column(String, unique=True, index=True, nullable=False)
+    recipient_role = Column(String, nullable=False, index=True)
+    fisher_id = Column(String, ForeignKey("demo_fishers.public_id", ondelete="CASCADE"), nullable=True)
+    vessel_id = Column(String, ForeignKey("demo_vessels.public_id", ondelete="CASCADE"), nullable=True)
+    trip_id = Column(String, ForeignKey("demo_trips.public_id", ondelete="CASCADE"), nullable=True)
+    hazard_id = Column(String, ForeignKey("demo_hazard_events.public_id", ondelete="CASCADE"), nullable=True)
+    geofence_id = Column(String, ForeignKey("demo_geofences.public_id", ondelete="CASCADE"), nullable=True)
+    title = Column(String, nullable=False)
+    message = Column(String, nullable=False)
+    severity = Column(String, default="INFO", nullable=False)
+    is_read = Column(Boolean, default=False, nullable=False)
+    is_acknowledged = Column(Boolean, default=False, nullable=False)
+    timestamp = Column(DateTime(timezone=True), nullable=False)
+    provenance_json = Column(JSON, nullable=False, default=dict)
+    namespace = Column(String, default="SAMUDRA_DEMO_V1", index=True, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=utcnow, nullable=False)
+
+
+class DemoVesselReplayPosition(Base):
+    __tablename__ = "demo_vessel_replay_positions"
+
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    public_id = Column(String, unique=True, index=True, nullable=False)
+    vessel_id = Column(String, ForeignKey("demo_vessels.public_id", ondelete="CASCADE"), nullable=False, index=True)
+    trip_id = Column(String, ForeignKey("demo_trips.public_id", ondelete="CASCADE"), nullable=True)
+    timestamp = Column(DateTime(timezone=True), nullable=False, index=True)
+    latitude = Column(Float, nullable=False)
+    longitude = Column(Float, nullable=False)
+    speed_knots = Column(Float, nullable=True)
+    heading_deg = Column(Float, nullable=True)
+    provenance_json = Column(JSON, nullable=False, default=dict)
+    namespace = Column(String, default="SAMUDRA_DEMO_V1", index=True, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=utcnow, nullable=False)
+

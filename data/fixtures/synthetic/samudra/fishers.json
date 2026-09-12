@@ -1,0 +1,178 @@
+[
+  {
+    "public_id": "fisher-01",
+    "name": "Suresh Patil",
+    "preferred_language": "mr",
+    "home_harbor_id": "harbor-ratnagiri",
+    "craft_profile": "motorized_boat",
+    "is_active": true,
+    "metadata_json": {
+      "experience_yrs": 18,
+      "mobile_device": "Android KaiOS"
+    },
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "fisher-02",
+    "name": "Ramesh Kadam",
+    "preferred_language": "mr",
+    "home_harbor_id": "harbor-ratnagiri",
+    "craft_profile": "mechanized_trawler",
+    "is_active": true,
+    "metadata_json": {
+      "experience_yrs": 24,
+      "mobile_device": "Android"
+    },
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "fisher-03",
+    "name": "Abdul Khan",
+    "preferred_language": "hi",
+    "home_harbor_id": "harbor-ratnagiri",
+    "craft_profile": "motorized_boat",
+    "is_active": true,
+    "metadata_json": {
+      "experience_yrs": 12,
+      "mobile_device": "Android"
+    },
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "fisher-04",
+    "name": "Dinesh Sharma",
+    "preferred_language": "hi",
+    "home_harbor_id": "harbor-ratnagiri",
+    "craft_profile": "artisanal_craft",
+    "is_active": true,
+    "metadata_json": {
+      "experience_yrs": 9,
+      "mobile_device": "Android Feature"
+    },
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "fisher-05",
+    "name": "Anthony Fernandes",
+    "preferred_language": "en",
+    "home_harbor_id": "harbor-malvan",
+    "craft_profile": "motorized_boat",
+    "is_active": true,
+    "metadata_json": {
+      "experience_yrs": 15,
+      "mobile_device": "iOS"
+    },
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "fisher-06",
+    "name": "Anand Tandel",
+    "preferred_language": "mr",
+    "home_harbor_id": "harbor-malvan",
+    "craft_profile": "mechanized_trawler",
+    "is_active": true,
+    "metadata_json": {
+      "experience_yrs": 30,
+      "mobile_device": "Android"
+    },
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "fisher-07",
+    "name": "Vijay Joshi",
+    "preferred_language": "en",
+    "home_harbor_id": "harbor-malvan",
+    "craft_profile": "artisanal_craft",
+    "is_active": true,
+    "metadata_json": {
+      "experience_yrs": 7,
+      "mobile_device": "Android"
+    },
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "fisher-08",
+    "name": "Sunil Verma",
+    "preferred_language": "hi",
+    "home_harbor_id": "harbor-malvan",
+    "craft_profile": "motorized_boat",
+    "is_active": true,
+    "metadata_json": {
+      "experience_yrs": 14,
+      "mobile_device": "Android"
+    },
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  }
+]

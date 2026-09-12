@@ -1,0 +1,610 @@
+[
+  {
+    "public_id": "edge-01",
+    "from_node_id": "node-01",
+    "to_node_id": "node-02",
+    "distance_nm": 1.5,
+    "route_name": "Route A - Inshore Sheltered Channel",
+    "hazard_exposure_score": 0.1,
+    "properties_json": {
+      "provenance": {
+        "mode": "SYNTHETIC",
+        "source": "synthetic-demo",
+        "dataset_version": "synthetic_demo_v1",
+        "namespace": "SAMUDRA_DEMO_V1",
+        "generated_at": "2026-09-12T06:00:00+00:00"
+      }
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "edge-02",
+    "from_node_id": "node-01",
+    "to_node_id": "node-03",
+    "distance_nm": 5.5,
+    "route_name": "Route A - Inshore Sheltered Channel",
+    "hazard_exposure_score": 0.1,
+    "properties_json": {
+      "provenance": {
+        "mode": "SYNTHETIC",
+        "source": "synthetic-demo",
+        "dataset_version": "synthetic_demo_v1",
+        "namespace": "SAMUDRA_DEMO_V1",
+        "generated_at": "2026-09-12T06:00:00+00:00"
+      }
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "edge-03",
+    "from_node_id": "node-03",
+    "to_node_id": "node-04",
+    "distance_nm": 7.2,
+    "route_name": "Route A - Inshore Sheltered Channel",
+    "hazard_exposure_score": 0.15,
+    "properties_json": {
+      "provenance": {
+        "mode": "SYNTHETIC",
+        "source": "synthetic-demo",
+        "dataset_version": "synthetic_demo_v1",
+        "namespace": "SAMUDRA_DEMO_V1",
+        "generated_at": "2026-09-12T06:00:00+00:00"
+      }
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "edge-04",
+    "from_node_id": "node-04",
+    "to_node_id": "node-09",
+    "distance_nm": 14.0,
+    "route_name": "Route A - Inshore Sheltered Channel",
+    "hazard_exposure_score": 0.2,
+    "properties_json": {
+      "provenance": {
+        "mode": "SYNTHETIC",
+        "source": "synthetic-demo",
+        "dataset_version": "synthetic_demo_v1",
+        "namespace": "SAMUDRA_DEMO_V1",
+        "generated_at": "2026-09-12T06:00:00+00:00"
+      }
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "edge-05",
+    "from_node_id": "node-09",
+    "to_node_id": "node-10",
+    "distance_nm": 8.0,
+    "route_name": "Route A - Inshore Sheltered Channel",
+    "hazard_exposure_score": 0.15,
+    "properties_json": {
+      "provenance": {
+        "mode": "SYNTHETIC",
+        "source": "synthetic-demo",
+        "dataset_version": "synthetic_demo_v1",
+        "namespace": "SAMUDRA_DEMO_V1",
+        "generated_at": "2026-09-12T06:00:00+00:00"
+      }
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "edge-06",
+    "from_node_id": "node-10",
+    "to_node_id": "node-12",
+    "distance_nm": 3.2,
+    "route_name": "Route A - Inshore Sheltered Channel",
+    "hazard_exposure_score": 0.1,
+    "properties_json": {
+      "provenance": {
+        "mode": "SYNTHETIC",
+        "source": "synthetic-demo",
+        "dataset_version": "synthetic_demo_v1",
+        "namespace": "SAMUDRA_DEMO_V1",
+        "generated_at": "2026-09-12T06:00:00+00:00"
+      }
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "edge-07",
+    "from_node_id": "node-12",
+    "to_node_id": "node-13",
+    "distance_nm": 6.0,
+    "route_name": "Route A - Inshore Sheltered Channel",
+    "hazard_exposure_score": 0.15,
+    "properties_json": {
+      "provenance": {
+        "mode": "SYNTHETIC",
+        "source": "synthetic-demo",
+        "dataset_version": "synthetic_demo_v1",
+        "namespace": "SAMUDRA_DEMO_V1",
+        "generated_at": "2026-09-12T06:00:00+00:00"
+      }
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "edge-08",
+    "from_node_id": "node-13",
+    "to_node_id": "node-14",
+    "distance_nm": 5.2,
+    "route_name": "Route A - Inshore Sheltered Channel",
+    "hazard_exposure_score": 0.15,
+    "properties_json": {
+      "provenance": {
+        "mode": "SYNTHETIC",
+        "source": "synthetic-demo",
+        "dataset_version": "synthetic_demo_v1",
+        "namespace": "SAMUDRA_DEMO_V1",
+        "generated_at": "2026-09-12T06:00:00+00:00"
+      }
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "edge-09",
+    "from_node_id": "node-14",
+    "to_node_id": "node-15",
+    "distance_nm": 5.0,
+    "route_name": "Route A - Inshore Sheltered Channel",
+    "hazard_exposure_score": 0.15,
+    "properties_json": {
+      "provenance": {
+        "mode": "SYNTHETIC",
+        "source": "synthetic-demo",
+        "dataset_version": "synthetic_demo_v1",
+        "namespace": "SAMUDRA_DEMO_V1",
+        "generated_at": "2026-09-12T06:00:00+00:00"
+      }
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "edge-10",
+    "from_node_id": "node-15",
+    "to_node_id": "node-16",
+    "distance_nm": 4.0,
+    "route_name": "Route A - Inshore Sheltered Channel",
+    "hazard_exposure_score": 0.1,
+    "properties_json": {
+      "provenance": {
+        "mode": "SYNTHETIC",
+        "source": "synthetic-demo",
+        "dataset_version": "synthetic_demo_v1",
+        "namespace": "SAMUDRA_DEMO_V1",
+        "generated_at": "2026-09-12T06:00:00+00:00"
+      }
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "edge-11",
+    "from_node_id": "node-01",
+    "to_node_id": "node-05",
+    "distance_nm": 3.0,
+    "route_name": "Route B - Exposed Open Sea Passage",
+    "hazard_exposure_score": 0.4,
+    "properties_json": {
+      "provenance": {
+        "mode": "SYNTHETIC",
+        "source": "synthetic-demo",
+        "dataset_version": "synthetic_demo_v1",
+        "namespace": "SAMUDRA_DEMO_V1",
+        "generated_at": "2026-09-12T06:00:00+00:00"
+      }
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "edge-12",
+    "from_node_id": "node-05",
+    "to_node_id": "node-06",
+    "distance_nm": 7.5,
+    "route_name": "Route B - Exposed Open Sea Passage",
+    "hazard_exposure_score": 0.65,
+    "properties_json": {
+      "provenance": {
+        "mode": "SYNTHETIC",
+        "source": "synthetic-demo",
+        "dataset_version": "synthetic_demo_v1",
+        "namespace": "SAMUDRA_DEMO_V1",
+        "generated_at": "2026-09-12T06:00:00+00:00"
+      }
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "edge-13",
+    "from_node_id": "node-06",
+    "to_node_id": "node-07",
+    "distance_nm": 9.5,
+    "route_name": "Route B - Exposed Open Sea Passage",
+    "hazard_exposure_score": 0.7,
+    "properties_json": {
+      "provenance": {
+        "mode": "SYNTHETIC",
+        "source": "synthetic-demo",
+        "dataset_version": "synthetic_demo_v1",
+        "namespace": "SAMUDRA_DEMO_V1",
+        "generated_at": "2026-09-12T06:00:00+00:00"
+      }
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "edge-14",
+    "from_node_id": "node-07",
+    "to_node_id": "node-08",
+    "distance_nm": 12.0,
+    "route_name": "Route B - Exposed Open Sea Passage",
+    "hazard_exposure_score": 0.75,
+    "properties_json": {
+      "provenance": {
+        "mode": "SYNTHETIC",
+        "source": "synthetic-demo",
+        "dataset_version": "synthetic_demo_v1",
+        "namespace": "SAMUDRA_DEMO_V1",
+        "generated_at": "2026-09-12T06:00:00+00:00"
+      }
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "edge-15",
+    "from_node_id": "node-08",
+    "to_node_id": "node-11",
+    "distance_nm": 9.2,
+    "route_name": "Route B - Exposed Open Sea Passage",
+    "hazard_exposure_score": 0.7,
+    "properties_json": {
+      "provenance": {
+        "mode": "SYNTHETIC",
+        "source": "synthetic-demo",
+        "dataset_version": "synthetic_demo_v1",
+        "namespace": "SAMUDRA_DEMO_V1",
+        "generated_at": "2026-09-12T06:00:00+00:00"
+      }
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "edge-16",
+    "from_node_id": "node-11",
+    "to_node_id": "node-17",
+    "distance_nm": 22.0,
+    "route_name": "Route B - Exposed Open Sea Passage",
+    "hazard_exposure_score": 0.65,
+    "properties_json": {
+      "provenance": {
+        "mode": "SYNTHETIC",
+        "source": "synthetic-demo",
+        "dataset_version": "synthetic_demo_v1",
+        "namespace": "SAMUDRA_DEMO_V1",
+        "generated_at": "2026-09-12T06:00:00+00:00"
+      }
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "edge-17",
+    "from_node_id": "node-17",
+    "to_node_id": "node-16",
+    "distance_nm": 3.5,
+    "route_name": "Route B - Exposed Open Sea Passage",
+    "hazard_exposure_score": 0.35,
+    "properties_json": {
+      "provenance": {
+        "mode": "SYNTHETIC",
+        "source": "synthetic-demo",
+        "dataset_version": "synthetic_demo_v1",
+        "namespace": "SAMUDRA_DEMO_V1",
+        "generated_at": "2026-09-12T06:00:00+00:00"
+      }
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "edge-18",
+    "from_node_id": "node-05",
+    "to_node_id": "node-20",
+    "distance_nm": 6.2,
+    "route_name": "PFZ Alpha Feeder",
+    "hazard_exposure_score": 0.5,
+    "properties_json": {
+      "provenance": {
+        "mode": "SYNTHETIC",
+        "source": "synthetic-demo",
+        "dataset_version": "synthetic_demo_v1",
+        "namespace": "SAMUDRA_DEMO_V1",
+        "generated_at": "2026-09-12T06:00:00+00:00"
+      }
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "edge-19",
+    "from_node_id": "node-20",
+    "to_node_id": "node-21",
+    "distance_nm": 9.0,
+    "route_name": "PFZ Alpha Corridor",
+    "hazard_exposure_score": 0.55,
+    "properties_json": {
+      "provenance": {
+        "mode": "SYNTHETIC",
+        "source": "synthetic-demo",
+        "dataset_version": "synthetic_demo_v1",
+        "namespace": "SAMUDRA_DEMO_V1",
+        "generated_at": "2026-09-12T06:00:00+00:00"
+      }
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "edge-20",
+    "from_node_id": "node-02",
+    "to_node_id": "node-21",
+    "distance_nm": 12.0,
+    "route_name": "Mirya to PFZ Alpha",
+    "hazard_exposure_score": 0.45,
+    "properties_json": {
+      "provenance": {
+        "mode": "SYNTHETIC",
+        "source": "synthetic-demo",
+        "dataset_version": "synthetic_demo_v1",
+        "namespace": "SAMUDRA_DEMO_V1",
+        "generated_at": "2026-09-12T06:00:00+00:00"
+      }
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "edge-21",
+    "from_node_id": "node-08",
+    "to_node_id": "node-09",
+    "distance_nm": 9.8,
+    "route_name": "Mid-coast Cross Transit",
+    "hazard_exposure_score": 0.35,
+    "properties_json": {
+      "provenance": {
+        "mode": "SYNTHETIC",
+        "source": "synthetic-demo",
+        "dataset_version": "synthetic_demo_v1",
+        "namespace": "SAMUDRA_DEMO_V1",
+        "generated_at": "2026-09-12T06:00:00+00:00"
+      }
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "edge-22",
+    "from_node_id": "node-11",
+    "to_node_id": "node-10",
+    "distance_nm": 9.4,
+    "route_name": "Devgad Offshore Link",
+    "hazard_exposure_score": 0.4,
+    "properties_json": {
+      "provenance": {
+        "mode": "SYNTHETIC",
+        "source": "synthetic-demo",
+        "dataset_version": "synthetic_demo_v1",
+        "namespace": "SAMUDRA_DEMO_V1",
+        "generated_at": "2026-09-12T06:00:00+00:00"
+      }
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "edge-23",
+    "from_node_id": "node-17",
+    "to_node_id": "node-22",
+    "distance_nm": 7.5,
+    "route_name": "Malvan to PFZ Bravo",
+    "hazard_exposure_score": 0.45,
+    "properties_json": {
+      "provenance": {
+        "mode": "SYNTHETIC",
+        "source": "synthetic-demo",
+        "dataset_version": "synthetic_demo_v1",
+        "namespace": "SAMUDRA_DEMO_V1",
+        "generated_at": "2026-09-12T06:00:00+00:00"
+      }
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "edge-24",
+    "from_node_id": "node-16",
+    "to_node_id": "node-18",
+    "distance_nm": 13.0,
+    "route_name": "Malvan Deep Sea Run",
+    "hazard_exposure_score": 0.6,
+    "properties_json": {
+      "provenance": {
+        "mode": "SYNTHETIC",
+        "source": "synthetic-demo",
+        "dataset_version": "synthetic_demo_v1",
+        "namespace": "SAMUDRA_DEMO_V1",
+        "generated_at": "2026-09-12T06:00:00+00:00"
+      }
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "edge-25",
+    "from_node_id": "node-18",
+    "to_node_id": "node-19",
+    "distance_nm": 16.0,
+    "route_name": "South Sindhudurg Run",
+    "hazard_exposure_score": 0.5,
+    "properties_json": {
+      "provenance": {
+        "mode": "SYNTHETIC",
+        "source": "synthetic-demo",
+        "dataset_version": "synthetic_demo_v1",
+        "namespace": "SAMUDRA_DEMO_V1",
+        "generated_at": "2026-09-12T06:00:00+00:00"
+      }
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "edge-26",
+    "from_node_id": "node-17",
+    "to_node_id": "node-19",
+    "distance_nm": 12.5,
+    "route_name": "Malvan to South Border",
+    "hazard_exposure_score": 0.45,
+    "properties_json": {
+      "provenance": {
+        "mode": "SYNTHETIC",
+        "source": "synthetic-demo",
+        "dataset_version": "synthetic_demo_v1",
+        "namespace": "SAMUDRA_DEMO_V1",
+        "generated_at": "2026-09-12T06:00:00+00:00"
+      }
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "edge-27",
+    "from_node_id": "node-19",
+    "to_node_id": "node-23",
+    "distance_nm": 13.0,
+    "route_name": "Goa North Transit",
+    "hazard_exposure_score": 0.55,
+    "properties_json": {
+      "provenance": {
+        "mode": "SYNTHETIC",
+        "source": "synthetic-demo",
+        "dataset_version": "synthetic_demo_v1",
+        "namespace": "SAMUDRA_DEMO_V1",
+        "generated_at": "2026-09-12T06:00:00+00:00"
+      }
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "edge-28",
+    "from_node_id": "node-23",
+    "to_node_id": "node-24",
+    "distance_nm": 12.5,
+    "route_name": "Goa Transit Channel",
+    "hazard_exposure_score": 0.8,
+    "properties_json": {
+      "provenance": {
+        "mode": "SYNTHETIC",
+        "source": "synthetic-demo",
+        "dataset_version": "synthetic_demo_v1",
+        "namespace": "SAMUDRA_DEMO_V1",
+        "generated_at": "2026-09-12T06:00:00+00:00"
+      }
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "edge-29",
+    "from_node_id": "node-18",
+    "to_node_id": "node-23",
+    "distance_nm": 22.0,
+    "route_name": "Outer Deep Transit",
+    "hazard_exposure_score": 0.75,
+    "properties_json": {
+      "provenance": {
+        "mode": "SYNTHETIC",
+        "source": "synthetic-demo",
+        "dataset_version": "synthetic_demo_v1",
+        "namespace": "SAMUDRA_DEMO_V1",
+        "generated_at": "2026-09-12T06:00:00+00:00"
+      }
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "edge-30",
+    "from_node_id": "node-06",
+    "to_node_id": "node-20",
+    "distance_nm": 1.8,
+    "route_name": "Deep Anchor to PFZ 1",
+    "hazard_exposure_score": 0.45,
+    "properties_json": {
+      "provenance": {
+        "mode": "SYNTHETIC",
+        "source": "synthetic-demo",
+        "dataset_version": "synthetic_demo_v1",
+        "namespace": "SAMUDRA_DEMO_V1",
+        "generated_at": "2026-09-12T06:00:00+00:00"
+      }
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "edge-31",
+    "from_node_id": "node-03",
+    "to_node_id": "node-06",
+    "distance_nm": 7.8,
+    "route_name": "Inshore to Offshore Link 1",
+    "hazard_exposure_score": 0.3,
+    "properties_json": {
+      "provenance": {
+        "mode": "SYNTHETIC",
+        "source": "synthetic-demo",
+        "dataset_version": "synthetic_demo_v1",
+        "namespace": "SAMUDRA_DEMO_V1",
+        "generated_at": "2026-09-12T06:00:00+00:00"
+      }
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "edge-32",
+    "from_node_id": "node-14",
+    "to_node_id": "node-22",
+    "distance_nm": 8.8,
+    "route_name": "Achara to PFZ Bravo",
+    "hazard_exposure_score": 0.35,
+    "properties_json": {
+      "provenance": {
+        "mode": "SYNTHETIC",
+        "source": "synthetic-demo",
+        "dataset_version": "synthetic_demo_v1",
+        "namespace": "SAMUDRA_DEMO_V1",
+        "generated_at": "2026-09-12T06:00:00+00:00"
+      }
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  }
+]

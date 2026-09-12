@@ -1,0 +1,290 @@
+[
+  {
+    "public_id": "trip-01",
+    "fisher_id": "fisher-01",
+    "vessel_id": "vessel-01",
+    "origin_harbor_id": "harbor-ratnagiri",
+    "destination_name": "Ratnagiri Inshore Fishing Zone",
+    "start_time": "2026-09-12T00:00:00+00:00",
+    "end_time": "2026-09-12T08:00:00+00:00",
+    "status": "IN_PROGRESS",
+    "metadata_json": {
+      "target_catch": "Mackerel",
+      "condition_overlap": "CALM"
+    },
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "trip-02",
+    "fisher_id": "fisher-02",
+    "vessel_id": "vessel-02",
+    "origin_harbor_id": "harbor-ratnagiri",
+    "destination_name": "Ratnagiri Outer Bank",
+    "start_time": "2026-09-11T18:00:00+00:00",
+    "end_time": "2026-09-12T05:00:00+00:00",
+    "status": "COMPLETED",
+    "metadata_json": {
+      "target_catch": "Ribbonfish",
+      "condition_overlap": "ELEVATED"
+    },
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "trip-03",
+    "fisher_id": "fisher-03",
+    "vessel_id": "vessel-03",
+    "origin_harbor_id": "harbor-ratnagiri",
+    "destination_name": "South Konkan Passage",
+    "start_time": "2026-09-12T04:00:00+00:00",
+    "end_time": "2026-09-12T14:00:00+00:00",
+    "status": "IN_PROGRESS",
+    "metadata_json": {
+      "target_catch": "Pomfret",
+      "condition_overlap": "HAZARD_SQUALL_INTERSECTION"
+    },
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "trip-04",
+    "fisher_id": "fisher-04",
+    "vessel_id": "vessel-04",
+    "origin_harbor_id": "harbor-ratnagiri",
+    "destination_name": "Mirya Bay Nearshore",
+    "start_time": "2026-09-12T02:00:00+00:00",
+    "end_time": "2026-09-12T05:00:00+00:00",
+    "status": "COMPLETED",
+    "metadata_json": {
+      "target_catch": "Prawns",
+      "condition_overlap": "CALM"
+    },
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "trip-05",
+    "fisher_id": "fisher-05",
+    "vessel_id": "vessel-05",
+    "origin_harbor_id": "harbor-malvan",
+    "destination_name": "Malvan North Perimeter",
+    "start_time": "2026-09-12T01:00:00+00:00",
+    "end_time": "2026-09-12T09:00:00+00:00",
+    "status": "IN_PROGRESS",
+    "metadata_json": {
+      "target_catch": "Kingfish",
+      "condition_overlap": "GEOFENCE_PROXIMITY"
+    },
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "trip-06",
+    "fisher_id": "fisher-06",
+    "vessel_id": "vessel-06",
+    "origin_harbor_id": "harbor-malvan",
+    "destination_name": "PFZ Sector Alpha",
+    "start_time": "2026-09-12T07:00:00+00:00",
+    "end_time": "2026-09-12T20:00:00+00:00",
+    "status": "PLANNED",
+    "metadata_json": {
+      "target_catch": "Tuna",
+      "condition_overlap": "PFZ_CANDIDATE"
+    },
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "trip-07",
+    "fisher_id": "fisher-07",
+    "vessel_id": "vessel-07",
+    "origin_harbor_id": "harbor-malvan",
+    "destination_name": "Tarkarli Coastal Bank",
+    "start_time": "2026-09-11T22:00:00+00:00",
+    "end_time": "2026-09-12T04:00:00+00:00",
+    "status": "COMPLETED",
+    "metadata_json": {
+      "target_catch": "Sardines",
+      "condition_overlap": "ROUTE_A_SHELTERED"
+    },
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "trip-08",
+    "fisher_id": "fisher-08",
+    "vessel_id": "vessel-08",
+    "origin_harbor_id": "harbor-malvan",
+    "destination_name": "Malvan Outer Deep Bank",
+    "start_time": "2026-09-12T08:00:00+00:00",
+    "end_time": "2026-09-12T16:00:00+00:00",
+    "status": "PLANNED",
+    "metadata_json": {
+      "target_catch": "Squid",
+      "condition_overlap": "ROUTE_B_EXPOSED"
+    },
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "trip-09",
+    "fisher_id": "fisher-01",
+    "vessel_id": "vessel-01",
+    "origin_harbor_id": "harbor-ratnagiri",
+    "destination_name": "Coastal Patrol Corridor",
+    "start_time": "2026-09-12T18:00:00+00:00",
+    "end_time": "2026-09-13T02:00:00+00:00",
+    "status": "PLANNED",
+    "metadata_json": {
+      "target_catch": "None (Operator)",
+      "condition_overlap": "OPERATOR_SURVEILLANCE"
+    },
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "trip-10",
+    "fisher_id": "fisher-05",
+    "vessel_id": "vessel-05",
+    "origin_harbor_id": "harbor-malvan",
+    "destination_name": "Sindhudurg Bio-Station",
+    "start_time": "2026-09-13T00:00:00+00:00",
+    "end_time": "2026-09-13T12:00:00+00:00",
+    "status": "PLANNED",
+    "metadata_json": {
+      "target_catch": "Water Samples",
+      "condition_overlap": "RESEARCHER_CRUISE"
+    },
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "trip-11",
+    "fisher_id": "fisher-02",
+    "vessel_id": "vessel-02",
+    "origin_harbor_id": "harbor-ratnagiri",
+    "destination_name": "Monsoon Wave Baseline Sector",
+    "start_time": "2026-09-13T06:00:00+00:00",
+    "end_time": "2026-09-13T18:00:00+00:00",
+    "status": "PLANNED",
+    "metadata_json": {
+      "target_catch": "Mixed Pelagic",
+      "condition_overlap": "HIGH_WAVE"
+    },
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "trip-12",
+    "fisher_id": "fisher-06",
+    "vessel_id": "vessel-06",
+    "origin_harbor_id": "harbor-malvan",
+    "destination_name": "Emergency Standby Sector",
+    "start_time": "2026-09-12T05:00:00+00:00",
+    "end_time": "2026-09-12T12:00:00+00:00",
+    "status": "IN_PROGRESS",
+    "metadata_json": {
+      "target_catch": "Standby Escort",
+      "condition_overlap": "DISASTER_MANAGEMENT_STANDBY"
+    },
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  }
+]

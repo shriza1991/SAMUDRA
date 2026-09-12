@@ -1,0 +1,458 @@
+[
+  {
+    "public_id": "node-01",
+    "node_name": "Ratnagiri Harbor Pier",
+    "latitude": 16.99,
+    "longitude": 73.28,
+    "depth_m": 8.0,
+    "is_sheltered": true,
+    "properties_json": {
+      "provenance": {
+        "mode": "SYNTHETIC",
+        "source": "synthetic-demo",
+        "dataset_version": "synthetic_demo_v1",
+        "namespace": "SAMUDRA_DEMO_V1",
+        "generated_at": "2026-09-12T06:00:00+00:00"
+      }
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "node-02",
+    "node_name": "Mirya Bay Entrance",
+    "latitude": 17.01,
+    "longitude": 73.265,
+    "depth_m": 14.0,
+    "is_sheltered": true,
+    "properties_json": {
+      "provenance": {
+        "mode": "SYNTHETIC",
+        "source": "synthetic-demo",
+        "dataset_version": "synthetic_demo_v1",
+        "namespace": "SAMUDRA_DEMO_V1",
+        "generated_at": "2026-09-12T06:00:00+00:00"
+      }
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "node-03",
+    "node_name": "Pawash Inshore Channel North",
+    "latitude": 16.9,
+    "longitude": 73.285,
+    "depth_m": 12.0,
+    "is_sheltered": true,
+    "properties_json": {
+      "provenance": {
+        "mode": "SYNTHETIC",
+        "source": "synthetic-demo",
+        "dataset_version": "synthetic_demo_v1",
+        "namespace": "SAMUDRA_DEMO_V1",
+        "generated_at": "2026-09-12T06:00:00+00:00"
+      }
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "node-04",
+    "node_name": "Pawash Inshore Channel South",
+    "latitude": 16.78,
+    "longitude": 73.3,
+    "depth_m": 15.0,
+    "is_sheltered": true,
+    "properties_json": {
+      "provenance": {
+        "mode": "SYNTHETIC",
+        "source": "synthetic-demo",
+        "dataset_version": "synthetic_demo_v1",
+        "namespace": "SAMUDRA_DEMO_V1",
+        "generated_at": "2026-09-12T06:00:00+00:00"
+      }
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "node-05",
+    "node_name": "Ratnagiri Outer Anchorage",
+    "latitude": 16.995,
+    "longitude": 73.23,
+    "depth_m": 28.0,
+    "is_sheltered": false,
+    "properties_json": {
+      "provenance": {
+        "mode": "SYNTHETIC",
+        "source": "synthetic-demo",
+        "dataset_version": "synthetic_demo_v1",
+        "namespace": "SAMUDRA_DEMO_V1",
+        "generated_at": "2026-09-12T06:00:00+00:00"
+      }
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "node-06",
+    "node_name": "Ratnagiri Deep Water Waypoint 1",
+    "latitude": 16.9,
+    "longitude": 73.15,
+    "depth_m": 42.0,
+    "is_sheltered": false,
+    "properties_json": {
+      "provenance": {
+        "mode": "SYNTHETIC",
+        "source": "synthetic-demo",
+        "dataset_version": "synthetic_demo_v1",
+        "namespace": "SAMUDRA_DEMO_V1",
+        "generated_at": "2026-09-12T06:00:00+00:00"
+      }
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "node-07",
+    "node_name": "Ratnagiri Deep Water Waypoint 2",
+    "latitude": 16.75,
+    "longitude": 73.1,
+    "depth_m": 55.0,
+    "is_sheltered": false,
+    "properties_json": {
+      "provenance": {
+        "mode": "SYNTHETIC",
+        "source": "synthetic-demo",
+        "dataset_version": "synthetic_demo_v1",
+        "namespace": "SAMUDRA_DEMO_V1",
+        "generated_at": "2026-09-12T06:00:00+00:00"
+      }
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "node-08",
+    "node_name": "Vijaybhoomi Offshore Junction",
+    "latitude": 16.55,
+    "longitude": 73.15,
+    "depth_m": 48.0,
+    "is_sheltered": false,
+    "properties_json": {
+      "provenance": {
+        "mode": "SYNTHETIC",
+        "source": "synthetic-demo",
+        "dataset_version": "synthetic_demo_v1",
+        "namespace": "SAMUDRA_DEMO_V1",
+        "generated_at": "2026-09-12T06:00:00+00:00"
+      }
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "node-09",
+    "node_name": "Vijaybhoomi Coastal Channel",
+    "latitude": 16.55,
+    "longitude": 73.32,
+    "depth_m": 18.0,
+    "is_sheltered": true,
+    "properties_json": {
+      "provenance": {
+        "mode": "SYNTHETIC",
+        "source": "synthetic-demo",
+        "dataset_version": "synthetic_demo_v1",
+        "namespace": "SAMUDRA_DEMO_V1",
+        "generated_at": "2026-09-12T06:00:00+00:00"
+      }
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "node-10",
+    "node_name": "Devgad North Passage",
+    "latitude": 16.42,
+    "longitude": 73.34,
+    "depth_m": 16.0,
+    "is_sheltered": true,
+    "properties_json": {
+      "provenance": {
+        "mode": "SYNTHETIC",
+        "source": "synthetic-demo",
+        "dataset_version": "synthetic_demo_v1",
+        "namespace": "SAMUDRA_DEMO_V1",
+        "generated_at": "2026-09-12T06:00:00+00:00"
+      }
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "node-11",
+    "node_name": "Devgad Offshore Waypoint",
+    "latitude": 16.4,
+    "longitude": 73.18,
+    "depth_m": 46.0,
+    "is_sheltered": false,
+    "properties_json": {
+      "provenance": {
+        "mode": "SYNTHETIC",
+        "source": "synthetic-demo",
+        "dataset_version": "synthetic_demo_v1",
+        "namespace": "SAMUDRA_DEMO_V1",
+        "generated_at": "2026-09-12T06:00:00+00:00"
+      }
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "node-12",
+    "node_name": "Devgad Harbor Approaches",
+    "latitude": 16.375,
+    "longitude": 73.37,
+    "depth_m": 11.0,
+    "is_sheltered": true,
+    "properties_json": {
+      "provenance": {
+        "mode": "SYNTHETIC",
+        "source": "synthetic-demo",
+        "dataset_version": "synthetic_demo_v1",
+        "namespace": "SAMUDRA_DEMO_V1",
+        "generated_at": "2026-09-12T06:00:00+00:00"
+      }
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "node-13",
+    "node_name": "Mithbav Coastal Pass",
+    "latitude": 16.28,
+    "longitude": 73.4,
+    "depth_m": 14.0,
+    "is_sheltered": true,
+    "properties_json": {
+      "provenance": {
+        "mode": "SYNTHETIC",
+        "source": "synthetic-demo",
+        "dataset_version": "synthetic_demo_v1",
+        "namespace": "SAMUDRA_DEMO_V1",
+        "generated_at": "2026-09-12T06:00:00+00:00"
+      }
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "node-14",
+    "node_name": "Achara Inshore Channel",
+    "latitude": 16.2,
+    "longitude": 73.43,
+    "depth_m": 13.0,
+    "is_sheltered": true,
+    "properties_json": {
+      "provenance": {
+        "mode": "SYNTHETIC",
+        "source": "synthetic-demo",
+        "dataset_version": "synthetic_demo_v1",
+        "namespace": "SAMUDRA_DEMO_V1",
+        "generated_at": "2026-09-12T06:00:00+00:00"
+      }
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "node-15",
+    "node_name": "Malvan North Shoal Bypass",
+    "latitude": 16.12,
+    "longitude": 73.44,
+    "depth_m": 16.0,
+    "is_sheltered": true,
+    "properties_json": {
+      "provenance": {
+        "mode": "SYNTHETIC",
+        "source": "synthetic-demo",
+        "dataset_version": "synthetic_demo_v1",
+        "namespace": "SAMUDRA_DEMO_V1",
+        "generated_at": "2026-09-12T06:00:00+00:00"
+      }
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "node-16",
+    "node_name": "Malvan Harbor Jetty",
+    "latitude": 16.06,
+    "longitude": 73.47,
+    "depth_m": 7.5,
+    "is_sheltered": true,
+    "properties_json": {
+      "provenance": {
+        "mode": "SYNTHETIC",
+        "source": "synthetic-demo",
+        "dataset_version": "synthetic_demo_v1",
+        "namespace": "SAMUDRA_DEMO_V1",
+        "generated_at": "2026-09-12T06:00:00+00:00"
+      }
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "node-17",
+    "node_name": "Malvan Outer Anchorage",
+    "latitude": 16.05,
+    "longitude": 73.41,
+    "depth_m": 26.0,
+    "is_sheltered": false,
+    "properties_json": {
+      "provenance": {
+        "mode": "SYNTHETIC",
+        "source": "synthetic-demo",
+        "dataset_version": "synthetic_demo_v1",
+        "namespace": "SAMUDRA_DEMO_V1",
+        "generated_at": "2026-09-12T06:00:00+00:00"
+      }
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "node-18",
+    "node_name": "Malvan Deep Sea Sector 1",
+    "latitude": 16.0,
+    "longitude": 73.25,
+    "depth_m": 58.0,
+    "is_sheltered": false,
+    "properties_json": {
+      "provenance": {
+        "mode": "SYNTHETIC",
+        "source": "synthetic-demo",
+        "dataset_version": "synthetic_demo_v1",
+        "namespace": "SAMUDRA_DEMO_V1",
+        "generated_at": "2026-09-12T06:00:00+00:00"
+      }
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "node-19",
+    "node_name": "Sindhudurg South Gateway",
+    "latitude": 15.85,
+    "longitude": 73.48,
+    "depth_m": 22.0,
+    "is_sheltered": false,
+    "properties_json": {
+      "provenance": {
+        "mode": "SYNTHETIC",
+        "source": "synthetic-demo",
+        "dataset_version": "synthetic_demo_v1",
+        "namespace": "SAMUDRA_DEMO_V1",
+        "generated_at": "2026-09-12T06:00:00+00:00"
+      }
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "node-20",
+    "node_name": "PFZ Sector Alpha Point 1",
+    "latitude": 16.92,
+    "longitude": 73.15,
+    "depth_m": 38.0,
+    "is_sheltered": false,
+    "properties_json": {
+      "provenance": {
+        "mode": "SYNTHETIC",
+        "source": "synthetic-demo",
+        "dataset_version": "synthetic_demo_v1",
+        "namespace": "SAMUDRA_DEMO_V1",
+        "generated_at": "2026-09-12T06:00:00+00:00"
+      }
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "node-21",
+    "node_name": "PFZ Sector Alpha Point 2",
+    "latitude": 17.05,
+    "longitude": 73.05,
+    "depth_m": 45.0,
+    "is_sheltered": false,
+    "properties_json": {
+      "provenance": {
+        "mode": "SYNTHETIC",
+        "source": "synthetic-demo",
+        "dataset_version": "synthetic_demo_v1",
+        "namespace": "SAMUDRA_DEMO_V1",
+        "generated_at": "2026-09-12T06:00:00+00:00"
+      }
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "node-22",
+    "node_name": "PFZ Sector Bravo Point 1",
+    "latitude": 16.12,
+    "longitude": 73.3,
+    "depth_m": 32.0,
+    "is_sheltered": false,
+    "properties_json": {
+      "provenance": {
+        "mode": "SYNTHETIC",
+        "source": "synthetic-demo",
+        "dataset_version": "synthetic_demo_v1",
+        "namespace": "SAMUDRA_DEMO_V1",
+        "generated_at": "2026-09-12T06:00:00+00:00"
+      }
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "node-23",
+    "node_name": "Goa-Konkan Transit Node 1",
+    "latitude": 15.65,
+    "longitude": 73.4,
+    "depth_m": 40.0,
+    "is_sheltered": false,
+    "properties_json": {
+      "provenance": {
+        "mode": "SYNTHETIC",
+        "source": "synthetic-demo",
+        "dataset_version": "synthetic_demo_v1",
+        "namespace": "SAMUDRA_DEMO_V1",
+        "generated_at": "2026-09-12T06:00:00+00:00"
+      }
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "node-24",
+    "node_name": "Goa-Konkan Transit Node 2",
+    "latitude": 15.45,
+    "longitude": 73.35,
+    "depth_m": 52.0,
+    "is_sheltered": false,
+    "properties_json": {
+      "provenance": {
+        "mode": "SYNTHETIC",
+        "source": "synthetic-demo",
+        "dataset_version": "synthetic_demo_v1",
+        "namespace": "SAMUDRA_DEMO_V1",
+        "generated_at": "2026-09-12T06:00:00+00:00"
+      }
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  }
+]

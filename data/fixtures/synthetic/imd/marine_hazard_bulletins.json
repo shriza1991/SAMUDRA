@@ -1,0 +1,482 @@
+[
+  {
+    "public_id": "hazard-01",
+    "event_type": "CYCLONE_SQUALL",
+    "severity": "WARNING",
+    "headline": "Severe Cyclone Squall Warning - Konkan Offshore Sector",
+    "geometry_geojson": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            72.8,
+            16.4
+          ],
+          [
+            73.4,
+            16.4
+          ],
+          [
+            73.4,
+            17.1
+          ],
+          [
+            72.8,
+            17.1
+          ],
+          [
+            72.8,
+            16.4
+          ]
+        ]
+      ]
+    },
+    "start_time": "2026-09-12T04:00:00+00:00",
+    "end_time": "2026-09-12T16:00:00+00:00",
+    "status": "ACTIVE",
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "IMD_CYCLONE_DIVISION",
+      "source_product": "IMD Severe Weather & Cyclone Warning Bulletin",
+      "official_documentation": "https://rsmcnewdelhi.imd.gov.in"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "hazard-02",
+    "event_type": "HIGH_WAVE",
+    "severity": "ALERT",
+    "headline": "High Wave & Swell Surge Alert (2.8m - 3.4m) off Ratnagiri",
+    "geometry_geojson": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            73.0,
+            16.8
+          ],
+          [
+            73.35,
+            16.8
+          ],
+          [
+            73.35,
+            17.2
+          ],
+          [
+            73.0,
+            17.2
+          ],
+          [
+            73.0,
+            16.8
+          ]
+        ]
+      ]
+    },
+    "start_time": "2026-09-12T06:00:00+00:00",
+    "end_time": "2026-09-13T00:00:00+00:00",
+    "status": "ACTIVE",
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "IMD_CYCLONE_DIVISION",
+      "source_product": "IMD Severe Weather & Cyclone Warning Bulletin",
+      "official_documentation": "https://rsmcnewdelhi.imd.gov.in"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "hazard-03",
+    "event_type": "HIGH_WIND",
+    "severity": "WARNING",
+    "headline": "Gale Wind Warning (32 to 38 knots) across South Maharashtra Waters",
+    "geometry_geojson": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            72.6,
+            15.9
+          ],
+          [
+            73.5,
+            15.9
+          ],
+          [
+            73.5,
+            16.7
+          ],
+          [
+            72.6,
+            16.7
+          ],
+          [
+            72.6,
+            15.9
+          ]
+        ]
+      ]
+    },
+    "start_time": "2026-09-12T00:00:00+00:00",
+    "end_time": "2026-09-12T12:00:00+00:00",
+    "status": "ACTIVE",
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "IMD_CYCLONE_DIVISION",
+      "source_product": "IMD Severe Weather & Cyclone Warning Bulletin",
+      "official_documentation": "https://rsmcnewdelhi.imd.gov.in"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "hazard-04",
+    "event_type": "THUNDERSTORM",
+    "severity": "WATCH",
+    "headline": "Coastal Thunderstorm & Intense Lightning Watch",
+    "geometry_geojson": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            73.2,
+            16.0
+          ],
+          [
+            73.6,
+            16.0
+          ],
+          [
+            73.6,
+            16.5
+          ],
+          [
+            73.2,
+            16.5
+          ],
+          [
+            73.2,
+            16.0
+          ]
+        ]
+      ]
+    },
+    "start_time": "2026-09-12T18:00:00+00:00",
+    "end_time": "2026-09-13T06:00:00+00:00",
+    "status": "PLANNED",
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "IMD_CYCLONE_DIVISION",
+      "source_product": "IMD Severe Weather & Cyclone Warning Bulletin",
+      "official_documentation": "https://rsmcnewdelhi.imd.gov.in"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "hazard-05",
+    "event_type": "RESTRICTED_AREA_ACTIVITY",
+    "severity": "WARNING",
+    "headline": "Naval Surface Gunfire & Missile Firing Activity Notice",
+    "geometry_geojson": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            73.15,
+            15.3
+          ],
+          [
+            73.35,
+            15.3
+          ],
+          [
+            73.35,
+            15.55
+          ],
+          [
+            73.15,
+            15.55
+          ],
+          [
+            73.15,
+            15.3
+          ]
+        ]
+      ]
+    },
+    "start_time": "2026-09-11T18:00:00+00:00",
+    "end_time": "2026-09-13T18:00:00+00:00",
+    "status": "ACTIVE",
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "IMD_CYCLONE_DIVISION",
+      "source_product": "IMD Severe Weather & Cyclone Warning Bulletin",
+      "official_documentation": "https://rsmcnewdelhi.imd.gov.in"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "hazard-06",
+    "event_type": "CYCLONE_SQUALL",
+    "severity": "WARNING",
+    "headline": "Past Squall Alert (Expired)",
+    "geometry_geojson": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            72.5,
+            16.2
+          ],
+          [
+            73.0,
+            16.2
+          ],
+          [
+            73.0,
+            16.8
+          ],
+          [
+            72.5,
+            16.8
+          ],
+          [
+            72.5,
+            16.2
+          ]
+        ]
+      ]
+    },
+    "start_time": "2026-09-10T18:00:00+00:00",
+    "end_time": "2026-09-11T18:00:00+00:00",
+    "status": "EXPIRED",
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "IMD_CYCLONE_DIVISION",
+      "source_product": "IMD Severe Weather & Cyclone Warning Bulletin",
+      "official_documentation": "https://rsmcnewdelhi.imd.gov.in"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "hazard-07",
+    "event_type": "HIGH_WAVE",
+    "severity": "WATCH",
+    "headline": "Swell Surge Advisory - Sindhudurg Coastal Belt",
+    "geometry_geojson": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            73.3,
+            15.8
+          ],
+          [
+            73.55,
+            15.8
+          ],
+          [
+            73.55,
+            16.2
+          ],
+          [
+            73.3,
+            16.2
+          ],
+          [
+            73.3,
+            15.8
+          ]
+        ]
+      ]
+    },
+    "start_time": "2026-09-12T12:00:00+00:00",
+    "end_time": "2026-09-13T12:00:00+00:00",
+    "status": "PLANNED",
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "IMD_CYCLONE_DIVISION",
+      "source_product": "IMD Severe Weather & Cyclone Warning Bulletin",
+      "official_documentation": "https://rsmcnewdelhi.imd.gov.in"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "hazard-08",
+    "event_type": "ADVISORY",
+    "severity": "NORMAL",
+    "headline": "Dense Morning Sea Fog & Visibility Reduction Advisory",
+    "geometry_geojson": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            73.2,
+            16.9
+          ],
+          [
+            73.4,
+            16.9
+          ],
+          [
+            73.4,
+            17.15
+          ],
+          [
+            73.2,
+            17.15
+          ],
+          [
+            73.2,
+            16.9
+          ]
+        ]
+      ]
+    },
+    "start_time": "2026-09-13T00:00:00+00:00",
+    "end_time": "2026-09-13T06:00:00+00:00",
+    "status": "PLANNED",
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "IMD_CYCLONE_DIVISION",
+      "source_product": "IMD Severe Weather & Cyclone Warning Bulletin",
+      "official_documentation": "https://rsmcnewdelhi.imd.gov.in"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "hazard-09",
+    "event_type": "CURRENT_SHEAR",
+    "severity": "ALERT",
+    "headline": "Strong Tidal Rip & Surface Current Shear (> 2.4 knots)",
+    "geometry_geojson": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            73.1,
+            16.3
+          ],
+          [
+            73.35,
+            16.3
+          ],
+          [
+            73.35,
+            16.6
+          ],
+          [
+            73.1,
+            16.6
+          ],
+          [
+            73.1,
+            16.3
+          ]
+        ]
+      ]
+    },
+    "start_time": "2026-09-12T06:00:00+00:00",
+    "end_time": "2026-09-12T20:00:00+00:00",
+    "status": "ACTIVE",
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "IMD_CYCLONE_DIVISION",
+      "source_product": "IMD Severe Weather & Cyclone Warning Bulletin",
+      "official_documentation": "https://rsmcnewdelhi.imd.gov.in"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "hazard-10",
+    "event_type": "CYCLONE_SQUALL",
+    "severity": "WARNING",
+    "headline": "Monsoon Deep Depression Advisory (Expired Historical)",
+    "geometry_geojson": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            72.0,
+            15.5
+          ],
+          [
+            73.2,
+            15.5
+          ],
+          [
+            73.2,
+            16.8
+          ],
+          [
+            72.0,
+            16.8
+          ],
+          [
+            72.0,
+            15.5
+          ]
+        ]
+      ]
+    },
+    "start_time": "2026-09-09T06:00:00+00:00",
+    "end_time": "2026-09-11T06:00:00+00:00",
+    "status": "EXPIRED",
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "IMD_CYCLONE_DIVISION",
+      "source_product": "IMD Severe Weather & Cyclone Warning Bulletin",
+      "official_documentation": "https://rsmcnewdelhi.imd.gov.in"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  }
+]

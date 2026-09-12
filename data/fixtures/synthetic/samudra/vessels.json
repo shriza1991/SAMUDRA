@@ -1,0 +1,194 @@
+[
+  {
+    "public_id": "vessel-01",
+    "name": "Matsya Sagar 01",
+    "owner_fisher_id": "fisher-01",
+    "vessel_type": "motorized_boat",
+    "length_m": 9.5,
+    "capacity_tons": 3.0,
+    "home_harbor_id": "harbor-ratnagiri",
+    "status": "OPERATIONAL",
+    "metadata_json": {
+      "engine_hp": 30,
+      "hull_material": "FRP"
+    },
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "vessel-02",
+    "name": "Konkan Pride",
+    "owner_fisher_id": "fisher-02",
+    "vessel_type": "mechanized_trawler",
+    "length_m": 18.0,
+    "capacity_tons": 15.0,
+    "home_harbor_id": "harbor-ratnagiri",
+    "status": "OPERATIONAL",
+    "metadata_json": {
+      "engine_hp": 120,
+      "hull_material": "Wood"
+    },
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "vessel-03",
+    "name": "Al-Bahr Explorer",
+    "owner_fisher_id": "fisher-03",
+    "vessel_type": "motorized_boat",
+    "length_m": 10.2,
+    "capacity_tons": 4.0,
+    "home_harbor_id": "harbor-ratnagiri",
+    "status": "OPERATIONAL",
+    "metadata_json": {
+      "engine_hp": 40,
+      "hull_material": "FRP"
+    },
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "vessel-04",
+    "name": "Samudra Ratna",
+    "owner_fisher_id": "fisher-04",
+    "vessel_type": "artisanal_craft",
+    "length_m": 6.5,
+    "capacity_tons": 1.2,
+    "home_harbor_id": "harbor-ratnagiri",
+    "status": "DOCKED",
+    "metadata_json": {
+      "engine_hp": 10,
+      "hull_material": "Wood"
+    },
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "vessel-05",
+    "name": "Sea Hawk Goa",
+    "owner_fisher_id": "fisher-05",
+    "vessel_type": "motorized_boat",
+    "length_m": 11.0,
+    "capacity_tons": 4.5,
+    "home_harbor_id": "harbor-malvan",
+    "status": "OPERATIONAL",
+    "metadata_json": {
+      "engine_hp": 45,
+      "hull_material": "FRP"
+    },
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "vessel-06",
+    "name": "Sindhudurg Queen",
+    "owner_fisher_id": "fisher-06",
+    "vessel_type": "mechanized_trawler",
+    "length_m": 20.5,
+    "capacity_tons": 22.0,
+    "home_harbor_id": "harbor-malvan",
+    "status": "OPERATIONAL",
+    "metadata_json": {
+      "engine_hp": 160,
+      "hull_material": "Steel"
+    },
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "vessel-07",
+    "name": "Kripa Sagar",
+    "owner_fisher_id": "fisher-07",
+    "vessel_type": "artisanal_craft",
+    "length_m": 7.0,
+    "capacity_tons": 1.5,
+    "home_harbor_id": "harbor-malvan",
+    "status": "DOCKED",
+    "metadata_json": {
+      "engine_hp": 9.9,
+      "hull_material": "Wood"
+    },
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "vessel-08",
+    "name": "Pawan Putra",
+    "owner_fisher_id": "fisher-08",
+    "vessel_type": "motorized_boat",
+    "length_m": 9.8,
+    "capacity_tons": 3.2,
+    "home_harbor_id": "harbor-malvan",
+    "status": "OPERATIONAL",
+    "metadata_json": {
+      "engine_hp": 35,
+      "hull_material": "FRP"
+    },
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  }
+]

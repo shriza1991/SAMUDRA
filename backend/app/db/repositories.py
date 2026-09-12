@@ -15,6 +15,20 @@ from backend.app.db.models import (
     ConnectorSnapshot,
     ConnectorStatus,
     ConversationThread,
+    DemoEOGridCell,
+    DemoFisher,
+    DemoGeofence,
+    DemoHarbor,
+    DemoHazardEvent,
+    DemoMarineObservation,
+    DemoNotification,
+    DemoPFZCandidate,
+    DemoRouteEdge,
+    DemoRouteNode,
+    DemoStakeholder,
+    DemoTrip,
+    DemoVessel,
+    DemoVesselReplayPosition,
     EvidenceItem,
     MapLayer,
     Run,
@@ -202,3 +216,161 @@ class ConnectorStatusRepository(BaseRepository):
         except SQLAlchemyError:
             self.session.rollback()
             raise
+
+
+class SyntheticDemoRepository(BaseRepository):
+    """Repository for managing the SAMUDRA synthetic demo dataset."""
+
+    def delete_by_namespace(self, namespace: str) -> dict[str, int]:
+        """Delete all synthetic demo entities under a given namespace."""
+        counts = {}
+        # Order deletion to respect foreign keys (children before parents)
+        deletion_order = [
+            (DemoVesselReplayPosition, "vessel_replay_positions"),
+            (DemoNotification, "notifications"),
+            (DemoHazardEvent, "hazards"),
+            (DemoRouteEdge, "route_edges"),
+            (DemoRouteNode, "route_nodes"),
+            (DemoGeofence, "geofences"),
+            (DemoPFZCandidate, "pfz_candidates"),
+            (DemoEOGridCell, "eo_grid_cells"),
+            (DemoMarineObservation, "marine_observations"),
+            (DemoTrip, "trips"),
+            (DemoVessel, "vessels"),
+            (DemoFisher, "fishers"),
+            (DemoHarbor, "harbors"),
+            (DemoStakeholder, "stakeholders"),
+        ]
+
+        try:
+            for model_cls, key in deletion_order:
+                deleted = self.session.query(model_cls).filter_by(namespace=namespace).delete(synchronize_session=False)
+                counts[key] = deleted
+            self.session.commit()
+            return counts
+        except SQLAlchemyError:
+            self.session.rollback()
+            raise
+
+    def upsert_entities(self, model_cls: type, records: list[dict[str, Any]], match_key: str = "public_id") -> int:
+        """Upsert a list of entity dictionaries into the database."""
+        if not records:
+            return 0
+        try:
+            for rec in records:
+                match_val = rec.get(match_key)
+                existing = None
+                if match_val is not None:
+                    existing = self.session.query(model_cls).filter(getattr(model_cls, match_key) == match_val).first()
+                if existing:
+                    for k, v in rec.items():
+                        if hasattr(existing, k):
+                            setattr(existing, k, v)
+                else:
+                    instance = model_cls(**{k: v for k, v in rec.items() if hasattr(model_cls, k)})
+                    self.session.add(instance)
+            self.session.commit()
+            return len(records)
+        except SQLAlchemyError:
+            self.session.rollback()
+            raise
+
+    def get_counts_by_namespace(self, namespace: str) -> dict[str, int]:
+        """Return counts of all synthetic demo entities in the given namespace."""
+        models_map = {
+            "stakeholders": DemoStakeholder,
+            "harbors": DemoHarbor,
+            "fishers": DemoFisher,
+            "vessels": DemoVessel,
+            "trips": DemoTrip,
+            "marine_observations": DemoMarineObservation,
+            "eo_grid_cells": DemoEOGridCell,
+            "pfz_candidates": DemoPFZCandidate,
+            "geofences": DemoGeofence,
+            "route_nodes": DemoRouteNode,
+            "route_edges": DemoRouteEdge,
+            "hazards": DemoHazardEvent,
+            "notifications": DemoNotification,
+            "vessel_replay_positions": DemoVesselReplayPosition,
+        }
+        return {
+            key: self.session.query(model_cls).filter_by(namespace=namespace).count()
+            for key, model_cls in models_map.items()
+        }
+
+    def get_stakeholders(self, namespace: str = "SAMUDRA_DEMO_V1") -> list[DemoStakeholder]:
+        return self.session.query(DemoStakeholder).filter_by(namespace=namespace).all()
+
+    def get_harbors(self, namespace: str = "SAMUDRA_DEMO_V1") -> list[DemoHarbor]:
+        return self.session.query(DemoHarbor).filter_by(namespace=namespace).all()
+
+    def get_fishers(self, namespace: str = "SAMUDRA_DEMO_V1") -> list[DemoFisher]:
+        return self.session.query(DemoFisher).filter_by(namespace=namespace).all()
+
+    def get_vessels(self, namespace: str = "SAMUDRA_DEMO_V1") -> list[DemoVessel]:
+        return self.session.query(DemoVessel).filter_by(namespace=namespace).all()
+
+    def get_trips(self, namespace: str = "SAMUDRA_DEMO_V1") -> list[DemoTrip]:
+        return self.session.query(DemoTrip).filter_by(namespace=namespace).all()
+
+    def get_marine_observations(
+        self, namespace: str = "SAMUDRA_DEMO_V1", harbor_id: str | None = None
+    ) -> list[DemoMarineObservation]:
+        q = self.session.query(DemoMarineObservation).filter_by(namespace=namespace)
+        if harbor_id:
+            q = q.filter_by(harbor_id=harbor_id)
+        return q.order_by(DemoMarineObservation.observation_time.asc()).all()
+
+    def get_eo_grid_cells(
+        self, namespace: str = "SAMUDRA_DEMO_V1", cell_id: str | None = None
+    ) -> list[DemoEOGridCell]:
+        q = self.session.query(DemoEOGridCell).filter_by(namespace=namespace)
+        if cell_id:
+            q = q.filter_by(cell_id=cell_id)
+        return q.order_by(DemoEOGridCell.observation_time.asc()).all()
+
+    def get_pfz_candidates(
+        self, namespace: str = "SAMUDRA_DEMO_V1", valid_only: bool = False, as_of: Any = None
+    ) -> list[DemoPFZCandidate]:
+        q = self.session.query(DemoPFZCandidate).filter_by(namespace=namespace)
+        if valid_only:
+            q = q.filter(DemoPFZCandidate.qc_status == "VALID")
+            if as_of:
+                q = q.filter(DemoPFZCandidate.valid_to >= as_of)
+        return q.all()
+
+    def get_geofences(self, namespace: str = "SAMUDRA_DEMO_V1") -> list[DemoGeofence]:
+        return self.session.query(DemoGeofence).filter_by(namespace=namespace).all()
+
+    def get_route_nodes(self, namespace: str = "SAMUDRA_DEMO_V1") -> list[DemoRouteNode]:
+        return self.session.query(DemoRouteNode).filter_by(namespace=namespace).all()
+
+    def get_route_edges(self, namespace: str = "SAMUDRA_DEMO_V1") -> list[DemoRouteEdge]:
+        return self.session.query(DemoRouteEdge).filter_by(namespace=namespace).all()
+
+    def get_hazards(
+        self, namespace: str = "SAMUDRA_DEMO_V1", status: str | None = None
+    ) -> list[DemoHazardEvent]:
+        q = self.session.query(DemoHazardEvent).filter_by(namespace=namespace)
+        if status:
+            q = q.filter_by(status=status)
+        return q.all()
+
+    def get_notifications(
+        self, namespace: str = "SAMUDRA_DEMO_V1", role: str | None = None, is_read: bool | None = None
+    ) -> list[DemoNotification]:
+        q = self.session.query(DemoNotification).filter_by(namespace=namespace)
+        if role:
+            q = q.filter_by(recipient_role=role)
+        if is_read is not None:
+            q = q.filter_by(is_read=is_read)
+        return q.order_by(DemoNotification.timestamp.desc()).all()
+
+    def get_vessel_replay(
+        self, namespace: str = "SAMUDRA_DEMO_V1", vessel_id: str | None = None
+    ) -> list[DemoVesselReplayPosition]:
+        q = self.session.query(DemoVesselReplayPosition).filter_by(namespace=namespace)
+        if vessel_id:
+            q = q.filter_by(vessel_id=vessel_id)
+        return q.order_by(DemoVesselReplayPosition.timestamp.asc()).all()
+

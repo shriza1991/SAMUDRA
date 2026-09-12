@@ -1,0 +1,155 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "dataset_name": "SAMUDRA Synthetic Demo Dataset",
+  "dataset_version": "synthetic_demo_v1",
+  "namespace": "SAMUDRA_DEMO_V1",
+  "reference_time": "2026-09-12T06:00:00Z",
+  "data_mode": "SYNTHETIC",
+  "source": "synthetic-demo",
+  "description": "Authoritative reproducible synthetic baseline dataset for SAMUDRA prototype workflows (Fishers, Researchers, Coastal Authorities, Disaster Management, Maritime Operators). Modeled after official provider schemas from INCOIS, IMD, and MOSDAC/ISRO.",
+  "sources": {
+    "incois": {
+      "provider": "Indian National Centre for Ocean Information Services (INCOIS)",
+      "intended_use": [
+        "Ocean State Forecasts (wave height, currents, sea surface temperature)",
+        "Potential Fishing Zone (PFZ) advisory vectors"
+      ],
+      "official_documentation": "https://incois.gov.in/portal/osf",
+      "products": [
+        "INCOIS Ocean State Forecast (OSF)",
+        "INCOIS PFZ Mission Integrated Multilingual Advisories"
+      ]
+    },
+    "imd": {
+      "provider": "India Meteorological Department (IMD)",
+      "intended_use": [
+        "Coastal Weather Bulletins (wind speed, gust, direction, visibility)",
+        "Cyclone & Severe Weather Marine Warning Bulletins"
+      ],
+      "official_documentation": "https://mausam.imd.gov.in",
+      "products": [
+        "IMD Coastal Weather Bulletin (CWB)",
+        "RSMC New Delhi Tropical Cyclone Warning Division Bulletins"
+      ]
+    },
+    "mosdac": {
+      "provider": "Meteorological & Oceanographic Satellite Data Archival Centre (MOSDAC / ISRO)",
+      "intended_use": [
+        "Satellite Earth Observation (EO) context: chlorophyll-a concentration and thermal sea surface temperature"
+      ],
+      "official_documentation": "https://www.mosdac.gov.in",
+      "products": [
+        "Oceansat-3 Ocean Colour Monitor (OCM) Level-3 Chlorophyll-a Grid",
+        "INSAT-3D/3DR Thermal Sea Surface Temperature Grid"
+      ]
+    },
+    "samudra": {
+      "provider": "SAMUDRA Platform Domain Model",
+      "intended_use": [
+        "Stakeholder identities, fishers, vessels, voyages, routes, notifications, replay tracks, geofences"
+      ]
+    }
+  },
+  "geographic_operating_area": {
+    "region": "Konkan & South Maharashtra Coastal Sector",
+    "bounding_box": {
+      "min_latitude": 15.30,
+      "max_latitude": 17.50,
+      "min_longitude": 71.50,
+      "max_longitude": 73.60
+    },
+    "harbors": [
+      {
+        "id": "harbor-ratnagiri",
+        "name": "Ratnagiri",
+        "coordinates": [73.28, 16.99]
+      },
+      {
+        "id": "harbor-malvan",
+        "name": "Malvan",
+        "coordinates": [73.47, 16.06]
+      }
+    ]
+  },
+  "entity_counts": {
+    "stakeholders": 5,
+    "harbors": 2,
+    "fishers": 8,
+    "vessels": 8,
+    "trips": 12,
+    "marine_observations": 96,
+    "eo_grid_cells": 350,
+    "pfz_candidates": 12,
+    "geofences": 5,
+    "route_nodes": 24,
+    "route_edges": 32,
+    "hazards": 10,
+    "notifications": 20,
+    "replay_positions": 60
+  },
+  "intentional_quality_cases": [
+    {
+      "case_id": "QC-STALE-OBS-01",
+      "entity": "marine_observations",
+      "record_id": "obs-ratnagiri--20h",
+      "source_provider": "INCOIS",
+      "condition": "Observation timestamp is 20 hours old with is_stale=True, qc_flag=9, and qc_status=STALE."
+    },
+    {
+      "case_id": "QC-MISSING-OBS-01",
+      "entity": "marine_observations",
+      "record_id": "obs-ratnagiri-+02h",
+      "source_provider": "INCOIS / IMD",
+      "condition": "Nullable measurements (wind_gust_knots, wave_period_sec) are explicitly null/None (source sentinel -999.0), NOT zero."
+    },
+    {
+      "case_id": "QC-DEGRADED-OBS-01",
+      "entity": "marine_observations",
+      "record_id": "obs-ratnagiri-+08h",
+      "source_provider": "INCOIS",
+      "condition": "Observation flagged with qc_flag=1 and qc_status=DEGRADED_QC_WARNING."
+    },
+    {
+      "case_id": "QC-CLOUD-OBSCURED-EO-01",
+      "entity": "eo_grid_cells",
+      "record_id": "eo-CELL-00-00-d00",
+      "source_provider": "MOSDAC_ISRO",
+      "condition": "Satellite pixel has QA_FLAGS=1 (Cloud Obscured) with CHL_A=null and cloud_fraction=0.85."
+    },
+    {
+      "case_id": "QC-EXPIRED-PFZ-01",
+      "entity": "pfz_candidates",
+      "record_id": "pfz-06",
+      "source_provider": "INCOIS",
+      "condition": "PFZ candidate validity window expired prior to reference time (valid_to < REFERENCE_TIME)."
+    },
+    {
+      "case_id": "QC-OUT-OF-RADIUS-PFZ-01",
+      "entity": "pfz_candidates",
+      "record_id": "pfz-07",
+      "source_provider": "INCOIS",
+      "condition": "PFZ candidate located 165 km offshore (> 120 km query radius)."
+    },
+    {
+      "case_id": "QC-ACTIVE-HAZARD-01",
+      "entity": "hazards",
+      "record_id": "hazard-01",
+      "source_provider": "IMD",
+      "condition": "Severe cyclone squall warning actively overlapping trip-03 and vessel-03."
+    },
+    {
+      "case_id": "QC-EXPIRED-HAZARD-01",
+      "entity": "hazards",
+      "record_id": "hazard-06",
+      "source_provider": "IMD",
+      "condition": "Historical hazard bulletin with status=EXPIRED."
+    },
+    {
+      "case_id": "QC-GEOFENCE-INTERACTION-01",
+      "entity": "replay_positions",
+      "vessel_id": "vessel-02",
+      "source_provider": "SAMUDRA",
+      "condition": "Replay GPS track moves past Malvan North boundary and near coral sanctuary perimeter."
+    }
+  ]
+}
