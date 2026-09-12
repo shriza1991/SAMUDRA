@@ -13,6 +13,7 @@ interface ChatInputProps {
 
 export default function ChatInput({ language = 'en', onSend, onStartCall, disabled }: ChatInputProps) {
   const [text, setText] = useState('');
+  const [detectedLanguage, setDetectedLanguage] = useState<string | null>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const t = TRANSLATIONS[language] || TRANSLATIONS.en;
 
@@ -27,6 +28,7 @@ export default function ChatInput({ language = 'en', onSend, onStartCall, disabl
   } = useVoiceRecorder({
     onTranscription: result => {
       if (result && result.transcript) {
+        setDetectedLanguage(result.normalized_language);
         onSend(result.transcript, result.normalized_language as 'en' | 'hi' | 'mr');
       }
     },
@@ -89,6 +91,13 @@ export default function ChatInput({ language = 'en', onSend, onStartCall, disabl
           <div className="voice-status-pill transcribing" role="status" aria-live="polite">
             <Loader2 size={13} className="spin" />
             <span>{t.transcribingIndicator}</span>
+          </div>
+        )}
+
+        {detectedLanguage && !isRecording && !isTranscribing && (
+          <div className="voice-status-pill detected" role="status">
+            <Mic size={13} />
+            <span>Voice detected: {languageLabel(detectedLanguage)}</span>
           </div>
         )}
 
@@ -165,5 +174,13 @@ export default function ChatInput({ language = 'en', onSend, onStartCall, disabl
       </div>
     </div>
   );
+}
+
+function languageLabel(language: string): string {
+  const normalized = language.toLowerCase();
+  if (normalized.startsWith('hi')) return 'Hindi';
+  if (normalized.startsWith('mr')) return 'Marathi';
+  if (normalized.startsWith('ta')) return 'Tamil';
+  return 'English';
 }
 

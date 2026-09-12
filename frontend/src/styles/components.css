@@ -235,6 +235,12 @@
   cursor: default;
 }
 
+.voice-status-pill.detected {
+  color: var(--color-accent);
+  background: color-mix(in srgb, var(--color-accent) 12%, var(--color-bg-secondary));
+  border-color: color-mix(in srgb, var(--color-accent) 30%, var(--color-border));
+}
+
 /* Sample Prompts */
 .sample-prompts {
   width: 100%;
