@@ -59,10 +59,10 @@ class ImdWeatherNormalizer:
 
         return WeatherConditionsPayload(
             harbor=harbor,
-            wind_speed_knots=wind_speed if wind_speed is not None else 12.0,
+            wind_speed_knots=wind_speed,
             wind_gust_knots=wind_gust,
             wind_direction_deg=wind_dir,
-            visibility_km=visibility if visibility is not None else 10.0,
+            visibility_km=visibility,
             observed_at=obs_time,
             valid_to=valid_to,
             source_name="IMD Coastal Weather Bulletin (SYNTHETIC)",

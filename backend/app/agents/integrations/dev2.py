@@ -28,7 +28,7 @@ class MarineConditionsPayload(BaseModel):
     """Normalized marine ocean state retrieved by Dev 2 connectors (INCOIS)."""
 
     harbor: str = Field(..., description="Target coastal harbor or station")
-    significant_wave_height_m: float = Field(..., ge=0.0, description="Wave height in meters")
+    significant_wave_height_m: Optional[float] = Field(None, ge=0.0, description="Wave height in meters")
     swell_height_m: Optional[float] = Field(None, ge=0.0, description="Swell wave height in meters")
     swell_period_sec: Optional[float] = Field(None, ge=0.0, description="Swell period in seconds")
     surface_current_knots: Optional[float] = Field(None, description="Surface current speed in knots")
@@ -43,7 +43,7 @@ class WeatherConditionsPayload(BaseModel):
     """Normalized coastal atmospheric weather retrieved by Dev 2 connectors (IMD)."""
 
     harbor: str = Field(..., description="Target coastal station or harbor")
-    wind_speed_knots: float = Field(..., ge=0.0, description="Sustained wind speed in knots")
+    wind_speed_knots: Optional[float] = Field(None, ge=0.0, description="Sustained wind speed in knots")
     wind_gust_knots: Optional[float] = Field(None, ge=0.0, description="Peak wind gust speed in knots")
     wind_direction_deg: Optional[float] = Field(None, ge=0.0, le=360.0, description="Wind direction in degrees")
     visibility_km: Optional[float] = Field(None, ge=0.0, description="Horizontal visibility in kilometers")

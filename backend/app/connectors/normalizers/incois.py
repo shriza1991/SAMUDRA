@@ -70,7 +70,7 @@ class IncoisOSFNormalizer:
 
         return MarineConditionsPayload(
             harbor=harbor,
-            significant_wave_height_m=swh if swh is not None else 1.2,
+            significant_wave_height_m=swh,
             swell_height_m=swell_height,
             swell_period_sec=swell_period,
             surface_current_knots=current_speed,

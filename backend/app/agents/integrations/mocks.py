@@ -153,9 +153,11 @@ class MockRiskEngine:
     def evaluate_risk(
         self,
         context: ToolInvocationContext,
-        marine: MarineConditionsPayload,
-        weather: WeatherConditionsPayload,
-        hazard: HazardBulletinPayload,
+        marine: Optional[MarineConditionsPayload] = None,
+        weather: Optional[WeatherConditionsPayload] = None,
+        hazard: Optional[HazardBulletinPayload] = None,
+        bundle: Optional[Any] = None,
+        **kwargs,
     ) -> RiskAssessmentPayload:
         if self.override_status is not None:
             status = self.override_status
@@ -209,7 +211,7 @@ class MockRiskEngine:
         from backend.app.domain.risk_engine import DeterministicRiskEngine
 
         return DeterministicRiskEngine.evaluate(
-            context, marine, weather, hazard, data_mode="M2_CONTRACT_MOCK"
+            context, marine=marine, weather=weather, hazard=hazard, bundle=bundle, data_mode="M2_CONTRACT_MOCK"
         )
 
 

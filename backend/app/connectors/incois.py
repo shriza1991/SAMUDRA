@@ -130,13 +130,13 @@ class IncoisOceanStateConnector(BaseLiveConnector):
         now_utc = datetime.now(UTC)
         return MarineConditionsPayload(
             harbor=harbor,
-            significant_wave_height_m=0.0,
+            significant_wave_height_m=None,
             swell_height_m=None,
             swell_period_sec=None,
             surface_current_knots=None,
             sea_surface_temp_c=None,
             observed_at=now_utc.isoformat(),
-            valid_to=now_utc.isoformat(),  # Immediately expired → stale
+            valid_to=(now_utc - timedelta(seconds=1)).isoformat(),  # Immediately expired → stale
             source_name=f"INCOIS OSF (DEGRADED — {reason})",
             source_url=None,
         )

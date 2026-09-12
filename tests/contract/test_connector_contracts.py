@@ -187,15 +187,15 @@ class TestConnectorDegradedFallback:
         # Force SNAPSHOT mode so no HTTP calls are made
         connector.data_mode = "SNAPSHOT"
         payload = connector.get_marine_conditions(ratnagiri_context)
-        # SNAPSHOT_REDIRECT payload: wave height = 0.0, expired valid_to
-        assert payload.significant_wave_height_m == 0.0 or True  # graceful
+        # SNAPSHOT_REDIRECT payload: wave height = None, expired valid_to
+        assert payload.significant_wave_height_m is None or payload.significant_wave_height_m >= 0.0
         assert is_iso8601_utc(payload.observed_at)
 
     def test_imd_weather_returns_degraded_not_exception(self, ratnagiri_context):
         connector = ImdWeatherConnector()
         connector.data_mode = "SNAPSHOT"
         payload = connector.get_weather_conditions(ratnagiri_context)
-        assert payload.wind_speed_knots >= 0.0
+        assert payload.wind_speed_knots is None or payload.wind_speed_knots >= 0.0
         assert is_iso8601_utc(payload.observed_at)
 
     def test_imd_hazard_returns_normal_not_exception(self, ratnagiri_context):

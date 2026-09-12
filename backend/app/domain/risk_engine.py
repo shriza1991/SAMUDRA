@@ -14,7 +14,7 @@ CRITICAL INVARIANTS:
 from __future__ import annotations
 
 import logging
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timezone
 from typing import Any, Dict, List, Optional
 
 from backend.app.agents.integrations.contracts import ToolInvocationContext
@@ -134,6 +134,7 @@ class DeterministicRiskEngine:
                 except Exception:
                     pass
 
+            is_marine_degraded = marine_stale or "DEGRADED" in (marine.source_name or "").upper()
             prov_marine = DataProvenance(
                 provider_name="INCOIS",
                 source_name=marine.source_name or "INCOIS Ocean State Forecast",
@@ -142,7 +143,7 @@ class DeterministicRiskEngine:
                 valid_to=marine.valid_to,
                 data_mode=data_mode,
                 is_stale=marine_stale,
-                quality_flags=["official_source"] if not marine_stale else ["degraded", "stale_telemetry"],
+                quality_flags=["official_source"] if not is_marine_degraded else ["degraded", "stale_telemetry"],
             )
             provenance_list.append(prov_marine)
             evidence_ids.append("EV-INCOIS-OSF-01")
@@ -159,6 +160,7 @@ class DeterministicRiskEngine:
                 except Exception:
                     pass
 
+            is_weather_degraded = weather_stale or "DEGRADED" in (weather.source_name or "").upper()
             prov_weather = DataProvenance(
                 provider_name="IMD",
                 source_name=weather.source_name or "IMD Coastal Weather Bulletin",
@@ -167,7 +169,7 @@ class DeterministicRiskEngine:
                 valid_to=weather.valid_to,
                 data_mode=data_mode,
                 is_stale=weather_stale,
-                quality_flags=["official_source"] if not weather_stale else ["degraded", "stale_telemetry"],
+                quality_flags=["official_source"] if not is_weather_degraded else ["degraded", "stale_telemetry"],
             )
             provenance_list.append(prov_weather)
             evidence_ids.append("EV-IMD-WEATHER-01")
@@ -184,6 +186,7 @@ class DeterministicRiskEngine:
                 except Exception:
                     pass
 
+            is_hazard_degraded = hazard_stale or "DEGRADED" in (hazard.source_name or "").upper()
             prov_hazard = DataProvenance(
                 provider_name="IMD",
                 source_name=hazard.source_name or "IMD Hazard Division",
@@ -192,46 +195,51 @@ class DeterministicRiskEngine:
                 valid_to=hazard.valid_to,
                 data_mode=data_mode,
                 is_stale=hazard_stale,
-                quality_flags=["official_source"] if not hazard_stale else ["degraded", "stale_bulletin"],
+                quality_flags=["official_source"] if not is_hazard_degraded else ["degraded", "stale_bulletin"],
             )
             provenance_list.append(prov_hazard)
             evidence_ids.append("EV-IMD-HAZARD-01")
 
-        # Check for missing critical inputs
+        # Check for missing critical inputs or degraded telemetry
         is_data_degraded = (
             marine is None
             or weather is None
+            or hazard is None
             or marine.significant_wave_height_m is None
             or weather.wind_speed_knots is None
             or marine_stale
             or weather_stale
+            or hazard_stale
+            or (marine is not None and "DEGRADED" in (marine.source_name or "").upper())
+            or (weather is not None and "DEGRADED" in (weather.source_name or "").upper())
+            or (hazard is not None and "DEGRADED" in (hazard.source_name or "").upper())
         )
 
         if is_data_degraded:
             threshold_checks.append(
                 ThresholdComparison(
                     metric_name="data_validity",
-                    observed_value="EXPIRED" if (marine_stale or weather_stale) else "UNAVAILABLE",
+                    observed_value="EXPIRED" if (marine_stale or weather_stale or hazard_stale) else "UNAVAILABLE",
                     threshold_value="CURRENT_WINDOW",
                     operator="==",
                     unit="status",
                     exceeded=True,
                     impact="UNKNOWN_TRIGGER",
-                    description="Critical forecast telemetry is stale or missing — safe operating conditions cannot be guaranteed.",
+                    description="Critical forecast telemetry or hazard bulletin is stale, degraded, or missing — safe operating conditions cannot be guaranteed.",
                 )
             )
-            decisive_factors.append("Missing or expired sensor telemetry (validity window exceeded).")
-            warnings.append("DEGRADED_DATA: Stale or incomplete sensor telemetry received.")
+            decisive_factors.append("Missing, degraded, or expired sensor telemetry (validity window exceeded).")
+            warnings.append("DEGRADED_DATA: Stale, degraded, or incomplete telemetry received.")
 
             return RiskAssessmentPayload(
                 status=RecommendationStatus.UNKNOWN,
-                summary="Sensor and forecast data are expired or incomplete. Safe departure evaluation cannot be completed.",
+                summary="Sensor, forecast, or hazard bulletin data are expired, degraded, or incomplete. Safe departure evaluation cannot be completed.",
                 decisive_factors=decisive_factors,
                 non_decisive_factors=non_decisive_factors,
                 threshold_comparisons=threshold_checks,
                 recommended_action="Hold departure. Verify with port authorities before navigating.",
                 confidence_level=ConfidenceLevel.LOW,
-                confidence_reasons=["Sensor telemetry validity window expired or data feed missing"],
+                confidence_reasons=["Sensor telemetry validity window expired, degraded, or data feed missing"],
                 provenance=provenance_list,
                 evidence_ids=evidence_ids,
                 warnings=warnings,

@@ -116,12 +116,12 @@ class ImdWeatherConnector(BaseLiveConnector):
         now_utc = datetime.now(UTC)
         return WeatherConditionsPayload(
             harbor=harbor,
-            wind_speed_knots=0.0,
+            wind_speed_knots=None,
             wind_gust_knots=None,
             wind_direction_deg=None,
             visibility_km=None,
             observed_at=now_utc.isoformat(),
-            valid_to=now_utc.isoformat(),  # Immediately expired
+            valid_to=(now_utc - timedelta(seconds=1)).isoformat(),  # Immediately expired
             source_name=f"IMD Weather (DEGRADED — {reason})",
             source_url=None,
         )

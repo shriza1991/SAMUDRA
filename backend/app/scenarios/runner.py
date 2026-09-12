@@ -170,9 +170,11 @@ class ScenarioRiskEngine:
     def evaluate_risk(
         self,
         context: ToolInvocationContext,
-        marine: MarineConditionsPayload,
-        weather: WeatherConditionsPayload,
-        hazard: HazardBulletinPayload,
+        marine: Optional[MarineConditionsPayload] = None,
+        weather: Optional[WeatherConditionsPayload] = None,
+        hazard: Optional[HazardBulletinPayload] = None,
+        bundle: Optional[Any] = None,
+        **kwargs,
     ) -> RiskAssessmentPayload:
         from backend.app.domain.risk_engine import DeterministicRiskEngine
 
@@ -181,6 +183,7 @@ class ScenarioRiskEngine:
             marine=marine,
             weather=weather,
             hazard=hazard,
+            bundle=bundle,
             data_mode="SNAPSHOT",
         )
 

@@ -78,14 +78,9 @@ class OpenMeteoConnector(BaseLiveConnector):
         ocean_current = _first("ocean_current_velocity")
         sst = _first("sea_surface_temperature")
 
-        # Fallback to 0.0 if wave height is completely missing to avoid pydantic error, but
-        # normally we shouldn't invent data. However, the contract requires significant_wave_height_m.
-        # It's better to provide a float if the API succeeded.
-        sig_wave = wave_height if wave_height is not None else 0.0
-
         return MarineConditionsPayload(
             harbor=harbor,
-            significant_wave_height_m=sig_wave,
+            significant_wave_height_m=wave_height,
             swell_height_m=swell_height,
             swell_period_sec=swell_period,
             surface_current_knots=(ocean_current * 1.94384) if ocean_current is not None else None,
@@ -129,12 +124,9 @@ class OpenMeteoConnector(BaseLiveConnector):
         direction = _first("wind_direction_10m")
         visibility = _first("visibility")
 
-        # wind_speed_knots is required.
-        ws_knots = wind_speed if wind_speed is not None else 0.0
-
         return WeatherConditionsPayload(
             harbor=harbor,
-            wind_speed_knots=ws_knots,
+            wind_speed_knots=wind_speed,
             wind_gust_knots=gusts,
             wind_direction_deg=direction,
             visibility_km=(visibility / 1000.0) if visibility is not None else None,
