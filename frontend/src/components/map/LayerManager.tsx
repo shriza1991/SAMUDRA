@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import type { MapLayer } from '../../types/contracts';
 import { X, Eye, EyeOff, ShieldAlert, Navigation } from 'lucide-react';
 import { translateText, type SupportedLanguage } from '../../i18n/translations';
@@ -17,6 +18,35 @@ export default function LayerManager({
   onClose,
   language = 'en',
 }: LayerManagerProps) {
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  // Modern light-dismiss: Dismiss on Escape key and outside pointer interactions
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    const handlePointerDown = (e: PointerEvent) => {
+      const target = e.target as HTMLElement;
+      if (panelRef.current && !panelRef.current.contains(target) && !target.closest('.map-layer-toggle')) {
+        onClose();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    const timer = setTimeout(() => {
+      window.addEventListener('pointerdown', handlePointerDown);
+    }, 0);
+
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('pointerdown', handlePointerDown);
+    };
+  }, [onClose]);
+
   const safetyLayers = layers.filter(
     l => l.style?.layer_category === 'safety_critical' ||
          l.style?.layer_category === 'base_geofence' ||
@@ -73,7 +103,7 @@ export default function LayerManager({
   };
 
   return (
-    <div className="layer-manager" role="region" aria-label="Map layer controls">
+    <div ref={panelRef} className="layer-manager" role="region" aria-label="Map layer controls">
       <div className="layer-manager-header">
         <h4 className="layer-manager-title">{translateText('Map Layers', language)} ({layers.length})</h4>
         <button className="layer-manager-close" onClick={onClose} aria-label="Close layer panel">

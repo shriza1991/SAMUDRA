@@ -46,9 +46,25 @@ code {
   border-radius: var(--radius-sm);
 }
 
-/* Scrollbar styling */
+/* Modern Typography: Balance headings and prevent orphans in advisories */
+h1, h2, h3, h4, h5, h6 {
+  text-wrap: balance;
+}
+
+p, .chat-message-content, .recommendation-summary, .evidence-card-desc {
+  text-wrap: pretty;
+}
+
+/* Modern standard scrollbar styling (Firefox, modern Chromium, Safari) */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border) transparent;
+}
+
+/* Fallback scrollbar styling for legacy WebKit/Blink */
 ::-webkit-scrollbar {
   width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {

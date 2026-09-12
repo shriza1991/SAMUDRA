@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { EvidenceItem, AgentTraceItem } from '../../types/contracts';
 import { TRANSLATIONS, type SupportedLanguage } from '../../i18n/translations';
 import EvidenceCard from './EvidenceCard';
@@ -22,6 +22,18 @@ export default function EvidenceDrawer({
 }: EvidenceDrawerProps) {
   const [activeTab, setActiveTab] = useState<'evidence' | 'trace'>('evidence');
   const t = TRANSLATIONS[language] || TRANSLATIONS.en;
+
+  // Modern dialog interaction: Dismiss on Escape key
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 

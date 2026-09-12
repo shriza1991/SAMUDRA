@@ -76,6 +76,18 @@ export default function CallModal({
     }
   }, [isOpen]);
 
+  // Dismiss on Escape key
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        endCall();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, endCall]);
+
   // Auto-scroll transcript box
   useEffect(() => {
     transcriptEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -86,7 +98,17 @@ export default function CallModal({
   const langInfo = getLanguageLabel(detectedLanguage);
 
   return (
-    <div className="call-modal-backdrop" role="dialog" aria-modal="true" aria-label={t.callTitle}>
+    <div
+      className="call-modal-backdrop"
+      role="dialog"
+      aria-modal="true"
+      aria-label={t.callTitle}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          endCall();
+        }
+      }}
+    >
       <div className="call-modal-container">
         {/* Top Header */}
         <header className="call-header">
