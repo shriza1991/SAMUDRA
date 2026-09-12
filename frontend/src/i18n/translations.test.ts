@@ -130,4 +130,27 @@ describe('Multilingual i18n Dictionary', () => {
     expect(mrAdvisory).toContain('महत्त्वाचे निर्णायक घटक:');
     expect(mrAdvisory).toContain('कृती सल्ला:');
   });
+
+  it('translates portal, what-if, authority deck, and map layer phrases', () => {
+    // Portal & Fisher Deck
+    expect(translateText('Select Your Operational Mission Portal', 'hi')).toContain('पोर्टल');
+    expect(translateText('Fisher Console', 'mr')).toContain('कन्सोल');
+    expect(translateText('Authority Command Deck', 'hi')).toContain('डेक');
+    expect(translateText('Voyage controls', 'mr')).toContain('प्रवास नियंत्रणे');
+
+    // What-If & Mission Twin
+    expect(translateText('Mission Twin', 'hi')).toBe('मिशन ट्विन');
+    expect(translateText('Run What-If Simulation', 'mr')).toContain('सिम्युलेशन सुरू करा');
+    expect(translateText('Counterfactual Decision Impact', 'hi')).toContain('निर्णय प्रभाव विश्लेषण');
+
+    // Authority & Fleet Surveillance
+    expect(translateText('Maritime Fleet Surveillance & Trajectory Replay', 'mr')).toContain('पाळत');
+    expect(translateText('Audit Terminal', 'hi')).toBe('ऑडिट टर्मिनल');
+    expect(translateText('Benchmark Runner', 'mr')).toContain('बेंचमार्क');
+
+    // Map & Layers
+    expect(translateText('Map Layers', 'hi')).toBe('मानचित्र परतें');
+    expect(translateText('Safety Critical', 'mr')).toBe('सुरक्षिततेसाठी महत्त्वाचे');
+    expect(translateText('Safest Corridor', 'hi')).toContain('सुरक्षिततम गलियारा');
+  });
 });

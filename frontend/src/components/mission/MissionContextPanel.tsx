@@ -1,6 +1,6 @@
 import { Anchor, ShipWheel } from 'lucide-react';
 import type { DecisionDiff, MissionContext, OperationalRole, WhatIfParameters } from '../../types/mission';
-import type { SupportedLanguage } from '../../i18n/translations';
+import { translateText, type SupportedLanguage } from '../../i18n/translations';
 import WhatIfSimulator from './WhatIfSimulator';
 
 interface MissionContextPanelProps {
@@ -39,29 +39,33 @@ export default function MissionContextPanel({
     <section className="mission-context-panel" aria-label="Mission context and dashboard view">
       <div className="mission-context-heading">
         <div>
-          <span className="mission-context-eyebrow">Voyage controls</span>
-          <h2>Mission context</h2>
+          <span className="mission-context-eyebrow">{translateText('Voyage controls', language)}</span>
+          <h2>{translateText('Mission context', language)}</h2>
         </div>
         <Anchor size={19} aria-hidden="true" />
       </div>
 
       <div className="mission-context-fields">
         <label>
-          <span>Departure harbor</span>
+          <span>{translateText('Departure harbor', language)}</span>
           <select value={context.origin_harbor ?? ''} onChange={(event) => setHarbor(event.target.value)}>
             {HARBORS.map((harbor) => <option key={harbor} value={harbor}>{harbor}</option>)}
           </select>
         </label>
         <label>
-          <span><ShipWheel size={13} aria-hidden="true" /> Vessel profile</span>
+          <span><ShipWheel size={13} aria-hidden="true" /> {translateText('Vessel profile', language)}</span>
           <select value={context.craft_profile ?? 'motorized_boat'} onChange={(event) => setCraft(event.target.value as MissionContext['craft_profile'])}>
-            {CRAFT_PROFILES.map((profile) => <option key={profile.value} value={profile.value}>{profile.label}</option>)}
+            {CRAFT_PROFILES.map((profile) => (
+              <option key={profile.value} value={profile.value}>
+                {translateText(profile.label, language)}
+              </option>
+            ))}
           </select>
         </label>
       </div>
 
       <p className="mission-context-note">
-        Voyage departure parameters and craft profile for deterministic marine safety calculation.
+        {translateText('Voyage departure parameters and craft profile for deterministic marine safety calculation.', language)}
       </p>
 
       {onSimulate && (

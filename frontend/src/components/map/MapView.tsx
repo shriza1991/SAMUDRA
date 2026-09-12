@@ -4,6 +4,7 @@ import type { MapLayer } from '../../types/contracts';
 import LayerManager from './LayerManager';
 import MissionMapBrief from './MissionMapBrief';
 import { Layers } from 'lucide-react';
+import type { SupportedLanguage } from '../../i18n/translations';
 
 /** Initial fallback center (Indian coastal waters) */
 const INITIAL_CENTER: [number, number] = [73.28, 16.99];
@@ -18,9 +19,10 @@ interface MapViewProps {
   theme?: 'light' | 'dark';
   center?: [number, number];
   zoom?: number;
+  language?: SupportedLanguage;
 }
 
-export default function MapView({ layers, theme = 'light', center, zoom }: MapViewProps) {
+export default function MapView({ layers, theme = 'light', center, zoom, language = 'en' }: MapViewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const activeLayersRef = useRef<{ layers: string[]; sources: string[] }>({ layers: [], sources: [] });
@@ -276,7 +278,7 @@ export default function MapView({ layers, theme = 'light', center, zoom }: MapVi
     <section className="map-view" aria-label="Geospatial map viewport">
       <div ref={containerRef} className="map-container" />
 
-      <MissionMapBrief layers={layers} />
+      <MissionMapBrief layers={layers} language={language} />
 
       {layers.length > 0 && (
         <button
@@ -285,7 +287,10 @@ export default function MapView({ layers, theme = 'light', center, zoom }: MapVi
           aria-label="Toggle layer panel"
         >
           <Layers size={18} />
-          <span>{layers.length} Layers</span>
+          <span>
+            {layers.length}{' '}
+            {language === 'hi' ? 'परतें' : language === 'mr' ? 'स्तर' : 'Layers'}
+          </span>
         </button>
       )}
 
@@ -295,6 +300,7 @@ export default function MapView({ layers, theme = 'light', center, zoom }: MapVi
           visibility={layerVisibility}
           onToggle={toggleLayer}
           onClose={() => setShowLayerPanel(false)}
+          language={language}
         />
       )}
     </section>

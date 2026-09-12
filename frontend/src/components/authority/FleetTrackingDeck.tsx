@@ -20,12 +20,14 @@ import {
   type DemoNotification,
 } from '../../api/client';
 import type { MapLayer } from '../../types/contracts';
+import { translateText, type SupportedLanguage } from '../../i18n/translations';
 
 interface FleetTrackingDeckProps {
   onReplayUpdate?: (layer: MapLayer | null) => void;
+  language?: SupportedLanguage;
 }
 
-export default function FleetTrackingDeck({ onReplayUpdate }: FleetTrackingDeckProps) {
+export default function FleetTrackingDeck({ onReplayUpdate, language = 'en' }: FleetTrackingDeckProps) {
   const [vessels, setVessels] = useState<DemoVessel[]>([]);
   const [selectedVesselId, setSelectedVesselId] = useState<string>('vessel-01');
   const [positions, setPositions] = useState<VesselPosition[]>([]);
@@ -138,9 +140,9 @@ export default function FleetTrackingDeck({ onReplayUpdate }: FleetTrackingDeckP
     <div className="fleet-tracking-deck" aria-label="Fleet Surveillance & Vessel Replay Deck">
       <div className="fleet-deck-header">
         <div>
-          <h3>Maritime Fleet Surveillance & Trajectory Replay</h3>
+          <h3>{translateText('Maritime Fleet Surveillance & Trajectory Replay', language)}</h3>
           <p className="fleet-deck-subtitle">
-            Auditing active coastal vessel positions, time-series GPS replay logs, and multi-agency broadcast alerts.
+            {translateText('Auditing active coastal vessel positions, time-series GPS replay logs, and multi-agency broadcast alerts.', language)}
           </p>
         </div>
       </div>
@@ -150,7 +152,7 @@ export default function FleetTrackingDeck({ onReplayUpdate }: FleetTrackingDeckP
         <section className="fleet-vessel-pane">
           <div className="fleet-section-title">
             <Ship size={16} />
-            <span>Monitored Coastal Fleet ({vessels.length})</span>
+            <span>{translateText('Monitored Coastal Fleet', language)} ({vessels.length})</span>
           </div>
 
           <div className="fleet-vessel-list">
@@ -168,9 +170,9 @@ export default function FleetTrackingDeck({ onReplayUpdate }: FleetTrackingDeckP
                     <span className="vessel-type-badge">{v.vessel_type.replace('_', ' ')}</span>
                   </div>
                   <div className="vessel-specs">
-                    <span>Length: {v.length_m}m</span>
-                    <span>Home: {v.home_harbor_id}</span>
-                    {v.metadata_json?.engine_hp && <span>Engine: {v.metadata_json.engine_hp} HP</span>}
+                    <span>{translateText('Length:', language)} {v.length_m}m</span>
+                    <span>{translateText('Home:', language)} {v.home_harbor_id}</span>
+                    {v.metadata_json?.engine_hp && <span>{translateText('Engine:', language)} {v.metadata_json.engine_hp} HP</span>}
                   </div>
                 </button>
               );
@@ -182,7 +184,7 @@ export default function FleetTrackingDeck({ onReplayUpdate }: FleetTrackingDeckP
             <div className="fleet-scrubber-card">
               <div className="scrubber-header">
                 <div>
-                  <span className="scrubber-eyebrow">GPS Trajectory Replay</span>
+                  <span className="scrubber-eyebrow">{translateText('GPS Trajectory Replay', language)}</span>
                   <h4>{selectedVessel.name}</h4>
                 </div>
                 <div className="scrubber-controls">
@@ -190,10 +192,10 @@ export default function FleetTrackingDeck({ onReplayUpdate }: FleetTrackingDeckP
                     type="button"
                     className="scrubber-btn"
                     onClick={() => setIsPlaying(!isPlaying)}
-                    title={isPlaying ? 'Pause replay' : 'Play trajectory'}
+                    title={isPlaying ? translateText('Pause', language) : translateText('Play', language)}
                   >
                     {isPlaying ? <Pause size={14} /> : <Play size={14} />}
-                    <span>{isPlaying ? 'Pause' : 'Play'}</span>
+                    <span>{isPlaying ? translateText('Pause', language) : translateText('Play', language)}</span>
                   </button>
                   <button
                     type="button"
@@ -202,7 +204,7 @@ export default function FleetTrackingDeck({ onReplayUpdate }: FleetTrackingDeckP
                       setCurrentIndex(0);
                       setIsPlaying(false);
                     }}
-                    title="Reset to departure"
+                    title={translateText('Reset to departure', language)}
                   >
                     <RotateCcw size={14} />
                   </button>
@@ -223,9 +225,9 @@ export default function FleetTrackingDeck({ onReplayUpdate }: FleetTrackingDeckP
                   className="scrubber-slider"
                 />
                 <div className="scrubber-time-labels">
-                  <span>Start ({positions[0]?.timestamp || '00:00'})</span>
+                  <span>{translateText('Start', language)} ({positions[0]?.timestamp || '00:00'})</span>
                   <span className="current-time-pill">T = {currentPos.timestamp}</span>
-                  <span>End ({positions[positions.length - 1]?.timestamp || '03:30'})</span>
+                  <span>{translateText('End', language)} ({positions[positions.length - 1]?.timestamp || '03:30'})</span>
                 </div>
               </div>
 
@@ -233,15 +235,15 @@ export default function FleetTrackingDeck({ onReplayUpdate }: FleetTrackingDeckP
               <div className="scrubber-telemetry-grid">
                 <div className="telemetry-pill">
                   <Gauge size={14} />
-                  <span>Speed: <strong>{currentPos.speed_knots} kts</strong></span>
+                  <span>{translateText('Speed:', language)} <strong>{currentPos.speed_knots} kts</strong></span>
                 </div>
                 <div className="telemetry-pill">
                   <Compass size={14} />
-                  <span>Heading: <strong>{currentPos.heading_deg}°</strong></span>
+                  <span>{translateText('Heading:', language)} <strong>{currentPos.heading_deg}°</strong></span>
                 </div>
                 <div className="telemetry-pill">
                   <MapPin size={14} />
-                  <span>Pos: <strong>{currentPos.latitude.toFixed(3)}°N, {currentPos.longitude.toFixed(3)}°E</strong></span>
+                  <span>{translateText('Pos:', language)} <strong>{currentPos.latitude.toFixed(3)}°N, {currentPos.longitude.toFixed(3)}°E</strong></span>
                 </div>
               </div>
             </div>
@@ -252,7 +254,7 @@ export default function FleetTrackingDeck({ onReplayUpdate }: FleetTrackingDeckP
         <section className="fleet-alerts-pane">
           <div className="fleet-section-title">
             <Radio size={16} />
-            <span>Maritime Broadcast Alerts ({notifications.length})</span>
+            <span>{translateText('Maritime Broadcast Alerts', language)} ({notifications.length})</span>
           </div>
 
           <div className="fleet-alerts-list">
@@ -272,13 +274,13 @@ export default function FleetTrackingDeck({ onReplayUpdate }: FleetTrackingDeckP
                       ) : (
                         <Bell size={15} className="alert-icon" />
                       )}
-                      <strong>{notif.title}</strong>
+                      <strong>{translateText(notif.title, language)}</strong>
                     </div>
                     <span className="alert-severity-pill">{notif.severity}</span>
                   </div>
-                  <p className="alert-message">{notif.message}</p>
+                  <p className="alert-message">{translateText(notif.message, language)}</p>
                   <div className="alert-card-footer">
-                    <span>Role: {notif.recipient_role}</span>
+                    <span>{translateText('Role:', language)} {notif.recipient_role}</span>
                     <span>{new Date(notif.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                   </div>
                 </article>

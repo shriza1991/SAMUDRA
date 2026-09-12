@@ -14,27 +14,28 @@ import {
   ShipWheel,
   SlidersHorizontal,
 } from 'lucide-react';
-import type { SupportedLanguage } from '../i18n/translations';
+import { translateText, type SupportedLanguage } from '../i18n/translations';
 
 interface PortalPageProps {
   onSelectRole: (role: 'fisher' | 'authority') => void;
   language?: SupportedLanguage;
 }
 
-export default function PortalPage({ onSelectRole }: PortalPageProps) {
+export default function PortalPage({ onSelectRole, language = 'en' }: PortalPageProps) {
+  const tr = (str: string) => translateText(str, language);
+
   return (
-    <main className="portal-page" role="main" aria-label="SAMUDRA Portal Role Selection">
+    <main className="portal-page" role="main" aria-label={tr('Select Your Operational Mission Portal')}>
       <div className="portal-container">
         {/* Hero Section */}
         <section className="portal-hero">
           <div className="portal-badge">
             <Anchor size={14} className="portal-badge-icon" />
-            <span>ISRO & INCOIS Marine Intelligence Platform</span>
+            <span>{tr('ISRO & INCOIS Marine Intelligence Platform')}</span>
           </div>
-          <h1 className="portal-title">Select Your Operational Mission Portal</h1>
+          <h1 className="portal-title">{tr('Select Your Operational Mission Portal')}</h1>
           <p className="portal-description">
-            SAMUDRA orchestrates India&apos;s oceanographic, meteorological, and regulatory data into deterministic voyage
-            advisories, risk evaluations, and maritime surveillance.
+            {tr("SAMUDRA orchestrates India's oceanographic, meteorological, and regulatory data into deterministic voyage advisories, risk evaluations, and maritime surveillance.")}
           </p>
         </section>
 
@@ -47,36 +48,35 @@ export default function PortalPage({ onSelectRole }: PortalPageProps) {
                 <Fish size={28} />
               </div>
               <div>
-                <span className="portal-card-eyebrow">Artisanal Fishers & Vessel Skippers</span>
-                <h2>Fisher Console</h2>
+                <span className="portal-card-eyebrow">{tr('Artisanal Fishers & Vessel Skippers')}</span>
+                <h2>{tr('Fisher Console')}</h2>
               </div>
             </div>
 
             <p className="portal-card-summary">
-              Purpose-built for coastal fishermen and vessel operators preparing to depart harbor. Answers operational voyage
-              questions with rigid safety thresholds and vernacular voice support.
+              {tr('Purpose-built for coastal fishermen and vessel operators preparing to depart harbor. Answers operational voyage questions with rigid safety thresholds and vernacular voice support.')}
             </p>
 
             <ul className="portal-features-list">
               <li>
                 <CheckCircle2 size={15} className="feature-check" />
-                <span><strong>Departure Safety Status:</strong> Instant GO / CAUTION / NO-GO verdicts.</span>
+                <span><strong>{tr('Departure Safety Status:')}</strong> {tr('Instant GO / CAUTION / NO-GO verdicts.')}</span>
               </li>
               <li>
                 <MapPinned size={15} className="feature-check" />
-                <span><strong>Potential Fishing Zones (PFZ):</strong> Distance, bearing, SST, and chlorophyll gradients.</span>
+                <span><strong>{tr('Potential Fishing Zones (PFZ):')}</strong> {tr('Distance, bearing, SST, and chlorophyll gradients.')}</span>
               </li>
               <li>
                 <SlidersHorizontal size={15} className="feature-check" />
-                <span><strong>Mission Twin What-If:</strong> Test departure delay windows (+2h, +4h) and craft types.</span>
+                <span><strong>{tr('Mission Twin What-If:')}</strong> {tr('Test departure delay windows (+2h, +4h) and craft types.')}</span>
               </li>
               <li>
                 <Mic size={15} className="feature-check" />
-                <span><strong>Voice Calls with VAD:</strong> Bidirectional audio assistance in Hindi, Marathi, and English.</span>
+                <span><strong>{tr('Voice Calls with VAD:')}</strong> {tr('Bidirectional audio assistance in Hindi, Marathi, and English.')}</span>
               </li>
               <li>
                 <ShipWheel size={15} className="feature-check" />
-                <span><strong>Corridor Optimization:</strong> Compare Safest vs. Direct vs. Balanced route options.</span>
+                <span><strong>{tr('Corridor Optimization:')}</strong> {tr('Compare Safest vs. Direct vs. Balanced route options.')}</span>
               </li>
             </ul>
 
@@ -85,7 +85,7 @@ export default function PortalPage({ onSelectRole }: PortalPageProps) {
               className="portal-cta-btn fisher-cta"
               onClick={() => onSelectRole('fisher')}
             >
-              <span>Enter Fisher Console</span>
+              <span>{tr('Enter Fisher Console')}</span>
               <ArrowRight size={16} />
             </button>
           </article>
@@ -97,36 +97,35 @@ export default function PortalPage({ onSelectRole }: PortalPageProps) {
                 <Building2 size={28} />
               </div>
               <div>
-                <span className="portal-card-eyebrow">Port Officials & Maritime Authorities</span>
-                <h2>Authority Command Deck</h2>
+                <span className="portal-card-eyebrow">{tr('Port Officials & Maritime Authorities')}</span>
+                <h2>{tr('Authority Command Deck')}</h2>
               </div>
             </div>
 
             <p className="portal-card-summary">
-              Dedicated command interface for Port Authorities, Fisheries Departments, and Coastal Disaster Management teams
-              auditing fleet compliance and active hazard sectors.
+              {tr('Dedicated command interface for Port Authorities, Fisheries Departments, and Coastal Disaster Management teams auditing fleet compliance and active hazard sectors.')}
             </p>
 
             <ul className="portal-features-list">
               <li>
                 <RadioTower size={15} className="feature-check" />
-                <span><strong>Coastal Sector Surveillance:</strong> Monitor Ratnagiri, Malvan, Goa, and Mumbai waters.</span>
+                <span><strong>{tr('Coastal Sector Surveillance:')}</strong> {tr('Monitor Ratnagiri, Malvan, Goa, and Mumbai waters.')}</span>
               </li>
               <li>
                 <ShieldAlert size={15} className="feature-check" />
-                <span><strong>Live Hazard Polygons:</strong> Track IMD squall warnings, MPAs, and naval firing areas.</span>
+                <span><strong>{tr('Live Hazard Polygons:')}</strong> {tr('Track IMD squall warnings, MPAs, and naval firing areas.')}</span>
               </li>
               <li>
                 <FileCheck2 size={15} className="feature-check" />
-                <span><strong>Evidence & Provenance Audit:</strong> Direct in-page inspection of official INCOIS/IMD feeds.</span>
+                <span><strong>{tr('Evidence & Provenance Audit:')}</strong> {tr('Direct in-page inspection of official INCOIS/IMD feeds.')}</span>
               </li>
               <li>
                 <Activity size={15} className="feature-check" />
-                <span><strong>Autonomous Reasoning Trail:</strong> Full LangGraph agent execution trace logs.</span>
+                <span><strong>{tr('Autonomous Reasoning Trail:')}</strong> {tr('Full LangGraph agent execution trace logs.')}</span>
               </li>
               <li>
                 <Compass size={15} className="feature-check" />
-                <span><strong>Surveillance Query Terminal:</strong> Run regional simulations and query decision records.</span>
+                <span><strong>{tr('Surveillance Query Terminal:')}</strong> {tr('Run regional simulations and query decision records.')}</span>
               </li>
             </ul>
 
@@ -135,7 +134,7 @@ export default function PortalPage({ onSelectRole }: PortalPageProps) {
               className="portal-cta-btn authority-cta"
               onClick={() => onSelectRole('authority')}
             >
-              <span>Enter Authority Deck</span>
+              <span>{tr('Enter Authority Deck')}</span>
               <ArrowRight size={16} />
             </button>
           </article>
@@ -144,7 +143,7 @@ export default function PortalPage({ onSelectRole }: PortalPageProps) {
         {/* Footer info badge */}
         <footer className="portal-footer">
           <p>
-            Deterministic Marine Decision Engine · Complying with Official Government Feeds (INCOIS OSF, PFZ, SVAS, IMD Marine)
+            {tr('Deterministic Marine Decision Engine · Complying with Official Government Feeds (INCOIS OSF, PFZ, SVAS, IMD Marine)')}
           </p>
         </footer>
       </div>

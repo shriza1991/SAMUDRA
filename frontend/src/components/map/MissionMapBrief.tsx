@@ -2,11 +2,13 @@ import React, { useState } from 'react';
 import { AlertTriangle, Compass, Fish, MapPinned, Route, ShieldCheck, Zap } from 'lucide-react';
 import type { MapLayer } from '../../types/contracts';
 import type { OperationalMode } from '../../types/mission';
+import { translateText, type SupportedLanguage } from '../../i18n/translations';
 
 interface MissionMapBriefProps {
   layers: MapLayer[];
   selectedMode?: OperationalMode;
   onModeChange?: (mode: OperationalMode) => void;
+  language?: SupportedLanguage;
 }
 
 const OPERATIONAL_MODES: Array<{
@@ -44,6 +46,7 @@ export default function MissionMapBrief({
   layers,
   selectedMode: controlledMode,
   onModeChange,
+  language = 'en',
 }: MissionMapBriefProps) {
   const [internalMode, setInternalMode] = useState<OperationalMode>('safest');
   const activeMode = controlledMode ?? internalMode;
@@ -57,7 +60,7 @@ export default function MissionMapBrief({
     return (
       <div className="mission-map-brief map-brief-empty" role="status">
         <MapPinned size={17} />
-        <span>Ask a mission question to view its PFZ, route, and safety layers here.</span>
+        <span>{translateText('Ask a mission question to view its PFZ, route, and safety layers here.', language)}</span>
       </div>
     );
   }
@@ -76,19 +79,19 @@ export default function MissionMapBrief({
     <aside className="mission-map-brief" aria-label="Mission map summary and corridor selection">
       <div className="map-brief-heading">
         <MapPinned size={16} />
-        <span>Mission map & corridors</span>
+        <span>{translateText('Mission map & corridors', language)}</span>
       </div>
 
       <div className="map-brief-stats">
-        <BriefStat icon={<Fish size={14} />} label="PFZ" count={pfzLayers.length} active={pfzLayers.length > 0} />
-        <BriefStat icon={<Route size={14} />} label="Routes" count={routeLayers.length} active={routeLayers.length > 0} />
-        <BriefStat icon={<AlertTriangle size={14} />} label="Hazards" count={hazardLayers.length} active={hazardLayers.length > 0} critical />
+        <BriefStat icon={<Fish size={14} />} label={translateText('PFZ', language)} count={pfzLayers.length} active={pfzLayers.length > 0} />
+        <BriefStat icon={<Route size={14} />} label={translateText('Routes', language)} count={routeLayers.length} active={routeLayers.length > 0} />
+        <BriefStat icon={<AlertTriangle size={14} />} label={translateText('Hazards', language)} count={hazardLayers.length} active={hazardLayers.length > 0} critical />
       </div>
 
       {/* Operational corridor strategy selector when routes or PFZ exist */}
       {(routeLayers.length > 0 || pfzLayers.length > 0) && (
         <div className="map-corridor-section">
-          <div className="map-corridor-label">Operational Strategy:</div>
+          <div className="map-corridor-label">{translateText('Operational Strategy:', language)}</div>
           <div className="map-corridor-modes" role="radiogroup" aria-label="Operational navigation mode">
             {OPERATIONAL_MODES.map((m) => (
               <button
@@ -97,20 +100,20 @@ export default function MissionMapBrief({
                 className={`map-corridor-chip ${activeMode === m.id ? 'active' : ''}`}
                 onClick={() => handleModeSelect(m.id)}
                 aria-pressed={activeMode === m.id}
-                title={m.strategy}
+                title={translateText(m.strategy, language)}
               >
                 {m.icon}
-                <span>{m.label}</span>
-                <span className="corridor-badge">{m.badge}</span>
+                <span>{translateText(m.label, language)}</span>
+                <span className="corridor-badge">{translateText(m.badge, language)}</span>
               </button>
             ))}
           </div>
 
           <div className="map-corridor-info">
-            <small>{OPERATIONAL_MODES.find((m) => m.id === activeMode)?.strategy}</small>
+            <small>{translateText(OPERATIONAL_MODES.find((m) => m.id === activeMode)?.strategy ?? '', language)}</small>
             {routeDistance && (
               <span className="map-route-metric">
-                Est. Distance: <strong>{routeDistance} km</strong>
+                {translateText('Est. Distance:', language)} <strong>{routeDistance} km</strong>
               </span>
             )}
           </div>
@@ -120,10 +123,15 @@ export default function MissionMapBrief({
       <div className="map-brief-layer-list">
         {layers.slice(0, 3).map((layer) => (
           <span key={layer.layer_id}>
-            <i style={{ backgroundColor: layer.style?.color || '#38bdf8' }} /> {layer.name}
+            <i style={{ backgroundColor: layer.style?.color || '#38bdf8' }} /> {translateText(layer.name, language)}
           </span>
         ))}
-        {layers.length > 3 && <span>+{layers.length - 3} more layers</span>}
+        {layers.length > 3 && (
+          <span>
+            +{layers.length - 3}{' '}
+            {language === 'hi' ? 'अधिक परतें' : language === 'mr' ? 'अधिक स्तर' : 'more layers'}
+          </span>
+        )}
       </div>
     </aside>
   );

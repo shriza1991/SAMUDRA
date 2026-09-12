@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { ArrowRight, Check, Clock, Cpu, RefreshCw, SlidersHorizontal, Sparkles } from 'lucide-react';
 import type { DecisionDiff, MissionContext, WhatIfParameters } from '../../types/mission';
-import type { SupportedLanguage } from '../../i18n/translations';
+import { translateText, type SupportedLanguage } from '../../i18n/translations';
 
 interface WhatIfSimulatorProps {
   currentContext: MissionContext;
@@ -98,8 +98,8 @@ export default function WhatIfSimulator({
       >
         <span className="what-if-toggle-left">
           <Cpu size={14} className="what-if-icon" />
-          <strong>Mission Twin</strong>
-          <span className="what-if-tag">What-If Simulation</span>
+          <strong>{translateText('Mission Twin', language)}</strong>
+          <span className="what-if-tag">{translateText('What-If Simulation', language)}</span>
         </span>
         <SlidersHorizontal size={13} />
       </button>
@@ -107,13 +107,13 @@ export default function WhatIfSimulator({
       {isOpen && (
         <div className="what-if-panel">
           <p className="what-if-description">
-            Current status: <strong>{currentStatus.replace('_', '-')}</strong>. Simulate counterfactual voyage parameters (temporal window, vessel limits) against deterministic risk rules.
+            {translateText('Current status:', language)} <strong>{currentStatus.replace('_', '-')}</strong>. {translateText('Simulate counterfactual voyage parameters (temporal window, vessel limits) against deterministic risk rules.', language)}
           </p>
 
           {/* Temporal delay selector */}
           <div className="what-if-section">
             <span className="what-if-label">
-              <Clock size={12} /> Departure window offset:
+              <Clock size={12} /> {translateText('Departure window offset:', language)}
             </span>
             <div className="what-if-time-chips" role="radiogroup" aria-label="Departure delay offset">
               {TIME_OFFSETS.map((t) => (
@@ -124,7 +124,7 @@ export default function WhatIfSimulator({
                   onClick={() => setTimeOffset(t.hours)}
                   aria-pressed={timeOffset === t.hours}
                 >
-                  {t.label}
+                  {t.label === 'Now' ? translateText('Now', language) : t.label}
                 </button>
               ))}
             </div>
@@ -133,30 +133,36 @@ export default function WhatIfSimulator({
           {/* Vessel profile & Objective selectors */}
           <div className="what-if-grid">
             <label className="what-if-field">
-              <span>Vessel profile</span>
+              <span>{translateText('Vessel profile', language)}</span>
               <select
                 value={craftOverride}
                 onChange={(e) => setCraftOverride(e.target.value as MissionContext['craft_profile'])}
               >
                 {CRAFT_OPTIONS.map((c) => (
                   <option key={c.value} value={c.value}>
-                    {c.label}
+                    {translateText(c.label, language)}
                   </option>
                 ))}
               </select>
             </label>
 
             <label className="what-if-field">
-              <span>Objective</span>
+              <span>{translateText('Objective', language)}</span>
               <select
                 value={objective}
                 onChange={(e) => setObjective(e.target.value as 'pfz' | 'safety' | 'transit')}
               >
-                {OBJECTIVES.map((o) => (
-                  <option key={o.value} value={o.value}>
-                    {o.label}
-                  </option>
-                ))}
+                {OBJECTIVES.map((o) => {
+                  let translatedLabel: string = o.label;
+                  if (o.value === 'pfz') translatedLabel = `🐟 ${translateText('PFZ Harvesting', language)}`;
+                  else if (o.value === 'safety') translatedLabel = `⚓ ${translateText('Coastal Safety', language)}`;
+                  else if (o.value === 'transit') translatedLabel = `🧭 ${translateText('Safe Passage', language)}`;
+                  return (
+                    <option key={o.value} value={o.value}>
+                      {translatedLabel}
+                    </option>
+                  );
+                })}
               </select>
             </label>
           </div>
@@ -171,11 +177,11 @@ export default function WhatIfSimulator({
             >
               {isLoading ? (
                 <>
-                  <RefreshCw size={13} className="spin" /> Simulating...
+                  <RefreshCw size={13} className="spin" /> {translateText('Simulating...', language)}
                 </>
               ) : (
                 <>
-                  <Sparkles size={13} /> Run What-If Simulation
+                  <Sparkles size={13} /> {translateText('Run What-If Simulation', language)}
                 </>
               )}
             </button>
@@ -185,19 +191,19 @@ export default function WhatIfSimulator({
           {activeDiff && (
             <div className="what-if-diff-card" role="region" aria-label="Decision Diff Analysis">
               <div className="diff-header">
-                <span className="diff-title">Counterfactual Decision Impact</span>
-                <span className="diff-timestamp">+{activeDiff.timeOffsetHours}h offset</span>
+                <span className="diff-title">{translateText('Counterfactual Decision Impact', language)}</span>
+                <span className="diff-timestamp">+{activeDiff.timeOffsetHours}h {translateText('offset', language)}</span>
               </div>
               <div className="diff-comparison">
                 <div className="diff-status-item">
-                  <small>Baseline</small>
+                  <small>{translateText('Baseline', language)}</small>
                   <span className={`status-pill status-${activeDiff.baselineStatus.toLowerCase().replace('_', '-')}`}>
                     {activeDiff.baselineStatus.replace('_', '-')}
                   </span>
                 </div>
                 <ArrowRight size={14} className="diff-arrow" />
                 <div className="diff-status-item">
-                  <small>Simulated</small>
+                  <small>{translateText('Simulated', language)}</small>
                   <span className={`status-pill status-${activeDiff.simulatedStatus.toLowerCase().replace('_', '-')}`}>
                     {activeDiff.simulatedStatus.replace('_', '-')}
                   </span>
@@ -205,7 +211,7 @@ export default function WhatIfSimulator({
               </div>
 
               {activeDiff.summary && (
-                <p className="diff-summary">{activeDiff.summary}</p>
+                <p className="diff-summary">{translateText(activeDiff.summary, language)}</p>
               )}
 
               {craftOverride !== currentContext.craft_profile && (
@@ -217,10 +223,10 @@ export default function WhatIfSimulator({
                 >
                   {applied ? (
                     <>
-                      <Check size={13} /> Profile Applied
+                      <Check size={13} /> {translateText('Profile Applied', language)}
                     </>
                   ) : (
-                    'Apply simulated craft to mission context'
+                    translateText('Apply simulated craft to mission context', language)
                   )}
                 </button>
               )}

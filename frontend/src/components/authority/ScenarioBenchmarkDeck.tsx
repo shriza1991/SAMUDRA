@@ -15,7 +15,7 @@ import {
   type DemoScenario,
   type ScenarioBenchmarkResult,
 } from '../../api/client';
-import type { SupportedLanguage } from '../../i18n/translations';
+import { translateText, type SupportedLanguage } from '../../i18n/translations';
 
 interface ScenarioBenchmarkDeckProps {
   language?: SupportedLanguage;
@@ -63,10 +63,9 @@ export default function ScenarioBenchmarkDeck({ language = 'en' }: ScenarioBench
     <div className="scenario-benchmark-deck" aria-label="Canonical Scenario Benchmark Suite">
       <div className="benchmark-header">
         <div>
-          <h3>Canonical Evaluation Scenarios (S1–S8 Benchmark Runner)</h3>
+          <h3>{translateText('Canonical Evaluation Scenarios (S1–S8 Benchmark Runner)', language)}</h3>
           <p className="benchmark-subtitle">
-            Execute deterministic evaluation pipelines on the LangGraph agent graph to verify safety decisions,
-            evidence grounding, and rule compliance.
+            {translateText('Execute deterministic evaluation pipelines on the LangGraph agent graph to verify safety decisions, evidence grounding, and rule compliance.', language)}
           </p>
         </div>
       </div>
@@ -74,7 +73,7 @@ export default function ScenarioBenchmarkDeck({ language = 'en' }: ScenarioBench
       <div className="benchmark-workspace">
         {/* Left: Scenarios Selector List */}
         <aside className="benchmark-scenario-list" aria-label="Scenarios selection">
-          <span className="benchmark-list-label">Evaluation Benchmarks ({scenarios.length})</span>
+          <span className="benchmark-list-label">{translateText('Evaluation Benchmarks', language)} ({scenarios.length})</span>
           <div className="benchmark-cards-scroll">
             {scenarios.map((sc) => {
               const isSelected = sc.id === selectedScenarioId;
@@ -102,7 +101,7 @@ export default function ScenarioBenchmarkDeck({ language = 'en' }: ScenarioBench
                     <span className={`status-pill ${badgeColor}`}>{badge}</span>
                   </div>
                   <div className="scenario-name">{sc.name}</div>
-                  <div className="scenario-harbor">Harbor: {sc.harbor || 'Ratnagiri'}</div>
+                  <div className="scenario-harbor">{translateText('Harbor:', language)} {sc.harbor || 'Ratnagiri'}</div>
                 </button>
               );
             })}
@@ -115,7 +114,7 @@ export default function ScenarioBenchmarkDeck({ language = 'en' }: ScenarioBench
             <div className="scenario-spec-box">
               <div className="scenario-spec-header">
                 <div>
-                  <span className="scenario-spec-eyebrow">Scenario Specification</span>
+                  <span className="scenario-spec-eyebrow">{translateText('Scenario Specification', language)}</span>
                   <h4>{selectedScenario.id}: {selectedScenario.name}</h4>
                 </div>
                 <button
@@ -127,12 +126,12 @@ export default function ScenarioBenchmarkDeck({ language = 'en' }: ScenarioBench
                   {isRunning ? (
                     <>
                       <RefreshCw size={15} className="spin-icon" />
-                      <span>Executing Graph...</span>
+                      <span>{translateText('Executing Graph...', language)}</span>
                     </>
                   ) : (
                     <>
                       <Play size={15} />
-                      <span>Run Benchmark Test</span>
+                      <span>{translateText('Run Benchmark Test', language)}</span>
                     </>
                   )}
                 </button>
@@ -141,24 +140,24 @@ export default function ScenarioBenchmarkDeck({ language = 'en' }: ScenarioBench
               <p className="scenario-spec-desc">{selectedScenario.description}</p>
 
               <div className="scenario-query-quote">
-                <strong>Standard Query:</strong> &ldquo;{selectedScenario.query}&rdquo;
+                <strong>{translateText('Standard Query:', language)}</strong> &ldquo;{selectedScenario.query}&rdquo;
               </div>
 
               <div className="scenario-meta-grid">
                 <div className="scenario-meta-item">
-                  <span>Target Intent</span>
+                  <span>{translateText('Target Intent', language)}</span>
                   <strong>{selectedScenario.intent || 'SAFETY'}</strong>
                 </div>
                 <div className="scenario-meta-item">
-                  <span>Expected Status</span>
+                  <span>{translateText('Expected Status', language)}</span>
                   <strong className="status-pill status-go">{selectedScenario.expected_status || 'GO'}</strong>
                 </div>
                 <div className="scenario-meta-item">
-                  <span>Confidence Bar</span>
+                  <span>{translateText('Confidence Bar', language)}</span>
                   <strong>{selectedScenario.expected_confidence || 'HIGH'}</strong>
                 </div>
                 <div className="scenario-meta-item">
-                  <span>Harbor Sector</span>
+                  <span>{translateText('Harbor Sector', language)}</span>
                   <strong>{selectedScenario.harbor || 'Ratnagiri'}</strong>
                 </div>
               </div>
@@ -179,51 +178,51 @@ export default function ScenarioBenchmarkDeck({ language = 'en' }: ScenarioBench
                 <div className="result-status-title">
                   {benchmarkResult.passed ? (
                     <span className="result-tag pass">
-                      <CheckCircle2 size={16} /> TEST SUITE PASSED
+                      <CheckCircle2 size={16} /> {translateText('TEST SUITE PASSED', language)}
                     </span>
                   ) : (
                     <span className="result-tag fail">
-                      <XCircle size={16} /> TEST SUITE FAILED
+                      <XCircle size={16} /> {translateText('TEST SUITE FAILED', language)}
                     </span>
                   )}
-                  <h5>Pipeline Verification: {benchmarkResult.scenario_id}</h5>
+                  <h5>{translateText('Pipeline Verification:', language)} {benchmarkResult.scenario_id}</h5>
                 </div>
                 <span className="result-metric-summary">
-                  {benchmarkResult.trace_steps_count} execution steps · {benchmarkResult.evidence_count} evidence records
+                  {benchmarkResult.trace_steps_count} {translateText('execution steps', language)} · {benchmarkResult.evidence_count} {translateText('evidence records', language)}
                 </span>
               </div>
 
               <div className="result-kpis-grid">
                 <div className="result-kpi">
-                  <span>Status Match</span>
+                  <span>{translateText('Status Match', language)}</span>
                   <strong>
-                    Actual: <span className="status-highlight">{benchmarkResult.actual_status}</span> (Expected: {benchmarkResult.expected_status})
+                    {translateText('Actual:', language)} <span className="status-highlight">{benchmarkResult.actual_status}</span> ({translateText('Expected:', language)} {benchmarkResult.expected_status})
                   </strong>
                 </div>
                 <div className="result-kpi">
-                  <span>Intent Match</span>
+                  <span>{translateText('Intent Match', language)}</span>
                   <strong>
-                    {benchmarkResult.actual_intent} (Expected: {benchmarkResult.expected_intent})
+                    {benchmarkResult.actual_intent} ({translateText('Expected:', language)} {benchmarkResult.expected_intent})
                   </strong>
                 </div>
                 <div className="result-kpi">
-                  <span>Evidence Grounding</span>
+                  <span>{translateText('Evidence Grounding', language)}</span>
                   <strong>
                     {benchmarkResult.evidence_grounded ? (
-                      <span className="grounded-yes">100% Grounded</span>
+                      <span className="grounded-yes">{translateText('100% Grounded', language)}</span>
                     ) : (
-                      <span className="grounded-no">Unverified</span>
+                      <span className="grounded-no">{translateText('Unverified', language)}</span>
                     )}
                   </strong>
                 </div>
                 <div className="result-kpi">
-                  <span>Confidence Level</span>
+                  <span>{translateText('Confidence Level', language)}</span>
                   <strong>{benchmarkResult.actual_confidence}</strong>
                 </div>
               </div>
 
               <div className="result-tools-block">
-                <span className="block-title"><Layers size={14} /> Executed LangGraph Tools:</span>
+                <span className="block-title"><Layers size={14} /> {translateText('Executed LangGraph Tools:', language)}</span>
                 <div className="tools-pills">
                   {benchmarkResult.executed_tools.map((tool, idx) => (
                     <span key={idx} className="tool-pill">
@@ -234,7 +233,7 @@ export default function ScenarioBenchmarkDeck({ language = 'en' }: ScenarioBench
               </div>
 
               <div className="result-response-block">
-                <span className="block-title"><FileCheck2 size={14} /> Composed Advisory Output:</span>
+                <span className="block-title"><FileCheck2 size={14} /> {translateText('Composed Advisory Output:', language)}</span>
                 <div className="result-response-text">
                   {benchmarkResult.response_text}
                 </div>
@@ -242,7 +241,7 @@ export default function ScenarioBenchmarkDeck({ language = 'en' }: ScenarioBench
 
               {benchmarkResult.validation_notes.length > 0 && (
                 <div className="result-notes-block">
-                  <span className="block-title"><Activity size={14} /> Validation Criteria Check:</span>
+                  <span className="block-title"><Activity size={14} /> {translateText('Validation Criteria Check:', language)}</span>
                   <ul>
                     {benchmarkResult.validation_notes.map((note, idx) => (
                       <li key={idx}>{note}</li>
@@ -257,8 +256,7 @@ export default function ScenarioBenchmarkDeck({ language = 'en' }: ScenarioBench
             <div className="benchmark-placeholder-note">
               <HelpCircle size={28} />
               <p>
-                Select an evaluation scenario from the left and click <strong>&ldquo;Run Benchmark Test&rdquo;</strong> to execute
-                the backend LangGraph agent pipeline and audit the response in real time.
+                {translateText('Select an evaluation scenario from the left and click "Run Benchmark Test" to execute the backend LangGraph agent pipeline and audit the response in real time.', language)}
               </p>
             </div>
           )}

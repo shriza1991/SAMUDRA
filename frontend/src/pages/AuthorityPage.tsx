@@ -18,6 +18,7 @@ import FleetTrackingDeck from '../components/authority/FleetTrackingDeck';
 import type { useChat } from '../hooks/useChat';
 import type { MapLayer } from '../types/contracts';
 import { createSectorLayers, getSectorConfig, fetchAndFormatBaseLayers } from '../utils/geo';
+import { translateText } from '../i18n/translations';
 
 export interface AuthorityPageProps {
   chat: ReturnType<typeof useChat>;
@@ -88,11 +89,11 @@ export default function AuthorityPage({
         <div className="authority-bar-left">
           <div className="authority-title-row">
             <Building2 size={16} className="authority-brand-icon" />
-            <span className="authority-title">Authority Command Deck</span>
+            <span className="authority-title">{translateText('Authority Command Deck', chat.language)}</span>
           </div>
 
           <label className="authority-sector-selector">
-            <span className="sector-label">Sector:</span>
+            <span className="sector-label">{translateText('Sector:', chat.language)}</span>
             <select
               value={selectedSector}
               onChange={(e) => setSelectedSector(e.target.value)}
@@ -108,7 +109,7 @@ export default function AuthorityPage({
         {/* Compact KPI Pills in a single clean row */}
         <div className="authority-kpi-chips">
           <div className="authority-kpi-chip">
-            <span className="chip-label">Verdict:</span>
+            <span className="chip-label">{translateText('Verdict:', chat.language)}</span>
             <span className={`status-pill status-${status.toLowerCase().replace('_', '-')}`}>
               {status.replace('_', '-')}
             </span>
@@ -116,17 +117,17 @@ export default function AuthorityPage({
 
           <div className="authority-kpi-chip">
             <AlertTriangle size={13} className={hazardLayers.length > 0 ? 'status-no-go' : ''} />
-            <span><strong>{hazardLayers.length}</strong> Hazards</span>
+            <span><strong>{hazardLayers.length}</strong> {translateText('Hazards', chat.language)}</span>
           </div>
 
           <div className="authority-kpi-chip">
             <FileCheck2 size={13} className="status-accent" />
-            <span><strong>{evidenceList.length}</strong> Sources</span>
+            <span><strong>{evidenceList.length}</strong> {translateText('Sources', chat.language)}</span>
           </div>
 
           <div className="authority-kpi-chip">
             <Activity size={13} className="status-accent" />
-            <span><strong>{traceList.length}</strong> Steps</span>
+            <span><strong>{traceList.length}</strong> {translateText('Steps', chat.language)}</span>
           </div>
         </div>
       </section>
@@ -141,7 +142,7 @@ export default function AuthorityPage({
           aria-selected={authorityTab === 'terminal'}
         >
           <RadioTower size={13} />
-          <span>Audit Terminal</span>
+          <span>{translateText('Audit Terminal', chat.language)}</span>
         </button>
         <button
           type="button"
@@ -151,7 +152,7 @@ export default function AuthorityPage({
           aria-selected={authorityTab === 'fleet'}
         >
           <Ship size={13} />
-          <span>Fleet Surveillance</span>
+          <span>{translateText('Fleet Surveillance', chat.language)}</span>
         </button>
         <button
           type="button"
@@ -161,7 +162,7 @@ export default function AuthorityPage({
           aria-selected={authorityTab === 'benchmarks'}
         >
           <FlaskConical size={13} />
-          <span>Benchmark Runner</span>
+          <span>{translateText('Benchmark Runner', chat.language)}</span>
         </button>
         <button
           type="button"
@@ -171,7 +172,7 @@ export default function AuthorityPage({
           aria-selected={authorityTab === 'audit'}
         >
           <FileCheck2 size={13} />
-          <span>Evidence & Trace ({traceList.length})</span>
+          <span>{translateText('Evidence & Trace', chat.language)} ({traceList.length})</span>
         </button>
       </nav>
 
@@ -182,14 +183,14 @@ export default function AuthorityPage({
             {/* Left: Reused ChatPanel in Official Dispatch Terminal Mode */}
             <aside className="authority-terminal-pane" aria-label="Terminal Pane">
               <div className="authority-terminal-header">
-                <span>Surveillance Query Terminal</span>
+                <span>{translateText('Surveillance Query Terminal', chat.language)}</span>
                 <button
                   type="button"
                   className="authority-reset-btn"
                   onClick={chat.clearChat}
                   title="Clear audit session"
                 >
-                  <RotateCcw size={12} /> Reset
+                  <RotateCcw size={12} /> {translateText('Reset', chat.language)}
                 </button>
               </div>
 
@@ -212,6 +213,7 @@ export default function AuthorityPage({
                 theme={theme}
                 center={sectorConfig.center}
                 zoom={sectorConfig.zoom}
+                language={chat.language}
               />
             </div>
           </div>
@@ -220,7 +222,7 @@ export default function AuthorityPage({
         {authorityTab === 'fleet' && (
           <div className="authority-workspace-grid authority-fleet-grid">
             <aside className="authority-fleet-pane" aria-label="Fleet Surveillance Pane">
-              <FleetTrackingDeck onReplayUpdate={setReplayLayer} />
+              <FleetTrackingDeck onReplayUpdate={setReplayLayer} language={chat.language} />
             </aside>
             <div className="authority-map-pane">
               <MapView
@@ -228,6 +230,7 @@ export default function AuthorityPage({
                 theme={theme}
                 center={sectorConfig.center}
                 zoom={sectorConfig.zoom}
+                language={chat.language}
               />
             </div>
           </div>
@@ -245,7 +248,7 @@ export default function AuthorityPage({
             <div className="authority-audit-column">
               <div className="audit-section-header">
                 <FileCheck2 size={16} />
-                <h3>Verified Official Evidence ({evidenceList.length})</h3>
+                <h3>{translateText('Verified Official Evidence', chat.language)} ({evidenceList.length})</h3>
               </div>
               {evidenceList.length > 0 ? (
                 <div className="authority-evidence-grid">
@@ -255,13 +258,13 @@ export default function AuthorityPage({
                 </div>
               ) : (
                 <p className="authority-empty-note">
-                  No active evidence items. Run an advisory query to inspect official telemetry.
+                  {translateText('No active evidence items. Run an advisory query to inspect official telemetry.', chat.language)}
                 </p>
               )}
 
               {warningsList.length > 0 && (
                 <div className="authority-warnings-box">
-                  <h4>Active System Warnings & Fallbacks</h4>
+                  <h4>{translateText('Active System Warnings & Fallbacks', chat.language)}</h4>
                   <ul>
                     {warningsList.map((w, idx) => (
                       <li key={idx}>{w}</li>
@@ -274,7 +277,7 @@ export default function AuthorityPage({
             <div className="authority-audit-column">
               <div className="audit-section-header">
                 <Activity size={16} />
-                <h3>Autonomous Agent Execution Trail ({traceList.length} Steps)</h3>
+                <h3>{translateText('Autonomous Agent Execution Trail', chat.language)} ({traceList.length} {translateText('Steps', chat.language)})</h3>
               </div>
               {traceList.length > 0 ? (
                 <div className="authority-timeline-card">
@@ -282,7 +285,7 @@ export default function AuthorityPage({
                 </div>
               ) : (
                 <p className="authority-empty-note">
-                  No trace recorded. Queries processed by the cognitive graph will log execution steps here.
+                  {translateText('No trace recorded. Queries processed by the cognitive graph will log execution steps here.', chat.language)}
                 </p>
               )}
             </div>

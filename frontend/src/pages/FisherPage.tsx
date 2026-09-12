@@ -6,6 +6,7 @@ import MissionContextPanel from '../components/mission/MissionContextPanel';
 import type { useChat } from '../hooks/useChat';
 import type { MapLayer } from '../types/contracts';
 import { createHarborLayer, getHarborCoordinates, fetchAndFormatBaseLayers } from '../utils/geo';
+import { translateText } from '../i18n/translations';
 
 export interface FisherPageProps {
   chat: ReturnType<typeof useChat>;
@@ -16,10 +17,10 @@ export interface FisherPageProps {
   onBack: () => void;
 }
 
-function formatCraft(profile?: string): string {
-  if (profile === 'traditional_non_motorized') return 'Traditional';
-  if (profile === 'mechanized_trawler') return 'Trawler';
-  return 'Motorized';
+function formatCraft(profile: string | undefined, lang: any): string {
+  if (profile === 'traditional_non_motorized') return translateText('Traditional', lang);
+  if (profile === 'mechanized_trawler') return translateText('Trawler', lang);
+  return translateText('Motorized', lang);
 }
 
 /**
@@ -71,7 +72,7 @@ export default function FisherPage({
               aria-selected={sidebarTab === 'chat'}
             >
               <MessageSquare size={13} />
-              <span>Advisory Chat</span>
+              <span>{translateText('Advisory Chat', chat.language)}</span>
             </button>
             <button
               type="button"
@@ -81,7 +82,7 @@ export default function FisherPage({
               aria-selected={sidebarTab === 'voyage'}
             >
               <SlidersHorizontal size={13} />
-              <span>Voyage Settings</span>
+              <span>{translateText('Voyage Settings', chat.language)}</span>
             </button>
           </div>
 
@@ -89,10 +90,12 @@ export default function FisherPage({
             type="button"
             className="fisher-compact-context-pill"
             onClick={() => setSidebarTab(sidebarTab === 'chat' ? 'voyage' : 'chat')}
-            title="Toggle voyage settings"
+            title={translateText('Toggle voyage settings', chat.language)}
           >
             <Anchor size={11} className="context-pill-icon" />
-            <span className="context-pill-text">{originHarbor} · {formatCraft(chat.missionContext.craft_profile)}</span>
+            <span className="context-pill-text">
+              {translateText(originHarbor, chat.language)} · {formatCraft(chat.missionContext.craft_profile, chat.language)}
+            </span>
           </button>
         </div>
 
@@ -130,6 +133,7 @@ export default function FisherPage({
         theme={theme}
         center={harborCoords}
         zoom={9.5}
+        language={chat.language}
       />
     </main>
   );

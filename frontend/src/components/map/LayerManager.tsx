@@ -1,14 +1,22 @@
 import type { MapLayer } from '../../types/contracts';
 import { X, Eye, EyeOff, ShieldAlert, Navigation } from 'lucide-react';
+import { translateText, type SupportedLanguage } from '../../i18n/translations';
 
 interface LayerManagerProps {
   layers: MapLayer[];
   visibility: Record<string, boolean>;
   onToggle: (layerId: string) => void;
   onClose: () => void;
+  language?: SupportedLanguage;
 }
 
-export default function LayerManager({ layers, visibility, onToggle, onClose }: LayerManagerProps) {
+export default function LayerManager({
+  layers,
+  visibility,
+  onToggle,
+  onClose,
+  language = 'en',
+}: LayerManagerProps) {
   const safetyLayers = layers.filter(
     l => l.style?.layer_category === 'safety_critical' ||
          l.style?.layer_category === 'base_geofence' ||
@@ -39,7 +47,7 @@ export default function LayerManager({ layers, visibility, onToggle, onClose }: 
             }}
           >
             {icon}
-            <span>{title}</span>
+            <span>{translateText(title, language)}</span>
           </div>
         )}
         {items.map(layer => {
@@ -55,7 +63,7 @@ export default function LayerManager({ layers, visibility, onToggle, onClose }: 
                 className="layer-color-dot"
                 style={{ backgroundColor: layer.style?.color || '#38bdf8' }}
               />
-              <span className="layer-name">{layer.name}</span>
+              <span className="layer-name">{translateText(layer.name, language)}</span>
               {isVisible ? <Eye size={14} /> : <EyeOff size={14} />}
             </button>
           );
@@ -67,7 +75,7 @@ export default function LayerManager({ layers, visibility, onToggle, onClose }: 
   return (
     <div className="layer-manager" role="region" aria-label="Map layer controls">
       <div className="layer-manager-header">
-        <h4 className="layer-manager-title">Map Layers ({layers.length})</h4>
+        <h4 className="layer-manager-title">{translateText('Map Layers', language)} ({layers.length})</h4>
         <button className="layer-manager-close" onClick={onClose} aria-label="Close layer panel">
           <X size={16} />
         </button>

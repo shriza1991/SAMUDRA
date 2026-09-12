@@ -688,6 +688,785 @@ export const CANONICAL_TRANSLATION_MAP: TranslationEntry[] = [
     hi: 'तटरेखा से 5 समुद्री मील के भीतर ही संचालन करें (केवल सिमुलेशन)।',
     mr: 'किनारपट्टीपासून ५ सागरी मैलाच्या आतच बोट चालवा (केवळ सिम्युलेशन).',
   },
+
+  // --- PORTAL PAGE TRANSLATIONS ---
+  {
+    en: 'Select Your Operational Mission Portal',
+    hi: 'अपना परिचालन मिशन पोर्टल चुनें',
+    mr: 'तुमचे ऑपरेशनल मिशन पोर्टल निवडा',
+  },
+  {
+    en: 'ISRO & INCOIS Marine Intelligence Platform',
+    hi: 'इसरो (ISRO) एवं इनकोइस (INCOIS) सागरीय बुद्धिमत्ता मंच',
+    mr: 'इस्रो (ISRO) आणि इनकोइस (INCOIS) सागरी बुद्धिमत्ता मंच',
+  },
+  {
+    en: "SAMUDRA orchestrates India's oceanographic, meteorological, and regulatory data into deterministic voyage advisories, risk evaluations, and maritime surveillance.",
+    hi: 'समुद्र (SAMUDRA) भारत के समुद्र विज्ञान, मौसम विज्ञान और नियामक डेटा को निश्चित यात्रा सलाह, जोखिम मूल्यांकन और समुद्री निगरानी में संयोजित करता है।',
+    mr: 'समुद्र (SAMUDRA) भारताचा समुद्रशास्त्र, हवामानशास्त्र आणि नियामक डेटा निश्चित प्रवास सल्ले, जोखीम मूल्यांकन आणि सागरी पाळतीमध्ये एकत्रित करतो.',
+  },
+  {
+    en: 'Artisanal Fishers & Vessel Skippers',
+    hi: 'पारंपरिक मछुआरे और नौका नाविक',
+    mr: 'पारंपारिक मच्छीमार आणि बोट चालक',
+  },
+  {
+    en: 'Fisher Console',
+    hi: 'मत्स्य पालन कंसोल',
+    mr: 'मच्छीमार कन्सोल',
+  },
+  {
+    en: 'Purpose-built for coastal fishermen and vessel operators preparing to depart harbor. Answers operational voyage questions with rigid safety thresholds and vernacular voice support.',
+    hi: 'बंदरगाह से प्रस्थान करने वाले तटीय मछुआरों और नौका चालकों के लिए विशेष निर्मित। कठोर सुरक्षा सीमाओं और क्षेत्रीय भाषा में वॉयस समर्थन के साथ परिचालन प्रश्नों का उत्तर देता है।',
+    mr: 'बंदरातून प्रस्थान करणाऱ्या किनारपट्टीवरील मच्छीमार आणि बोट चालकांसाठी खास तयार केलेले. कडक सुरक्षा मर्यादा आणि स्थानिक भाषा व्हॉइस सहाय्यासह सागरी प्रश्नांची उत्तरे देतो.',
+  },
+  {
+    en: 'Departure Safety Status:',
+    hi: 'प्रस्थान सुरक्षा स्थिति:',
+    mr: 'प्रस्थान सुरक्षा स्थिती:',
+  },
+  {
+    en: 'Instant GO / CAUTION / NO-GO verdicts.',
+    hi: 'त्वरित GO / CAUTION / NO-GO सुरक्षा निर्णय।',
+    mr: 'त्वरित GO / CAUTION / NO-GO सुरक्षा निर्णय.',
+  },
+  {
+    en: 'Potential Fishing Zones (PFZ):',
+    hi: 'संभावित मत्स्य क्षेत्र (PFZ):',
+    mr: 'संभाव्य मासेमारी क्षेत्र (PFZ):',
+  },
+  {
+    en: 'Distance, bearing, SST, and chlorophyll gradients.',
+    hi: 'दूरी, दिशा, समुद्री तापमान (SST) और क्लोरोफिल प्रवणता।',
+    mr: 'अंतर, दिशा, सागरी तापमान (SST) आणि क्लोरोफिल प्रमाण.',
+  },
+  {
+    en: 'Mission Twin What-If:',
+    hi: 'मिशन ट्विन काल्पनिक सिमुलेशन:',
+    mr: 'मिशन ट्विन व्हॉट-इफ मॉडेलिंग:',
+  },
+  {
+    en: 'Test departure delay windows (+2h, +4h) and craft types.',
+    hi: 'प्रस्थान विलंब (+2 घंटे, +4 घंटे) और नौका प्रकारों का परीक्षण करें।',
+    mr: 'प्रस्थान विलंब (+2 तास, +4 तास) आणि बोट प्रकारांची चाचणी घ्या.',
+  },
+  {
+    en: 'Voice Calls with VAD:',
+    hi: 'VAD युक्त वॉयस कॉल:',
+    mr: 'VAD सह व्हॉइस कॉलिंग:',
+  },
+  {
+    en: 'Bidirectional audio assistance in Hindi, Marathi, and English.',
+    hi: 'हिंदी, मराठी और अंग्रेजी में द्विदिशीय ऑडियो सहायता।',
+    mr: 'हिंदी, मराठी आणि इंग्रजीमध्ये दुहेरी ऑडिओ सहाय्य.',
+  },
+  {
+    en: 'Corridor Optimization:',
+    hi: 'जलमार्ग गलियारा अनुकूलन:',
+    mr: 'सागरी मार्ग अनुकूलन:',
+  },
+  {
+    en: 'Compare Safest vs. Direct vs. Balanced route options.',
+    hi: 'सुरक्षिततम, सीधा और संतुलित समुद्री मार्गों की तुलना करें।',
+    mr: 'सर्वात सुरक्षित, थेट आणि संतुलित सागरी मार्गांची तुलना करा.',
+  },
+  {
+    en: 'Enter Fisher Console',
+    hi: 'मत्स्य कंसोल में प्रवेश करें',
+    mr: 'मच्छीमार कन्सोल उघडा',
+  },
+  {
+    en: 'Port Officials & Maritime Authorities',
+    hi: 'पत्तन अधिकारी और समुद्री नियामक प्राधिकरण',
+    mr: 'बंदर अधिकारी आणि सागरी प्राधिकरण',
+  },
+  {
+    en: 'Authority Command Deck',
+    hi: 'प्राधिकरण कमान डेक',
+    mr: 'प्राधिकरण कमांड डेक',
+  },
+  {
+    en: 'Dedicated command interface for Port Authorities, Fisheries Departments, and Coastal Disaster Management teams auditing fleet compliance and active hazard sectors.',
+    hi: 'पत्तन प्राधिकरण, मत्स्य विभाग और तटीय आपदा प्रबंधन टीमों के लिए समर्पित कमान इंटरफ़ेस, जो नौका अनुपालन और सक्रिय खतरा क्षेत्रों का ऑडिट करता है।',
+    mr: 'बंदर प्राधिकरण, मत्स्य व्यवसाय विभाग आणि किनारपट्टी आपत्ती व्यवस्थापन पथकांसाठी समर्पित कमांड इंटरफेस, जो नौकांचे नियमन आणि धोक्याच्या क्षेत्रांचे परीक्षण करतो.',
+  },
+  {
+    en: 'Coastal Sector Surveillance:',
+    hi: 'तटीय क्षेत्र निगरानी:',
+    mr: 'किनारपट्टी क्षेत्र पाळत:',
+  },
+  {
+    en: 'Monitor Ratnagiri, Malvan, Goa, and Mumbai waters.',
+    hi: 'रत्नागिरी, मालवण, गोवा और मुंबई जलक्षेत्र की निगरानी करें।',
+    mr: 'रत्नागिरी, मालवण, गोवा आणि मुंबई सागरी क्षेत्रावर पाळत ठेवा.',
+  },
+  {
+    en: 'Live Hazard Polygons:',
+    hi: 'लाइव खतरा क्षेत्र पॉलीगॉन:',
+    mr: 'थेट धोक्याचे सागरी पट्टे:',
+  },
+  {
+    en: 'Track IMD squall warnings, MPAs, and naval firing areas.',
+    hi: 'IMD तूफान चेतावनियों, समुद्री संरक्षित क्षेत्रों और नौसैनिक फायरिंग रेंजों को ट्रैक करें।',
+    mr: 'IMD वादळी इशारे, सागरी संरक्षित क्षेत्रे आणि नौदल फायरिंग क्षेत्रांचा मागोवा घ्या.',
+  },
+  {
+    en: 'Evidence & Provenance Audit:',
+    hi: 'साक्ष्य एवं डेटा स्रोत ऑडिट:',
+    mr: 'पुरावे आणि माहिती स्रोत ऑडिट:',
+  },
+  {
+    en: 'Direct in-page inspection of official INCOIS/IMD feeds.',
+    hi: 'आधिकारिक INCOIS/IMD डेटा फ़ीड का सीधा पृष्ठ पर निरीक्षण।',
+    mr: 'अधिकृत INCOIS/IMD डेटा फीडची थेट तपासणी.',
+  },
+  {
+    en: 'Autonomous Reasoning Trail:',
+    hi: 'स्वायत्त एजेंट निष्पादन निशान:',
+    mr: 'स्वायत्त एजंट अंमलबजावणी माग:',
+  },
+  {
+    en: 'Full LangGraph agent execution trace logs.',
+    hi: 'संपूर्ण LangGraph एजेंट निष्पादन ट्रेस लॉग।',
+    mr: 'संपूर्ण LangGraph एजंट अंमलबजावणी ट्रेस लॉग.',
+  },
+  {
+    en: 'Surveillance Query Terminal:',
+    hi: 'निगरानी प्रश्न टर्मिनल:',
+    mr: 'पाळत ठेवणे प्रश्न टर्मिनल:',
+  },
+  {
+    en: 'Run regional simulations and query decision records.',
+    hi: 'क्षेत्रीय सिमुलेशन चलाएं और निर्णय अभिलेखों की खोज करें।',
+    mr: 'प्रादेशिक सिम्युलेशन चालवा आणि निर्णय नोंदी तपासा.',
+  },
+  {
+    en: 'Enter Authority Deck',
+    hi: 'प्राधिकरण डेक में प्रवेश करें',
+    mr: 'प्राधिकरण डेक उघडा',
+  },
+  {
+    en: 'Deterministic Marine Decision Engine · Complying with Official Government Feeds (INCOIS OSF, PFZ, SVAS, IMD Marine)',
+    hi: 'निश्चित सागरी निर्णय इंजन · आधिकारिक सरकारी फ़ीड (INCOIS OSF, PFZ, SVAS, IMD Marine) के अनुरूप',
+    mr: 'निश्चित सागरी निर्णय इंजिन · अधिकृत सरकारी माहिती फीड (INCOIS OSF, PFZ, SVAS, IMD Marine) शी सुसंगत',
+  },
+
+  // --- FISHER WORKSPACE & VOYAGE CONTROLS ---
+  {
+    en: 'Advisory Chat',
+    hi: 'सलाहकार चैट',
+    mr: 'सल्लागार चॅट',
+  },
+  {
+    en: 'Voyage Settings',
+    hi: 'यात्रा सेटिंग्स',
+    mr: 'प्रवास सेटिंग्ज',
+  },
+  {
+    en: 'Voyage controls',
+    hi: 'यात्रा नियंत्रण',
+    mr: 'प्रवास नियंत्रणे',
+  },
+  {
+    en: 'Mission context',
+    hi: 'मिशन संदर्भ',
+    mr: 'मिशन संदर्भ',
+  },
+  {
+    en: 'Departure harbor',
+    hi: 'प्रस्थान बंदरगाह',
+    mr: 'प्रस्थान बंदर',
+  },
+  {
+    en: 'Vessel profile',
+    hi: 'नौका प्रोफ़ाइल',
+    mr: 'बोट प्रोफाइल',
+  },
+  {
+    en: 'Traditional craft',
+    hi: 'पारंपरिक नाव',
+    mr: 'पारंपारिक नाव',
+  },
+  {
+    en: 'Motorized boat',
+    hi: 'मोटरबोट',
+    mr: 'मोटारबोट',
+  },
+  {
+    en: 'Mechanized trawler',
+    hi: 'यांत्रिक ट्रॉलर',
+    mr: 'यांत्रिकी ट्रॉलर',
+  },
+  {
+    en: 'Traditional',
+    hi: 'पारंपरिक',
+    mr: 'पारंपारिक',
+  },
+  {
+    en: 'Motorized',
+    hi: 'मोटरबोट',
+    mr: 'मोटारबोट',
+  },
+  {
+    en: 'Trawler',
+    hi: 'ट्रॉलर',
+    mr: 'ट्रॉलर',
+  },
+  {
+    en: 'Voyage departure parameters and craft profile for deterministic marine safety calculation.',
+    hi: 'निश्चित समुद्री सुरक्षा गणना के लिए यात्रा प्रस्थान पैरामीटर और नौका प्रोफ़ाइल।',
+    mr: 'निश्चित सागरी सुरक्षा गणनेसाठी प्रवास प्रस्थान मापदंड आणि बोट प्रोफाइल.',
+  },
+  {
+    en: 'Edit Voyage',
+    hi: 'यात्रा बदलें',
+    mr: 'प्रवास बदला',
+  },
+  {
+    en: 'Toggle voyage settings',
+    hi: 'यात्रा सेटिंग्स चालू/बंद करें',
+    mr: 'प्रवास सेटिंग्ज उघडा',
+  },
+
+  // --- WHAT-IF SIMULATOR ---
+  {
+    en: 'Mission Twin What-If Simulator',
+    hi: 'मिशन ट्विन काल्पनिक सिमुलेटर',
+    mr: 'मिशन ट्विन व्हॉट-इफ सिम्युलेटर',
+  },
+  {
+    en: 'Test departure delay windows and vessel craft types for risk reduction',
+    hi: 'जोखिम कम करने के लिए प्रस्थान विलंब समय और नौका प्रकारों का परीक्षण करें',
+    mr: 'धोका कमी करण्यासाठी प्रस्थान विलंब वेळ आणि बोट प्रकारांची चाचणी घ्या',
+  },
+  {
+    en: 'Departure delay window:',
+    hi: 'प्रस्थान विलंब अवधि:',
+    mr: 'प्रस्थान विलंब वेळ:',
+  },
+  {
+    en: 'Craft profile override:',
+    hi: 'नौका प्रकार बदलें:',
+    mr: 'बोट प्रकार बदला:',
+  },
+  {
+    en: 'Optimization target:',
+    hi: 'अनुकूलन लक्ष्य:',
+    mr: 'अनुकूलन उद्दिष्ट:',
+  },
+  {
+    en: 'Simulate What-If Scenario',
+    hi: 'काल्पनिक परिदृश्य सिमुलेट करें',
+    mr: 'व्हॉट-इफ परिस्थिती सिम्युलेट करा',
+  },
+  {
+    en: 'Simulating Twin...',
+    hi: 'सिमुलेशन जारी है...',
+    mr: 'सिम्युलेशन सुरू आहे...',
+  },
+  {
+    en: 'Apply Selected Parameters',
+    hi: 'चयनित पैरामीटर लागू करें',
+    mr: 'निवडलेले मापदंड लागू करा',
+  },
+  {
+    en: 'Applied to Mission Context',
+    hi: 'मिशन संदर्भ में लागू किया गया',
+    mr: 'मिशन संदर्भामध्ये लागू केले',
+  },
+  {
+    en: 'Coastal Safety',
+    hi: 'तटीय सुरक्षा',
+    mr: 'किनारपट्टी सुरक्षा',
+  },
+  {
+    en: 'Safe Passage',
+    hi: 'सुरक्षित जलमार्ग',
+    mr: 'सुरक्षित प्रवास',
+  },
+  {
+    en: 'PFZ Harvesting',
+    hi: 'मत्स्य संचयन (PFZ)',
+    mr: 'मासेमारी संचयन (PFZ)',
+  },
+  {
+    en: 'Now',
+    hi: 'अभी',
+    mr: 'आता',
+  },
+
+  // --- AUTHORITY COMMAND DECK ---
+  {
+    en: 'Surveillance Sector',
+    hi: 'निगरानी क्षेत्र',
+    mr: 'पाळत क्षेत्र',
+  },
+  {
+    en: 'Sector:',
+    hi: 'क्षेत्र:',
+    mr: 'विभाग:',
+  },
+  {
+    en: 'Advisory Verdict',
+    hi: 'सलाहकार निर्णय',
+    mr: 'सल्लागार निर्णय',
+  },
+  {
+    en: 'Verdict:',
+    hi: 'निर्णय:',
+    mr: 'निर्णय:',
+  },
+  {
+    en: 'Active Hazard Zones',
+    hi: 'सक्रिय खतरा क्षेत्र',
+    mr: 'सक्रिय धोक्याचे क्षेत्र',
+  },
+  {
+    en: 'Hazards',
+    hi: 'खतरे',
+    mr: 'धोके',
+  },
+  {
+    en: 'Official Sources',
+    hi: 'आधिकारिक स्रोत',
+    mr: 'अधिकृत स्रोत',
+  },
+  {
+    en: 'Sources',
+    hi: 'स्रोत',
+    mr: 'स्रोत',
+  },
+  {
+    en: 'Agent Execution',
+    hi: 'एजेंट निष्पादन',
+    mr: 'एजंट अंमलबजावणी',
+  },
+  {
+    en: 'Steps',
+    hi: 'कदम',
+    mr: 'पायऱ्या',
+  },
+  {
+    en: 'Audit Terminal',
+    hi: 'ऑडिट टर्मिनल',
+    mr: 'ऑडिट टर्मिनल',
+  },
+  {
+    en: 'Fleet Surveillance',
+    hi: 'नौका बेड़ा निगरानी',
+    mr: 'नौका दल पाळत',
+  },
+  {
+    en: 'Benchmark Runner',
+    hi: 'मानदंड धावक',
+    mr: 'बेंचमार्क चाचणी',
+  },
+  {
+    en: 'Evidence & Trace',
+    hi: 'साक्ष्य व ट्रेस',
+    mr: 'पुरावे व ट्रेस',
+  },
+  {
+    en: 'Surveillance Query Terminal',
+    hi: 'निगरानी प्रश्न टर्मिनल',
+    mr: 'पाळत ठेवणे प्रश्न टर्मिनल',
+  },
+  {
+    en: 'Reset',
+    hi: 'रीसेट',
+    mr: 'रीसेट',
+  },
+  {
+    en: 'Verified Official Evidence',
+    hi: 'सत्यापित आधिकारिक साक्ष्य',
+    mr: 'सत्यापित अधिकृत पुरावे',
+  },
+  {
+    en: 'No active evidence items. Run an advisory query to inspect official telemetry.',
+    hi: 'कोई सक्रिय साक्ष्य उपलब्ध नहीं है। आधिकारिक डेटा देखने के लिए सलाह प्रश्न पूछें।',
+    mr: 'सध्या कोणतेही सक्रिय पुरावे नाहीत. अधिकृत माहिती तपासण्यासाठी प्रश्न विचारा.',
+  },
+  {
+    en: 'Active System Warnings & Fallbacks',
+    hi: 'सक्रिय सिस्टम चेतावनियां और फ़ॉलबैक',
+    mr: 'सक्रिय चेतावणी आणि पर्यायी माहिती',
+  },
+  {
+    en: 'Autonomous Agent Execution Trail',
+    hi: 'स्वायत्त एजेंट निष्पादन निशान',
+    mr: 'स्वायत्त एजंट अंमलबजावणी माग',
+  },
+  {
+    en: 'No trace recorded. Queries processed by the cognitive graph will log execution steps here.',
+    hi: 'कोई ट्रेस दर्ज नहीं है। एजेंट द्वारा संसाधित प्रश्नों के निष्पादन चरण यहाँ दर्ज होंगे।',
+    mr: 'कोणताही ट्रेस नोंदवला गेला नाही. एजंटद्वारे तपासलेल्या प्रश्नांची पायऱ्या येथे दिसतील.',
+  },
+
+  // --- FLEET TRACKING DECK ---
+  {
+    en: 'Maritime Fleet Surveillance & Trajectory Replay',
+    hi: 'समुद्री नौका बेड़ा निगरानी और प्रक्षेपवक्र रीप्ले',
+    mr: 'सागरी नौका दल पाळत आणि जलमार्ग रीप्ले',
+  },
+  {
+    en: 'Auditing active coastal vessel positions, time-series GPS replay logs, and multi-agency broadcast alerts.',
+    hi: 'सक्रिय तटीय पोत स्थितियों, जीपीएस रीप्ले लॉग और बहु-एजेंसी प्रसारण अलर्ट का ऑडिट।',
+    mr: 'सक्रिय नौकांचे स्थान, जीपीएस रीप्ले नोंदी आणि अधिकृत सागरी संदेशांचे परीक्षण.',
+  },
+  {
+    en: 'Monitored Coastal Fleet',
+    hi: 'निगरानी अधीन तटीय नौका बेड़ा',
+    mr: 'पाळतीखालील किनारपट्टी नौका दल',
+  },
+  {
+    en: 'Length:',
+    hi: 'लंबाई:',
+    mr: 'लांबी:',
+  },
+  {
+    en: 'Home:',
+    hi: 'बंदरगाह:',
+    mr: 'मूळ बंदर:',
+  },
+  {
+    en: 'Engine:',
+    hi: 'इंजन:',
+    mr: 'इंजिन:',
+  },
+  {
+    en: 'GPS Trajectory Replay',
+    hi: 'जीपीएस प्रक्षेपवक्र रीप्ले',
+    mr: 'जीपीएस जलमार्ग रीप्ले',
+  },
+  {
+    en: 'Pause',
+    hi: 'रोकें',
+    mr: 'थांबवा',
+  },
+  {
+    en: 'Play',
+    hi: 'चलाएं',
+    mr: 'सुरू करा',
+  },
+  {
+    en: 'Reset to departure',
+    hi: 'प्रस्थान स्थिति पर रीसेट करें',
+    mr: 'प्रस्थान स्थितीवर रीसेट करा',
+  },
+  {
+    en: 'Start',
+    hi: 'प्रारंभ',
+    mr: 'सुरुवात',
+  },
+  {
+    en: 'End',
+    hi: 'समाप्त',
+    mr: 'शेवट',
+  },
+  {
+    en: 'Speed:',
+    hi: 'गति:',
+    mr: 'वेग:',
+  },
+  {
+    en: 'Heading:',
+    hi: 'दिशा:',
+    mr: 'दिशा:',
+  },
+  {
+    en: 'Pos:',
+    hi: 'स्थान:',
+    mr: 'स्थान:',
+  },
+  {
+    en: 'Maritime Broadcast Alerts',
+    hi: 'समुद्री प्रसारण चेतावनियां',
+    mr: 'सागरी प्रसारण संदेश',
+  },
+  {
+    en: 'Role:',
+    hi: 'भूमिका:',
+    mr: 'भूमिका:',
+  },
+
+  // --- BENCHMARK RUNNER ---
+  {
+    en: 'LangGraph Scenario Benchmark Runner',
+    hi: 'लैंगग्राफ परिदृश्य बेंचमार्क धावक',
+    mr: 'LangGraph परिस्थिती बेंचमार्क चाचणी',
+  },
+  {
+    en: 'Automated end-to-end evaluation suite testing canonical multi-agent marine scenarios against live pipeline rules.',
+    hi: 'लाइव पाइपलाइन नियमों के विरुद्ध मानक मल्टी-एजेंट समुद्री परिदृश्यों का स्वचालित संपूर्ण परीक्षण सुइट।',
+    mr: 'थेट नियमांनुसार सागरी मल्टी-एजंट परिस्थितींचे स्वयंचलित मूल्यमापन.',
+  },
+  {
+    en: 'Canonical Test Scenarios',
+    hi: 'मानक परीक्षण परिदृश्य',
+    mr: 'प्रामाणिक चाचणी परिस्थिती',
+  },
+  {
+    en: 'Run Benchmark Test',
+    hi: 'बेंचमार्क परीक्षण चलाएं',
+    mr: 'बेंचमार्क चाचणी चालवा',
+  },
+  {
+    en: 'Executing Graph...',
+    hi: 'एजेंट निष्पादित हो रहा है...',
+    mr: 'एजंट प्रक्रिया सुरू आहे...',
+  },
+  {
+    en: 'Standard Query:',
+    hi: 'मानक प्रश्न:',
+    mr: 'प्रामाणिक प्रश्न:',
+  },
+  {
+    en: 'Target Intent',
+    hi: 'लक्षित उद्देश्य',
+    mr: 'उद्दिष्ट प्रकार',
+  },
+  {
+    en: 'Expected Status',
+    hi: 'अपेक्षित स्थिति',
+    mr: 'अपेक्षित स्थिती',
+  },
+  {
+    en: 'Confidence Bar',
+    hi: 'विश्वास स्तर',
+    mr: 'विश्वासार्हता स्तर',
+  },
+  {
+    en: 'Harbor Sector',
+    hi: 'बंदरगाह क्षेत्र',
+    mr: 'बंदर विभाग',
+  },
+  {
+    en: 'TEST SUITE PASSED',
+    hi: 'परीक्षण सुइट उत्तीर्ण',
+    mr: 'चाचणी यशस्वी',
+  },
+  {
+    en: 'TEST SUITE FAILED',
+    hi: 'परीक्षण सुइट विफल',
+    mr: 'चाचणी अयशस्वी',
+  },
+  {
+    en: 'Pipeline Verification:',
+    hi: 'पाइपलाइन सत्यापन:',
+    mr: 'पाइपलाइन पडताळणी:',
+  },
+  {
+    en: 'execution steps',
+    hi: 'निष्पादन चरण',
+    mr: 'अंमलबजावणी पायऱ्या',
+  },
+  {
+    en: 'evidence records',
+    hi: 'साक्ष्य रिकॉर्ड',
+    mr: 'पुरावे नोंदी',
+  },
+  {
+    en: 'Status Match',
+    hi: 'स्थिति मिलान',
+    mr: 'स्थिती जुळणी',
+  },
+  {
+    en: 'Intent Match',
+    hi: 'उद्देश्य मिलान',
+    mr: 'उद्दिष्ट जुळणी',
+  },
+  {
+    en: 'Evidence Grounding',
+    hi: 'साक्ष्य आधार',
+    mr: 'पुरावा आधार',
+  },
+  {
+    en: 'Confidence Level',
+    hi: 'विश्वास स्तर',
+    mr: 'विश्वास पातळी',
+  },
+  {
+    en: '100% Grounded',
+    hi: '100% प्रमाणित',
+    mr: '१००% प्रमाणित',
+  },
+  {
+    en: 'Unverified',
+    hi: 'असत्यापित',
+    mr: 'अप्रमाणित',
+  },
+  {
+    en: 'Executed LangGraph Tools:',
+    hi: 'निष्पादित टूल्स (LangGraph Tools):',
+    mr: 'वापरलेले टूल्स (LangGraph Tools):',
+  },
+  {
+    en: 'Composed Advisory Output:',
+    hi: 'तैयार की गई सलाह (Advisory Output):',
+    mr: 'तयार केलेला सल्ला (Advisory Output):',
+  },
+  {
+    en: 'Validation Criteria Check:',
+    hi: 'सत्यापन मानदंड जांच:',
+    mr: 'पडताळणी निकष तपासणी:',
+  },
+  {
+    en: 'Select an evaluation scenario from the left and click "Run Benchmark Test" to execute the backend LangGraph agent pipeline and audit the response in real time.',
+    hi: 'बाईं ओर से एक परीक्षण परिदृश्य चुनें और बैकएंड LangGraph एजेंट पाइपलाइन को निष्पादित करने और वास्तविक समय में प्रतिक्रिया का ऑडिट करने के लिए "बेंचमार्क परीक्षण चलाएं" पर क्लिक करें।',
+    mr: 'डाव्या बाजूने चाचणी परिस्थिती निवडा आणि बॅकएंड LangGraph एजंट चालवून रिअल-टाइममध्ये उत्तराचे परीक्षण करण्यासाठी "बेंचमार्क चाचणी चालवा" वर क्लिक करा.',
+  },
+
+  // --- MAP & LAYERS ---
+  {
+    en: 'Map Layers',
+    hi: 'मानचित्र परतें',
+    mr: 'नकाशा स्तर',
+  },
+  {
+    en: 'Safety Critical',
+    hi: 'सुरक्षा महत्वपूर्ण',
+    mr: 'सुरक्षिततेसाठी महत्त्वाचे',
+  },
+  {
+    en: 'Navigation & Operational',
+    hi: 'नेविगेशन व संचालन',
+    mr: 'नेव्हिगेशन व संचलन',
+  },
+  {
+    en: 'Current status:',
+    hi: 'वर्तमान स्थिति:',
+    mr: 'सध्याची स्थिती:',
+  },
+  {
+    en: 'Simulate counterfactual voyage parameters (temporal window, vessel limits) against deterministic risk rules.',
+    hi: 'निश्चित जोखिम नियमों के विरुद्ध काल्पनिक यात्रा मापदंडों (समय खिड़की, पोत सीमाएं) का अनुकरण करें।',
+    mr: 'निश्चित जोखीम नियमांविरूद्ध काल्पनिक प्रवास मापदंड (वेळ, बोट मर्यादा) सिम्युलेट करा.',
+  },
+  {
+    en: 'Departure window offset:',
+    hi: 'प्रस्थान समय विलंब:',
+    mr: 'प्रस्थान वेळ विलंब:',
+  },
+  {
+    en: 'Objective',
+    hi: 'उद्देश्य',
+    mr: 'उद्दिष्ट',
+  },
+  {
+    en: 'Simulating...',
+    hi: 'सिमुलेशन जारी है...',
+    mr: 'सिम्युलेशन सुरू आहे...',
+  },
+  {
+    en: 'Baseline',
+    hi: 'मूल आधार',
+    mr: 'मूळ स्थिती',
+  },
+  {
+    en: 'Simulated',
+    hi: 'सिम्युलेटेड',
+    mr: 'सिम्युलेटेड',
+  },
+  {
+    en: 'Profile Applied',
+    hi: 'प्रोफ़ाइल लागू किया गया',
+    mr: 'प्रोफाइल लागू केले',
+  },
+  {
+    en: 'Apply simulated craft to mission context',
+    hi: 'मिशन संदर्भ में सिम्युलेटेड नाव लागू करें',
+    mr: 'मिशन संदर्भात सिम्युलेटेड बोट लागू करा',
+  },
+  {
+    en: 'Canonical Evaluation Scenarios (S1–S8 Benchmark Runner)',
+    hi: 'मानक मूल्यांकन परिदृश्य (S1–S8 बेंचमार्क रनर)',
+    mr: 'प्रामाणिक मूल्यमापन परिस्थिती (S1–S8 बेंचमार्क रनर)',
+  },
+  {
+    en: 'Execute deterministic evaluation pipelines on the LangGraph agent graph to verify safety decisions, evidence grounding, and rule compliance.',
+    hi: 'सुरक्षा निर्णयों, साक्ष्य आधार और नियम अनुपालन को सत्यापित करने के लिए LangGraph एजेंट पर मूल्यांकन पाइपलाइन चलाएं।',
+    mr: 'सुरक्षा निर्णय, पुरावे आणि नियम पडताळणीसाठी LangGraph एजंटवर मूल्यमापन पाइपलाइन चालवा.',
+  },
+  {
+    en: 'Evaluation Benchmarks',
+    hi: 'मूल्यांकन बेंचमार्क',
+    mr: 'मूल्यमापन बेंचमार्क',
+  },
+  {
+    en: 'Scenario Specification',
+    hi: 'परिदृश्य विनिर्देश',
+    mr: 'परिस्थिती तपशील',
+  },
+  {
+    en: 'Actual:',
+    hi: 'वास्तविक:',
+    mr: 'वास्तविक:',
+  },
+  {
+    en: 'Expected:',
+    hi: 'अपेक्षित:',
+    mr: 'अपेक्षित:',
+  },
+  {
+    en: 'Harbor:',
+    hi: 'बंदरगाह:',
+    mr: 'बंदर:',
+  },
+  {
+    en: 'Ask a mission question to view its PFZ, route, and safety layers here.',
+    hi: 'मानचित्र पर PFZ, मार्ग और सुरक्षा परतें देखने के लिए मिशन संबंधी प्रश्न पूछें।',
+    mr: 'नकाशावर PFZ, मार्ग आणि सुरक्षा स्तर पाहण्यासाठी प्रश्न विचारा.',
+  },
+  {
+    en: 'Mission map & corridors',
+    hi: 'मिशन मानचित्र व गलियारे',
+    mr: 'मिशन नकाशा व जलमार्ग',
+  },
+  {
+    en: 'Operational Strategy:',
+    hi: 'परिचालन रणनीति:',
+    mr: 'कार्यपद्धती धोरण:',
+  },
+  {
+    en: 'Min Risk',
+    hi: 'न्यूनतम जोखिम',
+    mr: 'किमान धोका',
+  },
+  {
+    en: 'Optimal',
+    hi: 'इष्टतम',
+    mr: 'सर्वोत्तम',
+  },
+  {
+    en: 'Fastest',
+    hi: 'तीव्रतम',
+    mr: 'सर्वात जलद',
+  },
+  {
+    en: 'Maximizes distance from squall advisory & naval firing buffers',
+    hi: 'तूफान चेतावनी और नौसेना फायरिंग बफ़र्स से दूरी को अधिकतम करता है',
+    mr: 'वादळ चेतावणी आणि नौदल क्षेत्रांपासून अंतर जास्तीत जास्त ठेवते',
+  },
+  {
+    en: 'Balanced transit time & wave height exposure along coast',
+    hi: 'तट के साथ पारगमन समय और लहर की ऊंचाई का संतुलित समन्वय',
+    mr: 'किनाऱ्यालगत प्रवासाची वेळ आणि लाटांचा समतोल समन्वय',
+  },
+  {
+    en: 'Direct bearing to target PFZ coordinate (highest weather sensitivity)',
+    hi: 'लक्षित PFZ निर्देशांक के लिए सीधा मार्ग (मौसम के प्रति उच्चतम संवेदनशीलता)',
+    mr: 'लक्ष्य PFZ कडे थेट मार्ग (हवामानास अत्यंत संवेदनशील)',
+  },
+  {
+    en: 'Routes',
+    hi: 'जलमार्ग',
+    mr: 'सागरी मार्ग',
+  },
+  {
+    en: 'Est. Distance:',
+    hi: 'अनुमानित दूरी:',
+    mr: 'अंदाजे अंतर:',
+  },
 ];
 
 const CRAFT_TRANSLATIONS: Record<string, { hi: string; mr: string }> = {
