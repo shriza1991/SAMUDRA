@@ -90,6 +90,24 @@ Anchor the P0 MVP implementation around Ratnagiri, Malvan, and the Konkan marine
 Reason:
 Allows deep, end-to-end multi-source validation across real coastal landing centres before scaling nationally.
 
+## D014 — Frontend UI Standardization on shadcn/ui & Radix UI Primitives
+Status: ACCEPTED
+
+Decision:
+Standardize all frontend interactive components on shadcn/ui primitives backed by Radix UI and Tailwind CSS v4, replacing bespoke CSS implementations across cards, dialogs, badges, tabs, selects, sliders, textareas, switches, and alerts. Preserve SAMUDRA marine design tokens and dual-theme high-contrast safety palettes via semantic CSS variable mapping in `globals.css`.
+
+Reason:
+Guarantees WAI-ARIA compliance, focus trapping, keyboard navigation, accessible dialog semantics, and robust visual consistency across both desktop authority decks and mobile fisher views without custom wheel reinvention.
+
+Alternatives:
+1. Continue maintaining bespoke custom CSS classes/inline styles (rejected: poor accessibility, maintenance burden, styling inconsistencies).
+2. Heavy third-party component suites like MUI or AntD (rejected: bundle bloat, inflexible styling overrides against marine tokens).
+
+Impact:
+All UI primitives reside in `frontend/src/components/ui/` with full ownership in the codebase; Tailwind CSS v4 handles utility styling; all existing contracts, vernacular labels, and visual fidelity are preserved with zero regression.
+Owner: M1 Frontend
+Date: 2026-09-13
+
 ## Decision template
 ### D0XX — <title>
 Status: PROPOSED / ACCEPTED / REJECTED
@@ -99,4 +117,5 @@ Alternatives:
 Impact:
 Owner:
 Date:
+
 
