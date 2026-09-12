@@ -62,6 +62,7 @@ export default function App() {
         theme={theme}
         onThemeToggle={toggleTheme}
         currentPortal={portal}
+        onLogout={() => setPortal('selection')}
         onReturnToPortal={() => setPortal('selection')}
       />
 

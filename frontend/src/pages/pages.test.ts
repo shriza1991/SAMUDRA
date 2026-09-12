@@ -25,4 +25,32 @@ describe('Persona Pages: Fisher & Authority Modular Separation with Portal Selec
     expect(roles[0]).toBe('fisher');
     expect(roles[1]).toBe('authority');
   });
+
+  it('verifies portal acts as the single entrypoint for switching personas', () => {
+    type PortalMode = 'selection' | 'fisher' | 'authority';
+    let currentPortal: PortalMode = 'selection';
+
+    const onSelectRole = (role: 'fisher' | 'authority') => {
+      currentPortal = role;
+    };
+    const onLogout = () => {
+      currentPortal = 'selection';
+    };
+
+    // User chooses Fisher on the single Portal page
+    onSelectRole('fisher');
+    expect(currentPortal).toBe('fisher');
+
+    // User clicks Logout in the top-right header to return to Persona Selection
+    onLogout();
+    expect(currentPortal).toBe('selection');
+
+    // User chooses Authority on the single Portal page
+    onSelectRole('authority');
+    expect(currentPortal).toBe('authority');
+
+    // User clicks Logout again
+    onLogout();
+    expect(currentPortal).toBe('selection');
+  });
 });

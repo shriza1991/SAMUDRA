@@ -680,31 +680,31 @@
   color: var(--color-accent);
 }
 
-.header-back-portal-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 3px 9px;
-  border-radius: var(--radius-full);
-  background: var(--color-bg-tertiary);
-  border: 1px solid var(--color-border);
-  color: var(--color-text-muted);
-  font-size: var(--font-size-xs);
-  font-weight: 500;
-  cursor: pointer;
-  transition: all var(--transition-fast);
-}
-
-.header-back-portal-btn:hover {
-  background: var(--color-bg-secondary);
-  border-color: var(--color-accent);
-  color: var(--color-accent);
-}
-
 .app-tagline {
   margin: 2px 0 0;
   font-size: var(--font-size-sm);
   color: var(--color-text-dim);
+}
+
+.header-logout-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: var(--radius-md);
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.header-logout-btn:hover {
+  background: var(--color-no-go-bg);
+  border-color: var(--color-no-go);
+  color: var(--color-no-go);
 }
 
 .header-page-nav {

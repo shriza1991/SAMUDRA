@@ -1,17 +1,17 @@
-import { Anchor, Building2, Fish, ShipWheel } from 'lucide-react';
+import { Anchor, ShipWheel } from 'lucide-react';
 import type { DecisionDiff, MissionContext, OperationalRole, WhatIfParameters } from '../../types/mission';
 import type { SupportedLanguage } from '../../i18n/translations';
 import WhatIfSimulator from './WhatIfSimulator';
 
 interface MissionContextPanelProps {
   context: MissionContext;
-  role: OperationalRole;
+  role?: OperationalRole;
   currentStatus?: string;
   language?: SupportedLanguage;
   isLoading?: boolean;
   activeDiff?: DecisionDiff | null;
   onContextChange: (context: MissionContext) => void;
-  onRoleChange: (role: OperationalRole) => void;
+  onRoleChange?: (role: OperationalRole) => void;
   onSimulate?: (params: WhatIfParameters, queryText: string) => void;
 }
 
@@ -25,13 +25,11 @@ const CRAFT_PROFILES = [
 
 export default function MissionContextPanel({
   context,
-  role,
   currentStatus,
   language = 'en',
   isLoading = false,
   activeDiff,
   onContextChange,
-  onRoleChange,
   onSimulate,
 }: MissionContextPanelProps) {
   const setHarbor = (origin_harbor: string) => onContextChange({ ...context, origin_harbor });
@@ -41,29 +39,10 @@ export default function MissionContextPanel({
     <section className="mission-context-panel" aria-label="Mission context and dashboard view">
       <div className="mission-context-heading">
         <div>
-          <span className="mission-context-eyebrow">Operational dashboard</span>
+          <span className="mission-context-eyebrow">Voyage controls</span>
           <h2>Mission context</h2>
         </div>
         <Anchor size={19} aria-hidden="true" />
-      </div>
-
-      <div className="role-switcher" role="group" aria-label="Dashboard view">
-        <button
-          type="button"
-          className={role === 'fisher' ? 'active' : ''}
-          onClick={() => onRoleChange('fisher')}
-          aria-pressed={role === 'fisher'}
-        >
-          <Fish size={15} /> Fisher / Skipper
-        </button>
-        <button
-          type="button"
-          className={role === 'authority' ? 'active' : ''}
-          onClick={() => onRoleChange('authority')}
-          aria-pressed={role === 'authority'}
-        >
-          <Building2 size={15} /> Authority view
-        </button>
       </div>
 
       <div className="mission-context-fields">
@@ -82,9 +61,7 @@ export default function MissionContextPanel({
       </div>
 
       <p className="mission-context-note">
-        {role === 'fisher'
-          ? 'A clear voyage decision with the essential map and evidence.'
-          : 'Expanded evidence, source status, and trace are available for review.'}
+        Voyage departure parameters and craft profile for deterministic marine safety calculation.
       </p>
 
       {onSimulate && (

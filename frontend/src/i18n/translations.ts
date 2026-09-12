@@ -52,6 +52,7 @@ export interface LocaleContent {
   callDetectedLanguage: string;
   callSubtitleUser: string;
   callSubtitleSamudra: string;
+  logoutBtn: string;
 }
 
 
@@ -133,6 +134,7 @@ export const TRANSLATIONS: Record<SupportedLanguage, LocaleContent> = {
     callDetectedLanguage: 'Detected Language',
     callSubtitleUser: 'You',
     callSubtitleSamudra: 'SAMUDRA',
+    logoutBtn: 'Logout',
   },
   hi: {
     appTagline: 'स्मार्ट स्वायत्त सागरी समझ, निर्णय और जोखिम सहायक',
@@ -211,6 +213,7 @@ export const TRANSLATIONS: Record<SupportedLanguage, LocaleContent> = {
     callDetectedLanguage: 'पहचानी गई भाषा',
     callSubtitleUser: 'आप',
     callSubtitleSamudra: 'समुद्र (SAMUDRA)',
+    logoutBtn: 'लॉग आउट',
   },
   mr: {
     appTagline: 'स्मार्ट स्वायत्त सागरी आकलन, निर्णय आणि जोखीम सहाय्यक',
@@ -289,6 +292,7 @@ export const TRANSLATIONS: Record<SupportedLanguage, LocaleContent> = {
     callDetectedLanguage: 'ओळखलेली भाषा',
     callSubtitleUser: 'तुम्ही',
     callSubtitleSamudra: 'समुद्र (SAMUDRA)',
+    logoutBtn: 'लॉग आउट',
   },
 };
 

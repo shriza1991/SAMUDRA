@@ -38,7 +38,6 @@ export default function FisherPage({
           isLoading={chat.isLoading}
           activeDiff={chat.activeDiff}
           onContextChange={chat.setMissionContext}
-          onRoleChange={() => {}}
           onSimulate={chat.simulateWhatIf}
         />
 

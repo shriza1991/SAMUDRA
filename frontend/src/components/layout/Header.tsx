@@ -1,7 +1,7 @@
 import LanguageSelector from './LanguageSelector';
 import DataModeIndicator from './DataModeIndicator';
 import ThemeToggle from './ThemeToggle';
-import { ArrowLeft, FileText, PhoneCall } from 'lucide-react';
+import { FileText, LogOut, PhoneCall } from 'lucide-react';
 import { TRANSLATIONS, type SupportedLanguage } from '../../i18n/translations';
 
 interface HeaderProps {
@@ -13,6 +13,7 @@ interface HeaderProps {
   theme: 'light' | 'dark';
   onThemeToggle: () => void;
   currentPortal?: 'selection' | 'fisher' | 'authority';
+  onLogout?: () => void;
   onReturnToPortal?: () => void;
 }
 
@@ -25,27 +26,16 @@ export default function Header({
   theme,
   onThemeToggle,
   currentPortal = 'selection',
+  onLogout,
   onReturnToPortal,
 }: HeaderProps) {
   const t = TRANSLATIONS[language] || TRANSLATIONS.en;
+  const handleLogout = onLogout || onReturnToPortal;
 
   return (
     <header className="app-header">
       <div className="app-header-left">
-        <div className="app-title-group">
-          <h1 className="app-title">SAMUDRA</h1>
-          {onReturnToPortal && currentPortal !== 'selection' && (
-            <button
-              type="button"
-              className="header-back-portal-btn"
-              onClick={onReturnToPortal}
-              title="Return to Portal Selection"
-            >
-              <ArrowLeft size={13} />
-              <span>Change Portal</span>
-            </button>
-          )}
-        </div>
+        <h1 className="app-title">SAMUDRA</h1>
         <p className="app-tagline">
           {t.appTagline}
         </p>
@@ -76,6 +66,18 @@ export default function Header({
           >
             <FileText size={14} />
             <span>{t.evidenceBtn} ({evidenceCount})</span>
+          </button>
+        )}
+        {currentPortal !== 'selection' && handleLogout && (
+          <button
+            type="button"
+            className="header-logout-btn"
+            onClick={handleLogout}
+            title={t.logoutBtn || 'Logout'}
+            aria-label={t.logoutBtn || 'Logout'}
+          >
+            <LogOut size={14} />
+            <span>{t.logoutBtn || 'Logout'}</span>
           </button>
         )}
       </div>
