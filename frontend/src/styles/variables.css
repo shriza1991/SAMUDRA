@@ -15,6 +15,9 @@
   --color-text-dim: #94a3b8;
   --color-accent: #0284c7;
   --color-accent-hover: #0369a1;
+  --color-accent-text: #ffffff;
+  --color-accent-subtle: rgba(2, 132, 199, 0.1);
+  --color-accent-border: rgba(2, 132, 199, 0.25);
 
   /* Status Colors (Light Mode - vibrant text with soft tinted backgrounds) */
   --color-go: #15803d;
@@ -84,6 +87,9 @@
   --color-text-dim: #64748b;
   --color-accent: #38bdf8;
   --color-accent-hover: #0ea5e9;
+  --color-accent-text: #0b1329;
+  --color-accent-subtle: rgba(56, 189, 248, 0.15);
+  --color-accent-border: rgba(56, 189, 248, 0.3);
 
   /* Status Colors */
   --color-go: #22c55e;
