@@ -6,7 +6,7 @@ import ChatMessage from './ChatMessage';
 import ChatInput from './ChatInput';
 import SamplePrompts from './SamplePrompts';
 import RecommendationBanner from '../recommendation/RecommendationBanner';
-import { Anchor, ArrowLeft, RotateCcw, PhoneCall } from 'lucide-react';
+import { Anchor, ArrowLeft, RotateCcw } from 'lucide-react';
 
 interface ChatPanelProps {
   language: SupportedLanguage;
@@ -58,20 +58,6 @@ export default function ChatPanel({
         <span className="chat-panel-title">{t.chatTitle}</span>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          {onStartCall && (
-            <button
-              type="button"
-              className="call-samudra-trigger-btn"
-              onClick={onStartCall}
-              title={t.callSamudraBtn}
-              aria-label={t.callSamudraBtn}
-            >
-              <span className="call-trigger-pulse-dot" aria-hidden="true" />
-              <PhoneCall size={13} />
-              <span>{t.callSamudraBtn}</span>
-            </button>
-          )}
-
           {messages.length > 0 && onReset && (
             <button
               type="button"

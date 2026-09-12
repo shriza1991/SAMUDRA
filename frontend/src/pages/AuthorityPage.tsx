@@ -7,8 +7,6 @@ import {
   FlaskConical,
   RadioTower,
   RotateCcw,
-  ShieldAlert,
-  ShieldCheck,
   Ship,
 } from 'lucide-react';
 import ChatPanel from '../components/chat/ChatPanel';
@@ -85,20 +83,21 @@ export default function AuthorityPage({
 
   return (
     <div className={`authority-page view-${mobileView}`} role="region" aria-label="Authority Command Deck">
-      {/* Top Authority KPI Deck */}
-      <section className="authority-kpi-bar" aria-label="Operational KPI Overview">
+      {/* Top Authority Command Bar */}
+      <section className="authority-command-bar" aria-label="Operational Command Bar">
         <div className="authority-bar-left">
           <div className="authority-title-row">
-            <Building2 size={18} className="authority-brand-icon" />
-            <div>
-              <h2>Maritime Authority Command Deck</h2>
-              <span className="authority-subtitle">Official Fleet Advisory & Regulatory Surveillance</span>
-            </div>
+            <Building2 size={16} className="authority-brand-icon" />
+            <span className="authority-title">Authority Command Deck</span>
           </div>
 
           <label className="authority-sector-selector">
-            <span>Surveillance Sector</span>
-            <select value={selectedSector} onChange={(e) => setSelectedSector(e.target.value)}>
+            <span className="sector-label">Sector:</span>
+            <select
+              value={selectedSector}
+              onChange={(e) => setSelectedSector(e.target.value)}
+              className="authority-sector-select"
+            >
               {SECTORS.map((s) => (
                 <option key={s} value={s}>{s}</option>
               ))}
@@ -106,51 +105,33 @@ export default function AuthorityPage({
           </label>
         </div>
 
-        {/* 4 Standardized KPI Metric Cards */}
-        <div className="authority-kpis">
-          <div className="authority-kpi-card">
-            <span className="kpi-label">Advisory Verdict</span>
-            <div className="kpi-value-row">
-              {status === 'NO_GO' ? (
-                <ShieldAlert size={15} className="kpi-icon status-no-go" />
-              ) : status === 'CAUTION' ? (
-                <AlertTriangle size={15} className="kpi-icon status-caution" />
-              ) : (
-                <ShieldCheck size={15} className="kpi-icon status-go" />
-              )}
-              <strong className={`status-pill status-${status.toLowerCase().replace('_', '-')}`}>
-                {status.replace('_', '-')}
-              </strong>
-            </div>
+        {/* Compact KPI Pills in a single clean row */}
+        <div className="authority-kpi-chips">
+          <div className="authority-kpi-chip">
+            <span className="chip-label">Verdict:</span>
+            <span className={`status-pill status-${status.toLowerCase().replace('_', '-')}`}>
+              {status.replace('_', '-')}
+            </span>
           </div>
 
-          <div className="authority-kpi-card">
-            <span className="kpi-label">Active Hazard Zones</span>
-            <div className="kpi-value-row">
-              <AlertTriangle size={15} className={hazardLayers.length > 0 ? 'kpi-icon status-no-go' : 'kpi-icon'} />
-              <strong>{hazardLayers.length} Polygons</strong>
-            </div>
+          <div className="authority-kpi-chip">
+            <AlertTriangle size={13} className={hazardLayers.length > 0 ? 'status-no-go' : ''} />
+            <span><strong>{hazardLayers.length}</strong> Hazards</span>
           </div>
 
-          <div className="authority-kpi-card">
-            <span className="kpi-label">Official Sources</span>
-            <div className="kpi-value-row">
-              <FileCheck2 size={15} className="kpi-icon status-accent" />
-              <strong>{evidenceList.length} Verified</strong>
-            </div>
+          <div className="authority-kpi-chip">
+            <FileCheck2 size={13} className="status-accent" />
+            <span><strong>{evidenceList.length}</strong> Sources</span>
           </div>
 
-          <div className="authority-kpi-card">
-            <span className="kpi-label">Agent Execution</span>
-            <div className="kpi-value-row">
-              <Activity size={15} className="kpi-icon status-accent" />
-              <strong>{traceList.length} Steps</strong>
-            </div>
+          <div className="authority-kpi-chip">
+            <Activity size={13} className="status-accent" />
+            <span><strong>{traceList.length}</strong> Steps</span>
           </div>
         </div>
       </section>
 
-      {/* Authority View Switcher Tabs */}
+      {/* Authority View Switcher Tabs - Clean & Concise */}
       <nav className="authority-tab-nav" role="tablist" aria-label="Authority sub-views">
         <button
           type="button"
@@ -159,8 +140,8 @@ export default function AuthorityPage({
           role="tab"
           aria-selected={authorityTab === 'terminal'}
         >
-          <RadioTower size={14} />
-          <span>Regional Audit & Dispatch Terminal</span>
+          <RadioTower size={13} />
+          <span>Audit Terminal</span>
         </button>
         <button
           type="button"
@@ -169,8 +150,8 @@ export default function AuthorityPage({
           role="tab"
           aria-selected={authorityTab === 'fleet'}
         >
-          <Ship size={14} />
-          <span>Fleet Surveillance & Trajectory Replay</span>
+          <Ship size={13} />
+          <span>Fleet Surveillance</span>
         </button>
         <button
           type="button"
@@ -179,8 +160,8 @@ export default function AuthorityPage({
           role="tab"
           aria-selected={authorityTab === 'benchmarks'}
         >
-          <FlaskConical size={14} />
-          <span>Scenario Benchmark Runner (S1–S8)</span>
+          <FlaskConical size={13} />
+          <span>Benchmark Runner</span>
         </button>
         <button
           type="button"
@@ -189,8 +170,8 @@ export default function AuthorityPage({
           role="tab"
           aria-selected={authorityTab === 'audit'}
         >
-          <FileCheck2 size={14} />
-          <span>Evidence & Autonomous Trace Log ({traceList.length})</span>
+          <FileCheck2 size={13} />
+          <span>Evidence & Trace ({traceList.length})</span>
         </button>
       </nav>
 
