@@ -36,7 +36,10 @@ export default function ChatPanel({
   const t = TRANSLATIONS[language] || TRANSLATIONS.en;
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    const timer = setTimeout(() => {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, 60);
+    return () => clearTimeout(timer);
   }, [messages, activeResponse, isLoading]);
 
   const showWelcome = messages.length === 0;

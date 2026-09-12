@@ -64,7 +64,7 @@ export default function ChatInput({ language = 'en', onSend, onStartCall, disabl
 
   return (
     <div className="chat-input-container">
-      <div className="chat-input-wrapper">
+      <div className="chat-input-card">
         {voiceError && (
           <div className="voice-error-pill" role="alert">
             <span>{voiceError}</span>
@@ -116,68 +116,72 @@ export default function ChatInput({ language = 'en', onSend, onStartCall, disabl
           onChange={e => setText(e.target.value)}
           onKeyDown={handleKeyDown}
           disabled={disabled || isRecording || isTranscribing}
-          rows={1}
+          rows={2}
           aria-label={t.sendBtnAria}
         />
-      </div>
 
-      <div className="chat-input-actions">
-        {onStartCall && (
-          <button
-            type="button"
-            className="call-samudra-trigger-btn"
-            onClick={onStartCall}
-            disabled={disabled || isRecording || isTranscribing}
-            title={t.callSamudraBtn}
-            aria-label={t.callSamudraBtn}
-          >
-            <span className="call-trigger-pulse-dot" aria-hidden="true" />
-            <PhoneCall size={14} />
-            <span>{t.callSamudraBtn}</span>
-          </button>
-        )}
+        <div className="chat-input-actions-bar">
+          <div className="chat-input-actions-left">
+            {onStartCall && (
+              <button
+                type="button"
+                className="call-samudra-trigger-btn"
+                onClick={onStartCall}
+                disabled={disabled || isRecording || isTranscribing}
+                title={t.callSamudraBtn}
+                aria-label={t.callSamudraBtn}
+              >
+                <span className="call-trigger-pulse-dot" aria-hidden="true" />
+                <PhoneCall size={13} />
+                <span>{t.callSamudraBtn}</span>
+              </button>
+            )}
+          </div>
 
-        <button
-          type="button"
-          className={`chat-mic-btn ${isRecording ? 'is-recording' : ''} ${isTranscribing ? 'is-transcribing' : ''}`}
-          onClick={handleMicClick}
-          disabled={disabled || isTranscribing || !isSupported}
-          title={
-            !isSupported
-              ? 'Voice recording not supported in this browser'
-              : isRecording
-              ? t.micRecordingAria
-              : isTranscribing
-              ? t.micTranscribingAria
-              : t.micBtnAria
-          }
-          aria-label={
-            !isSupported
-              ? 'Voice recording not supported in this browser'
-              : isRecording
-              ? t.micRecordingAria
-              : isTranscribing
-              ? t.micTranscribingAria
-              : t.micBtnAria
-          }
-        >
-          {isTranscribing ? (
-            <Loader2 size={18} className="spin" />
-          ) : isRecording ? (
-            <Square size={16} fill="currentColor" />
-          ) : (
-            <Mic size={18} />
-          )}
-        </button>
+          <div className="chat-input-actions-right">
+            <button
+              type="button"
+              className={`chat-mic-btn ${isRecording ? 'is-recording' : ''} ${isTranscribing ? 'is-transcribing' : ''}`}
+              onClick={handleMicClick}
+              disabled={disabled || isTranscribing || !isSupported}
+              title={
+                !isSupported
+                  ? 'Voice recording not supported in this browser'
+                  : isRecording
+                  ? t.micRecordingAria
+                  : isTranscribing
+                  ? t.micTranscribingAria
+                  : t.micBtnAria
+              }
+              aria-label={
+                !isSupported
+                  ? 'Voice recording not supported in this browser'
+                  : isRecording
+                  ? t.micRecordingAria
+                  : isTranscribing
+                  ? t.micTranscribingAria
+                  : t.micBtnAria
+              }
+            >
+              {isTranscribing ? (
+                <Loader2 size={16} className="spin" />
+              ) : isRecording ? (
+                <Square size={14} fill="currentColor" />
+              ) : (
+                <Mic size={16} />
+              )}
+            </button>
 
-        <button
-          className="chat-send-btn"
-          onClick={handleSend}
-          disabled={disabled || isRecording || isTranscribing || !text.trim()}
-          aria-label={t.sendBtnAria}
-        >
-          <Send size={18} />
-        </button>
+            <button
+              className="chat-send-btn"
+              onClick={handleSend}
+              disabled={disabled || isRecording || isTranscribing || !text.trim()}
+              aria-label={t.sendBtnAria}
+            >
+              <Send size={15} />
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );
