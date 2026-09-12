@@ -30,7 +30,7 @@ Every query evaluated by the Risk Engine must resolve into exactly one of the fo
 
 ## 3. The Five Inviolable Safety Hard-Stops
 
-These deterministic rules run in Python code (`backend/app/domain/risk.py`) and **cannot be overridden by the LLM prompt**:
+These deterministic rules run in Python code (`backend/app/domain/risk_engine.py`) and **cannot be overridden by the LLM prompt**:
 
 1. **Official Red Alert / Cyclone Rule**: Any active IMD Cyclone Warning, Depression Alert, or Red Coastal Advisory within 50 nautical miles of the departure or transit polygon immediately triggers an unconditional **`NO_GO`**.
 2. **Maritime Boundary Hard-Stop**: Any route line-string intersecting a prohibited maritime polygon (e.g., naval firing zone, International Maritime Boundary Line) triggers a hard **`NO_GO`** with boundary coordinates highlighted on the map.
