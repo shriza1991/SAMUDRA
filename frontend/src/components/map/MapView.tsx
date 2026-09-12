@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import maplibregl from 'maplibre-gl';
+import * as Popover from '@radix-ui/react-popover';
 import type { MapLayer } from '../../types/contracts';
 import LayerManager from './LayerManager';
 import MissionMapBrief from './MissionMapBrief';
@@ -298,27 +299,38 @@ export default function MapView({ layers, theme = 'light', center, zoom, languag
       <MissionMapBrief layers={layers} language={language} />
 
       {layers.length > 0 && (
-        <button
-          className="map-layer-toggle"
-          onClick={() => setShowLayerPanel(!showLayerPanel)}
-          aria-label="Toggle layer panel"
-        >
-          <Layers size={18} />
-          <span>
-            {layers.length}{' '}
-            {language === 'hi' ? 'परतें' : language === 'mr' ? 'स्तर' : 'Layers'}
-          </span>
-        </button>
-      )}
+        <Popover.Root open={showLayerPanel} onOpenChange={setShowLayerPanel}>
+          <Popover.Trigger asChild>
+            <button
+              className="map-layer-toggle"
+              aria-label="Toggle layer panel"
+            >
+              <Layers size={18} />
+              <span>
+                {layers.length}{' '}
+                {language === 'hi' ? 'परतें' : language === 'mr' ? 'स्तर' : 'Layers'}
+              </span>
+            </button>
+          </Popover.Trigger>
 
-      {showLayerPanel && (
-        <LayerManager
-          layers={layers}
-          visibility={layerVisibility}
-          onToggle={toggleLayer}
-          onClose={() => setShowLayerPanel(false)}
-          language={language}
-        />
+          <Popover.Portal>
+            <Popover.Content
+              className="layer-manager-popover"
+              side="bottom"
+              align="end"
+              sideOffset={6}
+              collisionPadding={12}
+            >
+              <LayerManager
+                layers={layers}
+                visibility={layerVisibility}
+                onToggle={toggleLayer}
+                onClose={() => setShowLayerPanel(false)}
+                language={language}
+              />
+            </Popover.Content>
+          </Popover.Portal>
+        </Popover.Root>
       )}
     </section>
   );

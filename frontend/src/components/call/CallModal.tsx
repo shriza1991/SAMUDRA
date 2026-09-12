@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import * as Dialog from '@radix-ui/react-dialog';
 import {
   PhoneOff,
   Mic,
@@ -76,74 +77,56 @@ export default function CallModal({
     }
   }, [isOpen]);
 
-  // Dismiss on Escape key
-  useEffect(() => {
-    if (!isOpen) return;
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        endCall();
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, endCall]);
-
   // Auto-scroll transcript box
   useEffect(() => {
     transcriptEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [transcriptHistory, callState]);
 
-  if (!isOpen) return null;
-
   const langInfo = getLanguageLabel(detectedLanguage);
 
   return (
-    <div
-      className="call-modal-backdrop"
-      role="dialog"
-      aria-modal="true"
-      aria-label={t.callTitle}
-      onClick={(e) => {
-        if (e.target === e.currentTarget) {
-          endCall();
-        }
-      }}
-    >
-      <div className="call-modal-container">
-        {/* Top Header */}
-        <header className="call-header">
-          <div className="call-branding">
-            <div className="call-logo-icon">
-              <Anchor size={18} />
-            </div>
-            <div>
-              <h2 className="call-title">{t.callTitle}</h2>
-              <div className="call-status-row">
-                <span className={`call-status-dot ${callState === 'ERROR' ? 'error' : 'active'}`} />
-                <span className="call-duration-text">{formattedDuration}</span>
-                <span className="call-harbor-tag">{originHarbor}</span>
+    <Dialog.Root open={isOpen} onOpenChange={(open) => { if (!open) endCall(); }}>
+      <Dialog.Portal>
+        <Dialog.Overlay className="call-modal-backdrop" />
+        <Dialog.Content
+          className="call-modal-container"
+          aria-describedby={undefined}
+        >
+          {/* Top Header */}
+          <header className="call-header">
+            <div className="call-branding">
+              <div className="call-logo-icon">
+                <Anchor size={18} />
+              </div>
+              <div>
+                <Dialog.Title className="call-title">{t.callTitle}</Dialog.Title>
+                <div className="call-status-row">
+                  <span className={`call-status-dot ${callState === 'ERROR' ? 'error' : 'active'}`} />
+                  <span className="call-duration-text">{formattedDuration}</span>
+                  <span className="call-harbor-tag">{originHarbor}</span>
+                </div>
               </div>
             </div>
-          </div>
 
-          <div className="call-header-right">
-            {detectedLanguage && (
-              <div className="call-lang-pill" title={`${t.callDetectedLanguage}: ${langInfo.name}`}>
-                <Globe size={13} />
-                <span>{langInfo.flag} {langInfo.name}</span>
-              </div>
-            )}
-            <button
-              type="button"
-              className="call-close-icon-btn"
-              onClick={endCall}
-              aria-label={t.callEndBtn}
-              title={t.callEndBtn}
-            >
-              <X size={18} />
-            </button>
-          </div>
-        </header>
+            <div className="call-header-right">
+              {detectedLanguage && (
+                <div className="call-lang-pill" title={`${t.callDetectedLanguage}: ${langInfo.name}`}>
+                  <Globe size={13} />
+                  <span>{langInfo.flag} {langInfo.name}</span>
+                </div>
+              )}
+              <Dialog.Close asChild>
+                <button
+                  type="button"
+                  className="call-close-icon-btn"
+                  aria-label={t.callEndBtn}
+                  title={t.callEndBtn}
+                >
+                  <X size={18} />
+                </button>
+              </Dialog.Close>
+            </div>
+          </header>
 
         {/* Central Visualizer Section */}
         <section className="call-visualizer-section">
@@ -337,7 +320,8 @@ export default function CallModal({
             </button>
           </div>
         </footer>
-      </div>
-    </div>
-  );
+      </Dialog.Content>
+    </Dialog.Portal>
+  </Dialog.Root>
+);
 }

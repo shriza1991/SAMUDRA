@@ -1721,10 +1721,24 @@
   background: var(--color-bg-secondary);
 }
 
-@keyframes panelPopIn {
+/* Layer Manager Popover (Radix UI Anchored to [5 Layers] toggle) */
+.layer-manager-popover {
+  z-index: 1000;
+  outline: none;
+}
+
+.layer-manager-popover[data-state="open"] {
+  animation: popoverFadeIn 160ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.layer-manager-popover[data-state="closed"] {
+  animation: popoverFadeOut 120ms ease-out;
+}
+
+@keyframes popoverFadeIn {
   from {
     opacity: 0;
-    transform: translateY(-6px) scale(0.98);
+    transform: translateY(-6px) scale(0.97);
   }
   to {
     opacity: 1;
@@ -1732,23 +1746,28 @@
   }
 }
 
-/* Layer Manager Panel (Positioned cleanly on TOP-RIGHT below controls, zero overlap with left brief) */
+@keyframes popoverFadeOut {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.97);
+  }
+}
+
 .layer-manager {
-  position: absolute;
-  top: 46px;
-  right: 10px;
   width: 270px;
   max-height: 420px;
   background: color-mix(in srgb, var(--color-bg-secondary) 96%, transparent);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  z-index: 25;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(12px);
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  animation: panelPopIn 160ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .layer-manager-header {
@@ -1847,14 +1866,24 @@
 .drawer-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(2px);
-  z-index: 50;
-  display: flex;
-  justify-content: flex-end;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+}
+
+.drawer-overlay[data-state="open"] {
+  animation: overlayShow 200ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.drawer-overlay[data-state="closed"] {
+  animation: overlayHide 150ms ease-in;
 }
 
 .evidence-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
   width: 440px;
   max-width: 90vw;
   height: 100%;
@@ -1862,8 +1891,17 @@
   border-left: 1px solid var(--color-border);
   display: flex;
   flex-direction: column;
-  box-shadow: var(--shadow-drawer);
-  animation: slideInRight 0.2s ease-out;
+  box-shadow: 0 0 40px rgba(0, 0, 0, 0.6);
+  z-index: 1001;
+  outline: none;
+}
+
+.evidence-drawer[data-state="open"] {
+  animation: slideInRight 220ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.evidence-drawer[data-state="closed"] {
+  animation: slideOutRight 160ms ease-in;
 }
 
 @keyframes slideInRight {
@@ -1872,6 +1910,33 @@
   }
   to {
     transform: translateX(0);
+  }
+}
+
+@keyframes slideOutRight {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes overlayShow {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes overlayHide {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
   }
 }
 
@@ -2520,20 +2585,23 @@
   background: rgba(3, 10, 20, 0.82);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: var(--space-md, 16px);
-  animation: callFadeIn 0.25s ease-out;
 }
 
-@keyframes callFadeIn {
-  from { opacity: 0; transform: scale(0.98); }
-  to { opacity: 1; transform: scale(1); }
+.call-modal-backdrop[data-state="open"] {
+  animation: overlayShow 200ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.call-modal-backdrop[data-state="closed"] {
+  animation: overlayHide 150ms ease-in;
 }
 
 /* Modal Container */
 .call-modal-container {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 10001;
   width: 100%;
   max-width: 440px;
   height: min(680px, 92vh);
@@ -2546,7 +2614,37 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  position: relative;
+  outline: none;
+}
+
+.call-modal-container[data-state="open"] {
+  animation: modalScaleIn 200ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.call-modal-container[data-state="closed"] {
+  animation: modalScaleOut 150ms ease-in;
+}
+
+@keyframes modalScaleIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -48%) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+@keyframes modalScaleOut {
+  from {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translate(-50%, -48%) scale(0.96);
+  }
 }
 
 /* Header */

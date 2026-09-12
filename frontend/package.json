@@ -11,6 +11,8 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@radix-ui/react-dialog": "^1.1.23",
+    "@radix-ui/react-popover": "^1.1.23",
     "clsx": "^2.1.1",
     "lucide-react": "^0.395.0",
     "maplibre-gl": "^4.3.2",
