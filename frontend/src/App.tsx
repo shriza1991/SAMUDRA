@@ -88,8 +88,13 @@ export default function App() {
           <MissionContextPanel
             context={chat.missionContext}
             role={role}
+            currentStatus={chat.activeResponse?.recommendation.status}
+            language={chat.language}
+            isLoading={chat.isLoading}
+            activeDiff={chat.activeDiff}
             onContextChange={chat.setMissionContext}
             onRoleChange={setRole}
+            onSimulate={chat.simulateWhatIf}
           />
           <OperationalSnapshot
             role={role}

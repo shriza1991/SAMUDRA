@@ -14,3 +14,29 @@ export const DEFAULT_MISSION_CONTEXT: MissionContext = {
   origin_harbor: 'Ratnagiri',
   craft_profile: 'motorized_boat',
 };
+
+/** Counterfactual simulation parameters for Mission Twin */
+export interface WhatIfParameters {
+  timeOffsetHours: number;
+  craftProfileOverride: MissionContext['craft_profile'];
+  objective: 'pfz' | 'safety' | 'transit';
+}
+
+export const DEFAULT_WHAT_IF_PARAMS: WhatIfParameters = {
+  timeOffsetHours: 4,
+  craftProfileOverride: 'motorized_boat',
+  objective: 'pfz',
+};
+
+/** Decision Diff comparing baseline response to counterfactual simulation */
+export interface DecisionDiff {
+  baselineStatus: string;
+  simulatedStatus: string;
+  summary: string;
+  timeOffsetHours: number;
+  craftProfile: MissionContext['craft_profile'];
+  timestamp: string;
+}
+
+/** Operational corridor modes for multi-route evaluation */
+export type OperationalMode = 'safest' | 'balanced' | 'direct';

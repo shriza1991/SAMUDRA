@@ -1,11 +1,18 @@
 import { Anchor, Building2, Fish, ShipWheel } from 'lucide-react';
-import type { MissionContext, OperationalRole } from '../../types/mission';
+import type { DecisionDiff, MissionContext, OperationalRole, WhatIfParameters } from '../../types/mission';
+import type { SupportedLanguage } from '../../i18n/translations';
+import WhatIfSimulator from './WhatIfSimulator';
 
 interface MissionContextPanelProps {
   context: MissionContext;
   role: OperationalRole;
+  currentStatus?: string;
+  language?: SupportedLanguage;
+  isLoading?: boolean;
+  activeDiff?: DecisionDiff | null;
   onContextChange: (context: MissionContext) => void;
   onRoleChange: (role: OperationalRole) => void;
+  onSimulate?: (params: WhatIfParameters, queryText: string) => void;
 }
 
 const HARBORS = ['Ratnagiri', 'Malvan', 'Panaji', 'Mumbai', 'Veraval', 'Porbandar'];
@@ -19,8 +26,13 @@ const CRAFT_PROFILES = [
 export default function MissionContextPanel({
   context,
   role,
+  currentStatus,
+  language = 'en',
+  isLoading = false,
+  activeDiff,
   onContextChange,
   onRoleChange,
+  onSimulate,
 }: MissionContextPanelProps) {
   const setHarbor = (origin_harbor: string) => onContextChange({ ...context, origin_harbor });
   const setCraft = (craft_profile: MissionContext['craft_profile']) => onContextChange({ ...context, craft_profile });
@@ -74,6 +86,18 @@ export default function MissionContextPanel({
           ? 'A clear voyage decision with the essential map and evidence.'
           : 'Expanded evidence, source status, and trace are available for review.'}
       </p>
+
+      {onSimulate && (
+        <WhatIfSimulator
+          currentContext={context}
+          currentStatus={currentStatus}
+          language={language}
+          isLoading={isLoading}
+          activeDiff={activeDiff}
+          onSimulate={onSimulate}
+          onApplyContext={onContextChange}
+        />
+      )}
     </section>
   );
 }

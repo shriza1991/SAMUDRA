@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import type { ChatRequest, ChatResponse } from '../types/contracts';
 import { sendMessage, ApiError } from '../api/client';
-import { DEFAULT_MISSION_CONTEXT, type MissionContext } from '../types/mission';
+import { DEFAULT_MISSION_CONTEXT, type DecisionDiff, type MissionContext, type WhatIfParameters } from '../types/mission';
 
 export interface ChatMessage {
   id: string;
@@ -24,6 +24,7 @@ export function useChat() {
   const [activeResponse, setActiveResponse] = useState<ChatResponse | null>(null);
   const [language, setLanguage] = useState<'en' | 'hi' | 'mr'>('en');
   const [missionContext, setMissionContext] = useState<MissionContext>(DEFAULT_MISSION_CONTEXT);
+  const [activeDiff, setActiveDiff] = useState<DecisionDiff | null>(null);
 
   const send = useCallback(async (text: string, languageOverride?: 'en' | 'hi' | 'mr') => {
     const targetLanguage = languageOverride || language;
@@ -101,10 +102,90 @@ export function useChat() {
     }
   }, [conversationId, language, missionContext]);
 
+  const simulateWhatIf = useCallback(async (params: WhatIfParameters, queryText: string) => {
+    const baselineStatus = activeResponse?.recommendation.status ?? 'READY';
+    const effectiveContext: MissionContext = {
+      origin_harbor: missionContext.origin_harbor,
+      craft_profile: params.craftProfileOverride ?? missionContext.craft_profile,
+    };
+
+    const userMsg: ChatMessage = {
+      id: generateId(),
+      role: 'user',
+      content: queryText,
+      timestamp: new Date(),
+    };
+
+    const loadingMsg: ChatMessage = {
+      id: generateId(),
+      role: 'assistant',
+      content: '',
+      timestamp: new Date(),
+      isLoading: true,
+    };
+
+    setMessages(prev => [...prev, userMsg, loadingMsg]);
+    setIsLoading(true);
+
+    try {
+      const req: ChatRequest = {
+        conversation_id: conversationId ?? undefined,
+        message: queryText,
+        user_context: {
+          ...effectiveContext,
+          language_preference: language,
+        },
+      };
+
+      const response = await sendMessage(req);
+
+      if (!conversationId && response.conversation_id) {
+        setConversationId(response.conversation_id);
+      }
+
+      const assistantMsg: ChatMessage = {
+        id: loadingMsg.id,
+        role: 'assistant',
+        content: response.answer,
+        timestamp: new Date(),
+        response,
+      };
+
+      setMessages(prev => prev.map(m => (m.id === loadingMsg.id ? assistantMsg : m)));
+      setActiveResponse(response);
+
+      // Construct Decision Diff
+      setActiveDiff({
+        baselineStatus,
+        simulatedStatus: response.recommendation.status,
+        summary: response.recommendation.summary,
+        timeOffsetHours: params.timeOffsetHours,
+        craftProfile: effectiveContext.craft_profile,
+        timestamp: new Date().toISOString(),
+      });
+    } catch (err) {
+      let errorMsg = 'Failed to run simulation. Please check server connectivity.';
+      if (err instanceof ApiError) {
+        errorMsg = `Simulation error (${err.status}): ${err.statusText}`;
+      } else if (err instanceof Error) {
+        errorMsg = err.message;
+      }
+
+      setMessages(prev => prev.map(m =>
+        m.id === loadingMsg.id
+          ? { ...m, isLoading: false, error: errorMsg, content: errorMsg }
+          : m
+      ));
+    } finally {
+      setIsLoading(false);
+    }
+  }, [activeResponse, conversationId, language, missionContext]);
+
   const clearChat = useCallback(() => {
     setMessages([]);
     setConversationId(null);
     setActiveResponse(null);
+    setActiveDiff(null);
   }, []);
 
   return {
@@ -116,6 +197,8 @@ export function useChat() {
     setLanguage,
     missionContext,
     setMissionContext,
+    activeDiff,
+    simulateWhatIf,
     send,
     clearChat,
   };
