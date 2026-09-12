@@ -1,8 +1,10 @@
+import { useMemo } from 'react';
 import ChatPanel from '../components/chat/ChatPanel';
 import MapView from '../components/map/MapView';
 import MissionContextPanel from '../components/mission/MissionContextPanel';
 import OperationalSnapshot from '../components/mission/OperationalSnapshot';
 import type { useChat } from '../hooks/useChat';
+import { createHarborLayer, getHarborCoordinates } from '../utils/geo';
 
 export interface FisherPageProps {
   chat: ReturnType<typeof useChat>;
@@ -27,6 +29,25 @@ export default function FisherPage({
   onOpenEvidence,
   onBack,
 }: FisherPageProps) {
+  const originHarbor = chat.missionContext.origin_harbor || 'Ratnagiri';
+  const harborCoords = useMemo(() => getHarborCoordinates(originHarbor), [originHarbor]);
+  const status = chat.activeResponse?.recommendation.status ?? 'GO';
+
+  // Construct active layers: Ensure departure harbor station is always visible & interactive
+  const effectiveLayers = useMemo(() => {
+    const responseLayers = chat.activeResponse?.map_layers ?? [];
+    const hasOriginLayer = responseLayers.some(
+      (l) => l.layer_id.includes('origin') || l.layer_id.includes('vessel_position') || l.layer_id.includes('harbor')
+    );
+
+    if (hasOriginLayer) {
+      return responseLayers;
+    }
+
+    const baselineHarborLayer = createHarborLayer(originHarbor, status);
+    return [baselineHarborLayer, ...responseLayers];
+  }, [chat.activeResponse?.map_layers, originHarbor, status]);
+
   return (
     <main className={`app-main fisher-page view-${mobileView}`} role="main">
       <div className="mission-workspace">
@@ -62,8 +83,10 @@ export default function FisherPage({
       </div>
 
       <MapView
-        layers={chat.activeResponse?.map_layers ?? []}
+        layers={effectiveLayers}
         theme={theme}
+        center={harborCoords}
+        zoom={9.5}
       />
     </main>
   );

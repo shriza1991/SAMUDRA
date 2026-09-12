@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
   Activity,
   AlertTriangle,
@@ -14,6 +14,7 @@ import MapView from '../components/map/MapView';
 import EvidenceCard from '../components/evidence/EvidenceCard';
 import AgentTimeline from '../components/trace/AgentTimeline';
 import type { useChat } from '../hooks/useChat';
+import { createSectorLayers, getSectorConfig } from '../utils/geo';
 
 export interface AuthorityPageProps {
   chat: ReturnType<typeof useChat>;
@@ -48,14 +49,24 @@ export default function AuthorityPage({
   const [selectedSector, setSelectedSector] = useState(SECTORS[0]);
   const [authorityTab, setAuthorityTab] = useState<'terminal' | 'audit'>('terminal');
 
+  const sectorConfig = useMemo(() => getSectorConfig(selectedSector), [selectedSector]);
+
+  // Combine sector surveillance polygon + radar post with any active query layers
+  const authorityLayers = useMemo(() => {
+    const baseLayers = createSectorLayers(selectedSector);
+    const responseLayers = chat.activeResponse?.map_layers ?? [];
+    return [...baseLayers, ...responseLayers];
+  }, [selectedSector, chat.activeResponse?.map_layers]);
+
   const status = chat.activeResponse?.recommendation.status ?? 'READY';
   const evidenceList = chat.activeResponse?.evidence ?? [];
   const traceList = chat.activeResponse?.trace ?? [];
   const warningsList = chat.activeResponse?.warnings ?? [];
-  const hazardLayers = (chat.activeResponse?.map_layers ?? []).filter((l) =>
+  const hazardLayers = authorityLayers.filter((l) =>
     `${l.layer_id} ${l.name}`.toLowerCase().includes('hazard') ||
     `${l.layer_id} ${l.name}`.toLowerCase().includes('warning') ||
-    `${l.layer_id} ${l.name}`.toLowerCase().includes('squall')
+    `${l.layer_id} ${l.name}`.toLowerCase().includes('squall') ||
+    `${l.layer_id} ${l.name}`.toLowerCase().includes('sanctuary')
   );
 
   return (
@@ -182,8 +193,10 @@ export default function AuthorityPage({
             {/* Right: Reused MapView with live coastal polygons */}
             <div className="authority-map-pane">
               <MapView
-                layers={chat.activeResponse?.map_layers ?? []}
+                layers={authorityLayers}
                 theme={theme}
+                center={sectorConfig.center}
+                zoom={sectorConfig.zoom}
               />
             </div>
           </div>

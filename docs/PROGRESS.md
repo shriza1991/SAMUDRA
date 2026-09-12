@@ -29,7 +29,7 @@
 
 | Member | Domain / Workstream | Status | Tasks Completed | Test Suite |
 | :--- | :--- | :--- | :--- | :--- |
-| **M1** | Frontend & UI | READY | MapLayer schema alignment, voice call interface, Fisher/Authority separate pages, single portal switching, header logout button | Vitest (50 passed) |
+| **M1** | Frontend & UI | READY | MapLayer schema alignment, voice call interface, Fisher/Authority separate pages, single portal switching, header logout button, dynamic MapView with harbor auto-pan & sector surveillance layers | Vitest (54 passed) |
 | **M2** | Backend Platform & Connectors | OFFLINE_VERIFIED | Harbors loader, INCOIS OSF/PFZ/SVAS, IMD weather/hazard, Open-Meteo fallback, ConnectorManager | pytest connectors & contracts (71 passed) |
 | **M3** | Agent Orchestration & Explainability | OFFLINE_VERIFIED | Tool adapters, capability catalog registration, trace & evidence contracts | pytest agent_eval (371 passed) |
 | **M4** | Marine, Geo, Risk & Route Domain | OFFLINE_VERIFIED | Deterministic risk engine, Shapely geofence evaluation, PFZ Haversine ranking engine | pytest domain (12 passed) |
