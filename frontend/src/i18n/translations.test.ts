@@ -152,5 +152,11 @@ describe('Multilingual i18n Dictionary', () => {
     expect(translateText('Map Layers', 'hi')).toBe('मानचित्र परतें');
     expect(translateText('Safety Critical', 'mr')).toBe('सुरक्षिततेसाठी महत्त्वाचे');
     expect(translateText('Safest Corridor', 'hi')).toContain('सुरक्षिततम गलियारा');
+
+    // Researcher Lab
+    expect(translateText('Researcher Lab', 'hi')).toBe('शोधकर्ता प्रयोगशाला');
+    expect(translateText('Researcher Lab', 'mr')).toBe('संशोधक प्रयोगशाळा');
+    expect(translateText('Enter Researcher Lab', 'hi')).toContain('शोधकर्ता प्रयोगशाला');
+    expect(translateText('Enter Researcher Lab', 'mr')).toContain('संशोधक प्रयोगशाळेत');
   });
 });

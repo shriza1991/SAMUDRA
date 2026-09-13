@@ -3,13 +3,14 @@ import Header from './components/layout/Header';
 import PortalPage from './pages/PortalPage';
 import FisherPage from './pages/FisherPage';
 import AuthorityPage from './pages/AuthorityPage';
+import ResearcherPage from './pages/ResearcherPage';
 import SettingsPage from './pages/SettingsPage';
 import EvidenceDrawer from './components/evidence/EvidenceDrawer';
 import CallModal from './components/call/CallModal';
 import { useChat } from './hooks/useChat';
 import { MessageSquare, Map as MapIcon } from 'lucide-react';
 
-export type PortalMode = 'selection' | 'fisher' | 'authority' | 'settings';
+export type PortalMode = 'selection' | 'fisher' | 'authority' | 'researcher' | 'settings';
 
 /**
  * SAMUDRA Main Application Shell
@@ -117,6 +118,8 @@ export default function App() {
           onOpenEvidence={() => setIsDrawerOpen(true)}
           onBack={handleBack}
         />
+      ) : portal === 'researcher' ? (
+        <ResearcherPage />
       ) : (
         <SettingsPage
           theme={theme}
