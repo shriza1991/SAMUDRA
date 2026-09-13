@@ -104,6 +104,23 @@ Eliminates ghost tracks, false operational telemetry, and hardcoded map location
 Impact:
 Guarantees end-to-end data integrity from backend synthetic generator to MapLibre viewport.
 
+## D015 — Non-Fabricating Handling of Partial Upstream Payloads in Risk Evaluation
+Status: ACCEPTED
+Decision:
+1. Make `harbor`, `observed_at`, and `valid_to` optional (`Optional[str] = None`) on `MarineConditionsPayload`, `WeatherConditionsPayload`, and `HazardBulletinPayload` rather than required strings.
+2. Under no circumstances may missing values be fabricated (no invented harbor names, no current time substituted for missing observation/validity timestamps, no default zero values).
+3. In `specialist_tools_node`, dictionary tool results are safely extracted by filtering to declared model fields, safely aliasing compatible keys (e.g. `sea_surface_current_knots` -> `surface_current_knots`), and handling unexpected schema errors gracefully without crashing.
+4. Genuinely required safety measurements (e.g. `significant_wave_height_m`) continue to trigger `RecommendationStatus.UNKNOWN` if absent or None, preserving all F02/F03 safety invariants.
+5. In `tests/conftest.py`, ensure the shared `tool_registry` baseline starts with contract mocks so test suites are isolated from production connector registration in `main.py`.
+
+Reason:
+Upstream connectors, test doubles, and evaluation stubs frequently provide partial observations. Raising uncaught Pydantic `ValidationError` crashed the agent pipeline before deterministic risk evaluation could execute its safety checks.
+
+Impact:
+Eliminates crashes on partial marine payloads across agent evaluations while strictly preventing any fabricated data or weakened safety boundaries.
+Owner: Dev 2 / Dev 3
+Date: 2026-09-13
+
 ## Decision template
 ### D0XX — <title>
 Status: PROPOSED / ACCEPTED / REJECTED
@@ -113,4 +130,3 @@ Alternatives:
 Impact:
 Owner:
 Date:
-

@@ -24,6 +24,12 @@ from backend.app.main import app  # noqa: E402
 # Force in-memory store for all agent evaluations so they don't require Postgres
 memory_manager.set_store(InMemoryConversationStore())
 
+from backend.app.agents.integrations.mocks import register_m2_contract_mocks  # noqa: E402
+from backend.app.agents.tools import tool_registry  # noqa: E402
+
+# Initialize tool registry with contract mocks for offline testing
+register_m2_contract_mocks(tool_registry, override=True)
+
 
 @pytest.fixture
 def client():

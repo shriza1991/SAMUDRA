@@ -967,21 +967,56 @@ def specialist_tools_node(state: ORCAState) -> Dict[str, Any]:
             if observation_bundle is not None:
                 params["observation_bundle"] = observation_bundle
             else:
-                marine_payload = (
-                    MarineConditionsPayload(**tool_results["marine_conditions"])
-                    if "marine_conditions" in tool_results and tool_results["marine_conditions"]
-                    else None
-                )
-                weather_payload = (
-                    WeatherConditionsPayload(**tool_results["weather_conditions"])
-                    if "weather_conditions" in tool_results and tool_results["weather_conditions"]
-                    else None
-                )
-                hazard_payload = (
-                    HazardBulletinPayload(**tool_results["hazard_search"])
-                    if "hazard_search" in tool_results and tool_results["hazard_search"]
-                    else None
-                )
+                marine_payload = None
+                if "marine_conditions" in tool_results and tool_results["marine_conditions"]:
+                    raw_marine = tool_results["marine_conditions"]
+                    if isinstance(raw_marine, MarineConditionsPayload):
+                        marine_payload = raw_marine
+                    elif isinstance(raw_marine, dict):
+                        try:
+                            valid_marine = {
+                                k: v for k, v in raw_marine.items()
+                                if k in MarineConditionsPayload.model_fields
+                            }
+                            if "surface_current_knots" not in valid_marine and "sea_surface_current_knots" in raw_marine:
+                                valid_marine["surface_current_knots"] = raw_marine["sea_surface_current_knots"]
+                            marine_payload = MarineConditionsPayload(**valid_marine)
+                        except Exception as exc:
+                            logger.warning("Failed to construct MarineConditionsPayload from tool results: %s", exc)
+                            marine_payload = None
+
+                weather_payload = None
+                if "weather_conditions" in tool_results and tool_results["weather_conditions"]:
+                    raw_weather = tool_results["weather_conditions"]
+                    if isinstance(raw_weather, WeatherConditionsPayload):
+                        weather_payload = raw_weather
+                    elif isinstance(raw_weather, dict):
+                        try:
+                            valid_weather = {
+                                k: v for k, v in raw_weather.items()
+                                if k in WeatherConditionsPayload.model_fields
+                            }
+                            weather_payload = WeatherConditionsPayload(**valid_weather)
+                        except Exception as exc:
+                            logger.warning("Failed to construct WeatherConditionsPayload from tool results: %s", exc)
+                            weather_payload = None
+
+                hazard_payload = None
+                if "hazard_search" in tool_results and tool_results["hazard_search"]:
+                    raw_hazard = tool_results["hazard_search"]
+                    if isinstance(raw_hazard, HazardBulletinPayload):
+                        hazard_payload = raw_hazard
+                    elif isinstance(raw_hazard, dict):
+                        try:
+                            valid_hazard = {
+                                k: v for k, v in raw_hazard.items()
+                                if k in HazardBulletinPayload.model_fields
+                            }
+                            hazard_payload = HazardBulletinPayload(**valid_hazard)
+                        except Exception as exc:
+                            logger.warning("Failed to construct HazardBulletinPayload from tool results: %s", exc)
+                            hazard_payload = None
+
                 if marine_payload or weather_payload or hazard_payload:
                     observation_bundle = ObservationBundle(
                         marine=marine_payload,

@@ -27,14 +27,14 @@ if TYPE_CHECKING:
 class MarineConditionsPayload(BaseModel):
     """Normalized marine ocean state retrieved by Dev 2 connectors (INCOIS)."""
 
-    harbor: str = Field(..., description="Target coastal harbor or station")
+    harbor: Optional[str] = Field(None, description="Target coastal harbor or station")
     significant_wave_height_m: Optional[float] = Field(None, ge=0.0, description="Wave height in meters")
     swell_height_m: Optional[float] = Field(None, ge=0.0, description="Swell wave height in meters")
     swell_period_sec: Optional[float] = Field(None, ge=0.0, description="Swell period in seconds")
     surface_current_knots: Optional[float] = Field(None, description="Surface current speed in knots")
     sea_surface_temp_c: Optional[float] = Field(None, description="Sea surface temperature in Celsius")
-    observed_at: str = Field(..., description="Sensor or satellite measurement timestamp (ISO-8601 UTC)")
-    valid_to: str = Field(..., description="Forecast window expiration (ISO-8601 UTC)")
+    observed_at: Optional[str] = Field(None, description="Sensor or satellite measurement timestamp (ISO-8601 UTC)")
+    valid_to: Optional[str] = Field(None, description="Forecast window expiration (ISO-8601 UTC)")
     source_name: str = Field("INCOIS Ocean State Forecast", description="Official issuing authority")
     source_url: Optional[str] = Field(None, description="Direct URL to official bulletin or feed")
 
@@ -42,13 +42,13 @@ class MarineConditionsPayload(BaseModel):
 class WeatherConditionsPayload(BaseModel):
     """Normalized coastal atmospheric weather retrieved by Dev 2 connectors (IMD)."""
 
-    harbor: str = Field(..., description="Target coastal station or harbor")
+    harbor: Optional[str] = Field(None, description="Target coastal station or harbor")
     wind_speed_knots: Optional[float] = Field(None, ge=0.0, description="Sustained wind speed in knots")
     wind_gust_knots: Optional[float] = Field(None, ge=0.0, description="Peak wind gust speed in knots")
     wind_direction_deg: Optional[float] = Field(None, ge=0.0, le=360.0, description="Wind direction in degrees")
     visibility_km: Optional[float] = Field(None, ge=0.0, description="Horizontal visibility in kilometers")
-    observed_at: str = Field(..., description="Observation timestamp (ISO-8601 UTC)")
-    valid_to: str = Field(..., description="Advisory expiration (ISO-8601 UTC)")
+    observed_at: Optional[str] = Field(None, description="Observation timestamp (ISO-8601 UTC)")
+    valid_to: Optional[str] = Field(None, description="Advisory expiration (ISO-8601 UTC)")
     source_name: str = Field("IMD Coastal Weather Bulletin", description="Official issuing authority")
     source_url: Optional[str] = Field(None, description="Direct URL to official bulletin")
 
@@ -56,14 +56,14 @@ class WeatherConditionsPayload(BaseModel):
 class HazardBulletinPayload(BaseModel):
     """Severe weather and cyclone warnings retrieved by Dev 2 connectors (IMD)."""
 
-    harbor: str = Field(..., description="Monitored coastal zone or harbor")
+    harbor: Optional[str] = Field(None, description="Monitored coastal zone or harbor")
     cyclone_warning_active: bool = Field(False, description="True if cyclone alert or depression is active")
     squall_alert: bool = Field(False, description="True if squall or high wind gale warning issued")
     bulletin_id: Optional[str] = Field(None, description="Official bulletin reference identifier")
     severity: str = Field("NORMAL", description="Severity category: NORMAL | WATCH | ALERT | WARNING")
     headline: Optional[str] = Field(None, description="Official headline from issuing authority")
-    valid_from: str = Field(..., description="Advisory start timestamp (ISO-8601 UTC)")
-    valid_to: str = Field(..., description="Advisory expiration timestamp (ISO-8601 UTC)")
+    valid_from: Optional[str] = Field(None, description="Advisory start timestamp (ISO-8601 UTC)")
+    valid_to: Optional[str] = Field(None, description="Advisory expiration timestamp (ISO-8601 UTC)")
     source_name: str = Field("IMD Cyclone Warning Division", description="Official issuing authority")
     source_url: Optional[str] = Field(None, description="Direct URL to warning bulletin")
 
