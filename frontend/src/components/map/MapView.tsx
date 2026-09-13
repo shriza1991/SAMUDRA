@@ -126,6 +126,7 @@ export default function MapView({ layers, theme = 'light', center, zoom, languag
         const color = layer.style?.color || '#0284c7';
         const opacity = layer.style?.opacity ?? 0.6;
         const lineWidth = layer.style?.line_width ?? 2;
+        const lineDasharray = layer.style?.line_dasharray;
         const circleRadius = layer.style?.circle_radius ?? 8;
 
         const geomType = getGeometryType(geojson);
@@ -209,6 +210,7 @@ export default function MapView({ layers, theme = 'light', center, zoom, languag
                 'line-join': 'round',
               },
             });
+            if (lineDasharray) map.setPaintProperty(lineLayerId, 'line-dasharray', lineDasharray);
           } else {
             map.setPaintProperty(lineLayerId, 'line-color', color);
             map.setPaintProperty(lineLayerId, 'line-width', lineWidth);

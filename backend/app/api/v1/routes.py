@@ -16,6 +16,7 @@ Dev 2 responsibilities here:
 from __future__ import annotations
 
 import logging
+import math
 import uuid
 from datetime import UTC, datetime
 from typing import Any
@@ -1350,6 +1351,30 @@ def get_demo_vessel_replay(
         logger.debug("Database get_demo_vessel_replay failed (service offline): %s", exc)
     records = _get_synthetic_records("replay_positions", namespace=namespace)
     return [r for r in records if r.get("vessel_id") == vessel_id]
+
+
+@router.get("/demo/vessels/{vessel_id}/estimated-trajectory", tags=["Synthetic Demo"])
+def get_demo_vessel_estimated_trajectory(vessel_id: str, namespace: str = "SAMUDRA_DEMO_V1") -> dict[str, Any]:
+    """Bounded synthetic surveillance estimate from the latest canonical replay state."""
+    positions = get_demo_vessel_replay(vessel_id, namespace)
+    if not positions:
+        raise HTTPException(status_code=404, detail="Unknown vessel")
+    latest = max(positions, key=lambda item: item.get("timestamp", ""))
+    required = ("latitude", "longitude", "speed_knots", "heading_deg")
+    if any(latest.get(key) is None for key in required):
+        return {"vessel_id": vessel_id, "status": "UNAVAILABLE", "reason": "Current vessel movement state unavailable", "synthetic": True}
+    lat, lon = float(latest["latitude"]), float(latest["longitude"])
+    speed, heading = float(latest["speed_knots"]), float(latest["heading_deg"])
+    points = []
+    earth_radius_m = 6_371_000.0
+    for offset in range(0, 31, 5):
+        distance_m = speed * 1852.0 * offset / 60.0
+        bearing = math.radians(heading)
+        lat1, lon1 = math.radians(lat), math.radians(lon)
+        lat2 = math.asin(math.sin(lat1) * math.cos(distance_m / earth_radius_m) + math.cos(lat1) * math.sin(distance_m / earth_radius_m) * math.cos(bearing))
+        lon2 = lon1 + math.atan2(math.sin(bearing) * math.sin(distance_m / earth_radius_m) * math.cos(lat1), math.cos(distance_m / earth_radius_m) - math.sin(lat1) * math.sin(lat2))
+        points.append({"latitude": math.degrees(lat2), "longitude": math.degrees(lon2), "offset_minutes": offset})
+    return {"vessel_id": vessel_id, "generated_from": {"latitude": lat, "longitude": lon, "speed_knots": speed, "heading_deg": heading, "observed_at": latest.get("timestamp")}, "horizon_minutes": 30, "points": points, "status": "AVAILABLE", "synthetic": True}
 
 
 

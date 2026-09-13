@@ -317,6 +317,8 @@ export async function getDemoHazards(sector?: string): Promise<DemoHazard[]> {
   const url = sector ? `/demo/hazards?sector=${encodeURIComponent(sector)}` : '/demo/hazards';
   return request<DemoHazard[]>(url);
 }
+export interface EstimatedTrajectory { vessel_id: string; status: 'AVAILABLE' | 'UNAVAILABLE'; horizon_minutes?: number; points?: Array<{ latitude: number; longitude: number; offset_minutes: number }>; reason?: string; synthetic: boolean; }
+export async function getDemoEstimatedTrajectory(vesselId: string): Promise<EstimatedTrajectory> { return request<EstimatedTrajectory>(`/demo/vessels/${encodeURIComponent(vesselId)}/estimated-trajectory`); }
 
 export async function getDemoSectorHazards(sectorId: string): Promise<SectorHazardsResponse> {
   return request<SectorHazardsResponse>(`/demo/sectors/${encodeURIComponent(sectorId)}/hazards`);

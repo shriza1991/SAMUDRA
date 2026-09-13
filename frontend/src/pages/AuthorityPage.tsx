@@ -64,6 +64,7 @@ export default function AuthorityPage({
   const [selectedSector, setSelectedSector] = useState<string>(FALLBACK_DEMO_SECTORS[0].public_id);
   const [authorityTab, setAuthorityTab] = useState<AuthorityTab>('terminal');
   const [replayLayer, setReplayLayer] = useState<MapLayer | null>(null);
+  const [trajectoryLayer, setTrajectoryLayer] = useState<MapLayer | null>(null);
   const [baseLayers, setBaseLayers] = useState<MapLayer[]>([]);
 
   const [sectorSituation, setSectorSituation] = useState<SectorSituation | null>(null);
@@ -168,8 +169,8 @@ export default function AuthorityPage({
     const associationLayers = createHazardAssociationLayers(hazardAssociations, selectedOperationalAlert);
     const responseLayers = authorityActiveResponse?.map_layers ?? [];
     const activeReplay = replayLayer ? [replayLayer] : [];
-    return [...baseLayers, ...sectorLayers, ...hazardLayers, ...associationLayers, ...activeReplay, ...responseLayers];
-  }, [baseLayers, activeSector, sectorHazards, hazardAssociations, replayLayer, selectedOperationalAlert, authorityActiveResponse?.map_layers]);
+    return [...baseLayers, ...sectorLayers, ...hazardLayers, ...associationLayers, ...activeReplay, ...(trajectoryLayer ? [trajectoryLayer] : []), ...responseLayers];
+  }, [baseLayers, activeSector, sectorHazards, hazardAssociations, replayLayer, trajectoryLayer, selectedOperationalAlert, authorityActiveResponse?.map_layers]);
 
   const evidenceList = useMemo(() => {
     if (authorityActiveResponse?.evidence && authorityActiveResponse.evidence.length > 0) {
@@ -359,6 +360,7 @@ export default function AuthorityPage({
               <FleetTrackingDeck
                 selectedSector={selectedSector}
                 onReplayUpdate={setReplayLayer}
+                onTrajectoryUpdate={setTrajectoryLayer}
                 onAlertSelectionChange={(alert) => {
                   // The alert endpoint is sector-scoped; still enforce the
                   // boundary at the UI hand-off so stale async UI state cannot

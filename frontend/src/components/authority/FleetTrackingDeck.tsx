@@ -17,6 +17,7 @@ import {
   getDemoVesselReplay,
   getDemoNotifications,
   getDemoSectorOperationalAlerts,
+  getDemoEstimatedTrajectory,
   type DemoVessel,
   type VesselPosition,
   type DemoNotification,
@@ -30,6 +31,7 @@ interface FleetTrackingDeckProps {
   onReplayUpdate?: (layer: MapLayer | null) => void;
   onAlertSelectionChange?: (alert: VesselHazardOperationalAlert | null) => void;
   onAlertWhy?: (alert: VesselHazardOperationalAlert) => void;
+  onTrajectoryUpdate?: (layer: MapLayer | null) => void;
   language?: SupportedLanguage;
 }
 
@@ -38,6 +40,7 @@ export default function FleetTrackingDeck({
   onReplayUpdate,
   onAlertSelectionChange,
   onAlertWhy,
+  onTrajectoryUpdate,
   language = 'en',
 }: FleetTrackingDeckProps) {
   const [vessels, setVessels] = useState<DemoVessel[]>([]);
@@ -53,6 +56,7 @@ export default function FleetTrackingDeck({
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isReplayLoading, setIsReplayLoading] = useState<boolean>(false);
   const [isReplayUnavailable, setIsReplayUnavailable] = useState<boolean>(false);
+  const [trajectoryStatus, setTrajectoryStatus] = useState<{ available: boolean; reason?: string } | null>(null);
   const [focusTrigger, setFocusTrigger] = useState<number>(0);
 
   // Sector change effect: reload vessels & alerts, clear previous replay
@@ -70,6 +74,8 @@ export default function FleetTrackingDeck({
     setSelectedOperationalAlertId(null);
     onAlertSelectionChange?.(null);
     onReplayUpdate?.(null);
+    onTrajectoryUpdate?.(null);
+    setTrajectoryStatus(null);
 
     Promise.allSettled([
       getDemoVessels(selectedSector),
@@ -143,6 +149,8 @@ export default function FleetTrackingDeck({
       setIsReplayUnavailable(false);
       setIsReplayLoading(false);
       onReplayUpdate?.(null);
+      onTrajectoryUpdate?.(null);
+      setTrajectoryStatus(null);
       return;
     }
 
@@ -172,6 +180,12 @@ export default function FleetTrackingDeck({
         setIsReplayUnavailable(true);
         onReplayUpdate?.(null);
       });
+
+    getDemoEstimatedTrajectory(selectedVesselId).then((trajectory) => {
+      if (isCancelled || trajectory.status !== 'AVAILABLE' || !trajectory.points?.length) { if (!isCancelled) { onTrajectoryUpdate?.(null); setTrajectoryStatus({ available: false, reason: trajectory.reason }); } return; }
+      setTrajectoryStatus({ available: true });
+      onTrajectoryUpdate?.({ layer_id: 'layer_fleet_estimated_trajectory', name: `Estimated trajectory — next ${trajectory.horizon_minutes} min`, layer_type: 'geojson', visible: true, style: { color: '#facc15', opacity: 0.95, line_width: 2.5, line_dasharray: [2, 2], layer_category: 'estimated_trajectory' }, properties: { vessel_id: trajectory.vessel_id }, geojson: { type: 'Feature', geometry: { type: 'LineString', coordinates: trajectory.points.map((point) => [point.longitude, point.latitude]) }, properties: { label: 'Estimated trajectory — synthetic demonstration estimate', vessel_id: trajectory.vessel_id } } });
+    }).catch(() => { if (!isCancelled) { onTrajectoryUpdate?.(null); setTrajectoryStatus({ available: false }); } });
 
     return () => {
       isCancelled = true;
@@ -500,6 +514,11 @@ export default function FleetTrackingDeck({
                   <span>{translateText('Pos:', language)} <strong>{currentPos.latitude.toFixed(3)}°N, {currentPos.longitude.toFixed(3)}°E</strong></span>
                 </div>
               </div>
+              <p className="scrubber-eyebrow" style={{ marginTop: '10px' }}>
+                {trajectoryStatus?.available
+                  ? translateText('Estimated trajectory — next 30 min', language)
+                  : trajectoryStatus && translateText(`Estimated trajectory unavailable${trajectoryStatus.reason ? `: ${trajectoryStatus.reason}` : ''}`, language)}
+              </p>
             </div>
           )}
         </section>
