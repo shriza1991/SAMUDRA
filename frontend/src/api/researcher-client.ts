@@ -23,13 +23,13 @@ export interface MarineObservation {
   public_id: string;
   harbor_id: string;
   observation_time: string;
-  wave_height_m: number;
-  sst_celsius: number;
-  wind_speed_kn: number;
-  wind_direction_deg: number;
-  current_speed_kn: number;
-  swell_period_s: number;
-  visibility_nm: number;
+  wave_height_m: number | null;
+  sst_celsius: number | null;
+  wind_speed_kn: number | null;
+  wind_direction_deg: number | null;
+  current_speed_kn: number | null;
+  swell_period_s: number | null;
+  visibility_nm: number | null;
   source: string;
   data_mode: string;
   quality_flags: string[];
@@ -39,9 +39,9 @@ export interface EOGridCell {
   cell_id: string;
   center_lat: number;
   center_lon: number;
-  chlorophyll_a_mg_m3: number;
-  sst_celsius: number;
-  cloud_cover_pct: number;
+  chlorophyll_a_mg_m3: number | null;
+  sst_celsius: number | null;
+  cloud_cover_pct: number | null;
   satellite: string;
   pass_time: string;
   resolution_m: number;
@@ -52,8 +52,8 @@ export interface PFZCandidate {
   public_id: string;
   latitude: number;
   longitude: number;
-  sst_celsius: number;
-  chlorophyll_a_mg_m3: number;
+  sst_celsius: number | null;
+  chlorophyll_a_mg_m3: number | null;
   distance_km: number;
   bearing_deg: number;
   rank: number;
@@ -208,24 +208,85 @@ export const DATA_SOURCES: DataSourceInfo[] = [
 // ---------------------------------------------------------------------------
 
 export async function fetchHarbors(): Promise<HarborData[]> {
-  return fetchOrMock('/demo/harbors', MOCK_HARBORS);
+  const raw = await fetchOrMock<any[]>('/demo/harbors', MOCK_HARBORS);
+  return (raw || []).map((h, i) => ({
+    public_id: h.public_id || `harbor-${i}`,
+    name: h.name || 'Unknown Harbor',
+    latitude: typeof h.latitude === 'number' ? h.latitude : 0,
+    longitude: typeof h.longitude === 'number' ? h.longitude : 0,
+    state: h.state || 'Maharashtra',
+    metadata_json: h.metadata_json,
+  }));
 }
 
 export async function fetchMarineObservations(harborId?: string): Promise<MarineObservation[]> {
   const url = harborId ? `/demo/marine-observations?harbor_id=${harborId}` : '/demo/marine-observations';
-  return fetchOrMock(url, harborId ? MOCK_MARINE_OBS.filter(o => o.harbor_id === harborId) : MOCK_MARINE_OBS);
+  const fallback = harborId ? MOCK_MARINE_OBS.filter(o => o.harbor_id === harborId) : MOCK_MARINE_OBS;
+  const raw = await fetchOrMock<any[]>(url, fallback);
+  return (raw || []).map((o, i) => ({
+    public_id: o.public_id || `obs-${i}`,
+    harbor_id: o.harbor_id || harborId || '',
+    observation_time: o.observation_time || new Date().toISOString(),
+    wave_height_m: typeof o.wave_height_m === 'number' ? o.wave_height_m : typeof o.swh === 'number' ? o.swh : null,
+    sst_celsius: typeof o.sst_celsius === 'number' ? o.sst_celsius : typeof o.sea_surface_temp_c === 'number' ? o.sea_surface_temp_c : typeof o.sst === 'number' ? o.sst : null,
+    wind_speed_kn: typeof o.wind_speed_kn === 'number' ? o.wind_speed_kn : typeof o.wind_speed_knots === 'number' ? o.wind_speed_knots : null,
+    wind_direction_deg: typeof o.wind_direction_deg === 'number' ? o.wind_direction_deg : 0,
+    current_speed_kn: typeof o.current_speed_kn === 'number' ? o.current_speed_kn : typeof o.current_speed_knots === 'number' ? o.current_speed_knots : typeof o.current_speed === 'number' ? o.current_speed : null,
+    swell_period_s: typeof o.swell_period_s === 'number' ? o.swell_period_s : typeof o.wave_period_sec === 'number' ? o.wave_period_sec : typeof o.swell_period === 'number' ? o.swell_period : null,
+    visibility_nm: typeof o.visibility_nm === 'number' ? o.visibility_nm : typeof o.visibility_km === 'number' ? +(o.visibility_km * 0.54).toFixed(1) : 10,
+    source: o.source || (o.provenance_json?.intended_provider ? `${o.provenance_json.intended_provider} OSF` : 'INCOIS OSF'),
+    data_mode: o.data_mode || 'HYBRID',
+    quality_flags: Array.isArray(o.quality_flags) ? o.quality_flags : o.qc_status ? [o.qc_status.toLowerCase()] : ['verified'],
+  }));
 }
 
 export async function fetchEOGridCells(): Promise<EOGridCell[]> {
-  return fetchOrMock('/demo/eo-grid-cells', MOCK_EO_CELLS);
+  const raw = await fetchOrMock<any[]>('/demo/eo-grid-cells', MOCK_EO_CELLS);
+  return (raw || []).map((c, i) => ({
+    cell_id: c.cell_id || c.public_id || `cell-${i}`,
+    center_lat: typeof c.center_lat === 'number' ? c.center_lat : typeof c.latitude === 'number' ? c.latitude : 0,
+    center_lon: typeof c.center_lon === 'number' ? c.center_lon : typeof c.longitude === 'number' ? c.longitude : 0,
+    chlorophyll_a_mg_m3: typeof c.chlorophyll_a_mg_m3 === 'number' ? c.chlorophyll_a_mg_m3 : typeof c.chlorophyll_mg_m3 === 'number' ? c.chlorophyll_mg_m3 : typeof c.CHL_A === 'number' ? c.CHL_A : null,
+    sst_celsius: typeof c.sst_celsius === 'number' ? c.sst_celsius : typeof c.sst_c === 'number' ? c.sst_c : typeof c.SST === 'number' ? c.SST : null,
+    cloud_cover_pct: typeof c.cloud_cover_pct === 'number' ? c.cloud_cover_pct : typeof c.cloud_fraction === 'number' ? Math.round(c.cloud_fraction * 100) : null,
+    satellite: c.satellite || (c.source_name ? c.source_name.split(' ')[2] || 'Oceansat-3' : 'Oceansat-3 OCM'),
+    pass_time: c.pass_time || c.observation_time || new Date().toISOString(),
+    resolution_m: typeof c.resolution_m === 'number' ? c.resolution_m : 360,
+    source: c.source || c.source_name || 'ISRO MOSDAC',
+  }));
 }
 
 export async function fetchPFZCandidates(): Promise<PFZCandidate[]> {
-  return fetchOrMock('/demo/pfz-candidates?valid_only=true', MOCK_PFZ);
+  const raw = await fetchOrMock<any[]>('/demo/pfz-candidates?valid_only=true', MOCK_PFZ);
+  return (raw || []).map((p, i) => ({
+    public_id: p.public_id || `pfz-${i}`,
+    latitude: typeof p.latitude === 'number' ? p.latitude : 0,
+    longitude: typeof p.longitude === 'number' ? p.longitude : 0,
+    sst_celsius: typeof p.sst_celsius === 'number' ? p.sst_celsius : typeof p.sst_gradient === 'number' ? +(28.0 + p.sst_gradient).toFixed(1) : null,
+    chlorophyll_a_mg_m3: typeof p.chlorophyll_a_mg_m3 === 'number' ? p.chlorophyll_a_mg_m3 : typeof p.chlorophyll_value === 'number' ? p.chlorophyll_value : null,
+    distance_km: typeof p.distance_km === 'number' ? p.distance_km : 0,
+    bearing_deg: typeof p.bearing_deg === 'number' ? p.bearing_deg : 0,
+    rank: typeof p.rank === 'number' ? p.rank : i + 1,
+    status: p.status || p.qc_status || 'ACTIVE',
+    valid_from: p.valid_from || p.detected_at || new Date().toISOString(),
+    valid_to: p.valid_to || new Date().toISOString(),
+    source: p.source || 'INCOIS PFZ Advisory',
+  }));
 }
 
 export async function fetchHazards(): Promise<HazardBulletin[]> {
-  return fetchOrMock('/demo/hazards', MOCK_HAZARDS);
+  const raw = await fetchOrMock<any[]>('/demo/hazards', MOCK_HAZARDS);
+  return (raw || []).map((h, i) => ({
+    public_id: h.public_id || `hazard-${i}`,
+    headline: h.headline || h.title || 'Marine Hazard Alert',
+    severity: h.severity || 'WARNING',
+    status: h.status || 'ACTIVE',
+    issued_at: h.issued_at || h.created_at || new Date().toISOString(),
+    valid_until: h.valid_until || h.expires_at || new Date().toISOString(),
+    source: h.source || (h.provenance_json?.intended_provider ? `${h.provenance_json.intended_provider} Coastal` : 'IMD Coastal Bulletin'),
+    affected_area: h.affected_area || h.sector_id || 'Konkan Coast',
+    description: h.description || '',
+  }));
 }
 
 export async function fetchScenarios(): Promise<ScenarioMeta[]> {

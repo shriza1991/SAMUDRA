@@ -153,13 +153,17 @@ export default function OceanDataExplorer() {
               {observations.map(obs => (
                 <tr key={obs.public_id}>
                   <td className="researcher-cell-mono">{formatTime(obs.observation_time)}</td>
-                  <td className={obs.wave_height_m > 2.5 ? 'researcher-cell-danger' : obs.wave_height_m > 1.8 ? 'researcher-cell-warning' : ''}>{obs.wave_height_m.toFixed(1)}</td>
-                  <td>{obs.sst_celsius.toFixed(1)}</td>
-                  <td className={obs.wind_speed_kn > 25 ? 'researcher-cell-danger' : obs.wind_speed_kn > 18 ? 'researcher-cell-warning' : ''}>{obs.wind_speed_kn}</td>
-                  <td>{obs.swell_period_s.toFixed(1)}</td>
+                  <td className={(obs.wave_height_m ?? 0) > 2.5 ? 'researcher-cell-danger' : (obs.wave_height_m ?? 0) > 1.8 ? 'researcher-cell-warning' : ''}>
+                    {obs.wave_height_m != null ? obs.wave_height_m.toFixed(1) : '—'}
+                  </td>
+                  <td>{obs.sst_celsius != null ? obs.sst_celsius.toFixed(1) : '—'}</td>
+                  <td className={(obs.wind_speed_kn ?? 0) > 25 ? 'researcher-cell-danger' : (obs.wind_speed_kn ?? 0) > 18 ? 'researcher-cell-warning' : ''}>
+                    {obs.wind_speed_kn ?? '—'}
+                  </td>
+                  <td>{obs.swell_period_s != null ? obs.swell_period_s.toFixed(1) : '—'}</td>
                   <td><span className="researcher-source-badge">{obs.source}</span></td>
                   <td>
-                    {obs.quality_flags.map(f => (
+                    {(obs.quality_flags || []).map(f => (
                       <span key={f} className={`researcher-quality-flag ${f === 'official_source' ? 'official' : f === 'fallback' ? 'fallback' : ''}`}>{f}</span>
                     ))}
                   </td>
@@ -194,9 +198,13 @@ export default function OceanDataExplorer() {
                 {eoCells.map(cell => (
                   <tr key={cell.cell_id}>
                     <td className="researcher-cell-mono">{cell.cell_id}</td>
-                    <td style={{ color: cell.chlorophyll_a_mg_m3 > 1.5 ? '#10b981' : undefined, fontWeight: cell.chlorophyll_a_mg_m3 > 1.5 ? 600 : undefined }}>{cell.chlorophyll_a_mg_m3.toFixed(2)}</td>
-                    <td>{cell.sst_celsius.toFixed(1)}</td>
-                    <td className={cell.cloud_cover_pct > 30 ? 'researcher-cell-warning' : ''}>{cell.cloud_cover_pct}%</td>
+                    <td style={{ color: (cell.chlorophyll_a_mg_m3 ?? 0) > 1.5 ? '#10b981' : undefined, fontWeight: (cell.chlorophyll_a_mg_m3 ?? 0) > 1.5 ? 600 : undefined }}>
+                      {cell.chlorophyll_a_mg_m3 != null ? cell.chlorophyll_a_mg_m3.toFixed(2) : '—'}
+                    </td>
+                    <td>{cell.sst_celsius != null ? cell.sst_celsius.toFixed(1) : '—'}</td>
+                    <td className={(cell.cloud_cover_pct ?? 0) > 30 ? 'researcher-cell-warning' : ''}>
+                      {cell.cloud_cover_pct != null ? `${cell.cloud_cover_pct}%` : '—'}
+                    </td>
                     <td><span className="researcher-source-badge">{cell.satellite}</span></td>
                     <td>{cell.resolution_m}m</td>
                   </tr>
@@ -219,8 +227,8 @@ export default function OceanDataExplorer() {
                 <div className="researcher-pfz-body">
                   <div className="researcher-pfz-id">{pfz.public_id}</div>
                   <div className="researcher-pfz-stats">
-                    <span>{pfz.distance_km.toFixed(1)} km · {pfz.bearing_deg}°</span>
-                    <span>SST {pfz.sst_celsius}°C · Chl-a {pfz.chlorophyll_a_mg_m3} mg/m³</span>
+                    <span>{pfz.distance_km != null ? pfz.distance_km.toFixed(1) : '—'} km · {pfz.bearing_deg ?? 0}°</span>
+                    <span>SST {pfz.sst_celsius != null ? `${pfz.sst_celsius}°C` : '—'} · Chl-a {pfz.chlorophyll_a_mg_m3 != null ? `${pfz.chlorophyll_a_mg_m3} mg/m³` : '—'}</span>
                   </div>
                   <div className="researcher-pfz-validity">
                     Valid: {formatDate(pfz.valid_from)} — {formatDate(pfz.valid_to)}
