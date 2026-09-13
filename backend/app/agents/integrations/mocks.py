@@ -258,32 +258,52 @@ class MockPFZRankingEngine:
 class MockRouteExposureEngine:
     """Contract test double satisfying Dev 4 RouteExposureEngine protocol."""
 
+    def __init__(self, should_fail: bool = False, routes: Optional[List[EvaluatedRouteItem]] = None):
+        self.should_fail = should_fail
+        self.routes = routes
+
     def evaluate_routes(
         self,
         context: ToolInvocationContext,
         marine: MarineConditionsPayload,
         destination: str,
     ) -> RouteExposurePayload:
-        routes = [
-            EvaluatedRouteItem(
-                route_id="ROUTE-A-INSHORE",
-                name="Inshore Sheltered Channel",
-                distance_km=26.5,
-                max_wave_height_m=1.3,
-                risk_rating="LOW",
-                exposure_score=2.1,
-                waypoints=[[73.28, 16.99], [73.20, 16.95]],
-            ),
-            EvaluatedRouteItem(
-                route_id="ROUTE-B-DIRECT",
-                name="Direct Open-Sea Channel",
-                distance_km=20.2,
-                max_wave_height_m=2.1,
-                risk_rating="MODERATE",
-                exposure_score=4.8,
-                waypoints=[[73.28, 16.99], [73.10, 16.92]],
-            ),
-        ]
+        if self.should_fail:
+            raise RuntimeError("Route exposure engine unavailable")
+
+        if self.routes is not None:
+            routes = self.routes
+        else:
+            routes = [
+                EvaluatedRouteItem(
+                    route_id="ROUTE-A-INSHORE",
+                    name="Inshore Sheltered Channel",
+                    distance_km=26.5,
+                    max_wave_height_m=1.3,
+                    risk_rating="LOW",
+                    exposure_score=2.1,
+                    waypoints=[[73.28, 16.99], [73.20, 16.95]],
+                ),
+                EvaluatedRouteItem(
+                    route_id="ROUTE-B-DIRECT",
+                    name="Direct Open-Sea Channel",
+                    distance_km=20.2,
+                    max_wave_height_m=2.1,
+                    risk_rating="MODERATE",
+                    exposure_score=4.8,
+                    waypoints=[[73.28, 16.99], [73.10, 16.92]],
+                ),
+                EvaluatedRouteItem(
+                    route_id="ROUTE-C-BALANCED",
+                    name="Balanced Coastal Passage",
+                    distance_km=23.4,
+                    max_wave_height_m=1.7,
+                    risk_rating="LOW",
+                    exposure_score=3.4,
+                    waypoints=[[73.28, 16.99], [73.15, 16.94]],
+                ),
+            ]
+
         return RouteExposurePayload(
             origin=context.origin_harbor or "Ratnagiri",
             destination=destination,

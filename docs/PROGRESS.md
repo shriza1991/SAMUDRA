@@ -29,6 +29,17 @@
 ### P0-8E — Authority evidence and audit flow
 - Alert inspection opens the existing Audit view with direct canonical containment facts, separately labeled sector-situation evidence, and an explicit unavailable trace when no alert-to-run linkage exists.
 
+### P0-8G — Authority route alternatives & balanced candidate
+- Extended canonical RouteExposureEngine to return three truthful, evaluated route candidates: Safety-oriented (`ROUTE-A-INSHORE`), Balanced (`ROUTE-C-BALANCED`), and Direct (`ROUTE-B-DIRECT`).
+- Route C follows an intermediate path through the canonical synthetic route graph (`node-01` -> `node-03` -> `node-06` -> `node-10` -> `node-14` -> `node-16`), offering a genuine trade-off (23.4 km, 1.7m max wave, 3.4 exposure) between distance and exposure.
+- Exposed route alternatives via `/api/v1/demo/routes/alternatives` and `/api/v1/demo/sectors/{sector_id}/route-alternatives`.
+- MissionMapBrief and MapView dynamic layer rendering updated with candidate switching, real metric display, and honest empty/unavailable handling without hardcoded operational route geometry.
+
+### P0-8H — Simultaneous route alternatives visualization without clutter
+- Established visual hierarchy for route comparison: selected candidate rendered prominently as solid cyan line (`line_width: 4`, `opacity: 0.95`, `#06b6d4`), while non-selected alternatives render simultaneously as thin, dashed lines (`line_width: 2.5`, `line_dasharray: [3, 3]`, `opacity: 0.50`, `#38bdf8`).
+- Integrated dynamic sector route fetching in `AuthorityPage` with request cancellation and stale-state clearing on sector switch.
+- Stabilized map camera bounds to prevent abrupt jumping/refitting during Safest / Balanced / Direct corridor switching.
+
 ---
 
 ## P0 Marine Data Providers Status Board

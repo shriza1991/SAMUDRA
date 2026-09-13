@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import type { MapLayer } from '../../types/contracts';
 import { MOCK_SAFETY_RESPONSE, MOCK_PFZ_RESPONSE } from '../../api/mock-data';
+import { createAuthorityRouteLayers } from '../../utils/geo';
 
 describe('Map Layer GeoJSON Contract & Semantics', () => {
   it('validates Point geometry layers (e.g. Harbor departure points)', () => {
@@ -175,5 +176,145 @@ describe('Map Layer GeoJSON Contract & Semantics', () => {
     const props = (routeLayer.geojson as any).properties;
     expect(props.distance_km).toBe(42.6);
   });
-});
 
+  it('validates extractRouteCandidates and matchModeToCandidate for 3 genuine alternatives', async () => {
+    const { extractRouteCandidates, matchModeToCandidate } = await import('./MissionMapBrief');
+
+    const testLayers: MapLayer[] = [
+      {
+        layer_id: 'layer_recommended_route',
+        name: 'Recommended Safe Route',
+        layer_type: 'geojson',
+        visible: true,
+        geojson: {
+          type: 'Feature',
+          geometry: { type: 'LineString', coordinates: [[73.28, 16.99], [73.20, 16.95]] },
+          properties: {
+            route_id: 'ROUTE-A-INSHORE',
+            name: 'Inshore Sheltered Channel',
+            distance_km: 26.5,
+            max_wave_height_m: 1.3,
+            exposure_score: 2.1,
+            risk_rating: 'LOW',
+            is_recommended: true,
+          },
+        },
+      },
+      {
+        layer_id: 'layer_candidate_routes',
+        name: 'Candidate Passage Routes',
+        layer_type: 'geojson',
+        visible: true,
+        geojson: {
+          type: 'FeatureCollection',
+          features: [
+            {
+              type: 'Feature',
+              geometry: { type: 'LineString', coordinates: [[73.28, 16.99], [73.10, 16.92]] },
+              properties: {
+                route_id: 'ROUTE-B-DIRECT',
+                name: 'Direct Open-Sea Channel',
+                distance_km: 20.2,
+                max_wave_height_m: 2.1,
+                exposure_score: 4.8,
+                risk_rating: 'MODERATE',
+                is_recommended: false,
+              },
+            },
+            {
+              type: 'Feature',
+              geometry: { type: 'LineString', coordinates: [[73.28, 16.99], [73.15, 16.94]] },
+              properties: {
+                route_id: 'ROUTE-C-BALANCED',
+                name: 'Balanced Coastal Passage',
+                distance_km: 23.4,
+                max_wave_height_m: 1.7,
+                exposure_score: 3.4,
+                risk_rating: 'LOW',
+                is_recommended: false,
+              },
+            },
+          ],
+        },
+      },
+    ];
+
+    const candidates = extractRouteCandidates(testLayers);
+    expect(candidates).toHaveLength(3);
+
+    const safest = matchModeToCandidate('safest', candidates);
+    expect(safest?.route_id).toBe('ROUTE-A-INSHORE');
+    expect(safest?.distance_km).toBe(26.5);
+    expect(safest?.exposure_score).toBe(2.1);
+
+    const balanced = matchModeToCandidate('balanced', candidates);
+    expect(balanced?.route_id).toBe('ROUTE-C-BALANCED');
+    expect(balanced?.distance_km).toBe(23.4);
+    expect(balanced?.exposure_score).toBe(3.4);
+
+    const direct = matchModeToCandidate('direct', candidates);
+    expect(direct?.route_id).toBe('ROUTE-B-DIRECT');
+    expect(direct?.distance_km).toBe(20.2);
+    expect(direct?.exposure_score).toBe(4.8);
+  });
+
+  it('validates P0-8H route alternatives visual hierarchy and styling contracts', () => {
+    const mockRoutes = [
+      {
+        route_id: 'ROUTE-A-INSHORE',
+        name: 'Inshore Sheltered Channel',
+        distance_km: 26.5,
+        max_wave_height_m: 1.3,
+        risk_rating: 'LOW',
+        exposure_score: 2.1,
+        waypoints: [[73.28, 16.99], [73.20, 16.95]] as [number, number][],
+      },
+      {
+        route_id: 'ROUTE-C-BALANCED',
+        name: 'Balanced Coastal Passage',
+        distance_km: 23.4,
+        max_wave_height_m: 1.7,
+        risk_rating: 'LOW',
+        exposure_score: 3.4,
+        waypoints: [[73.28, 16.99], [73.15, 16.94]] as [number, number][],
+      },
+      {
+        route_id: 'ROUTE-B-DIRECT',
+        name: 'Direct Open-Sea Channel',
+        distance_km: 20.2,
+        max_wave_height_m: 2.1,
+        risk_rating: 'MODERATE',
+        exposure_score: 4.8,
+        waypoints: [[73.28, 16.99], [73.10, 16.92]] as [number, number][],
+      },
+    ];
+
+    // Verify empty state handling
+    const emptyLayers = createAuthorityRouteLayers([]);
+    expect(emptyLayers).toHaveLength(0);
+
+    // Verify 3 routes generation
+    const layers = createAuthorityRouteLayers(mockRoutes, 'ROUTE-A-INSHORE');
+    expect(layers).toHaveLength(2); // 1 recommended route layer + 1 candidate routes collection layer
+
+    const recommendedLayer = layers.find((l) => l.layer_id === 'layer_recommended_route');
+    expect(recommendedLayer).toBeDefined();
+    expect(recommendedLayer?.style?.color).toBe('#06b6d4');
+    expect(recommendedLayer?.style?.line_width).toBe(4);
+    expect(recommendedLayer?.style?.opacity).toBe(0.95);
+    expect((recommendedLayer?.geojson as any).properties?.is_recommended).toBe(true);
+    expect((recommendedLayer?.geojson as any).properties?.route_id).toBe('ROUTE-A-INSHORE');
+
+    const candidateLayer = layers.find((l) => l.layer_id === 'layer_candidate_routes');
+    expect(candidateLayer).toBeDefined();
+    expect(candidateLayer?.style?.color).toBe('#38bdf8');
+    expect(candidateLayer?.style?.line_width).toBe(2.5);
+    expect(candidateLayer?.style?.opacity).toBe(0.5);
+    expect(candidateLayer?.style?.line_dasharray).toEqual([3, 3]);
+
+    const candidateFeatures = (candidateLayer?.geojson as any).features;
+    expect(candidateFeatures).toHaveLength(2);
+    expect(candidateFeatures.map((f: any) => f.properties.route_id)).toEqual(['ROUTE-C-BALANCED', 'ROUTE-B-DIRECT']);
+    expect(candidateFeatures.every((f: any) => f.properties.is_recommended === false)).toBe(true);
+  });
+});

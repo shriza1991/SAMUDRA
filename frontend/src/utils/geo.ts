@@ -1,5 +1,5 @@
 import type { MapLayer } from '../types/contracts';
-import type { SectorHazard, VesselHazardAssociation } from '../api/client';
+import type { EvaluatedRouteItem, SectorHazard, VesselHazardAssociation } from '../api/client';
 import { getBaseLayers } from '../api/client';
 
 /**
@@ -366,3 +366,87 @@ export async function fetchAndFormatBaseLayers(): Promise<MapLayer[]> {
   }
 }
 
+/**
+ * Creates canonical MapLayers for Route Alternatives.
+ */
+export function createAuthorityRouteLayers(
+  routes: EvaluatedRouteItem[],
+  recommendedRouteId?: string | null
+): MapLayer[] {
+  if (!routes || routes.length === 0) return [];
+  const recId = recommendedRouteId || routes[0]?.route_id;
+  const recommendedRoute = routes.find((r) => r.route_id === recId) || routes[0];
+  const candidateRoutes = routes.filter((r) => r !== recommendedRoute);
+
+  const layers: MapLayer[] = [];
+
+  if (candidateRoutes.length > 0) {
+    layers.push({
+      layer_id: 'layer_candidate_routes',
+      name: 'Candidate Passage Routes',
+      layer_type: 'geojson',
+      visible: true,
+      style: {
+        color: '#38bdf8',
+        opacity: 0.5,
+        line_width: 2.5,
+        line_dasharray: [3, 3],
+        layer_category: 'navigation',
+      },
+      geojson: {
+        type: 'FeatureCollection',
+        features: candidateRoutes.map((r) => ({
+          type: 'Feature',
+          id: r.route_id,
+          geometry: {
+            type: 'LineString',
+            coordinates: r.waypoints,
+          },
+          properties: {
+            route_id: r.route_id,
+            name: r.name,
+            distance_km: r.distance_km,
+            max_wave_height_m: r.max_wave_height_m,
+            risk_rating: r.risk_rating,
+            exposure_score: r.exposure_score,
+            is_recommended: false,
+          },
+        })),
+      },
+    });
+  }
+
+  if (recommendedRoute) {
+    layers.push({
+      layer_id: 'layer_recommended_route',
+      name: `Recommended Route (${recommendedRoute.name})`,
+      layer_type: 'geojson',
+      visible: true,
+      style: {
+        color: '#06b6d4',
+        opacity: 0.95,
+        line_width: 4,
+        layer_category: 'navigation',
+      },
+      geojson: {
+        type: 'Feature',
+        id: recommendedRoute.route_id,
+        geometry: {
+          type: 'LineString',
+          coordinates: recommendedRoute.waypoints,
+        },
+        properties: {
+          route_id: recommendedRoute.route_id,
+          name: recommendedRoute.name,
+          distance_km: recommendedRoute.distance_km,
+          max_wave_height_m: recommendedRoute.max_wave_height_m,
+          risk_rating: recommendedRoute.risk_rating,
+          exposure_score: recommendedRoute.exposure_score,
+          is_recommended: true,
+        },
+      },
+    });
+  }
+
+  return layers;
+}

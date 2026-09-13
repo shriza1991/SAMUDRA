@@ -21,6 +21,7 @@ import {
   getDemoSectorHazards,
   getDemoSectorHazardAssociations,
   getDemoSectorSituation,
+  getDemoRouteAlternatives,
   type DemoSector,
   type SectorHazard,
   type VesselHazardAssociation,
@@ -31,6 +32,7 @@ import {
   createSectorLayers,
   createAuthorityHazardLayers,
   createHazardAssociationLayers,
+  createAuthorityRouteLayers,
   FALLBACK_DEMO_SECTORS,
   fetchAndFormatBaseLayers,
 } from '../utils/geo';
@@ -73,6 +75,7 @@ export default function AuthorityPage({
   const [sectorHazards, setSectorHazards] = useState<SectorHazard[]>([]);
   const [hazardError, setHazardError] = useState<string | null>(null);
   const [hazardAssociations, setHazardAssociations] = useState<VesselHazardAssociation[]>([]);
+  const [sectorRouteLayers, setSectorRouteLayers] = useState<MapLayer[]>([]);
   const [selectedOperationalAlert, setSelectedOperationalAlert] = useState<VesselHazardOperationalAlert | null>(null);
 
   useEffect(() => {
@@ -162,6 +165,30 @@ export default function AuthorityPage({
     return () => { isCurrent = false; };
   }, [activeSector.public_id]);
 
+  useEffect(() => {
+    let isCurrent = true;
+    const controller = new AbortController();
+    setSectorRouteLayers([]);
+
+    getDemoRouteAlternatives({ sector_id: activeSector.public_id }, controller.signal)
+      .then((data) => {
+        if (!isCurrent) return;
+        if (data && data.status === 'AVAILABLE' && Array.isArray(data.routes) && data.routes.length > 0) {
+          setSectorRouteLayers(createAuthorityRouteLayers(data.routes, data.recommended_route_id));
+        } else {
+          setSectorRouteLayers([]);
+        }
+      })
+      .catch(() => {
+        if (isCurrent) setSectorRouteLayers([]);
+      });
+
+    return () => {
+      isCurrent = false;
+      controller.abort();
+    };
+  }, [activeSector.public_id]);
+
   // Combine official base boundaries + sector polygon + replay trajectory + active query layers
   const authorityLayers = useMemo(() => {
     const sectorLayers = createSectorLayers(activeSector);
@@ -169,8 +196,32 @@ export default function AuthorityPage({
     const associationLayers = createHazardAssociationLayers(hazardAssociations, selectedOperationalAlert);
     const responseLayers = authorityActiveResponse?.map_layers ?? [];
     const activeReplay = replayLayer ? [replayLayer] : [];
-    return [...baseLayers, ...sectorLayers, ...hazardLayers, ...associationLayers, ...activeReplay, ...(trajectoryLayer ? [trajectoryLayer] : []), ...responseLayers];
-  }, [baseLayers, activeSector, sectorHazards, hazardAssociations, replayLayer, trajectoryLayer, selectedOperationalAlert, authorityActiveResponse?.map_layers]);
+    const hasResponseRoutes = responseLayers.some(
+      (l) => l.layer_id === 'layer_recommended_route' || l.layer_id === 'layer_candidate_routes'
+    );
+    const routeLayersToInclude = hasResponseRoutes ? [] : sectorRouteLayers;
+
+    return [
+      ...baseLayers,
+      ...sectorLayers,
+      ...hazardLayers,
+      ...associationLayers,
+      ...routeLayersToInclude,
+      ...activeReplay,
+      ...(trajectoryLayer ? [trajectoryLayer] : []),
+      ...responseLayers,
+    ];
+  }, [
+    baseLayers,
+    activeSector,
+    sectorHazards,
+    hazardAssociations,
+    sectorRouteLayers,
+    replayLayer,
+    trajectoryLayer,
+    selectedOperationalAlert,
+    authorityActiveResponse?.map_layers,
+  ]);
 
   const evidenceList = useMemo(() => {
     if (authorityActiveResponse?.evidence && authorityActiveResponse.evidence.length > 0) {

@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import maplibregl from 'maplibre-gl';
 import * as Popover from '@radix-ui/react-popover';
 import type { MapLayer } from '../../types/contracts';
+import type { OperationalMode } from '../../types/mission';
 import LayerManager from './LayerManager';
 import MissionMapBrief from './MissionMapBrief';
 import { Layers } from 'lucide-react';
@@ -29,9 +30,95 @@ export default function MapView({ layers, theme = 'light', center, zoom, languag
   const activeLayersRef = useRef<{ layers: string[]; sources: string[] }>({ layers: [], sources: [] });
   const [showLayerPanel, setShowLayerPanel] = useState(false);
   const [layerVisibility, setLayerVisibility] = useState<Record<string, boolean>>({});
+  const [selectedCorridorMode, setSelectedCorridorMode] = useState<OperationalMode>('safest');
 
   const activeStyle = theme === 'dark' ? MAP_STYLE_DARK : MAP_STYLE_LIGHT;
   const currentStyleRef = useRef(activeStyle);
+
+  // Dynamically compute effective render layers based on selected operational corridor
+  const effectiveRenderLayers = useMemo(() => {
+    const hasRouteLayers = layers.some(
+      (l) => l.layer_id === 'layer_recommended_route' || l.layer_id === 'layer_candidate_routes'
+    );
+    if (!hasRouteLayers) return layers;
+
+    const allRouteFeatures: any[] = [];
+    const nonRouteLayers: MapLayer[] = [];
+
+    for (const l of layers) {
+      if (l.layer_id === 'layer_recommended_route') {
+        if (l.geojson && (l.geojson as any).type === 'Feature') {
+          allRouteFeatures.push(l.geojson);
+        }
+      } else if (l.layer_id === 'layer_candidate_routes') {
+        if (l.geojson && (l.geojson as any).type === 'FeatureCollection' && Array.isArray((l.geojson as any).features)) {
+          allRouteFeatures.push(...(l.geojson as any).features);
+        }
+      } else {
+        nonRouteLayers.push(l);
+      }
+    }
+
+    if (allRouteFeatures.length === 0) return layers;
+
+    let selectedFeat = allRouteFeatures.find((f) => {
+      const id = f.properties?.route_id || '';
+      const name = (f.properties?.name || '').toLowerCase();
+      if (selectedCorridorMode === 'safest') return id === 'ROUTE-A-INSHORE' || name.includes('inshore') || name.includes('sheltered');
+      if (selectedCorridorMode === 'balanced') return id === 'ROUTE-C-BALANCED' || name.includes('balanced');
+      if (selectedCorridorMode === 'direct') return id === 'ROUTE-B-DIRECT' || name.includes('direct') || name.includes('deep');
+      return false;
+    });
+
+    if (!selectedFeat) {
+      selectedFeat = allRouteFeatures[0];
+    }
+
+    const otherFeats = allRouteFeatures.filter((f) => f !== selectedFeat);
+    const dynamicRouteLayers: MapLayer[] = [];
+
+    if (otherFeats.length > 0) {
+      dynamicRouteLayers.push({
+        layer_id: 'layer_candidate_routes',
+        name: 'Candidate Passage Routes',
+        layer_type: 'geojson',
+        visible: true,
+        style: {
+          color: '#38bdf8',
+          opacity: 0.5,
+          line_width: 2.5,
+          line_dasharray: [3, 3],
+          layer_category: 'navigation',
+        },
+        geojson: {
+          type: 'FeatureCollection',
+          features: otherFeats.map((f) => ({
+            ...f,
+            properties: { ...f.properties, is_recommended: false },
+          })),
+        },
+      });
+    }
+
+    dynamicRouteLayers.push({
+      layer_id: 'layer_recommended_route',
+      name: `Selected Corridor (${selectedFeat.properties?.name || selectedFeat.properties?.route_id || 'Route'})`,
+      layer_type: 'geojson',
+      visible: true,
+      style: {
+        color: '#06b6d4',
+        opacity: 0.95,
+        line_width: 4,
+        layer_category: 'navigation',
+      },
+      geojson: {
+        ...selectedFeat,
+        properties: { ...selectedFeat.properties, is_recommended: true },
+      },
+    });
+
+    return [...nonRouteLayers, ...dynamicRouteLayers];
+  }, [layers, selectedCorridorMode]);
 
   // Initialize map
   useEffect(() => {
@@ -69,6 +156,7 @@ export default function MapView({ layers, theme = 'light', center, zoom, languag
   const attachedListenersRef = useRef<Set<string>>(new Set());
   const activeReplayVesselRef = useRef<string | null>(null);
   const activeReplayTriggerRef = useRef<number | undefined>(undefined);
+  const lastFittedSignatureRef = useRef<string>('');
 
   // Animate map when programmatic center or zoom changes (only if no active replay trajectory is being tracked)
   useEffect(() => {
@@ -108,7 +196,7 @@ export default function MapView({ layers, theme = 'light', center, zoom, languag
       const newRegisteredLayers: string[] = [];
       const newRegisteredSources: string[] = [];
 
-      for (const layer of layers) {
+      for (const layer of effectiveRenderLayers) {
         const sourceId = `src-${layer.layer_id}`;
         const layerId = layer.layer_id;
         vis[layerId] = layer.visible;
@@ -210,11 +298,18 @@ export default function MapView({ layers, theme = 'light', center, zoom, languag
                 'line-join': 'round',
               },
             });
-            if (lineDasharray) map.setPaintProperty(lineLayerId, 'line-dasharray', lineDasharray);
+            if (lineDasharray) {
+              map.setPaintProperty(lineLayerId, 'line-dasharray', lineDasharray);
+            }
           } else {
             map.setPaintProperty(lineLayerId, 'line-color', color);
             map.setPaintProperty(lineLayerId, 'line-width', lineWidth);
             map.setPaintProperty(lineLayerId, 'line-opacity', opacity);
+            if (lineDasharray) {
+              map.setPaintProperty(lineLayerId, 'line-dasharray', lineDasharray);
+            } else {
+              map.setPaintProperty(lineLayerId, 'line-dasharray', [1, 0]);
+            }
           }
           newRegisteredLayers.push(lineLayerId);
         }
@@ -378,7 +473,14 @@ export default function MapView({ layers, theme = 'light', center, zoom, languag
             !l.layer_id.toLowerCase().includes('eez')
         );
 
-        if (operationalLayers.length > 0) {
+        const currentSignature = operationalLayers
+          .map((l) => l.layer_id)
+          .sort()
+          .join('|');
+
+        // Spatially stable: only refit when the set of operational layers changes, not on corridor mode toggle
+        if (operationalLayers.length > 0 && currentSignature !== lastFittedSignatureRef.current) {
+          lastFittedSignatureRef.current = currentSignature;
           const bounds = new maplibregl.LngLatBounds();
           let hasOperationalCoords = false;
           for (const l of operationalLayers) {
@@ -401,7 +503,7 @@ export default function MapView({ layers, theme = 'light', center, zoom, languag
       map.once('load', syncLayers);
       map.once('style.load', syncLayers);
     }
-  }, [layers, activeStyle]);
+  }, [effectiveRenderLayers, activeStyle]);
 
   const toggleLayer = useCallback((layerId: string) => {
     const map = mapRef.current;
@@ -429,7 +531,12 @@ export default function MapView({ layers, theme = 'light', center, zoom, languag
     <section className="map-view" aria-label="Geospatial map viewport">
       <div ref={containerRef} className="map-container" />
 
-      <MissionMapBrief layers={layers} language={language} />
+      <MissionMapBrief
+        layers={layers}
+        selectedMode={selectedCorridorMode}
+        onModeChange={setSelectedCorridorMode}
+        language={language}
+      />
 
       {layers.length > 0 && (
         <Popover.Root open={showLayerPanel} onOpenChange={setShowLayerPanel}>

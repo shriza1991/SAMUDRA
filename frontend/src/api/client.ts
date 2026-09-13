@@ -358,3 +358,40 @@ export async function getDemoSectorSituation(
   const qs = params.toString() ? `?${params.toString()}` : '';
   return request<SectorSituation>(`/demo/sectors/${encodeURIComponent(sectorId)}/situation${qs}`);
 }
+
+export interface EvaluatedRouteItem {
+  route_id: string;
+  name: string;
+  distance_km: number;
+  max_wave_height_m: number;
+  risk_rating: string;
+  exposure_score: number;
+  waypoints: [number, number][];
+}
+
+export interface RouteAlternativesResponse {
+  status: 'AVAILABLE' | 'NO_ROUTE' | 'UNAVAILABLE';
+  origin: string;
+  destination: string;
+  recommended_route_id?: string | null;
+  routes: EvaluatedRouteItem[];
+  message?: string;
+}
+
+export async function getDemoRouteAlternatives(
+  params?: {
+    sector_id?: string;
+    origin_harbor?: string;
+    destination?: string;
+    craft_profile?: string;
+  },
+  signal?: AbortSignal,
+): Promise<RouteAlternativesResponse> {
+  const query = new URLSearchParams();
+  if (params?.sector_id) query.set('sector_id', params.sector_id);
+  if (params?.origin_harbor) query.set('origin_harbor', params.origin_harbor);
+  if (params?.destination) query.set('destination', params.destination);
+  if (params?.craft_profile) query.set('craft_profile', params.craft_profile);
+  const qs = query.toString() ? `?${query.toString()}` : '';
+  return request<RouteAlternativesResponse>(`/demo/routes/alternatives${qs}`, { signal });
+}

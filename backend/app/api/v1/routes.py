@@ -1183,6 +1183,109 @@ def get_demo_routes(namespace: str = "SAMUDRA_DEMO_V1") -> dict[str, Any]:
     }
 
 
+@router.get(
+    "/demo/routes/alternatives",
+    tags=["Synthetic Demo"],
+    summary="Get evaluated passage route alternatives for a sector or origin/destination",
+)
+def get_demo_route_alternatives(
+    sector_id: str | None = None,
+    origin_harbor: str | None = None,
+    destination: str | None = None,
+    craft_profile: str = "motorized_boat",
+    namespace: str = "SAMUDRA_DEMO_V1",
+) -> dict[str, Any]:
+    """Retrieve evaluated passage route alternatives computed by RouteExposureEngine."""
+    from backend.app.agents.integrations.contracts import ToolInvocationContext
+    from backend.app.agents.integrations.dev2 import MarineConditionsPayload
+    from backend.app.agents.integrations.mocks import MockRouteExposureEngine
+    from backend.app.domain.situation import resolve_authority_sector_context
+
+    effective_origin = origin_harbor
+    effective_coords = None
+
+    if sector_id:
+        sector_ctx = resolve_authority_sector_context(sector_id)
+        if sector_ctx is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Surveillance sector '{sector_id}' not found.",
+            )
+        effective_origin = sector_ctx.get("origin_harbor") or effective_origin
+        effective_coords = sector_ctx.get("coordinates")
+
+    if not effective_origin:
+        effective_origin = "Ratnagiri"
+
+    effective_dest = destination or "Outer Bank"
+
+    ctx = ToolInvocationContext(
+        origin_harbor=effective_origin,
+        craft_profile=craft_profile,
+        coordinates=effective_coords,
+        sector_id=sector_id,
+    )
+
+    marine = MarineConditionsPayload(
+        significant_wave_height_m=1.3,
+        surface_current_knots=1.2,
+        swell_height_m=0.8,
+        swell_period_sec=8.0,
+    )
+
+    try:
+        engine = MockRouteExposureEngine()
+        payload = engine.evaluate_routes(ctx, marine, effective_dest)
+
+        if not payload.routes:
+            return {
+                "status": "NO_ROUTE",
+                "origin": payload.origin,
+                "destination": payload.destination,
+                "recommended_route_id": None,
+                "routes": [],
+                "message": "No feasible passage routes available for the specified origin/destination.",
+            }
+
+        return {
+            "status": "AVAILABLE",
+            "origin": payload.origin,
+            "destination": payload.destination,
+            "recommended_route_id": payload.recommended_route_id,
+            "routes": [r.model_dump() for r in payload.routes],
+        }
+    except Exception as exc:
+        logger.exception("Failed evaluating route alternatives: %s", exc)
+        return {
+            "status": "UNAVAILABLE",
+            "origin": effective_origin,
+            "destination": effective_dest,
+            "recommended_route_id": None,
+            "routes": [],
+            "message": f"Route data unavailable: {str(exc)}",
+        }
+
+
+@router.get(
+    "/demo/sectors/{sector_id}/route-alternatives",
+    tags=["Synthetic Demo"],
+    summary="Get evaluated passage route alternatives for a specific surveillance sector",
+)
+def get_demo_sector_route_alternatives(
+    sector_id: str,
+    destination: str | None = None,
+    craft_profile: str = "motorized_boat",
+    namespace: str = "SAMUDRA_DEMO_V1",
+) -> dict[str, Any]:
+    """Canonical alias for retrieving route alternatives for a specific sector."""
+    return get_demo_route_alternatives(
+        sector_id=sector_id,
+        destination=destination,
+        craft_profile=craft_profile,
+        namespace=namespace,
+    )
+
+
 def _canonical_sector_hazards(sector_id: str, namespace: str) -> list[dict[str, Any]] | None:
     """Delegate Authority hazard relevance to the shared domain resolver."""
     from backend.app.domain.situation import get_canonical_active_hazards_for_sector

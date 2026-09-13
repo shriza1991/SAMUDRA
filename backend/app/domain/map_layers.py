@@ -249,8 +249,12 @@ def generate_map_layers(state: Dict[str, Any]) -> List[MapLayer]:
                 dest_coords = _get_harbor_lon_lat(state.get("destination") or "Porbandar")
                 if r_id == "ROUTE-A-INSHORE":
                     mid_pt = [(lon + dest_coords[0]) / 2 + 0.05, (lat + dest_coords[1]) / 2]
-                else:
+                elif r_id == "ROUTE-B-DIRECT":
                     mid_pt = [(lon + dest_coords[0]) / 2 - 0.15, (lat + dest_coords[1]) / 2]
+                elif r_id == "ROUTE-C-BALANCED":
+                    mid_pt = [(lon + dest_coords[0]) / 2 - 0.05, (lat + dest_coords[1]) / 2]
+                else:
+                    mid_pt = [(lon + dest_coords[0]) / 2 - 0.05, (lat + dest_coords[1]) / 2]
                 r_waypoints = [[lon, lat], mid_pt, dest_coords]
 
             feat = {
