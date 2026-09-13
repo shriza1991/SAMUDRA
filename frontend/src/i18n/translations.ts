@@ -846,6 +846,76 @@ export const CANONICAL_TRANSLATION_MAP: TranslationEntry[] = [
     mr: 'प्राधिकरण डेक उघडा',
   },
   {
+    en: 'Marine Researchers & Data Scientists',
+    hi: 'समुद्री शोधकर्ता और डेटा वैज्ञानिक',
+    mr: 'सागरी संशोधक आणि डेटा शास्त्रज्ञ',
+  },
+  {
+    en: 'Researcher Lab',
+    hi: 'शोधकर्ता प्रयोगशाला',
+    mr: 'संशोधक प्रयोगशाळा',
+  },
+  {
+    en: "Explore ocean observation data, satellite EO products, evaluate benchmark scenarios, and inspect evidence provenance across SAMUDRA's marine data ecosystem.",
+    hi: 'समुद्र (SAMUDRA) के सागरीय डेटा तंत्र में महासागर अवलोकन डेटा, उपग्रह ईओ उत्पादों का अन्वेषण करें, बेंचमार्क परिदृश्यों का मूल्यांकन करें और साक्ष्य स्रोतों का निरीक्षण करें।',
+    mr: 'समुद्र (SAMUDRA) च्या सागरी डेटा परिसंस्थेतील महासागर निरीक्षण डेटा, उपग्रह ईओ उत्पादने एक्सप्लोर करा, बेंचमार्क परिस्थितींचे मूल्यांकन करा आणि पुराव्यांचे परीक्षण करा.',
+  },
+  {
+    en: 'Ocean Data Explorer:',
+    hi: 'महासागर डेटा एक्सप्लोरर:',
+    mr: 'महासागर डेटा एक्सप्लोरर:',
+  },
+  {
+    en: 'Marine conditions, SST, wave heights, and current speeds by harbor.',
+    hi: 'बंदरगाह अनुसार समुद्री स्थितियां, SST, लहर ऊंचाई और धारा गति।',
+    mr: 'बंदरांनुसार सागरी स्थिती, SST, लाटांची उंची आणि प्रवाहाचा वेग.',
+  },
+  {
+    en: 'Satellite EO Grid:',
+    hi: 'उपग्रह ईओ ग्रिड:',
+    mr: 'उपग्रह ईओ ग्रिड:',
+  },
+  {
+    en: 'Chlorophyll-a concentrations, SST rasters, and cloud cover from MOSDAC.',
+    hi: 'MOSDAC से क्लोरोफिल-ए सांद्रता, SST रास्टर और बादल आवरण।',
+    mr: 'MOSDAC कडून क्लोरोफिल-ए प्रमाण, SST रास्टर आणि ढगांचे आच्छादन.',
+  },
+  {
+    en: 'Scenario Lab:',
+    hi: 'परिदृश्य प्रयोगशाला (सिनेरियो लैब):',
+    mr: 'परिस्थिती प्रयोगशाळा (सिनेरिओ लॅब):',
+  },
+  {
+    en: 'Execute S1–S8 benchmark evaluations and audit recommendation traces.',
+    hi: 'S1–S8 बेंचमार्क मूल्यांकनों को निष्पादित करें और अनुशंसा निशानों का ऑडिट करें।',
+    mr: 'S1–S8 बेंचमार्क मूल्यमापन चालवा आणि शिफारस ट्रेसचे ऑडिट करा.',
+  },
+  {
+    en: 'Source Provenance:',
+    hi: 'स्रोत सत्यापन एवं उद्गम:',
+    mr: 'माहिती स्रोत आणि सत्यता:',
+  },
+  {
+    en: 'Data freshness, quality flags, and authoritative source hierarchy.',
+    hi: 'डेटा नवीनता, गुणवत्ता टैग और आधिकारिक स्रोत पदानुक्रम।',
+    mr: 'डेटा ताजेपणा, गुणवत्ता टॅग आणि अधिकृत स्रोत क्रमवारी.',
+  },
+  {
+    en: 'Query Workbench:',
+    hi: 'शोध प्रश्न कार्यमंच:',
+    mr: 'संशोधन प्रश्न कार्यशाळा:',
+  },
+  {
+    en: 'Exploratory natural language queries with inline evidence and trace.',
+    hi: 'इनलाइन साक्ष्य और ट्रेस के साथ अन्वेषणात्मक प्राकृतिक भाषा प्रश्न।',
+    mr: 'इनलाइन पुरावे आणि ट्रेससह अन्वेषणात्मक नैसर्गिक भाषा प्रश्न.',
+  },
+  {
+    en: 'Enter Researcher Lab',
+    hi: 'शोधकर्ता प्रयोगशाला में प्रवेश करें',
+    mr: 'संशोधक प्रयोगशाळेत प्रवेश करा',
+  },
+  {
     en: 'Deterministic Marine Decision Engine · Complying with Official Government Feeds (INCOIS OSF, PFZ, SVAS, IMD Marine)',
     hi: 'निश्चित सागरी निर्णय इंजन · आधिकारिक सरकारी फ़ीड (INCOIS OSF, PFZ, SVAS, IMD Marine) के अनुरूप',
     mr: 'निश्चित सागरी निर्णय इंजिन · अधिकृत सरकारी माहिती फीड (INCOIS OSF, PFZ, SVAS, IMD Marine) शी सुसंगत',

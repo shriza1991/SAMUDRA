@@ -2,13 +2,17 @@ import {
   Activity,
   Anchor,
   ArrowRight,
+  BarChart3,
+  Beaker,
   Building2,
   CheckCircle2,
   Compass,
   FileCheck2,
   Fish,
+  FlaskConical,
   MapPinned,
   Mic,
+  Microscope,
   RadioTower,
   ShieldAlert,
   ShipWheel,
@@ -17,7 +21,7 @@ import {
 import { translateText, type SupportedLanguage } from '../i18n/translations';
 
 interface PortalPageProps {
-  onSelectRole: (role: 'fisher' | 'authority') => void;
+  onSelectRole: (role: 'fisher' | 'authority' | 'researcher') => void;
   language?: SupportedLanguage;
 }
 
@@ -135,6 +139,55 @@ export default function PortalPage({ onSelectRole, language = 'en' }: PortalPage
               onClick={() => onSelectRole('authority')}
             >
               <span>{tr('Enter Authority Deck')}</span>
+              <ArrowRight size={16} />
+            </button>
+          </article>
+
+          {/* Card 3: Researcher Lab */}
+          <article className="portal-card researcher-portal-card">
+            <div className="portal-card-header">
+              <div className="portal-icon-wrapper researcher-icon">
+                <Beaker size={28} />
+              </div>
+              <div>
+                <span className="portal-card-eyebrow">{tr('Marine Researchers & Data Scientists')}</span>
+                <h2>{tr('Researcher Lab')}</h2>
+              </div>
+            </div>
+
+            <p className="portal-card-summary">
+              {tr('Explore ocean observation data, satellite EO products, evaluate benchmark scenarios, and inspect evidence provenance across SAMUDRA\'s marine data ecosystem.')}
+            </p>
+
+            <ul className="portal-features-list">
+              <li>
+                <Microscope size={15} className="feature-check" />
+                <span><strong>{tr('Ocean Data Explorer:')}</strong> {tr('Marine conditions, SST, wave heights, and current speeds by harbor.')}</span>
+              </li>
+              <li>
+                <BarChart3 size={15} className="feature-check" />
+                <span><strong>{tr('Satellite EO Grid:')}</strong> {tr('Chlorophyll-a concentrations, SST rasters, and cloud cover from MOSDAC.')}</span>
+              </li>
+              <li>
+                <FlaskConical size={15} className="feature-check" />
+                <span><strong>{tr('Scenario Lab:')}</strong> {tr('Execute S1–S8 benchmark evaluations and audit recommendation traces.')}</span>
+              </li>
+              <li>
+                <FileCheck2 size={15} className="feature-check" />
+                <span><strong>{tr('Source Provenance:')}</strong> {tr('Data freshness, quality flags, and authoritative source hierarchy.')}</span>
+              </li>
+              <li>
+                <Activity size={15} className="feature-check" />
+                <span><strong>{tr('Query Workbench:')}</strong> {tr('Exploratory natural language queries with inline evidence and trace.')}</span>
+              </li>
+            </ul>
+
+            <button
+              type="button"
+              className="portal-cta-btn researcher-cta"
+              onClick={() => onSelectRole('researcher')}
+            >
+              <span>{tr('Enter Researcher Lab')}</span>
               <ArrowRight size={16} />
             </button>
           </article>

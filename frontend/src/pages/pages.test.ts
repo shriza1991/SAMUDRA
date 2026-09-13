@@ -2,9 +2,10 @@ import { describe, it, expect } from 'vitest';
 import PortalPage from './PortalPage';
 import FisherPage from './FisherPage';
 import AuthorityPage from './AuthorityPage';
+import ResearcherPage from './ResearcherPage';
 import SettingsPage from './SettingsPage';
 
-describe('Persona Pages: Fisher & Authority Modular Separation with Portal Selection', () => {
+describe('Persona Pages: Fisher, Authority & Researcher Modular Separation with Portal Selection', () => {
   it('exports PortalPage component cleanly', () => {
     expect(PortalPage).toBeDefined();
     expect(typeof PortalPage).toBe('function');
@@ -25,18 +26,24 @@ describe('Persona Pages: Fisher & Authority Modular Separation with Portal Selec
     expect(typeof SettingsPage).toBe('function');
   });
 
-  it('validates role segregation between fisher and authority', () => {
-    const roles: Array<'fisher' | 'authority'> = ['fisher', 'authority'];
-    expect(roles).toHaveLength(2);
+  it('exports ResearcherPage component cleanly', () => {
+    expect(ResearcherPage).toBeDefined();
+    expect(typeof ResearcherPage).toBe('function');
+  });
+
+  it('validates role segregation between fisher, authority, and researcher', () => {
+    const roles: Array<'fisher' | 'authority' | 'researcher'> = ['fisher', 'authority', 'researcher'];
+    expect(roles).toHaveLength(3);
     expect(roles[0]).toBe('fisher');
     expect(roles[1]).toBe('authority');
+    expect(roles[2]).toBe('researcher');
   });
 
   it('verifies portal acts as the single entrypoint for switching personas', () => {
-    type PortalMode = 'selection' | 'fisher' | 'authority' | 'settings';
+    type PortalMode = 'selection' | 'fisher' | 'authority' | 'researcher' | 'settings';
     let currentPortal: PortalMode = 'selection';
 
-    const onSelectRole = (role: 'fisher' | 'authority') => {
+    const onSelectRole = (role: 'fisher' | 'authority' | 'researcher') => {
       currentPortal = role;
     };
     const onLogout = () => {
@@ -58,10 +65,18 @@ describe('Persona Pages: Fisher & Authority Modular Separation with Portal Selec
     // User clicks Logout again
     onLogout();
     expect(currentPortal).toBe('selection');
+
+    // User chooses Researcher on the single Portal page
+    onSelectRole('researcher');
+    expect(currentPortal).toBe('researcher');
+
+    // User clicks Logout again
+    onLogout();
+    expect(currentPortal).toBe('selection');
   });
 
   it('verifies seamless two-way routing into Settings and back to previous portal', () => {
-    type PortalMode = 'selection' | 'fisher' | 'authority' | 'settings';
+    type PortalMode = 'selection' | 'fisher' | 'authority' | 'researcher' | 'settings';
     let currentPortal: PortalMode = 'fisher';
     let previousPortal: PortalMode = 'selection';
 
