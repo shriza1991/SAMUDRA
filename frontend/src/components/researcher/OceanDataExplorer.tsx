@@ -195,8 +195,8 @@ export default function OceanDataExplorer() {
                 </tr>
               </thead>
               <tbody>
-                {eoCells.map(cell => (
-                  <tr key={cell.cell_id}>
+                {eoCells.map((cell, idx) => (
+                  <tr key={cell.public_id || `${cell.cell_id}-${cell.pass_time || idx}`}>
                     <td className="researcher-cell-mono">{cell.cell_id}</td>
                     <td style={{ color: (cell.chlorophyll_a_mg_m3 ?? 0) > 1.5 ? '#10b981' : undefined, fontWeight: (cell.chlorophyll_a_mg_m3 ?? 0) > 1.5 ? 600 : undefined }}>
                       {cell.chlorophyll_a_mg_m3 != null ? cell.chlorophyll_a_mg_m3.toFixed(2) : '—'}

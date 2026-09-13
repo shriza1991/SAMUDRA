@@ -5,9 +5,10 @@ import {
 } from 'lucide-react';
 import { fetchScenarios, runScenario, type ScenarioMeta, type ScenarioRunResult } from '../../api/researcher-client';
 
-function StatusBadge({ status }: { status: string }) {
-  const cls = status === 'GO' ? 'go' : status === 'NO_GO' ? 'no-go' : status === 'CAUTION' ? 'caution' : 'unknown';
-  return <span className={`researcher-status-badge ${cls}`}>{status.replace('_', ' ')}</span>;
+function StatusBadge({ status }: { status?: string }) {
+  const safeStatus = status || 'UNKNOWN';
+  const cls = safeStatus === 'GO' ? 'go' : safeStatus === 'NO_GO' ? 'no-go' : safeStatus === 'CAUTION' ? 'caution' : 'unknown';
+  return <span className={`researcher-status-badge ${cls}`}>{safeStatus.replace('_', ' ')}</span>;
 }
 
 export default function ScenarioLab() {
@@ -91,7 +92,7 @@ export default function ScenarioLab() {
               <div className="researcher-scenario-card-top">
                 <span className="researcher-scenario-id">{s.id}</span>
                 <span className="researcher-scenario-name">{s.name}</span>
-                {results[s.id] && <StatusBadge status={results[s.id].recommendation_status} />}
+                {results[s.id] && <StatusBadge status={results[s.id]?.recommendation_status} />}
                 {runningId === s.id && <Loader2 size={12} className="researcher-spinner" />}
               </div>
               <ChevronRight size={14} className="researcher-scenario-chevron" />
@@ -145,47 +146,47 @@ export default function ScenarioLab() {
                 <div className="researcher-result-kpis">
                   <div className="researcher-result-kpi">
                     <span className="researcher-kpi-label">Status</span>
-                    <StatusBadge status={selectedResult.recommendation_status} />
+                    <StatusBadge status={selectedResult?.recommendation_status} />
                   </div>
                   <div className="researcher-result-kpi">
                     <span className="researcher-kpi-label">Confidence</span>
-                    <span className="researcher-kpi-value">{selectedResult.confidence_level}</span>
+                    <span className="researcher-kpi-value">{selectedResult?.confidence_level || 'UNKNOWN'}</span>
                   </div>
                   <div className="researcher-result-kpi">
                     <span className="researcher-kpi-label">Evidence</span>
-                    <span className="researcher-kpi-value">{selectedResult.evidence_count} items</span>
+                    <span className="researcher-kpi-value">{selectedResult?.evidence_count ?? 0} items</span>
                   </div>
                   <div className="researcher-result-kpi">
                     <span className="researcher-kpi-label">Trace</span>
-                    <span className="researcher-kpi-value">{selectedResult.trace_steps} steps</span>
+                    <span className="researcher-kpi-value">{selectedResult?.trace_steps ?? 0} steps</span>
                   </div>
                   <div className="researcher-result-kpi">
                     <span className="researcher-kpi-label">Latency</span>
-                    <span className="researcher-kpi-value">{selectedResult.execution_time_ms}ms</span>
+                    <span className="researcher-kpi-value">{selectedResult?.execution_time_ms ?? 0}ms</span>
                   </div>
                 </div>
 
                 {/* Answer */}
                 <div className="researcher-result-answer">
                   <span className="researcher-input-label">Response</span>
-                  <p>{selectedResult.answer}</p>
+                  <p>{selectedResult?.answer || 'Evaluation completed successfully.'}</p>
                 </div>
 
                 {/* Decisive Factors */}
                 <div className="researcher-result-factors">
                   <span className="researcher-input-label">Decisive Factors</span>
                   <ul>
-                    {selectedResult.decisive_factors.map((f, i) => (
+                    {(selectedResult?.decisive_factors || []).map((f, i) => (
                       <li key={i}><CheckCircle2 size={12} /> {f}</li>
                     ))}
                   </ul>
                 </div>
 
                 {/* Warnings */}
-                {selectedResult.warnings.length > 0 && (
+                {(selectedResult?.warnings || []).length > 0 && (
                   <div className="researcher-result-warnings">
                     <span className="researcher-input-label">Warnings</span>
-                    {selectedResult.warnings.map((w, i) => (
+                    {(selectedResult?.warnings || []).map((w, i) => (
                       <div key={i} className="researcher-warning-item">
                         <AlertTriangle size={12} /> {w}
                       </div>

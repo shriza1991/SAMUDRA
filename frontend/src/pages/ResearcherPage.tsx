@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, Component, type ErrorInfo, type ReactNode } from 'react';
 import {
-  Beaker, Waves, Database, FlaskConical, MessageSquareText,
+  Beaker, Waves, Database, FlaskConical, MessageSquareText, AlertOctagon, RotateCcw,
 } from 'lucide-react';
 import OceanDataExplorer from '../components/researcher/OceanDataExplorer';
 import DataSourceMonitor from '../components/researcher/DataSourceMonitor';
@@ -8,6 +8,61 @@ import ScenarioLab from '../components/researcher/ScenarioLab';
 import QueryWorkbench from '../components/researcher/QueryWorkbench';
 
 type ResearcherDeck = 'ocean' | 'sources' | 'scenarios' | 'query';
+
+interface ErrorBoundaryProps {
+  children: ReactNode;
+  onReset?: () => void;
+}
+
+interface ErrorBoundaryState {
+  hasError: boolean;
+  error: Error | null;
+}
+
+class DeckErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  constructor(props: ErrorBoundaryProps) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    console.error('ResearcherDeck Error caught:', error, errorInfo);
+  }
+
+  handleReset = () => {
+    this.setState({ hasError: false, error: null });
+    this.props.onReset?.();
+  };
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="researcher-empty-results" style={{ padding: '3rem 1.5rem', textAlign: 'center', background: 'var(--card, #0f172a)', borderRadius: '8px', border: '1px solid var(--border, #334155)', margin: '1rem' }}>
+          <AlertOctagon size={32} style={{ color: '#ef4444', marginBottom: '0.75rem' }} />
+          <h3 style={{ fontSize: '1.1rem', fontWeight: 600, color: 'var(--foreground, #f8fafc)', marginBottom: '0.5rem' }}>
+            Deck Rendering Error
+          </h3>
+          <p style={{ color: 'var(--muted-foreground, #94a3b8)', maxWidth: '480px', margin: '0 auto 1rem', fontSize: '0.875rem' }}>
+            {this.state.error?.message || 'An unexpected error occurred while displaying this lab component.'}
+          </p>
+          <button
+            className="researcher-refresh-btn"
+            onClick={this.handleReset}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', borderRadius: '6px', background: 'var(--accent, #38bdf8)', color: '#000', fontWeight: 500, cursor: 'pointer', border: 'none' }}
+          >
+            <RotateCcw size={14} />
+            <span>Retry Component</span>
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 const DECKS: { id: ResearcherDeck; label: string; icon: typeof Waves }[] = [
   { id: 'ocean', label: 'Ocean Data', icon: Waves },
@@ -49,10 +104,12 @@ export default function ResearcherPage() {
 
       {/* Active Deck Content */}
       <div className="researcher-deck-content">
-        {activeDeck === 'ocean' && <OceanDataExplorer />}
-        {activeDeck === 'sources' && <DataSourceMonitor />}
-        {activeDeck === 'scenarios' && <ScenarioLab />}
-        {activeDeck === 'query' && <QueryWorkbench />}
+        <DeckErrorBoundary key={activeDeck}>
+          {activeDeck === 'ocean' && <OceanDataExplorer />}
+          {activeDeck === 'sources' && <DataSourceMonitor />}
+          {activeDeck === 'scenarios' && <ScenarioLab />}
+          {activeDeck === 'query' && <QueryWorkbench />}
+        </DeckErrorBoundary>
       </div>
     </div>
   );
