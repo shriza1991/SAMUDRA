@@ -3779,7 +3779,7 @@
 
 .portal-container {
   width: 100%;
-  max-width: 1040px;
+  max-width: 1320px;
   display: flex;
   flex-direction: column;
   gap: var(--space-2xl);
@@ -3830,7 +3830,7 @@
 
 .portal-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: var(--space-xl);
 }
 
@@ -4011,7 +4011,7 @@
   margin: 0;
 }
 
-@media (max-width: 820px) {
+@media (max-width: 960px) {
   .portal-grid {
     grid-template-columns: 1fr;
   }
