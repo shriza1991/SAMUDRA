@@ -24,6 +24,7 @@ import {
   type DemoSector,
   type SectorHazard,
   type VesselHazardAssociation,
+  type VesselHazardOperationalAlert,
   type SectorSituation,
 } from '../api/client';
 import {
@@ -71,6 +72,7 @@ export default function AuthorityPage({
   const [sectorHazards, setSectorHazards] = useState<SectorHazard[]>([]);
   const [hazardError, setHazardError] = useState<string | null>(null);
   const [hazardAssociations, setHazardAssociations] = useState<VesselHazardAssociation[]>([]);
+  const [selectedOperationalAlert, setSelectedOperationalAlert] = useState<VesselHazardOperationalAlert | null>(null);
 
   useEffect(() => {
     fetchAndFormatBaseLayers().then(setBaseLayers);
@@ -130,6 +132,9 @@ export default function AuthorityPage({
 
   useEffect(() => {
     let isCurrent = true;
+    // Alert inspection is scoped to a single Authority sector and must never
+    // survive a sector switch while its replacement data is loading.
+    setSelectedOperationalAlert(null);
     setSectorHazards([]);
     setHazardError(null);
 
@@ -158,12 +163,12 @@ export default function AuthorityPage({
   // Combine official base boundaries + sector polygon + replay trajectory + active query layers
   const authorityLayers = useMemo(() => {
     const sectorLayers = createSectorLayers(activeSector);
-    const hazardLayers = createAuthorityHazardLayers(sectorHazards);
-    const associationLayers = createHazardAssociationLayers(hazardAssociations);
+    const hazardLayers = createAuthorityHazardLayers(sectorHazards, selectedOperationalAlert?.hazard_id);
+    const associationLayers = createHazardAssociationLayers(hazardAssociations, selectedOperationalAlert);
     const responseLayers = authorityActiveResponse?.map_layers ?? [];
     const activeReplay = replayLayer ? [replayLayer] : [];
     return [...baseLayers, ...sectorLayers, ...hazardLayers, ...associationLayers, ...activeReplay, ...responseLayers];
-  }, [baseLayers, activeSector, sectorHazards, hazardAssociations, replayLayer, authorityActiveResponse?.map_layers]);
+  }, [baseLayers, activeSector, sectorHazards, hazardAssociations, replayLayer, selectedOperationalAlert, authorityActiveResponse?.map_layers]);
 
   const evidenceList = useMemo(() => {
     if (authorityActiveResponse?.evidence && authorityActiveResponse.evidence.length > 0) {
@@ -345,6 +350,12 @@ export default function AuthorityPage({
               <FleetTrackingDeck
                 selectedSector={selectedSector}
                 onReplayUpdate={setReplayLayer}
+                onAlertSelectionChange={(alert) => {
+                  // The alert endpoint is sector-scoped; still enforce the
+                  // boundary at the UI hand-off so stale async UI state cannot
+                  // highlight a different sector.
+                  setSelectedOperationalAlert(alert?.sector_id === activeSector.public_id ? alert : null);
+                }}
                 language={chat.language}
               />
             </aside>

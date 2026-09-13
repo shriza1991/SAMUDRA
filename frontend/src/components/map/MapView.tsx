@@ -163,6 +163,9 @@ export default function MapView({ layers, theme = 'light', center, zoom, languag
                 'fill-opacity': opacity,
               },
             });
+          } else {
+            map.setPaintProperty(layerId, 'fill-color', color);
+            map.setPaintProperty(layerId, 'fill-opacity', opacity);
           }
           newRegisteredLayers.push(layerId);
 
@@ -179,6 +182,10 @@ export default function MapView({ layers, theme = 'light', center, zoom, languag
                 'line-opacity': Math.min(opacity + 0.35, 1),
               },
             });
+          } else {
+            map.setPaintProperty(outlineId, 'line-color', color);
+            map.setPaintProperty(outlineId, 'line-width', lineWidth);
+            map.setPaintProperty(outlineId, 'line-opacity', Math.min(opacity + 0.35, 1));
           }
           newRegisteredLayers.push(outlineId);
         }
@@ -202,6 +209,10 @@ export default function MapView({ layers, theme = 'light', center, zoom, languag
                 'line-join': 'round',
               },
             });
+          } else {
+            map.setPaintProperty(lineLayerId, 'line-color', color);
+            map.setPaintProperty(lineLayerId, 'line-width', lineWidth);
+            map.setPaintProperty(lineLayerId, 'line-opacity', opacity);
           }
           newRegisteredLayers.push(lineLayerId);
         }
@@ -223,6 +234,10 @@ export default function MapView({ layers, theme = 'light', center, zoom, languag
                 'circle-stroke-color': '#ffffff',
               },
             });
+          } else {
+            map.setPaintProperty(pointLayerId, 'circle-radius', circleRadius);
+            map.setPaintProperty(pointLayerId, 'circle-color', color);
+            map.setPaintProperty(pointLayerId, 'circle-opacity', opacity);
           }
           newRegisteredLayers.push(pointLayerId);
         }

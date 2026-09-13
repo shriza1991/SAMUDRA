@@ -4318,6 +4318,19 @@
   padding: 10px;
 }
 
+button.fleet-alert-card {
+  width: 100%;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+button.fleet-alert-card.active {
+  border-color: #facc15;
+  box-shadow: 0 0 0 1px rgba(250, 204, 21, 0.35);
+}
+
 .fleet-alert-card.warning {
   border-left-color: #eab308;
 }

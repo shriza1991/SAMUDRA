@@ -249,9 +249,15 @@ export function createSectorLayers(sectorInput: DemoSector | string): MapLayer[]
 }
 
 /** Convert canonical Authority hazard geometry into inspectable MapLibre layers. */
-export function createAuthorityHazardLayers(hazards: SectorHazard[]): MapLayer[] {
+export function createAuthorityHazardLayers(
+  hazards: SectorHazard[],
+  selectedHazardId?: string | null,
+): MapLayer[] {
   return hazards.map((hazard) => {
-    const color = hazard.severity === 'WARNING'
+    const isSelected = hazard.hazard_id === selectedHazardId;
+    const color = isSelected
+      ? '#facc15'
+      : hazard.severity === 'WARNING'
       ? '#ef4444'
       : hazard.severity === 'ALERT'
       ? '#f97316'
@@ -264,8 +270,8 @@ export function createAuthorityHazardLayers(hazards: SectorHazard[]): MapLayer[]
       visible: true,
       style: {
         color,
-        opacity: 0.32,
-        line_width: 2.5,
+        opacity: isSelected ? 0.58 : 0.32,
+        line_width: isSelected ? 4.5 : 2.5,
         layer_category: 'authority_hazard',
       },
       geojson: {
@@ -278,6 +284,7 @@ export function createAuthorityHazardLayers(hazards: SectorHazard[]): MapLayer[]
           status: hazard.status,
           valid_from: hazard.valid_from,
           valid_to: hazard.valid_to,
+          selected_for_alert_inspection: isSelected,
         },
       },
     };
@@ -285,13 +292,25 @@ export function createAuthorityHazardLayers(hazards: SectorHazard[]): MapLayer[]
 }
 
 /** Highlight current canonical vessel positions already inside an active hazard area. */
-export function createHazardAssociationLayers(associations: VesselHazardAssociation[]): MapLayer[] {
-  return associations.map((association) => ({
+export function createHazardAssociationLayers(
+  associations: VesselHazardAssociation[],
+  selectedAssociation?: Pick<VesselHazardAssociation, 'vessel_id' | 'hazard_id'> | null,
+): MapLayer[] {
+  return associations.map((association) => {
+    const isSelected = association.vessel_id === selectedAssociation?.vessel_id
+      && association.hazard_id === selectedAssociation.hazard_id;
+    return {
     layer_id: `hazard_association_${association.vessel_id}_${association.hazard_id}`,
     name: `Hazard association: ${association.vessel_id}`,
     layer_type: 'geojson',
     visible: true,
-    style: { color: '#ef4444', opacity: 1, circle_radius: 12, layer_category: 'hazard_association' },
+    style: {
+      color: isSelected ? '#facc15' : '#ef4444',
+      opacity: 1,
+      circle_radius: isSelected ? 16 : 12,
+      line_width: isSelected ? 3 : undefined,
+      layer_category: 'hazard_association',
+    },
     geojson: {
       type: 'Feature',
       geometry: { type: 'Point', coordinates: association.vessel_position },
@@ -300,9 +319,11 @@ export function createHazardAssociationLayers(associations: VesselHazardAssociat
         hazard_id: association.hazard_id,
         association_type: association.association_type,
         evaluated_at: association.evaluated_at,
+        selected_for_alert_inspection: isSelected,
       },
     },
-  }));
+  };
+  });
 }
 
 /**

@@ -23,6 +23,9 @@
 ### P0-8C — Authority operational hazard alerts
 - Current, stable operational alerts are derived from P0-8B associations and displayed separately from historical broadcast notifications.
 
+### P0-8D — Authority alert inspection
+- Selecting a current operational alert reuses the canonical vessel replay focus and highlights the matching canonical hazard and association geometry. Inspection state is local to the active sector and is cleared on sector switch, unavailable data, or alert reconciliation.
+
 ---
 
 ## P0 Marine Data Providers Status Board

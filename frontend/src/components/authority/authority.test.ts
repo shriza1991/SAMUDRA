@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import ScenarioBenchmarkDeck from './ScenarioBenchmarkDeck';
 import FleetTrackingDeck from './FleetTrackingDeck';
-import { createSectorLayers, FALLBACK_DEMO_SECTORS } from '../../utils/geo';
-import type { DemoSector, SectorSituation } from '../../api/client';
+import { createAuthorityHazardLayers, createHazardAssociationLayers, createSectorLayers, FALLBACK_DEMO_SECTORS } from '../../utils/geo';
+import type { DemoSector, SectorHazard, SectorSituation, VesselHazardAssociation } from '../../api/client';
 
 describe('Authority Advanced Feature Decks', () => {
   it('exports ScenarioBenchmarkDeck component cleanly', () => {
@@ -58,6 +58,26 @@ describe('Authority Advanced Feature Decks', () => {
     expect(stationLayer.layer_id).toBe('sector_station_sector-malvan');
     expect(stationLayer.name).toBe('Malvan Marine Surveillance Unit');
     expect(stationLayer.geojson.geometry.coordinates).toEqual([73.47, 16.06]);
+  });
+
+  it('highlights only the canonical hazard and association selected by alert identifiers', () => {
+    const hazards: SectorHazard[] = [{
+      hazard_id: 'hazard-01', hazard_type: 'SQUALL', headline: 'Canonical hazard', severity: 'WARNING', status: 'ACTIVE',
+      valid_from: '2026-09-13T00:00:00Z', valid_to: '2026-09-14T00:00:00Z',
+      geometry: { type: 'Polygon', coordinates: [[[73, 16], [74, 16], [74, 17], [73, 16]]] },
+      provenance: {},
+    }];
+    const associations: VesselHazardAssociation[] = [{
+      vessel_id: 'vessel-01', hazard_id: 'hazard-01', sector_id: 'sector-ratnagiri', association_type: 'IN_HAZARD_AREA',
+      evaluated_at: '2026-09-13T12:00:00Z', vessel_position: [73.5, 16.5],
+    }];
+
+    const [hazardLayer] = createAuthorityHazardLayers(hazards, 'hazard-01');
+    const [associationLayer] = createHazardAssociationLayers(associations, associations[0]);
+    expect(hazardLayer.geojson.properties?.selected_for_alert_inspection).toBe(true);
+    expect(hazardLayer.geojson.geometry).toEqual(hazards[0].geometry);
+    expect(associationLayer.geojson.properties?.selected_for_alert_inspection).toBe(true);
+    expect(associationLayer.geojson.geometry).toEqual({ type: 'Point', coordinates: associations[0].vessel_position });
   });
 
   it('confirms FALLBACK_DEMO_SECTORS contains 5 distinct sectors for offline UI continuity', () => {

@@ -28,12 +28,14 @@ import { translateText, type SupportedLanguage } from '../../i18n/translations';
 interface FleetTrackingDeckProps {
   selectedSector?: string;
   onReplayUpdate?: (layer: MapLayer | null) => void;
+  onAlertSelectionChange?: (alert: VesselHazardOperationalAlert | null) => void;
   language?: SupportedLanguage;
 }
 
 export default function FleetTrackingDeck({
   selectedSector,
   onReplayUpdate,
+  onAlertSelectionChange,
   language = 'en',
 }: FleetTrackingDeckProps) {
   const [vessels, setVessels] = useState<DemoVessel[]>([]);
@@ -43,6 +45,7 @@ export default function FleetTrackingDeck({
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [notifications, setNotifications] = useState<DemoNotification[]>([]);
   const [operationalAlerts, setOperationalAlerts] = useState<VesselHazardOperationalAlert[]>([]);
+  const [selectedOperationalAlertId, setSelectedOperationalAlertId] = useState<string | null>(null);
   const [operationalAlertsUnavailable, setOperationalAlertsUnavailable] = useState<boolean>(false);
   const [isBackendOffline, setIsBackendOffline] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -62,6 +65,8 @@ export default function FleetTrackingDeck({
     setIsReplayLoading(false);
     setOperationalAlerts([]);
     setOperationalAlertsUnavailable(false);
+    setSelectedOperationalAlertId(null);
+    onAlertSelectionChange?.(null);
     onReplayUpdate?.(null);
 
     Promise.allSettled([
@@ -115,6 +120,18 @@ export default function FleetTrackingDeck({
       isCancelled = true;
     };
   }, [selectedSector]);
+
+  // Reconcile local inspection state with the latest canonical alert result.
+  // A vanished alert must not leave a phantom vessel/hazard highlight behind.
+  useEffect(() => {
+    if (
+      selectedOperationalAlertId
+      && !operationalAlerts.some((alert) => alert.alert_id === selectedOperationalAlertId)
+    ) {
+      setSelectedOperationalAlertId(null);
+      onAlertSelectionChange?.(null);
+    }
+  }, [operationalAlerts, selectedOperationalAlertId, onAlertSelectionChange]);
 
   // Selected vessel change effect: fetch canonical replay trajectory
   useEffect(() => {
@@ -260,6 +277,34 @@ export default function FleetTrackingDeck({
 
   const currentPos = positions[currentIndex] || positions[0];
   const selectedVessel = vessels.find((v) => v.public_id === selectedVesselId) || null;
+  const selectedOperationalAlert = operationalAlerts.find(
+    (alert) => alert.alert_id === selectedOperationalAlertId,
+  ) || null;
+
+  const inspectOperationalAlert = (alert: VesselHazardOperationalAlert) => {
+    // IDs are canonical backend identifiers. Refuse an incomplete or stale
+    // alert rather than deriving operational context from display text.
+    if (
+      alert.sector_id !== selectedSector
+      || !alert.vessel_id
+      || !alert.hazard_id
+    ) {
+      return;
+    }
+
+    setSelectedOperationalAlertId(alert.alert_id);
+    setSelectedVesselId(alert.vessel_id);
+    setIsPlaying(false);
+    // Existing replay focus maps the canonical latest replay position. It
+    // remains the sole source for vessel coordinates.
+    setFocusTrigger((count) => count + 1);
+    onAlertSelectionChange?.(alert);
+  };
+
+  const clearOperationalAlertInspection = () => {
+    setSelectedOperationalAlertId(null);
+    onAlertSelectionChange?.(null);
+  };
 
   return (
     <div className="fleet-tracking-deck" aria-label="Fleet Surveillance & Vessel Replay Deck">
@@ -473,15 +518,37 @@ export default function FleetTrackingDeck({
               {translateText('No vessels currently in an active hazard area.', language)}
             </p>
           ) : operationalAlerts.map((alert) => (
-            <article key={alert.alert_id} className={`fleet-alert-card ${alert.severity === 'WARNING' ? 'warning' : 'info'}`}>
+            <button
+              key={alert.alert_id}
+              type="button"
+              aria-pressed={selectedOperationalAlertId === alert.alert_id}
+              className={`fleet-alert-card ${alert.severity === 'WARNING' ? 'warning' : 'info'} ${selectedOperationalAlertId === alert.alert_id ? 'active' : ''}`}
+              onClick={() => inspectOperationalAlert(alert)}
+            >
               <div className="alert-card-top">
                 <div className="alert-title-group"><AlertTriangle size={15} className="alert-icon" /><strong>{translateText('Vessel in Active Hazard Area', language)}</strong></div>
                 <span className="alert-severity-pill">{alert.severity}</span>
               </div>
               <p className="alert-message">{alert.summary}</p>
               <div className="alert-card-footer"><span>{alert.vessel_id} · {alert.hazard_id}</span><span>{new Date(alert.observed_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span></div>
-            </article>
+            </button>
           ))}
+
+          {selectedOperationalAlert && (
+            <section className="fleet-alert-inspection" aria-label="Operational alert inspection" style={{ marginTop: '12px', padding: '12px', border: '1px solid rgba(250, 204, 21, 0.5)', borderRadius: '8px' }}>
+              <div className="fleet-section-title">
+                <Crosshair size={16} />
+                <span>{translateText('Alert Inspection', language)}</span>
+              </div>
+              <p className="alert-message">{translateText('Vessel in Active Hazard Area', language)}</p>
+              <div className="alert-card-footer"><span>{translateText('Vessel:', language)} {selectedOperationalAlert.vessel_id}</span><span>{translateText('Hazard:', language)} {selectedOperationalAlert.hazard_id}</span></div>
+              <div className="alert-card-footer"><span>{translateText('Sector:', language)} {selectedOperationalAlert.sector_id}</span><span>{translateText('Severity:', language)} {selectedOperationalAlert.severity}</span></div>
+              <div className="alert-card-footer"><span>{translateText('Observed:', language)} {new Date(selectedOperationalAlert.observed_at).toLocaleString()}</span><span>{translateText('Association:', language)} IN_HAZARD_AREA</span></div>
+              <button type="button" className="scrubber-btn" onClick={clearOperationalAlertInspection}>
+                {translateText('Return to Surveillance', language)}
+              </button>
+            </section>
+          )}
 
           <div className="fleet-section-title" style={{ marginTop: '14px' }}>
             <Bell size={16} />
