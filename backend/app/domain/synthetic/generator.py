@@ -899,65 +899,154 @@ def generate_notifications() -> List[Dict[str, Any]]:
     ]
 
 
+def generate_sectors() -> List[Dict[str, Any]]:
+    """Canonical demonstration surveillance sectors for coastal authority monitoring."""
+    sectors_def = [
+        (
+            "sector-ratnagiri",
+            "Ratnagiri Sector (MH-03)",
+            "harbor-ratnagiri",
+            [73.28, 16.99],
+            8.8,
+            "Ratnagiri Coast Guard & Fisheries Post",
+            [
+                [72.6, 16.5],
+                [73.5, 16.5],
+                [73.5, 17.5],
+                [72.6, 17.5],
+                [72.6, 16.5],
+            ],
+        ),
+        (
+            "sector-malvan",
+            "Malvan Marine Zone (MH-04)",
+            "harbor-malvan",
+            [73.47, 16.06],
+            9.5,
+            "Malvan Marine Surveillance Unit",
+            [
+                [73.35, 15.95],
+                [73.58, 15.95],
+                [73.58, 16.18],
+                [73.35, 16.18],
+                [73.35, 15.95],
+            ],
+        ),
+        (
+            "sector-goa",
+            "Goa Naval Corridor (GA-01)",
+            None,
+            [73.83, 15.49],
+            9.0,
+            "Goa Port & Naval Traffic Center",
+            [
+                [73.4, 15.15],
+                [74.05, 15.15],
+                [74.05, 15.8],
+                [73.4, 15.8],
+                [73.4, 15.15],
+            ],
+        ),
+        (
+            "sector-mumbai",
+            "Mumbai Offshore (MH-01)",
+            None,
+            [72.87, 18.92],
+            8.8,
+            "Mumbai Maritime Rescue Coordination Centre",
+            [
+                [72.2, 18.5],
+                [73.15, 18.5],
+                [73.15, 19.35],
+                [72.2, 19.35],
+                [72.2, 18.5],
+            ],
+        ),
+        (
+            "sector-veraval",
+            "Veraval Coastal Zone (GJ-02)",
+            None,
+            [70.37, 20.90],
+            8.5,
+            "Veraval Coastal Police & Fisheries Command",
+            [
+                [69.8, 20.4],
+                [70.9, 20.4],
+                [70.9, 21.3],
+                [69.8, 21.3],
+                [69.8, 20.4],
+            ],
+        ),
+    ]
+
+    return [
+        {
+            "public_id": sid,
+            "name": name,
+            "harbor_id": harbor,
+            "center": center,
+            "zoom": zoom,
+            "station_name": station,
+            "polygon": poly,
+            "provenance_json": {
+                **PROVENANCE_BASE,
+                "intended_provider": "SAMUDRA_MARITIME_AUTHORITY",
+                "note": "Demonstration surveillance sector boundary — not an official legal maritime demarcation",
+            },
+            "namespace": SYNTHETIC_NAMESPACE,
+            "created_at": REFERENCE_TIME,
+        }
+        for sid, name, harbor, center, zoom, station, poly in sectors_def
+    ]
+
+
 def generate_vessel_replay_positions() -> List[Dict[str, Any]]:
-    """60 Progressive GPS positions for 2 moving vessels (30 points each)."""
+    """240 Progressive GPS positions for all 8 canonical vessels (30 points each)."""
     positions = []
 
-    # Vessel 1: Matsya Sagar 01 (trip-01) — Departs Ratnagiri towards SW fishing ground
-    v1_start_lat, v1_start_lon = 16.990, 73.280
-    v1_dest_lat, v1_dest_lon = 16.910, 73.160
-    for step in range(30):
-        t_step = REFERENCE_TIME - timedelta(hours=6) + timedelta(minutes=12 * step)
-        fraction = step / 29.0
-        lat = round(v1_start_lat + (v1_dest_lat - v1_start_lat) * fraction + 0.002 * (step % 3), 4)
-        lon = round(v1_start_lon + (v1_dest_lon - v1_start_lon) * fraction - 0.001 * (step % 2), 4)
-        speed = round(7.5 + 0.8 * (step % 4) - 0.2 * step / 10.0, 1)
-        heading = round(235.0 + 3.0 * (step % 3), 1)
+    # Specification for each vessel:
+    # (vessel_id, trip_id, start_lat, start_lon, dest_lat, dest_lon, base_speed, base_heading)
+    vessel_routes = [
+        # Ratnagiri vessels (vessel-01 to vessel-04)
+        ("vessel-01", "trip-01", 16.990, 73.280, 16.910, 73.160, 7.5, 235.0),
+        ("vessel-02", "trip-02", 16.990, 73.280, 16.080, 73.440, 9.0, 175.0),
+        ("vessel-03", "trip-03", 16.990, 73.280, 16.650, 73.150, 8.2, 205.0),
+        ("vessel-04", "trip-04", 16.990, 73.280, 17.010, 73.265, 5.0, 310.0),
+        # Malvan vessels (vessel-05 to vessel-08)
+        ("vessel-05", "trip-05", 16.060, 73.470, 16.140, 73.410, 8.0, 325.0),
+        ("vessel-06", "trip-06", 16.060, 73.470, 15.920, 73.300, 9.5, 220.0),
+        ("vessel-07", "trip-07", 16.060, 73.470, 16.010, 73.490, 4.8, 165.0),
+        ("vessel-08", "trip-08", 16.060, 73.470, 15.850, 73.200, 8.5, 230.0),
+    ]
 
-        positions.append({
-            "public_id": f"pos-v01-{step:02d}",
-            "vessel_id": "vessel-01",
-            "trip_id": "trip-01",
-            "timestamp": t_step,
-            "latitude": lat,
-            "longitude": lon,
-            "speed_knots": speed,
-            "heading_deg": heading,
-            "provenance_json": {**PROVENANCE_BASE, "intended_provider": "SAMUDRA_VESSEL_TRACKING"},
-            "namespace": SYNTHETIC_NAMESPACE,
-            "created_at": REFERENCE_TIME,
-        })
+    for vid, tid, s_lat, s_lon, d_lat, d_lon, b_spd, b_hdg in vessel_routes:
+        for step in range(30):
+            t_step = REFERENCE_TIME - timedelta(hours=6) + timedelta(minutes=12 * step)
+            fraction = step / 29.0
+            lat = round(s_lat + (d_lat - s_lat) * fraction + 0.001 * (step % 3), 4)
+            lon = round(s_lon + (d_lon - s_lon) * fraction - 0.001 * (step % 2), 4)
+            speed = round(max(2.0, b_spd + 0.7 * (step % 4) - 0.1 * step / 10.0), 1)
+            heading = round((b_hdg + 2.5 * (step % 3)) % 360.0, 1)
 
-    # Vessel 2: Konkan Pride (trip-02) — Sails Southwards near Malvan North Sanctuary perimeter
-    v2_start_lat, v2_start_lon = 16.990, 73.280
-    v2_dest_lat, v2_dest_lon = 16.080, 73.440
-    for step in range(30):
-        t_step = REFERENCE_TIME - timedelta(hours=6) + timedelta(minutes=12 * step)
-        fraction = step / 29.0
-        lat = round(v2_start_lat + (v2_dest_lat - v2_start_lat) * fraction, 4)
-        lon = round(v2_start_lon + (v2_dest_lon - v2_start_lon) * fraction + 0.003 * (step % 4), 4)
-        speed = round(9.0 + 1.2 * (step % 3), 1)
-        heading = round(175.0 + 2.0 * (step % 2), 1)
-
-        positions.append({
-            "public_id": f"pos-v02-{step:02d}",
-            "vessel_id": "vessel-02",
-            "trip_id": "trip-02",
-            "timestamp": t_step,
-            "latitude": lat,
-            "longitude": lon,
-            "speed_knots": speed,
-            "heading_deg": heading,
-            "provenance_json": {**PROVENANCE_BASE, "intended_provider": "SAMUDRA_VESSEL_TRACKING"},
-            "namespace": SYNTHETIC_NAMESPACE,
-            "created_at": REFERENCE_TIME,
-        })
+            positions.append({
+                "public_id": f"pos-{vid}-{step:02d}",
+                "vessel_id": vid,
+                "trip_id": tid,
+                "timestamp": t_step,
+                "latitude": lat,
+                "longitude": lon,
+                "speed_knots": speed,
+                "heading_deg": heading,
+                "provenance_json": {**PROVENANCE_BASE, "intended_provider": "SAMUDRA_VESSEL_TRACKING"},
+                "namespace": SYNTHETIC_NAMESPACE,
+                "created_at": REFERENCE_TIME,
+            })
 
     return positions
 
 
 def generate_synthetic_demo_dataset() -> Dict[str, List[Dict[str, Any]]]:
-    """Generates all 14 entity groups into a single dictionary."""
+    """Generates all entity groups into a single dictionary."""
     return {
         "stakeholders": generate_stakeholders(),
         "harbors": generate_harbors(),
@@ -973,4 +1062,5 @@ def generate_synthetic_demo_dataset() -> Dict[str, List[Dict[str, Any]]]:
         "hazards": generate_hazards(),
         "notifications": generate_notifications(),
         "replay_positions": generate_vessel_replay_positions(),
+        "sectors": generate_sectors(),
     }

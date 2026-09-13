@@ -71,6 +71,8 @@ def dump_synthetic_fixtures(output_root: str = "data/fixtures/synthetic") -> Non
         json.dump(dataset["notifications"], f, indent=2, default=_json_serializer)
     with open(samudra_dir / "replay_positions.json", "w", encoding="utf-8") as f:
         json.dump(dataset["replay_positions"], f, indent=2, default=_json_serializer)
+    with open(samudra_dir / "sectors.json", "w", encoding="utf-8") as f:
+        json.dump(dataset["sectors"], f, indent=2, default=_json_serializer)
 
 
 if __name__ == "__main__":

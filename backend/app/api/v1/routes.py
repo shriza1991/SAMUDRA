@@ -364,6 +364,7 @@ async def get_run(run_id: str):
     """Retrieve details for a specific ORCA agent run."""
     import uuid
 
+    from backend.app.db.offline_store import offline_persistence_store
     from backend.app.db.repositories import RunRepository
     from backend.app.db.session import SessionLocal
 
@@ -372,13 +373,22 @@ async def get_run(run_id: str):
     except ValueError:
         return JSONResponse(status_code=400, content={"error": "Invalid run_id format"})
 
-    with SessionLocal() as session:
-        run_repo = RunRepository(session)
-        details = run_repo.get_run_with_details(run_uuid)
-        if not details:
-            return JSONResponse(status_code=404, content={"error": "Run not found"})
+    # 1. Try database first
+    try:
+        with SessionLocal() as session:
+            run_repo = RunRepository(session)
+            details = run_repo.get_run_with_details(run_uuid)
+            if details:
+                return details
+    except Exception as exc:
+        logger.debug("Database get_run failed (service offline): %s", exc)
 
-        return details
+    # 2. Fallback to in-memory offline store
+    offline_details = offline_persistence_store.get_run_with_details(run_uuid)
+    if offline_details:
+        return offline_details
+
+    return JSONResponse(status_code=404, content={"error": "Run not found"})
 
 
 @router.get(
@@ -394,6 +404,7 @@ async def get_map_layer(layer_id: str):
     from shapely.geometry import mapping
 
     from backend.app.db.models import MapLayer
+    from backend.app.db.offline_store import offline_persistence_store
     from backend.app.db.session import SessionLocal
 
     try:
@@ -401,22 +412,31 @@ async def get_map_layer(layer_id: str):
     except ValueError:
         return JSONResponse(status_code=400, content={"error": "Invalid layer_id format"})
 
-    with SessionLocal() as session:
-        layer = session.query(MapLayer).filter_by(id=layer_uuid).first()
-        if not layer:
-            return JSONResponse(status_code=404, content={"error": "Map layer not found"})
+    # 1. Try database first
+    try:
+        with SessionLocal() as session:
+            layer = session.query(MapLayer).filter_by(id=layer_uuid).first()
+            if layer:
+                geom_shape = to_shape(layer.geometry)
+                geojson_geom = mapping(geom_shape)
 
-        geom_shape = to_shape(layer.geometry)
-        geojson_geom = mapping(geom_shape)
+                return {
+                    "id": str(layer.id),
+                    "run_id": str(layer.run_id),
+                    "layer_type": layer.layer_type,
+                    "geometry": geojson_geom,
+                    "properties": layer.properties,
+                    "created_at": layer.created_at.isoformat() if layer.created_at else None,
+                }
+    except Exception as exc:
+        logger.debug("Database get_map_layer failed (service offline): %s", exc)
 
-        return {
-            "id": str(layer.id),
-            "run_id": str(layer.run_id),
-            "layer_type": layer.layer_type,
-            "geometry": geojson_geom,
-            "properties": layer.properties,
-            "created_at": layer.created_at.isoformat() if layer.created_at else None,
-        }
+    # 2. Fallback to in-memory offline store
+    offline_layer = offline_persistence_store.get_map_layer(layer_uuid)
+    if offline_layer:
+        return offline_layer
+
+    return JSONResponse(status_code=404, content={"error": "Map layer not found"})
 
 
 @router.get(
@@ -489,27 +509,55 @@ async def run_scenario_endpoint(scenario_id: str, language: str | None = None):
 )
 async def get_conversation_history(conversation_id: str):
     """Retrieve chat history for a specific conversation ID."""
+    from backend.app.db.offline_store import offline_persistence_store
     from backend.app.db.repositories import RunRepository
+    from backend.app.db.session import SessionLocal
 
-    with SessionLocal() as session:
-        run_repo = RunRepository(session)
-        runs = run_repo.get_all_by_thread(conversation_id)
-        if not runs:
-            return JSONResponse(status_code=404, content={"error": "Conversation not found"})
+    # 1. Try database first
+    try:
+        with SessionLocal() as session:
+            run_repo = RunRepository(session)
+            runs = run_repo.get_all_by_thread(conversation_id)
+            if runs:
+                history = []
+                for run in runs:
+                    metadata = run.metadata_json or {}
+                    turn = {
+                        "id": str(run.id),
+                        "status": run.run_status.value,
+                        "started_at": run.started_at.isoformat() if run.started_at else None,
+                        "request": metadata.get("request"),
+                        "response": metadata.get("response"),
+                        "data_mode": metadata.get("data_mode"),
+                    }
+                    history.append(turn)
+                return {"conversation_id": conversation_id, "history": history}
+    except Exception as exc:
+        logger.debug("Database get_conversation_history failed (service offline): %s", exc)
 
+    # 2. Fallback to in-memory offline store
+    offline_runs = offline_persistence_store.get_runs_by_thread(conversation_id)
+    if offline_runs:
         history = []
-        for run in runs:
-            metadata = run.metadata_json or {}
+        for r in offline_runs:
             turn = {
-                "id": str(run.id),
-                "status": run.run_status.value,
-                "started_at": run.started_at.isoformat() if run.started_at else None,
-                "request": metadata.get("request"),
-                "response": metadata.get("response"),
-                "data_mode": metadata.get("data_mode"),
+                "id": str(r["id"]),
+                "status": r["status"],
+                "started_at": r["started_at"],
+                "request": r.get("request"),
+                "response": r.get("response"),
+                "data_mode": r.get("data_mode"),
+                "persisted": False,
             }
             history.append(turn)
-        return {"conversation_id": conversation_id, "history": history}
+        return {
+            "conversation_id": conversation_id,
+            "history": history,
+            "persistence_status": "offline_in_memory",
+            "warnings": ["[OFFLINE-EPHEMERAL] Conversation history loaded from in-memory session."],
+        }
+
+    return JSONResponse(status_code=404, content={"error": "Conversation not found"})
 
 
 @router.get(
@@ -813,6 +861,28 @@ from backend.app.db.repositories import SyntheticDemoRepository
 import pathlib
 import json
 
+_in_memory_synthetic_cache: dict[str, Any] | None = None
+
+
+def _get_synthetic_records(key: str, namespace: str = "SAMUDRA_DEMO_V1") -> list[dict[str, Any]]:
+    """Fallback generator for synthetic demo records when PostgreSQL is offline."""
+    global _in_memory_synthetic_cache
+    if _in_memory_synthetic_cache is None:
+        from backend.app.domain.synthetic.generator import generate_synthetic_demo_dataset
+        _in_memory_synthetic_cache = generate_synthetic_demo_dataset()
+    raw_items = _in_memory_synthetic_cache.get(key, [])
+    formatted = []
+    for item in raw_items:
+        if item.get("namespace") == namespace:
+            d = dict(item)
+            for k, v in d.items():
+                if isinstance(v, datetime):
+                    d[k] = v.isoformat()
+                elif isinstance(v, uuid.UUID):
+                    d[k] = str(v)
+            formatted.append(d)
+    return formatted
+
 
 def _model_to_dict(obj: Any) -> dict[str, Any]:
     """Helper to convert SQLAlchemy model instance to dictionary."""
@@ -847,46 +917,105 @@ def get_demo_manifest() -> dict[str, Any]:
 @router.get("/demo/stakeholders", tags=["Synthetic Demo"])
 def get_demo_stakeholders(namespace: str = "SAMUDRA_DEMO_V1") -> list[dict[str, Any]]:
     """List all synthetic demo stakeholders."""
-    with SessionLocal() as session:
-        repo = SyntheticDemoRepository(session)
-        items = repo.get_stakeholders(namespace=namespace)
-        return [_model_to_dict(item) for item in items]
+    try:
+        with SessionLocal() as session:
+            repo = SyntheticDemoRepository(session)
+            items = repo.get_stakeholders(namespace=namespace)
+            if items:
+                return [_model_to_dict(item) for item in items]
+    except Exception as exc:
+        logger.debug("Database get_demo_stakeholders failed (service offline): %s", exc)
+    return _get_synthetic_records("stakeholders", namespace=namespace)
 
 
 @router.get("/demo/harbors", tags=["Synthetic Demo"])
 def get_demo_harbors(namespace: str = "SAMUDRA_DEMO_V1") -> list[dict[str, Any]]:
     """List all synthetic demo harbors."""
-    with SessionLocal() as session:
-        repo = SyntheticDemoRepository(session)
-        items = repo.get_harbors(namespace=namespace)
-        return [_model_to_dict(item) for item in items]
+    try:
+        with SessionLocal() as session:
+            repo = SyntheticDemoRepository(session)
+            items = repo.get_harbors(namespace=namespace)
+            if items:
+                return [_model_to_dict(item) for item in items]
+    except Exception as exc:
+        logger.debug("Database get_demo_harbors failed (service offline): %s", exc)
+    return _get_synthetic_records("harbors", namespace=namespace)
 
 
 @router.get("/demo/fishers", tags=["Synthetic Demo"])
 def get_demo_fishers(namespace: str = "SAMUDRA_DEMO_V1") -> list[dict[str, Any]]:
     """List all synthetic demo fishers."""
-    with SessionLocal() as session:
-        repo = SyntheticDemoRepository(session)
-        items = repo.get_fishers(namespace=namespace)
-        return [_model_to_dict(item) for item in items]
+    try:
+        with SessionLocal() as session:
+            repo = SyntheticDemoRepository(session)
+            items = repo.get_fishers(namespace=namespace)
+            if items:
+                return [_model_to_dict(item) for item in items]
+    except Exception as exc:
+        logger.debug("Database get_demo_fishers failed (service offline): %s", exc)
+    return _get_synthetic_records("fishers", namespace=namespace)
+
+
+def _resolve_sector_to_harbor_id(sector: str | None) -> str | None:
+    """Helper to map a surveillance sector identifier or display name to canonical harbor ID."""
+    if not sector:
+        return None
+    s = sector.lower()
+    if "ratnagiri" in s:
+        return "harbor-ratnagiri"
+    if "malvan" in s:
+        return "harbor-malvan"
+    # Sectors like Goa, Mumbai, Veraval have no seeded vessels in SAMUDRA_DEMO_V1
+    return "unseeded"
+
+
+@router.get("/demo/sectors", tags=["Synthetic Demo"])
+def get_demo_sectors(namespace: str = "SAMUDRA_DEMO_V1") -> list[dict[str, Any]]:
+    """List canonical demonstration surveillance sectors."""
+    sectors_path = pathlib.Path(__file__).resolve().parent.parent.parent.parent / "data" / "fixtures" / "synthetic" / "samudra" / "sectors.json"
+    if sectors_path.exists():
+        try:
+            with open(sectors_path, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception as exc:
+            logger.debug("Failed reading sectors fixture: %s", exc)
+    return _get_synthetic_records("sectors", namespace=namespace)
 
 
 @router.get("/demo/vessels", tags=["Synthetic Demo"])
-def get_demo_vessels(namespace: str = "SAMUDRA_DEMO_V1") -> list[dict[str, Any]]:
-    """List all synthetic demo vessels."""
-    with SessionLocal() as session:
-        repo = SyntheticDemoRepository(session)
-        items = repo.get_vessels(namespace=namespace)
-        return [_model_to_dict(item) for item in items]
+def get_demo_vessels(
+    sector: str | None = None,
+    harbor_id: str | None = None,
+    namespace: str = "SAMUDRA_DEMO_V1",
+) -> list[dict[str, Any]]:
+    """List synthetic demo vessels, optionally filtered by surveillance sector or home harbor."""
+    effective_harbor = harbor_id or _resolve_sector_to_harbor_id(sector)
+    try:
+        with SessionLocal() as session:
+            repo = SyntheticDemoRepository(session)
+            items = repo.get_vessels(namespace=namespace, harbor_id=effective_harbor)
+            if items:
+                return [_model_to_dict(item) for item in items]
+    except Exception as exc:
+        logger.debug("Database get_demo_vessels failed (service offline): %s", exc)
+    records = _get_synthetic_records("vessels", namespace=namespace)
+    if effective_harbor:
+        records = [r for r in records if r.get("home_harbor_id") == effective_harbor]
+    return records
 
 
 @router.get("/demo/trips", tags=["Synthetic Demo"])
 def get_demo_trips(namespace: str = "SAMUDRA_DEMO_V1") -> list[dict[str, Any]]:
     """List all synthetic demo fishing trips."""
-    with SessionLocal() as session:
-        repo = SyntheticDemoRepository(session)
-        items = repo.get_trips(namespace=namespace)
-        return [_model_to_dict(item) for item in items]
+    try:
+        with SessionLocal() as session:
+            repo = SyntheticDemoRepository(session)
+            items = repo.get_trips(namespace=namespace)
+            if items:
+                return [_model_to_dict(item) for item in items]
+    except Exception as exc:
+        logger.debug("Database get_demo_trips failed (service offline): %s", exc)
+    return _get_synthetic_records("trips", namespace=namespace)
 
 
 @router.get("/demo/marine-observations", tags=["Synthetic Demo"])
@@ -894,10 +1023,18 @@ def get_demo_marine_observations(
     harbor_id: str | None = None, namespace: str = "SAMUDRA_DEMO_V1"
 ) -> list[dict[str, Any]]:
     """List synthetic demo marine observations."""
-    with SessionLocal() as session:
-        repo = SyntheticDemoRepository(session)
-        items = repo.get_marine_observations(namespace=namespace, harbor_id=harbor_id)
-        return [_model_to_dict(item) for item in items]
+    try:
+        with SessionLocal() as session:
+            repo = SyntheticDemoRepository(session)
+            items = repo.get_marine_observations(namespace=namespace, harbor_id=harbor_id)
+            if items:
+                return [_model_to_dict(item) for item in items]
+    except Exception as exc:
+        logger.debug("Database get_demo_marine_observations failed (service offline): %s", exc)
+    records = _get_synthetic_records("marine_observations", namespace=namespace)
+    if harbor_id:
+        records = [r for r in records if r.get("harbor_id") == harbor_id]
+    return records
 
 
 @router.get("/demo/eo-grid-cells", tags=["Synthetic Demo"])
@@ -905,10 +1042,18 @@ def get_demo_eo_grid_cells(
     cell_id: str | None = None, namespace: str = "SAMUDRA_DEMO_V1"
 ) -> list[dict[str, Any]]:
     """List synthetic Earth Observation grid cell data."""
-    with SessionLocal() as session:
-        repo = SyntheticDemoRepository(session)
-        items = repo.get_eo_grid_cells(namespace=namespace, cell_id=cell_id)
-        return [_model_to_dict(item) for item in items]
+    try:
+        with SessionLocal() as session:
+            repo = SyntheticDemoRepository(session)
+            items = repo.get_eo_grid_cells(namespace=namespace, cell_id=cell_id)
+            if items:
+                return [_model_to_dict(item) for item in items]
+    except Exception as exc:
+        logger.debug("Database get_demo_eo_grid_cells failed (service offline): %s", exc)
+    records = _get_synthetic_records("eo_grid_cells", namespace=namespace)
+    if cell_id:
+        records = [r for r in records if r.get("cell_id") == cell_id]
+    return records
 
 
 @router.get("/demo/pfz-candidates", tags=["Synthetic Demo"])
@@ -916,54 +1061,138 @@ def get_demo_pfz_candidates(
     valid_only: bool = False, namespace: str = "SAMUDRA_DEMO_V1"
 ) -> list[dict[str, Any]]:
     """List synthetic Potential Fishing Zone (PFZ) advisory candidates."""
-    with SessionLocal() as session:
-        repo = SyntheticDemoRepository(session)
-        items = repo.get_pfz_candidates(namespace=namespace, valid_only=valid_only)
-        return [_model_to_dict(item) for item in items]
+    try:
+        with SessionLocal() as session:
+            repo = SyntheticDemoRepository(session)
+            items = repo.get_pfz_candidates(namespace=namespace, valid_only=valid_only)
+            if items:
+                return [_model_to_dict(item) for item in items]
+    except Exception as exc:
+        logger.debug("Database get_demo_pfz_candidates failed (service offline): %s", exc)
+    records = _get_synthetic_records("pfz_candidates", namespace=namespace)
+    if valid_only:
+        records = [r for r in records if r.get("status") == "ACTIVE"]
+    return records
 
 
 @router.get("/demo/geofences", tags=["Synthetic Demo"])
 def get_demo_geofences(namespace: str = "SAMUDRA_DEMO_V1") -> list[dict[str, Any]]:
     """List synthetic demo maritime geofences and restricted zones."""
-    with SessionLocal() as session:
-        repo = SyntheticDemoRepository(session)
-        items = repo.get_geofences(namespace=namespace)
-        return [_model_to_dict(item) for item in items]
+    try:
+        with SessionLocal() as session:
+            repo = SyntheticDemoRepository(session)
+            items = repo.get_geofences(namespace=namespace)
+            if items:
+                return [_model_to_dict(item) for item in items]
+    except Exception as exc:
+        logger.debug("Database get_demo_geofences failed (service offline): %s", exc)
+    return _get_synthetic_records("geofences", namespace=namespace)
 
 
 @router.get("/demo/routes", tags=["Synthetic Demo"])
 def get_demo_routes(namespace: str = "SAMUDRA_DEMO_V1") -> dict[str, Any]:
     """List synthetic demo maritime route graph (nodes and edges)."""
-    with SessionLocal() as session:
-        repo = SyntheticDemoRepository(session)
-        nodes = repo.get_route_nodes(namespace=namespace)
-        edges = repo.get_route_edges(namespace=namespace)
-        return {
-            "nodes": [_model_to_dict(n) for n in nodes],
-            "edges": [_model_to_dict(e) for e in edges],
-        }
+    try:
+        with SessionLocal() as session:
+            repo = SyntheticDemoRepository(session)
+            nodes = repo.get_route_nodes(namespace=namespace)
+            edges = repo.get_route_edges(namespace=namespace)
+            if nodes or edges:
+                return {
+                    "nodes": [_model_to_dict(n) for n in nodes],
+                    "edges": [_model_to_dict(e) for e in edges],
+                }
+    except Exception as exc:
+        logger.debug("Database get_demo_routes failed (service offline): %s", exc)
+    nodes = _get_synthetic_records("route_nodes", namespace=namespace)
+    edges = _get_synthetic_records("route_edges", namespace=namespace)
+    return {
+        "nodes": nodes,
+        "edges": edges,
+    }
+
+
+def _filter_hazards_by_sector(records: list[dict[str, Any]], sector: str) -> list[dict[str, Any]]:
+    s = sector.lower()
+    if "ratnagiri" in s:
+        return [r for r in records if any(k in f"{r.get('headline', '')} {r.get('public_id', '')}".lower() for k in ("ratnagiri", "konkan", "hazard-01", "hazard-02", "hazard-05", "hazard-06"))]
+    if "malvan" in s:
+        return [r for r in records if any(k in f"{r.get('headline', '')} {r.get('public_id', '')}".lower() for k in ("malvan", "sindhudurg", "hazard-04", "hazard-07"))]
+    if "goa" in s:
+        return [r for r in records if any(k in f"{r.get('headline', '')} {r.get('public_id', '')}".lower() for k in ("goa", "hazard-03", "hazard-08"))]
+    return []
 
 
 @router.get("/demo/hazards", tags=["Synthetic Demo"])
 def get_demo_hazards(
-    status: str | None = None, namespace: str = "SAMUDRA_DEMO_V1"
+    sector: str | None = None,
+    status: str | None = None,
+    namespace: str = "SAMUDRA_DEMO_V1",
 ) -> list[dict[str, Any]]:
-    """List synthetic demo marine weather hazard advisories."""
-    with SessionLocal() as session:
-        repo = SyntheticDemoRepository(session)
-        items = repo.get_hazards(namespace=namespace, status=status)
-        return [_model_to_dict(item) for item in items]
+    """List synthetic demo marine weather hazard advisories, optionally filtered by sector."""
+    try:
+        with SessionLocal() as session:
+            repo = SyntheticDemoRepository(session)
+            items = repo.get_hazards(namespace=namespace, status=status)
+            if items:
+                items_dict = [_model_to_dict(item) for item in items]
+                if sector:
+                    items_dict = _filter_hazards_by_sector(items_dict, sector)
+                return items_dict
+    except Exception as exc:
+        logger.debug("Database get_demo_hazards failed (service offline): %s", exc)
+    records = _get_synthetic_records("hazards", namespace=namespace)
+    if status:
+        records = [r for r in records if r.get("status") == status]
+    if sector:
+        records = _filter_hazards_by_sector(records, sector)
+    return records
 
 
 @router.get("/demo/notifications", tags=["Synthetic Demo"])
 def get_demo_notifications(
-    role: str | None = None, is_read: bool | None = None, namespace: str = "SAMUDRA_DEMO_V1"
+    sector: str | None = None,
+    role: str | None = None,
+    is_read: bool | None = None,
+    namespace: str = "SAMUDRA_DEMO_V1",
 ) -> list[dict[str, Any]]:
-    """List synthetic demo notifications and safety advisories."""
-    with SessionLocal() as session:
-        repo = SyntheticDemoRepository(session)
-        items = repo.get_notifications(namespace=namespace, role=role, is_read=is_read)
-        return [_model_to_dict(item) for item in items]
+    """List synthetic demo notifications and safety advisories, optionally filtered by sector."""
+    effective_harbor = _resolve_sector_to_harbor_id(sector)
+    target_vessel_ids = None
+    if effective_harbor and effective_harbor != "unseeded":
+        vessel_records = _get_synthetic_records("vessels", namespace=namespace)
+        target_vessel_ids = [v["public_id"] for v in vessel_records if v.get("home_harbor_id") == effective_harbor]
+
+    try:
+        with SessionLocal() as session:
+            repo = SyntheticDemoRepository(session)
+            items = repo.get_notifications(
+                namespace=namespace,
+                role=role,
+                is_read=is_read,
+                vessel_ids=target_vessel_ids,
+            )
+            if items:
+                return [_model_to_dict(item) for item in items]
+    except Exception as exc:
+        logger.debug("Database get_demo_notifications failed (service offline): %s", exc)
+    records = _get_synthetic_records("notifications", namespace=namespace)
+    if role:
+        records = [r for r in records if r.get("recipient_role") == role or r.get("target_role") == role]
+    if is_read is not None:
+        records = [r for r in records if r.get("is_read") == is_read]
+    if target_vessel_ids is not None:
+        records = [
+            r for r in records
+            if (r.get("vessel_id") in target_vessel_ids)
+            or (effective_harbor == "harbor-ratnagiri" and (r.get("geofence_id") == "geofence-03" or r.get("hazard_id") in ("hazard-01", "hazard-02")))
+            or (effective_harbor == "harbor-malvan" and (r.get("geofence_id") == "geofence-02" or r.get("hazard_id") in ("hazard-04", "hazard-07")))
+        ]
+    elif sector and "goa" in sector.lower():
+        records = [r for r in records if r.get("geofence_id") == "geofence-01" or r.get("hazard_id") in ("hazard-03", "hazard-08")]
+    elif sector and ("mumbai" in sector.lower() or "veraval" in sector.lower() or effective_harbor == "unseeded"):
+        records = []
+    return records
 
 
 @router.get("/demo/vessels/{vessel_id}/replay", tags=["Synthetic Demo"])
@@ -971,10 +1200,17 @@ def get_demo_vessel_replay(
     vessel_id: str, namespace: str = "SAMUDRA_DEMO_V1"
 ) -> list[dict[str, Any]]:
     """Get recorded replay track positions for a specific vessel."""
-    with SessionLocal() as session:
-        repo = SyntheticDemoRepository(session)
-        items = repo.get_vessel_replay(namespace=namespace, vessel_id=vessel_id)
-        return [_model_to_dict(item) for item in items]
+    try:
+        with SessionLocal() as session:
+            repo = SyntheticDemoRepository(session)
+            items = repo.get_vessel_replay(namespace=namespace, vessel_id=vessel_id)
+            if items:
+                return [_model_to_dict(item) for item in items]
+    except Exception as exc:
+        logger.debug("Database get_demo_vessel_replay failed (service offline): %s", exc)
+    records = _get_synthetic_records("replay_positions", namespace=namespace)
+    return [r for r in records if r.get("vessel_id") == vessel_id]
+
 
 
 

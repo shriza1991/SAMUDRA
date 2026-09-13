@@ -192,17 +192,85 @@ describe('API Client', () => {
     expect(res.actual_status).toBe('GO');
   });
 
-  it('fetches demo vessels and replay positions', async () => {
-    const { getDemoVessels, getDemoVesselReplay, getDemoNotifications } = await import('./client');
-    const vessels = await getDemoVessels();
-    expect(vessels.length).toBeGreaterThan(0);
+  it('fetches demo sectors, vessels, and replay positions via API', async () => {
+    const mockSectors = [
+      {
+        public_id: 'sector-ratnagiri',
+        name: 'Ratnagiri Sector (MH-03)',
+        code: 'MH-03',
+        station_name: 'Ratnagiri Post',
+        harbor_id: 'harbor-ratnagiri',
+        center: [73.28, 16.99],
+        zoom: 8.8,
+        polygon: [[72.6, 16.5], [73.5, 16.5], [73.5, 17.5], [72.6, 17.5], [72.6, 16.5]],
+      },
+    ];
+    const mockVessels = [
+      {
+        public_id: 'vessel-01',
+        name: 'Matsya Sagar 01',
+        vessel_type: 'motorized_boat',
+        length_m: 9.5,
+        capacity_tons: 3.0,
+        home_harbor_id: 'harbor-ratnagiri',
+        status: 'OPERATIONAL',
+      },
+    ];
+    const mockReplay = [
+      {
+        public_id: 'pos-1',
+        vessel_id: 'vessel-01',
+        trip_id: 'trip-01',
+        timestamp: '00:00',
+        latitude: 16.99,
+        longitude: 73.28,
+        speed_knots: 7.5,
+        heading_deg: 235,
+      },
+    ];
+    const mockNotifications = [
+      {
+        public_id: 'notif-01',
+        recipient_role: 'fisher',
+        title: 'Squall Warning',
+        message: 'High waves',
+        severity: 'WARNING',
+        is_read: false,
+        timestamp: '2026-09-12T05:00:00Z',
+      },
+    ];
+
+    (globalThis.fetch as any)
+      .mockResolvedValueOnce({ ok: true, json: async () => mockSectors })
+      .mockResolvedValueOnce({ ok: true, json: async () => mockVessels })
+      .mockResolvedValueOnce({ ok: true, json: async () => mockReplay })
+      .mockResolvedValueOnce({ ok: true, json: async () => mockNotifications });
+
+    const { getDemoSectors, getDemoVessels, getDemoVesselReplay, getDemoNotifications } = await import('./client');
+
+    const sectors = await getDemoSectors();
+    expect(sectors).toHaveLength(1);
+    expect(sectors[0].public_id).toBe('sector-ratnagiri');
+
+    const vessels = await getDemoVessels('Ratnagiri Sector (MH-03)');
+    expect(globalThis.fetch).toHaveBeenCalledWith(
+      expect.stringContaining('/demo/vessels?sector='),
+      expect.anything()
+    );
+    expect(vessels).toHaveLength(1);
+    expect(vessels[0].public_id).toBe('vessel-01');
 
     const positions = await getDemoVesselReplay('vessel-01');
-    expect(positions.length).toBeGreaterThan(0);
-    expect(positions[0].latitude).toBeCloseTo(16.99, 1);
+    expect(globalThis.fetch).toHaveBeenCalledWith('/api/v1/demo/vessels/vessel-01/replay', expect.anything());
+    expect(positions).toHaveLength(1);
+    expect(positions[0].latitude).toBeCloseTo(16.99, 2);
 
-    const notifs = await getDemoNotifications();
-    expect(notifs.length).toBeGreaterThan(0);
+    const notifs = await getDemoNotifications('Ratnagiri Sector (MH-03)');
+    expect(globalThis.fetch).toHaveBeenCalledWith(
+      expect.stringContaining('/demo/notifications?sector='),
+      expect.anything()
+    );
+    expect(notifs).toHaveLength(1);
   });
 });
 

@@ -55,6 +55,7 @@ def validate_synthetic_dataset(dataset: Dict[str, List[Dict[str, Any]]]) -> Dict
         "hazards",
         "notifications",
         "replay_positions",
+        "sectors",
     ]
     for key in required_keys:
         if key not in dataset:

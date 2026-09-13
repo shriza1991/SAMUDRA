@@ -1,6 +1,6 @@
 [
   {
-    "public_id": "pos-v01-00",
+    "public_id": "pos-vessel-01-00",
     "vessel_id": "vessel-01",
     "trip_id": "trip-01",
     "timestamp": "2026-09-12T00:00:00+00:00",
@@ -20,14 +20,14 @@
     "created_at": "2026-09-12T06:00:00+00:00"
   },
   {
-    "public_id": "pos-v01-01",
+    "public_id": "pos-vessel-01-01",
     "vessel_id": "vessel-01",
     "trip_id": "trip-01",
     "timestamp": "2026-09-12T00:12:00+00:00",
-    "latitude": 16.9892,
+    "latitude": 16.9882,
     "longitude": 73.2749,
-    "speed_knots": 8.3,
-    "heading_deg": 238.0,
+    "speed_knots": 8.2,
+    "heading_deg": 237.5,
     "provenance_json": {
       "mode": "SYNTHETIC",
       "source": "synthetic-demo",
@@ -40,14 +40,14 @@
     "created_at": "2026-09-12T06:00:00+00:00"
   },
   {
-    "public_id": "pos-v01-02",
+    "public_id": "pos-vessel-01-02",
     "vessel_id": "vessel-01",
     "trip_id": "trip-01",
     "timestamp": "2026-09-12T00:24:00+00:00",
-    "latitude": 16.9885,
+    "latitude": 16.9865,
     "longitude": 73.2717,
-    "speed_knots": 9.1,
-    "heading_deg": 241.0,
+    "speed_knots": 8.9,
+    "heading_deg": 240.0,
     "provenance_json": {
       "mode": "SYNTHETIC",
       "source": "synthetic-demo",
@@ -60,13 +60,13 @@
     "created_at": "2026-09-12T06:00:00+00:00"
   },
   {
-    "public_id": "pos-v01-03",
+    "public_id": "pos-vessel-01-03",
     "vessel_id": "vessel-01",
     "trip_id": "trip-01",
     "timestamp": "2026-09-12T00:36:00+00:00",
     "latitude": 16.9817,
     "longitude": 73.2666,
-    "speed_knots": 9.8,
+    "speed_knots": 9.6,
     "heading_deg": 235.0,
     "provenance_json": {
       "mode": "SYNTHETIC",
@@ -80,14 +80,14 @@
     "created_at": "2026-09-12T06:00:00+00:00"
   },
   {
-    "public_id": "pos-v01-04",
+    "public_id": "pos-vessel-01-04",
     "vessel_id": "vessel-01",
     "trip_id": "trip-01",
     "timestamp": "2026-09-12T00:48:00+00:00",
-    "latitude": 16.981,
+    "latitude": 16.98,
     "longitude": 73.2634,
-    "speed_knots": 7.4,
-    "heading_deg": 238.0,
+    "speed_knots": 7.5,
+    "heading_deg": 237.5,
     "provenance_json": {
       "mode": "SYNTHETIC",
       "source": "synthetic-demo",
@@ -100,14 +100,14 @@
     "created_at": "2026-09-12T06:00:00+00:00"
   },
   {
-    "public_id": "pos-v01-05",
+    "public_id": "pos-vessel-01-05",
     "vessel_id": "vessel-01",
     "trip_id": "trip-01",
     "timestamp": "2026-09-12T01:00:00+00:00",
-    "latitude": 16.9802,
+    "latitude": 16.9782,
     "longitude": 73.2583,
-    "speed_knots": 8.2,
-    "heading_deg": 241.0,
+    "speed_knots": 8.1,
+    "heading_deg": 240.0,
     "provenance_json": {
       "mode": "SYNTHETIC",
       "source": "synthetic-demo",
@@ -120,13 +120,13 @@
     "created_at": "2026-09-12T06:00:00+00:00"
   },
   {
-    "public_id": "pos-v01-06",
+    "public_id": "pos-vessel-01-06",
     "vessel_id": "vessel-01",
     "trip_id": "trip-01",
     "timestamp": "2026-09-12T01:12:00+00:00",
     "latitude": 16.9734,
     "longitude": 73.2552,
-    "speed_knots": 9.0,
+    "speed_knots": 8.8,
     "heading_deg": 235.0,
     "provenance_json": {
       "mode": "SYNTHETIC",
@@ -140,14 +140,14 @@
     "created_at": "2026-09-12T06:00:00+00:00"
   },
   {
-    "public_id": "pos-v01-07",
+    "public_id": "pos-vessel-01-07",
     "vessel_id": "vessel-01",
     "trip_id": "trip-01",
     "timestamp": "2026-09-12T01:24:00+00:00",
-    "latitude": 16.9727,
+    "latitude": 16.9717,
     "longitude": 73.25,
-    "speed_knots": 9.8,
-    "heading_deg": 238.0,
+    "speed_knots": 9.5,
+    "heading_deg": 237.5,
     "provenance_json": {
       "mode": "SYNTHETIC",
       "source": "synthetic-demo",
@@ -160,14 +160,14 @@
     "created_at": "2026-09-12T06:00:00+00:00"
   },
   {
-    "public_id": "pos-v01-08",
+    "public_id": "pos-vessel-01-08",
     "vessel_id": "vessel-01",
     "trip_id": "trip-01",
     "timestamp": "2026-09-12T01:36:00+00:00",
-    "latitude": 16.9719,
+    "latitude": 16.9699,
     "longitude": 73.2469,
-    "speed_knots": 7.3,
-    "heading_deg": 241.0,
+    "speed_knots": 7.4,
+    "heading_deg": 240.0,
     "provenance_json": {
       "mode": "SYNTHETIC",
       "source": "synthetic-demo",
@@ -180,7 +180,7 @@
     "created_at": "2026-09-12T06:00:00+00:00"
   },
   {
-    "public_id": "pos-v01-09",
+    "public_id": "pos-vessel-01-09",
     "vessel_id": "vessel-01",
     "trip_id": "trip-01",
     "timestamp": "2026-09-12T01:48:00+00:00",
@@ -200,14 +200,14 @@
     "created_at": "2026-09-12T06:00:00+00:00"
   },
   {
-    "public_id": "pos-v01-10",
+    "public_id": "pos-vessel-01-10",
     "vessel_id": "vessel-01",
     "trip_id": "trip-01",
     "timestamp": "2026-09-12T02:00:00+00:00",
-    "latitude": 16.9644,
+    "latitude": 16.9634,
     "longitude": 73.2386,
-    "speed_knots": 8.9,
-    "heading_deg": 238.0,
+    "speed_knots": 8.8,
+    "heading_deg": 237.5,
     "provenance_json": {
       "mode": "SYNTHETIC",
       "source": "synthetic-demo",
@@ -220,14 +220,14 @@
     "created_at": "2026-09-12T06:00:00+00:00"
   },
   {
-    "public_id": "pos-v01-11",
+    "public_id": "pos-vessel-01-11",
     "vessel_id": "vessel-01",
     "trip_id": "trip-01",
     "timestamp": "2026-09-12T02:12:00+00:00",
-    "latitude": 16.9637,
+    "latitude": 16.9617,
     "longitude": 73.2335,
-    "speed_knots": 9.7,
-    "heading_deg": 241.0,
+    "speed_knots": 9.5,
+    "heading_deg": 240.0,
     "provenance_json": {
       "mode": "SYNTHETIC",
       "source": "synthetic-demo",
@@ -240,13 +240,13 @@
     "created_at": "2026-09-12T06:00:00+00:00"
   },
   {
-    "public_id": "pos-v01-12",
+    "public_id": "pos-vessel-01-12",
     "vessel_id": "vessel-01",
     "trip_id": "trip-01",
     "timestamp": "2026-09-12T02:24:00+00:00",
     "latitude": 16.9569,
     "longitude": 73.2303,
-    "speed_knots": 7.3,
+    "speed_knots": 7.4,
     "heading_deg": 235.0,
     "provenance_json": {
       "mode": "SYNTHETIC",
@@ -260,14 +260,14 @@
     "created_at": "2026-09-12T06:00:00+00:00"
   },
   {
-    "public_id": "pos-v01-13",
+    "public_id": "pos-vessel-01-13",
     "vessel_id": "vessel-01",
     "trip_id": "trip-01",
     "timestamp": "2026-09-12T02:36:00+00:00",
-    "latitude": 16.9561,
+    "latitude": 16.9551,
     "longitude": 73.2252,
-    "speed_knots": 8.0,
-    "heading_deg": 238.0,
+    "speed_knots": 8.1,
+    "heading_deg": 237.5,
     "provenance_json": {
       "mode": "SYNTHETIC",
       "source": "synthetic-demo",
@@ -280,14 +280,14 @@
     "created_at": "2026-09-12T06:00:00+00:00"
   },
   {
-    "public_id": "pos-v01-14",
+    "public_id": "pos-vessel-01-14",
     "vessel_id": "vessel-01",
     "trip_id": "trip-01",
     "timestamp": "2026-09-12T02:48:00+00:00",
-    "latitude": 16.9554,
+    "latitude": 16.9534,
     "longitude": 73.2221,
     "speed_knots": 8.8,
-    "heading_deg": 241.0,
+    "heading_deg": 240.0,
     "provenance_json": {
       "mode": "SYNTHETIC",
       "source": "synthetic-demo",
@@ -300,13 +300,13 @@
     "created_at": "2026-09-12T06:00:00+00:00"
   },
   {
-    "public_id": "pos-v01-15",
+    "public_id": "pos-vessel-01-15",
     "vessel_id": "vessel-01",
     "trip_id": "trip-01",
     "timestamp": "2026-09-12T03:00:00+00:00",
     "latitude": 16.9486,
     "longitude": 73.2169,
-    "speed_knots": 9.6,
+    "speed_knots": 9.4,
     "heading_deg": 235.0,
     "provenance_json": {
       "mode": "SYNTHETIC",
@@ -320,14 +320,14 @@
     "created_at": "2026-09-12T06:00:00+00:00"
   },
   {
-    "public_id": "pos-v01-16",
+    "public_id": "pos-vessel-01-16",
     "vessel_id": "vessel-01",
     "trip_id": "trip-01",
     "timestamp": "2026-09-12T03:12:00+00:00",
-    "latitude": 16.9479,
+    "latitude": 16.9469,
     "longitude": 73.2138,
-    "speed_knots": 7.2,
-    "heading_deg": 238.0,
+    "speed_knots": 7.3,
+    "heading_deg": 237.5,
     "provenance_json": {
       "mode": "SYNTHETIC",
       "source": "synthetic-demo",
@@ -340,14 +340,14 @@
     "created_at": "2026-09-12T06:00:00+00:00"
   },
   {
-    "public_id": "pos-v01-17",
+    "public_id": "pos-vessel-01-17",
     "vessel_id": "vessel-01",
     "trip_id": "trip-01",
     "timestamp": "2026-09-12T03:24:00+00:00",
-    "latitude": 16.9471,
+    "latitude": 16.9451,
     "longitude": 73.2087,
     "speed_knots": 8.0,
-    "heading_deg": 241.0,
+    "heading_deg": 240.0,
     "provenance_json": {
       "mode": "SYNTHETIC",
       "source": "synthetic-demo",
@@ -360,7 +360,7 @@
     "created_at": "2026-09-12T06:00:00+00:00"
   },
   {
-    "public_id": "pos-v01-18",
+    "public_id": "pos-vessel-01-18",
     "vessel_id": "vessel-01",
     "trip_id": "trip-01",
     "timestamp": "2026-09-12T03:36:00+00:00",
@@ -380,14 +380,14 @@
     "created_at": "2026-09-12T06:00:00+00:00"
   },
   {
-    "public_id": "pos-v01-19",
+    "public_id": "pos-vessel-01-19",
     "vessel_id": "vessel-01",
     "trip_id": "trip-01",
     "timestamp": "2026-09-12T03:48:00+00:00",
-    "latitude": 16.9396,
+    "latitude": 16.9386,
     "longitude": 73.2004,
-    "speed_knots": 9.5,
-    "heading_deg": 238.0,
+    "speed_knots": 9.4,
+    "heading_deg": 237.5,
     "provenance_json": {
       "mode": "SYNTHETIC",
       "source": "synthetic-demo",
@@ -400,14 +400,14 @@
     "created_at": "2026-09-12T06:00:00+00:00"
   },
   {
-    "public_id": "pos-v01-20",
+    "public_id": "pos-vessel-01-20",
     "vessel_id": "vessel-01",
     "trip_id": "trip-01",
     "timestamp": "2026-09-12T04:00:00+00:00",
-    "latitude": 16.9388,
+    "latitude": 16.9368,
     "longitude": 73.1972,
-    "speed_knots": 7.1,
-    "heading_deg": 241.0,
+    "speed_knots": 7.3,
+    "heading_deg": 240.0,
     "provenance_json": {
       "mode": "SYNTHETIC",
       "source": "synthetic-demo",
@@ -420,13 +420,13 @@
     "created_at": "2026-09-12T06:00:00+00:00"
   },
   {
-    "public_id": "pos-v01-21",
+    "public_id": "pos-vessel-01-21",
     "vessel_id": "vessel-01",
     "trip_id": "trip-01",
     "timestamp": "2026-09-12T04:12:00+00:00",
     "latitude": 16.9321,
     "longitude": 73.1921,
-    "speed_knots": 7.9,
+    "speed_knots": 8.0,
     "heading_deg": 235.0,
     "provenance_json": {
       "mode": "SYNTHETIC",
@@ -440,14 +440,14 @@
     "created_at": "2026-09-12T06:00:00+00:00"
   },
   {
-    "public_id": "pos-v01-22",
+    "public_id": "pos-vessel-01-22",
     "vessel_id": "vessel-01",
     "trip_id": "trip-01",
     "timestamp": "2026-09-12T04:24:00+00:00",
-    "latitude": 16.9313,
+    "latitude": 16.9303,
     "longitude": 73.189,
     "speed_knots": 8.7,
-    "heading_deg": 238.0,
+    "heading_deg": 237.5,
     "provenance_json": {
       "mode": "SYNTHETIC",
       "source": "synthetic-demo",
@@ -460,14 +460,14 @@
     "created_at": "2026-09-12T06:00:00+00:00"
   },
   {
-    "public_id": "pos-v01-23",
+    "public_id": "pos-vessel-01-23",
     "vessel_id": "vessel-01",
     "trip_id": "trip-01",
     "timestamp": "2026-09-12T04:36:00+00:00",
-    "latitude": 16.9306,
+    "latitude": 16.9286,
     "longitude": 73.1838,
     "speed_knots": 9.4,
-    "heading_deg": 241.0,
+    "heading_deg": 240.0,
     "provenance_json": {
       "mode": "SYNTHETIC",
       "source": "synthetic-demo",
@@ -480,13 +480,13 @@
     "created_at": "2026-09-12T06:00:00+00:00"
   },
   {
-    "public_id": "pos-v01-24",
+    "public_id": "pos-vessel-01-24",
     "vessel_id": "vessel-01",
     "trip_id": "trip-01",
     "timestamp": "2026-09-12T04:48:00+00:00",
     "latitude": 16.9238,
     "longitude": 73.1807,
-    "speed_knots": 7.0,
+    "speed_knots": 7.3,
     "heading_deg": 235.0,
     "provenance_json": {
       "mode": "SYNTHETIC",
@@ -500,14 +500,14 @@
     "created_at": "2026-09-12T06:00:00+00:00"
   },
   {
-    "public_id": "pos-v01-25",
+    "public_id": "pos-vessel-01-25",
     "vessel_id": "vessel-01",
     "trip_id": "trip-01",
     "timestamp": "2026-09-12T05:00:00+00:00",
-    "latitude": 16.923,
+    "latitude": 16.922,
     "longitude": 73.1756,
-    "speed_knots": 7.8,
-    "heading_deg": 238.0,
+    "speed_knots": 7.9,
+    "heading_deg": 237.5,
     "provenance_json": {
       "mode": "SYNTHETIC",
       "source": "synthetic-demo",
@@ -520,14 +520,14 @@
     "created_at": "2026-09-12T06:00:00+00:00"
   },
   {
-    "public_id": "pos-v01-26",
+    "public_id": "pos-vessel-01-26",
     "vessel_id": "vessel-01",
     "trip_id": "trip-01",
     "timestamp": "2026-09-12T05:12:00+00:00",
-    "latitude": 16.9223,
+    "latitude": 16.9203,
     "longitude": 73.1724,
     "speed_knots": 8.6,
-    "heading_deg": 241.0,
+    "heading_deg": 240.0,
     "provenance_json": {
       "mode": "SYNTHETIC",
       "source": "synthetic-demo",
@@ -540,13 +540,13 @@
     "created_at": "2026-09-12T06:00:00+00:00"
   },
   {
-    "public_id": "pos-v01-27",
+    "public_id": "pos-vessel-01-27",
     "vessel_id": "vessel-01",
     "trip_id": "trip-01",
     "timestamp": "2026-09-12T05:24:00+00:00",
     "latitude": 16.9155,
     "longitude": 73.1673,
-    "speed_knots": 9.4,
+    "speed_knots": 9.3,
     "heading_deg": 235.0,
     "provenance_json": {
       "mode": "SYNTHETIC",
@@ -560,14 +560,14 @@
     "created_at": "2026-09-12T06:00:00+00:00"
   },
   {
-    "public_id": "pos-v01-28",
+    "public_id": "pos-vessel-01-28",
     "vessel_id": "vessel-01",
     "trip_id": "trip-01",
     "timestamp": "2026-09-12T05:36:00+00:00",
-    "latitude": 16.9148,
+    "latitude": 16.9138,
     "longitude": 73.1641,
-    "speed_knots": 6.9,
-    "heading_deg": 238.0,
+    "speed_knots": 7.2,
+    "heading_deg": 237.5,
     "provenance_json": {
       "mode": "SYNTHETIC",
       "source": "synthetic-demo",
@@ -580,14 +580,14 @@
     "created_at": "2026-09-12T06:00:00+00:00"
   },
   {
-    "public_id": "pos-v01-29",
+    "public_id": "pos-vessel-01-29",
     "vessel_id": "vessel-01",
     "trip_id": "trip-01",
     "timestamp": "2026-09-12T05:48:00+00:00",
-    "latitude": 16.914,
+    "latitude": 16.912,
     "longitude": 73.159,
-    "speed_knots": 7.7,
-    "heading_deg": 241.0,
+    "speed_knots": 7.9,
+    "heading_deg": 240.0,
     "provenance_json": {
       "mode": "SYNTHETIC",
       "source": "synthetic-demo",
@@ -600,7 +600,7 @@
     "created_at": "2026-09-12T06:00:00+00:00"
   },
   {
-    "public_id": "pos-v02-00",
+    "public_id": "pos-vessel-02-00",
     "vessel_id": "vessel-02",
     "trip_id": "trip-02",
     "timestamp": "2026-09-12T00:00:00+00:00",
@@ -620,14 +620,14 @@
     "created_at": "2026-09-12T06:00:00+00:00"
   },
   {
-    "public_id": "pos-v02-01",
+    "public_id": "pos-vessel-02-01",
     "vessel_id": "vessel-02",
     "trip_id": "trip-02",
     "timestamp": "2026-09-12T00:12:00+00:00",
-    "latitude": 16.9586,
-    "longitude": 73.2885,
-    "speed_knots": 10.2,
-    "heading_deg": 177.0,
+    "latitude": 16.9596,
+    "longitude": 73.2845,
+    "speed_knots": 9.7,
+    "heading_deg": 177.5,
     "provenance_json": {
       "mode": "SYNTHETIC",
       "source": "synthetic-demo",
@@ -640,14 +640,14 @@
     "created_at": "2026-09-12T06:00:00+00:00"
   },
   {
-    "public_id": "pos-v02-02",
+    "public_id": "pos-vessel-02-02",
     "vessel_id": "vessel-02",
     "trip_id": "trip-02",
     "timestamp": "2026-09-12T00:24:00+00:00",
-    "latitude": 16.9272,
-    "longitude": 73.297,
-    "speed_knots": 11.4,
-    "heading_deg": 175.0,
+    "latitude": 16.9292,
+    "longitude": 73.291,
+    "speed_knots": 10.4,
+    "heading_deg": 180.0,
     "provenance_json": {
       "mode": "SYNTHETIC",
       "source": "synthetic-demo",
@@ -660,33 +660,13 @@
     "created_at": "2026-09-12T06:00:00+00:00"
   },
   {
-    "public_id": "pos-v02-03",
+    "public_id": "pos-vessel-02-03",
     "vessel_id": "vessel-02",
     "trip_id": "trip-02",
     "timestamp": "2026-09-12T00:36:00+00:00",
     "latitude": 16.8959,
-    "longitude": 73.3056,
-    "speed_knots": 9.0,
-    "heading_deg": 177.0,
-    "provenance_json": {
-      "mode": "SYNTHETIC",
-      "source": "synthetic-demo",
-      "dataset_version": "synthetic_demo_v1",
-      "namespace": "SAMUDRA_DEMO_V1",
-      "generated_at": "2026-09-12T06:00:00+00:00",
-      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
-    },
-    "namespace": "SAMUDRA_DEMO_V1",
-    "created_at": "2026-09-12T06:00:00+00:00"
-  },
-  {
-    "public_id": "pos-v02-04",
-    "vessel_id": "vessel-02",
-    "trip_id": "trip-02",
-    "timestamp": "2026-09-12T00:48:00+00:00",
-    "latitude": 16.8645,
-    "longitude": 73.3021,
-    "speed_knots": 10.2,
+    "longitude": 73.2956,
+    "speed_knots": 11.1,
     "heading_deg": 175.0,
     "provenance_json": {
       "mode": "SYNTHETIC",
@@ -700,14 +680,14 @@
     "created_at": "2026-09-12T06:00:00+00:00"
   },
   {
-    "public_id": "pos-v02-05",
+    "public_id": "pos-vessel-02-04",
     "vessel_id": "vessel-02",
     "trip_id": "trip-02",
-    "timestamp": "2026-09-12T01:00:00+00:00",
-    "latitude": 16.8331,
-    "longitude": 73.3106,
-    "speed_knots": 11.4,
-    "heading_deg": 177.0,
+    "timestamp": "2026-09-12T00:48:00+00:00",
+    "latitude": 16.8655,
+    "longitude": 73.3021,
+    "speed_knots": 9.0,
+    "heading_deg": 177.5,
     "provenance_json": {
       "mode": "SYNTHETIC",
       "source": "synthetic-demo",
@@ -720,13 +700,33 @@
     "created_at": "2026-09-12T06:00:00+00:00"
   },
   {
-    "public_id": "pos-v02-06",
+    "public_id": "pos-vessel-02-05",
+    "vessel_id": "vessel-02",
+    "trip_id": "trip-02",
+    "timestamp": "2026-09-12T01:00:00+00:00",
+    "latitude": 16.8351,
+    "longitude": 73.3066,
+    "speed_knots": 9.6,
+    "heading_deg": 180.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-02-06",
     "vessel_id": "vessel-02",
     "trip_id": "trip-02",
     "timestamp": "2026-09-12T01:12:00+00:00",
     "latitude": 16.8017,
-    "longitude": 73.3191,
-    "speed_knots": 9.0,
+    "longitude": 73.3131,
+    "speed_knots": 10.3,
     "heading_deg": 175.0,
     "provenance_json": {
       "mode": "SYNTHETIC",
@@ -740,14 +740,14 @@
     "created_at": "2026-09-12T06:00:00+00:00"
   },
   {
-    "public_id": "pos-v02-07",
+    "public_id": "pos-vessel-02-07",
     "vessel_id": "vessel-02",
     "trip_id": "trip-02",
     "timestamp": "2026-09-12T01:24:00+00:00",
-    "latitude": 16.7703,
-    "longitude": 73.3276,
-    "speed_knots": 10.2,
-    "heading_deg": 177.0,
+    "latitude": 16.7713,
+    "longitude": 73.3176,
+    "speed_knots": 11.0,
+    "heading_deg": 177.5,
     "provenance_json": {
       "mode": "SYNTHETIC",
       "source": "synthetic-demo",
@@ -760,14 +760,14 @@
     "created_at": "2026-09-12T06:00:00+00:00"
   },
   {
-    "public_id": "pos-v02-08",
+    "public_id": "pos-vessel-02-08",
     "vessel_id": "vessel-02",
     "trip_id": "trip-02",
     "timestamp": "2026-09-12T01:36:00+00:00",
-    "latitude": 16.739,
+    "latitude": 16.741,
     "longitude": 73.3241,
-    "speed_knots": 11.4,
-    "heading_deg": 175.0,
+    "speed_knots": 8.9,
+    "heading_deg": 180.0,
     "provenance_json": {
       "mode": "SYNTHETIC",
       "source": "synthetic-demo",
@@ -780,33 +780,13 @@
     "created_at": "2026-09-12T06:00:00+00:00"
   },
   {
-    "public_id": "pos-v02-09",
+    "public_id": "pos-vessel-02-09",
     "vessel_id": "vessel-02",
     "trip_id": "trip-02",
     "timestamp": "2026-09-12T01:48:00+00:00",
     "latitude": 16.7076,
-    "longitude": 73.3327,
-    "speed_knots": 9.0,
-    "heading_deg": 177.0,
-    "provenance_json": {
-      "mode": "SYNTHETIC",
-      "source": "synthetic-demo",
-      "dataset_version": "synthetic_demo_v1",
-      "namespace": "SAMUDRA_DEMO_V1",
-      "generated_at": "2026-09-12T06:00:00+00:00",
-      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
-    },
-    "namespace": "SAMUDRA_DEMO_V1",
-    "created_at": "2026-09-12T06:00:00+00:00"
-  },
-  {
-    "public_id": "pos-v02-10",
-    "vessel_id": "vessel-02",
-    "trip_id": "trip-02",
-    "timestamp": "2026-09-12T02:00:00+00:00",
-    "latitude": 16.6762,
-    "longitude": 73.3412,
-    "speed_knots": 10.2,
+    "longitude": 73.3287,
+    "speed_knots": 9.6,
     "heading_deg": 175.0,
     "provenance_json": {
       "mode": "SYNTHETIC",
@@ -820,14 +800,14 @@
     "created_at": "2026-09-12T06:00:00+00:00"
   },
   {
-    "public_id": "pos-v02-11",
+    "public_id": "pos-vessel-02-10",
     "vessel_id": "vessel-02",
     "trip_id": "trip-02",
-    "timestamp": "2026-09-12T02:12:00+00:00",
-    "latitude": 16.6448,
-    "longitude": 73.3497,
-    "speed_knots": 11.4,
-    "heading_deg": 177.0,
+    "timestamp": "2026-09-12T02:00:00+00:00",
+    "latitude": 16.6772,
+    "longitude": 73.3352,
+    "speed_knots": 10.3,
+    "heading_deg": 177.5,
     "provenance_json": {
       "mode": "SYNTHETIC",
       "source": "synthetic-demo",
@@ -840,13 +820,33 @@
     "created_at": "2026-09-12T06:00:00+00:00"
   },
   {
-    "public_id": "pos-v02-12",
+    "public_id": "pos-vessel-02-11",
+    "vessel_id": "vessel-02",
+    "trip_id": "trip-02",
+    "timestamp": "2026-09-12T02:12:00+00:00",
+    "latitude": 16.6468,
+    "longitude": 73.3397,
+    "speed_knots": 11.0,
+    "heading_deg": 180.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-02-12",
     "vessel_id": "vessel-02",
     "trip_id": "trip-02",
     "timestamp": "2026-09-12T02:24:00+00:00",
     "latitude": 16.6134,
     "longitude": 73.3462,
-    "speed_knots": 9.0,
+    "speed_knots": 8.9,
     "heading_deg": 175.0,
     "provenance_json": {
       "mode": "SYNTHETIC",
@@ -860,14 +860,14 @@
     "created_at": "2026-09-12T06:00:00+00:00"
   },
   {
-    "public_id": "pos-v02-13",
+    "public_id": "pos-vessel-02-13",
     "vessel_id": "vessel-02",
     "trip_id": "trip-02",
     "timestamp": "2026-09-12T02:36:00+00:00",
-    "latitude": 16.5821,
-    "longitude": 73.3547,
-    "speed_knots": 10.2,
-    "heading_deg": 177.0,
+    "latitude": 16.5831,
+    "longitude": 73.3507,
+    "speed_knots": 9.6,
+    "heading_deg": 177.5,
     "provenance_json": {
       "mode": "SYNTHETIC",
       "source": "synthetic-demo",
@@ -880,14 +880,14 @@
     "created_at": "2026-09-12T06:00:00+00:00"
   },
   {
-    "public_id": "pos-v02-14",
+    "public_id": "pos-vessel-02-14",
     "vessel_id": "vessel-02",
     "trip_id": "trip-02",
     "timestamp": "2026-09-12T02:48:00+00:00",
-    "latitude": 16.5507,
-    "longitude": 73.3632,
-    "speed_knots": 11.4,
-    "heading_deg": 175.0,
+    "latitude": 16.5527,
+    "longitude": 73.3572,
+    "speed_knots": 10.3,
+    "heading_deg": 180.0,
     "provenance_json": {
       "mode": "SYNTHETIC",
       "source": "synthetic-demo",
@@ -900,33 +900,13 @@
     "created_at": "2026-09-12T06:00:00+00:00"
   },
   {
-    "public_id": "pos-v02-15",
+    "public_id": "pos-vessel-02-15",
     "vessel_id": "vessel-02",
     "trip_id": "trip-02",
     "timestamp": "2026-09-12T03:00:00+00:00",
     "latitude": 16.5193,
-    "longitude": 73.3718,
-    "speed_knots": 9.0,
-    "heading_deg": 177.0,
-    "provenance_json": {
-      "mode": "SYNTHETIC",
-      "source": "synthetic-demo",
-      "dataset_version": "synthetic_demo_v1",
-      "namespace": "SAMUDRA_DEMO_V1",
-      "generated_at": "2026-09-12T06:00:00+00:00",
-      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
-    },
-    "namespace": "SAMUDRA_DEMO_V1",
-    "created_at": "2026-09-12T06:00:00+00:00"
-  },
-  {
-    "public_id": "pos-v02-16",
-    "vessel_id": "vessel-02",
-    "trip_id": "trip-02",
-    "timestamp": "2026-09-12T03:12:00+00:00",
-    "latitude": 16.4879,
-    "longitude": 73.3683,
-    "speed_knots": 10.2,
+    "longitude": 73.3618,
+    "speed_knots": 10.9,
     "heading_deg": 175.0,
     "provenance_json": {
       "mode": "SYNTHETIC",
@@ -940,14 +920,14 @@
     "created_at": "2026-09-12T06:00:00+00:00"
   },
   {
-    "public_id": "pos-v02-17",
+    "public_id": "pos-vessel-02-16",
     "vessel_id": "vessel-02",
     "trip_id": "trip-02",
-    "timestamp": "2026-09-12T03:24:00+00:00",
-    "latitude": 16.4566,
-    "longitude": 73.3768,
-    "speed_knots": 11.4,
-    "heading_deg": 177.0,
+    "timestamp": "2026-09-12T03:12:00+00:00",
+    "latitude": 16.4889,
+    "longitude": 73.3683,
+    "speed_knots": 8.8,
+    "heading_deg": 177.5,
     "provenance_json": {
       "mode": "SYNTHETIC",
       "source": "synthetic-demo",
@@ -960,13 +940,33 @@
     "created_at": "2026-09-12T06:00:00+00:00"
   },
   {
-    "public_id": "pos-v02-18",
+    "public_id": "pos-vessel-02-17",
+    "vessel_id": "vessel-02",
+    "trip_id": "trip-02",
+    "timestamp": "2026-09-12T03:24:00+00:00",
+    "latitude": 16.4586,
+    "longitude": 73.3728,
+    "speed_knots": 9.5,
+    "heading_deg": 180.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-02-18",
     "vessel_id": "vessel-02",
     "trip_id": "trip-02",
     "timestamp": "2026-09-12T03:36:00+00:00",
     "latitude": 16.4252,
-    "longitude": 73.3853,
-    "speed_knots": 9.0,
+    "longitude": 73.3793,
+    "speed_knots": 10.2,
     "heading_deg": 175.0,
     "provenance_json": {
       "mode": "SYNTHETIC",
@@ -980,14 +980,14 @@
     "created_at": "2026-09-12T06:00:00+00:00"
   },
   {
-    "public_id": "pos-v02-19",
+    "public_id": "pos-vessel-02-19",
     "vessel_id": "vessel-02",
     "trip_id": "trip-02",
     "timestamp": "2026-09-12T03:48:00+00:00",
-    "latitude": 16.3938,
-    "longitude": 73.3938,
-    "speed_knots": 10.2,
-    "heading_deg": 177.0,
+    "latitude": 16.3948,
+    "longitude": 73.3838,
+    "speed_knots": 10.9,
+    "heading_deg": 177.5,
     "provenance_json": {
       "mode": "SYNTHETIC",
       "source": "synthetic-demo",
@@ -1000,14 +1000,14 @@
     "created_at": "2026-09-12T06:00:00+00:00"
   },
   {
-    "public_id": "pos-v02-20",
+    "public_id": "pos-vessel-02-20",
     "vessel_id": "vessel-02",
     "trip_id": "trip-02",
     "timestamp": "2026-09-12T04:00:00+00:00",
-    "latitude": 16.3624,
+    "latitude": 16.3644,
     "longitude": 73.3903,
-    "speed_knots": 11.4,
-    "heading_deg": 175.0,
+    "speed_knots": 8.8,
+    "heading_deg": 180.0,
     "provenance_json": {
       "mode": "SYNTHETIC",
       "source": "synthetic-demo",
@@ -1020,33 +1020,13 @@
     "created_at": "2026-09-12T06:00:00+00:00"
   },
   {
-    "public_id": "pos-v02-21",
+    "public_id": "pos-vessel-02-21",
     "vessel_id": "vessel-02",
     "trip_id": "trip-02",
     "timestamp": "2026-09-12T04:12:00+00:00",
     "latitude": 16.331,
-    "longitude": 73.3989,
-    "speed_knots": 9.0,
-    "heading_deg": 177.0,
-    "provenance_json": {
-      "mode": "SYNTHETIC",
-      "source": "synthetic-demo",
-      "dataset_version": "synthetic_demo_v1",
-      "namespace": "SAMUDRA_DEMO_V1",
-      "generated_at": "2026-09-12T06:00:00+00:00",
-      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
-    },
-    "namespace": "SAMUDRA_DEMO_V1",
-    "created_at": "2026-09-12T06:00:00+00:00"
-  },
-  {
-    "public_id": "pos-v02-22",
-    "vessel_id": "vessel-02",
-    "trip_id": "trip-02",
-    "timestamp": "2026-09-12T04:24:00+00:00",
-    "latitude": 16.2997,
-    "longitude": 73.4074,
-    "speed_knots": 10.2,
+    "longitude": 73.3949,
+    "speed_knots": 9.5,
     "heading_deg": 175.0,
     "provenance_json": {
       "mode": "SYNTHETIC",
@@ -1060,14 +1040,14 @@
     "created_at": "2026-09-12T06:00:00+00:00"
   },
   {
-    "public_id": "pos-v02-23",
+    "public_id": "pos-vessel-02-22",
     "vessel_id": "vessel-02",
     "trip_id": "trip-02",
-    "timestamp": "2026-09-12T04:36:00+00:00",
-    "latitude": 16.2683,
-    "longitude": 73.4159,
-    "speed_knots": 11.4,
-    "heading_deg": 177.0,
+    "timestamp": "2026-09-12T04:24:00+00:00",
+    "latitude": 16.3007,
+    "longitude": 73.4014,
+    "speed_knots": 10.2,
+    "heading_deg": 177.5,
     "provenance_json": {
       "mode": "SYNTHETIC",
       "source": "synthetic-demo",
@@ -1080,13 +1060,33 @@
     "created_at": "2026-09-12T06:00:00+00:00"
   },
   {
-    "public_id": "pos-v02-24",
+    "public_id": "pos-vessel-02-23",
+    "vessel_id": "vessel-02",
+    "trip_id": "trip-02",
+    "timestamp": "2026-09-12T04:36:00+00:00",
+    "latitude": 16.2703,
+    "longitude": 73.4059,
+    "speed_knots": 10.9,
+    "heading_deg": 180.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-02-24",
     "vessel_id": "vessel-02",
     "trip_id": "trip-02",
     "timestamp": "2026-09-12T04:48:00+00:00",
     "latitude": 16.2369,
     "longitude": 73.4124,
-    "speed_knots": 9.0,
+    "speed_knots": 8.8,
     "heading_deg": 175.0,
     "provenance_json": {
       "mode": "SYNTHETIC",
@@ -1100,14 +1100,14 @@
     "created_at": "2026-09-12T06:00:00+00:00"
   },
   {
-    "public_id": "pos-v02-25",
+    "public_id": "pos-vessel-02-25",
     "vessel_id": "vessel-02",
     "trip_id": "trip-02",
     "timestamp": "2026-09-12T05:00:00+00:00",
-    "latitude": 16.2055,
-    "longitude": 73.4209,
-    "speed_knots": 10.2,
-    "heading_deg": 177.0,
+    "latitude": 16.2065,
+    "longitude": 73.4169,
+    "speed_knots": 9.4,
+    "heading_deg": 177.5,
     "provenance_json": {
       "mode": "SYNTHETIC",
       "source": "synthetic-demo",
@@ -1120,14 +1120,14 @@
     "created_at": "2026-09-12T06:00:00+00:00"
   },
   {
-    "public_id": "pos-v02-26",
+    "public_id": "pos-vessel-02-26",
     "vessel_id": "vessel-02",
     "trip_id": "trip-02",
     "timestamp": "2026-09-12T05:12:00+00:00",
-    "latitude": 16.1741,
-    "longitude": 73.4294,
-    "speed_knots": 11.4,
-    "heading_deg": 175.0,
+    "latitude": 16.1761,
+    "longitude": 73.4234,
+    "speed_knots": 10.1,
+    "heading_deg": 180.0,
     "provenance_json": {
       "mode": "SYNTHETIC",
       "source": "synthetic-demo",
@@ -1140,33 +1140,13 @@
     "created_at": "2026-09-12T06:00:00+00:00"
   },
   {
-    "public_id": "pos-v02-27",
+    "public_id": "pos-vessel-02-27",
     "vessel_id": "vessel-02",
     "trip_id": "trip-02",
     "timestamp": "2026-09-12T05:24:00+00:00",
     "latitude": 16.1428,
-    "longitude": 73.438,
-    "speed_knots": 9.0,
-    "heading_deg": 177.0,
-    "provenance_json": {
-      "mode": "SYNTHETIC",
-      "source": "synthetic-demo",
-      "dataset_version": "synthetic_demo_v1",
-      "namespace": "SAMUDRA_DEMO_V1",
-      "generated_at": "2026-09-12T06:00:00+00:00",
-      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
-    },
-    "namespace": "SAMUDRA_DEMO_V1",
-    "created_at": "2026-09-12T06:00:00+00:00"
-  },
-  {
-    "public_id": "pos-v02-28",
-    "vessel_id": "vessel-02",
-    "trip_id": "trip-02",
-    "timestamp": "2026-09-12T05:36:00+00:00",
-    "latitude": 16.1114,
-    "longitude": 73.4345,
-    "speed_knots": 10.2,
+    "longitude": 73.428,
+    "speed_knots": 10.8,
     "heading_deg": 175.0,
     "provenance_json": {
       "mode": "SYNTHETIC",
@@ -1180,14 +1160,3634 @@
     "created_at": "2026-09-12T06:00:00+00:00"
   },
   {
-    "public_id": "pos-v02-29",
+    "public_id": "pos-vessel-02-28",
+    "vessel_id": "vessel-02",
+    "trip_id": "trip-02",
+    "timestamp": "2026-09-12T05:36:00+00:00",
+    "latitude": 16.1124,
+    "longitude": 73.4345,
+    "speed_knots": 8.7,
+    "heading_deg": 177.5,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-02-29",
     "vessel_id": "vessel-02",
     "trip_id": "trip-02",
     "timestamp": "2026-09-12T05:48:00+00:00",
-    "latitude": 16.08,
-    "longitude": 73.443,
+    "latitude": 16.082,
+    "longitude": 73.439,
+    "speed_knots": 9.4,
+    "heading_deg": 180.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-03-00",
+    "vessel_id": "vessel-03",
+    "trip_id": "trip-03",
+    "timestamp": "2026-09-12T00:00:00+00:00",
+    "latitude": 16.99,
+    "longitude": 73.28,
+    "speed_knots": 8.2,
+    "heading_deg": 205.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-03-01",
+    "vessel_id": "vessel-03",
+    "trip_id": "trip-03",
+    "timestamp": "2026-09-12T00:12:00+00:00",
+    "latitude": 16.9793,
+    "longitude": 73.2745,
+    "speed_knots": 8.9,
+    "heading_deg": 207.5,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-03-02",
+    "vessel_id": "vessel-03",
+    "trip_id": "trip-03",
+    "timestamp": "2026-09-12T00:24:00+00:00",
+    "latitude": 16.9686,
+    "longitude": 73.271,
+    "speed_knots": 9.6,
+    "heading_deg": 210.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-03-03",
+    "vessel_id": "vessel-03",
+    "trip_id": "trip-03",
+    "timestamp": "2026-09-12T00:36:00+00:00",
+    "latitude": 16.9548,
+    "longitude": 73.2656,
+    "speed_knots": 10.3,
+    "heading_deg": 205.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-03-04",
+    "vessel_id": "vessel-03",
+    "trip_id": "trip-03",
+    "timestamp": "2026-09-12T00:48:00+00:00",
+    "latitude": 16.9441,
+    "longitude": 73.2621,
+    "speed_knots": 8.2,
+    "heading_deg": 207.5,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-03-05",
+    "vessel_id": "vessel-03",
+    "trip_id": "trip-03",
+    "timestamp": "2026-09-12T01:00:00+00:00",
+    "latitude": 16.9334,
+    "longitude": 73.2566,
+    "speed_knots": 8.8,
+    "heading_deg": 210.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-03-06",
+    "vessel_id": "vessel-03",
+    "trip_id": "trip-03",
+    "timestamp": "2026-09-12T01:12:00+00:00",
+    "latitude": 16.9197,
+    "longitude": 73.2531,
+    "speed_knots": 9.5,
+    "heading_deg": 205.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-03-07",
+    "vessel_id": "vessel-03",
+    "trip_id": "trip-03",
+    "timestamp": "2026-09-12T01:24:00+00:00",
+    "latitude": 16.9089,
+    "longitude": 73.2476,
+    "speed_knots": 10.2,
+    "heading_deg": 207.5,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-03-08",
+    "vessel_id": "vessel-03",
+    "trip_id": "trip-03",
+    "timestamp": "2026-09-12T01:36:00+00:00",
+    "latitude": 16.8982,
+    "longitude": 73.2441,
+    "speed_knots": 8.1,
+    "heading_deg": 210.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-03-09",
+    "vessel_id": "vessel-03",
+    "trip_id": "trip-03",
+    "timestamp": "2026-09-12T01:48:00+00:00",
+    "latitude": 16.8845,
+    "longitude": 73.2387,
+    "speed_knots": 8.8,
+    "heading_deg": 205.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-03-10",
+    "vessel_id": "vessel-03",
+    "trip_id": "trip-03",
+    "timestamp": "2026-09-12T02:00:00+00:00",
+    "latitude": 16.8738,
+    "longitude": 73.2352,
+    "speed_knots": 9.5,
+    "heading_deg": 207.5,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-03-11",
+    "vessel_id": "vessel-03",
+    "trip_id": "trip-03",
+    "timestamp": "2026-09-12T02:12:00+00:00",
+    "latitude": 16.863,
+    "longitude": 73.2297,
+    "speed_knots": 10.2,
+    "heading_deg": 210.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-03-12",
+    "vessel_id": "vessel-03",
+    "trip_id": "trip-03",
+    "timestamp": "2026-09-12T02:24:00+00:00",
+    "latitude": 16.8493,
+    "longitude": 73.2262,
+    "speed_knots": 8.1,
+    "heading_deg": 205.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-03-13",
+    "vessel_id": "vessel-03",
+    "trip_id": "trip-03",
+    "timestamp": "2026-09-12T02:36:00+00:00",
+    "latitude": 16.8386,
+    "longitude": 73.2207,
+    "speed_knots": 8.8,
+    "heading_deg": 207.5,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-03-14",
+    "vessel_id": "vessel-03",
+    "trip_id": "trip-03",
+    "timestamp": "2026-09-12T02:48:00+00:00",
+    "latitude": 16.8279,
+    "longitude": 73.2172,
+    "speed_knots": 9.5,
+    "heading_deg": 210.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-03-15",
+    "vessel_id": "vessel-03",
+    "trip_id": "trip-03",
+    "timestamp": "2026-09-12T03:00:00+00:00",
+    "latitude": 16.8141,
+    "longitude": 73.2118,
+    "speed_knots": 10.1,
+    "heading_deg": 205.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-03-16",
+    "vessel_id": "vessel-03",
+    "trip_id": "trip-03",
+    "timestamp": "2026-09-12T03:12:00+00:00",
+    "latitude": 16.8034,
+    "longitude": 73.2083,
+    "speed_knots": 8.0,
+    "heading_deg": 207.5,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-03-17",
+    "vessel_id": "vessel-03",
+    "trip_id": "trip-03",
+    "timestamp": "2026-09-12T03:24:00+00:00",
+    "latitude": 16.7927,
+    "longitude": 73.2028,
+    "speed_knots": 8.7,
+    "heading_deg": 210.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-03-18",
+    "vessel_id": "vessel-03",
+    "trip_id": "trip-03",
+    "timestamp": "2026-09-12T03:36:00+00:00",
+    "latitude": 16.779,
+    "longitude": 73.1993,
+    "speed_knots": 9.4,
+    "heading_deg": 205.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-03-19",
+    "vessel_id": "vessel-03",
+    "trip_id": "trip-03",
+    "timestamp": "2026-09-12T03:48:00+00:00",
+    "latitude": 16.7682,
+    "longitude": 73.1938,
+    "speed_knots": 10.1,
+    "heading_deg": 207.5,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-03-20",
+    "vessel_id": "vessel-03",
+    "trip_id": "trip-03",
+    "timestamp": "2026-09-12T04:00:00+00:00",
+    "latitude": 16.7575,
+    "longitude": 73.1903,
+    "speed_knots": 8.0,
+    "heading_deg": 210.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-03-21",
+    "vessel_id": "vessel-03",
+    "trip_id": "trip-03",
+    "timestamp": "2026-09-12T04:12:00+00:00",
+    "latitude": 16.7438,
+    "longitude": 73.1849,
+    "speed_knots": 8.7,
+    "heading_deg": 205.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-03-22",
+    "vessel_id": "vessel-03",
+    "trip_id": "trip-03",
+    "timestamp": "2026-09-12T04:24:00+00:00",
+    "latitude": 16.7331,
+    "longitude": 73.1814,
+    "speed_knots": 9.4,
+    "heading_deg": 207.5,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-03-23",
+    "vessel_id": "vessel-03",
+    "trip_id": "trip-03",
+    "timestamp": "2026-09-12T04:36:00+00:00",
+    "latitude": 16.7223,
+    "longitude": 73.1759,
+    "speed_knots": 10.1,
+    "heading_deg": 210.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-03-24",
+    "vessel_id": "vessel-03",
+    "trip_id": "trip-03",
+    "timestamp": "2026-09-12T04:48:00+00:00",
+    "latitude": 16.7086,
+    "longitude": 73.1724,
+    "speed_knots": 8.0,
+    "heading_deg": 205.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-03-25",
+    "vessel_id": "vessel-03",
+    "trip_id": "trip-03",
+    "timestamp": "2026-09-12T05:00:00+00:00",
+    "latitude": 16.6979,
+    "longitude": 73.1669,
+    "speed_knots": 8.6,
+    "heading_deg": 207.5,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-03-26",
+    "vessel_id": "vessel-03",
+    "trip_id": "trip-03",
+    "timestamp": "2026-09-12T05:12:00+00:00",
+    "latitude": 16.6872,
+    "longitude": 73.1634,
+    "speed_knots": 9.3,
+    "heading_deg": 210.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-03-27",
+    "vessel_id": "vessel-03",
+    "trip_id": "trip-03",
+    "timestamp": "2026-09-12T05:24:00+00:00",
+    "latitude": 16.6734,
+    "longitude": 73.158,
+    "speed_knots": 10.0,
+    "heading_deg": 205.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-03-28",
+    "vessel_id": "vessel-03",
+    "trip_id": "trip-03",
+    "timestamp": "2026-09-12T05:36:00+00:00",
+    "latitude": 16.6627,
+    "longitude": 73.1545,
+    "speed_knots": 7.9,
+    "heading_deg": 207.5,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-03-29",
+    "vessel_id": "vessel-03",
+    "trip_id": "trip-03",
+    "timestamp": "2026-09-12T05:48:00+00:00",
+    "latitude": 16.652,
+    "longitude": 73.149,
+    "speed_knots": 8.6,
+    "heading_deg": 210.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-04-00",
+    "vessel_id": "vessel-04",
+    "trip_id": "trip-04",
+    "timestamp": "2026-09-12T00:00:00+00:00",
+    "latitude": 16.99,
+    "longitude": 73.28,
+    "speed_knots": 5.0,
+    "heading_deg": 310.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-04-01",
+    "vessel_id": "vessel-04",
+    "trip_id": "trip-04",
+    "timestamp": "2026-09-12T00:12:00+00:00",
+    "latitude": 16.9917,
+    "longitude": 73.2785,
+    "speed_knots": 5.7,
+    "heading_deg": 312.5,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-04-02",
+    "vessel_id": "vessel-04",
+    "trip_id": "trip-04",
+    "timestamp": "2026-09-12T00:24:00+00:00",
+    "latitude": 16.9934,
+    "longitude": 73.279,
+    "speed_knots": 6.4,
+    "heading_deg": 315.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-04-03",
+    "vessel_id": "vessel-04",
+    "trip_id": "trip-04",
+    "timestamp": "2026-09-12T00:36:00+00:00",
+    "latitude": 16.9921,
+    "longitude": 73.2774,
+    "speed_knots": 7.1,
+    "heading_deg": 310.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-04-04",
+    "vessel_id": "vessel-04",
+    "trip_id": "trip-04",
+    "timestamp": "2026-09-12T00:48:00+00:00",
+    "latitude": 16.9938,
+    "longitude": 73.2779,
+    "speed_knots": 5.0,
+    "heading_deg": 312.5,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-04-05",
+    "vessel_id": "vessel-04",
+    "trip_id": "trip-04",
+    "timestamp": "2026-09-12T01:00:00+00:00",
+    "latitude": 16.9954,
+    "longitude": 73.2764,
+    "speed_knots": 5.7,
+    "heading_deg": 315.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-04-06",
+    "vessel_id": "vessel-04",
+    "trip_id": "trip-04",
+    "timestamp": "2026-09-12T01:12:00+00:00",
+    "latitude": 16.9941,
+    "longitude": 73.2769,
+    "speed_knots": 6.3,
+    "heading_deg": 310.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-04-07",
+    "vessel_id": "vessel-04",
+    "trip_id": "trip-04",
+    "timestamp": "2026-09-12T01:24:00+00:00",
+    "latitude": 16.9958,
+    "longitude": 73.2754,
+    "speed_knots": 7.0,
+    "heading_deg": 312.5,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-04-08",
+    "vessel_id": "vessel-04",
+    "trip_id": "trip-04",
+    "timestamp": "2026-09-12T01:36:00+00:00",
+    "latitude": 16.9975,
+    "longitude": 73.2759,
+    "speed_knots": 4.9,
+    "heading_deg": 315.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-04-09",
+    "vessel_id": "vessel-04",
+    "trip_id": "trip-04",
+    "timestamp": "2026-09-12T01:48:00+00:00",
+    "latitude": 16.9962,
+    "longitude": 73.2743,
+    "speed_knots": 5.6,
+    "heading_deg": 310.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-04-10",
+    "vessel_id": "vessel-04",
+    "trip_id": "trip-04",
+    "timestamp": "2026-09-12T02:00:00+00:00",
+    "latitude": 16.9979,
+    "longitude": 73.2748,
+    "speed_knots": 6.3,
+    "heading_deg": 312.5,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-04-11",
+    "vessel_id": "vessel-04",
+    "trip_id": "trip-04",
+    "timestamp": "2026-09-12T02:12:00+00:00",
+    "latitude": 16.9996,
+    "longitude": 73.2733,
+    "speed_knots": 7.0,
+    "heading_deg": 315.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-04-12",
+    "vessel_id": "vessel-04",
+    "trip_id": "trip-04",
+    "timestamp": "2026-09-12T02:24:00+00:00",
+    "latitude": 16.9983,
+    "longitude": 73.2738,
+    "speed_knots": 4.9,
+    "heading_deg": 310.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-04-13",
+    "vessel_id": "vessel-04",
+    "trip_id": "trip-04",
+    "timestamp": "2026-09-12T02:36:00+00:00",
+    "latitude": 17.0,
+    "longitude": 73.2723,
+    "speed_knots": 5.6,
+    "heading_deg": 312.5,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-04-14",
+    "vessel_id": "vessel-04",
+    "trip_id": "trip-04",
+    "timestamp": "2026-09-12T02:48:00+00:00",
+    "latitude": 17.0017,
+    "longitude": 73.2728,
+    "speed_knots": 6.3,
+    "heading_deg": 315.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-04-15",
+    "vessel_id": "vessel-04",
+    "trip_id": "trip-04",
+    "timestamp": "2026-09-12T03:00:00+00:00",
+    "latitude": 17.0003,
+    "longitude": 73.2712,
+    "speed_knots": 6.9,
+    "heading_deg": 310.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-04-16",
+    "vessel_id": "vessel-04",
+    "trip_id": "trip-04",
+    "timestamp": "2026-09-12T03:12:00+00:00",
+    "latitude": 17.002,
+    "longitude": 73.2717,
+    "speed_knots": 4.8,
+    "heading_deg": 312.5,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-04-17",
+    "vessel_id": "vessel-04",
+    "trip_id": "trip-04",
+    "timestamp": "2026-09-12T03:24:00+00:00",
+    "latitude": 17.0037,
+    "longitude": 73.2702,
+    "speed_knots": 5.5,
+    "heading_deg": 315.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-04-18",
+    "vessel_id": "vessel-04",
+    "trip_id": "trip-04",
+    "timestamp": "2026-09-12T03:36:00+00:00",
+    "latitude": 17.0024,
+    "longitude": 73.2707,
+    "speed_knots": 6.2,
+    "heading_deg": 310.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-04-19",
+    "vessel_id": "vessel-04",
+    "trip_id": "trip-04",
+    "timestamp": "2026-09-12T03:48:00+00:00",
+    "latitude": 17.0041,
+    "longitude": 73.2692,
+    "speed_knots": 6.9,
+    "heading_deg": 312.5,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-04-20",
+    "vessel_id": "vessel-04",
+    "trip_id": "trip-04",
+    "timestamp": "2026-09-12T04:00:00+00:00",
+    "latitude": 17.0058,
+    "longitude": 73.2697,
+    "speed_knots": 4.8,
+    "heading_deg": 315.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-04-21",
+    "vessel_id": "vessel-04",
+    "trip_id": "trip-04",
+    "timestamp": "2026-09-12T04:12:00+00:00",
+    "latitude": 17.0045,
+    "longitude": 73.2681,
+    "speed_knots": 5.5,
+    "heading_deg": 310.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-04-22",
+    "vessel_id": "vessel-04",
+    "trip_id": "trip-04",
+    "timestamp": "2026-09-12T04:24:00+00:00",
+    "latitude": 17.0062,
+    "longitude": 73.2686,
+    "speed_knots": 6.2,
+    "heading_deg": 312.5,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-04-23",
+    "vessel_id": "vessel-04",
+    "trip_id": "trip-04",
+    "timestamp": "2026-09-12T04:36:00+00:00",
+    "latitude": 17.0079,
+    "longitude": 73.2671,
+    "speed_knots": 6.9,
+    "heading_deg": 315.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-04-24",
+    "vessel_id": "vessel-04",
+    "trip_id": "trip-04",
+    "timestamp": "2026-09-12T04:48:00+00:00",
+    "latitude": 17.0066,
+    "longitude": 73.2676,
+    "speed_knots": 4.8,
+    "heading_deg": 310.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-04-25",
+    "vessel_id": "vessel-04",
+    "trip_id": "trip-04",
+    "timestamp": "2026-09-12T05:00:00+00:00",
+    "latitude": 17.0082,
+    "longitude": 73.2661,
+    "speed_knots": 5.5,
+    "heading_deg": 312.5,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-04-26",
+    "vessel_id": "vessel-04",
+    "trip_id": "trip-04",
+    "timestamp": "2026-09-12T05:12:00+00:00",
+    "latitude": 17.0099,
+    "longitude": 73.2666,
+    "speed_knots": 6.1,
+    "heading_deg": 315.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-04-27",
+    "vessel_id": "vessel-04",
+    "trip_id": "trip-04",
+    "timestamp": "2026-09-12T05:24:00+00:00",
+    "latitude": 17.0086,
+    "longitude": 73.265,
+    "speed_knots": 6.8,
+    "heading_deg": 310.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-04-28",
+    "vessel_id": "vessel-04",
+    "trip_id": "trip-04",
+    "timestamp": "2026-09-12T05:36:00+00:00",
+    "latitude": 17.0103,
+    "longitude": 73.2655,
+    "speed_knots": 4.7,
+    "heading_deg": 312.5,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-04-29",
+    "vessel_id": "vessel-04",
+    "trip_id": "trip-04",
+    "timestamp": "2026-09-12T05:48:00+00:00",
+    "latitude": 17.012,
+    "longitude": 73.264,
+    "speed_knots": 5.4,
+    "heading_deg": 315.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-05-00",
+    "vessel_id": "vessel-05",
+    "trip_id": "trip-05",
+    "timestamp": "2026-09-12T00:00:00+00:00",
+    "latitude": 16.06,
+    "longitude": 73.47,
+    "speed_knots": 8.0,
+    "heading_deg": 325.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-05-01",
+    "vessel_id": "vessel-05",
+    "trip_id": "trip-05",
+    "timestamp": "2026-09-12T00:12:00+00:00",
+    "latitude": 16.0638,
+    "longitude": 73.4669,
+    "speed_knots": 8.7,
+    "heading_deg": 327.5,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-05-02",
+    "vessel_id": "vessel-05",
+    "trip_id": "trip-05",
+    "timestamp": "2026-09-12T00:24:00+00:00",
+    "latitude": 16.0675,
+    "longitude": 73.4659,
+    "speed_knots": 9.4,
+    "heading_deg": 330.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-05-03",
+    "vessel_id": "vessel-05",
+    "trip_id": "trip-05",
+    "timestamp": "2026-09-12T00:36:00+00:00",
+    "latitude": 16.0683,
+    "longitude": 73.4628,
+    "speed_knots": 10.1,
+    "heading_deg": 325.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-05-04",
+    "vessel_id": "vessel-05",
+    "trip_id": "trip-05",
+    "timestamp": "2026-09-12T00:48:00+00:00",
+    "latitude": 16.072,
+    "longitude": 73.4617,
+    "speed_knots": 8.0,
+    "heading_deg": 327.5,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-05-05",
+    "vessel_id": "vessel-05",
+    "trip_id": "trip-05",
+    "timestamp": "2026-09-12T01:00:00+00:00",
+    "latitude": 16.0758,
+    "longitude": 73.4587,
+    "speed_knots": 8.6,
+    "heading_deg": 330.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-05-06",
+    "vessel_id": "vessel-05",
+    "trip_id": "trip-05",
+    "timestamp": "2026-09-12T01:12:00+00:00",
+    "latitude": 16.0766,
+    "longitude": 73.4576,
+    "speed_knots": 9.3,
+    "heading_deg": 325.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-05-07",
+    "vessel_id": "vessel-05",
+    "trip_id": "trip-05",
+    "timestamp": "2026-09-12T01:24:00+00:00",
+    "latitude": 16.0803,
+    "longitude": 73.4545,
+    "speed_knots": 10.0,
+    "heading_deg": 327.5,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-05-08",
+    "vessel_id": "vessel-05",
+    "trip_id": "trip-05",
+    "timestamp": "2026-09-12T01:36:00+00:00",
+    "latitude": 16.0841,
+    "longitude": 73.4534,
+    "speed_knots": 7.9,
+    "heading_deg": 330.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-05-09",
+    "vessel_id": "vessel-05",
+    "trip_id": "trip-05",
+    "timestamp": "2026-09-12T01:48:00+00:00",
+    "latitude": 16.0848,
+    "longitude": 73.4504,
+    "speed_knots": 8.6,
+    "heading_deg": 325.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-05-10",
+    "vessel_id": "vessel-05",
+    "trip_id": "trip-05",
+    "timestamp": "2026-09-12T02:00:00+00:00",
+    "latitude": 16.0886,
+    "longitude": 73.4493,
+    "speed_knots": 9.3,
+    "heading_deg": 327.5,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-05-11",
+    "vessel_id": "vessel-05",
+    "trip_id": "trip-05",
+    "timestamp": "2026-09-12T02:12:00+00:00",
+    "latitude": 16.0923,
+    "longitude": 73.4462,
+    "speed_knots": 10.0,
+    "heading_deg": 330.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-05-12",
+    "vessel_id": "vessel-05",
+    "trip_id": "trip-05",
+    "timestamp": "2026-09-12T02:24:00+00:00",
+    "latitude": 16.0931,
+    "longitude": 73.4452,
+    "speed_knots": 7.9,
+    "heading_deg": 325.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-05-13",
+    "vessel_id": "vessel-05",
+    "trip_id": "trip-05",
+    "timestamp": "2026-09-12T02:36:00+00:00",
+    "latitude": 16.0969,
+    "longitude": 73.4421,
+    "speed_knots": 8.6,
+    "heading_deg": 327.5,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-05-14",
+    "vessel_id": "vessel-05",
+    "trip_id": "trip-05",
+    "timestamp": "2026-09-12T02:48:00+00:00",
+    "latitude": 16.1006,
+    "longitude": 73.441,
+    "speed_knots": 9.3,
+    "heading_deg": 330.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-05-15",
+    "vessel_id": "vessel-05",
+    "trip_id": "trip-05",
+    "timestamp": "2026-09-12T03:00:00+00:00",
+    "latitude": 16.1014,
+    "longitude": 73.438,
+    "speed_knots": 9.9,
+    "heading_deg": 325.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-05-16",
+    "vessel_id": "vessel-05",
+    "trip_id": "trip-05",
+    "timestamp": "2026-09-12T03:12:00+00:00",
+    "latitude": 16.1051,
+    "longitude": 73.4369,
+    "speed_knots": 7.8,
+    "heading_deg": 327.5,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-05-17",
+    "vessel_id": "vessel-05",
+    "trip_id": "trip-05",
+    "timestamp": "2026-09-12T03:24:00+00:00",
+    "latitude": 16.1089,
+    "longitude": 73.4338,
+    "speed_knots": 8.5,
+    "heading_deg": 330.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-05-18",
+    "vessel_id": "vessel-05",
+    "trip_id": "trip-05",
+    "timestamp": "2026-09-12T03:36:00+00:00",
+    "latitude": 16.1097,
+    "longitude": 73.4328,
+    "speed_knots": 9.2,
+    "heading_deg": 325.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-05-19",
+    "vessel_id": "vessel-05",
+    "trip_id": "trip-05",
+    "timestamp": "2026-09-12T03:48:00+00:00",
+    "latitude": 16.1134,
+    "longitude": 73.4297,
+    "speed_knots": 9.9,
+    "heading_deg": 327.5,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-05-20",
+    "vessel_id": "vessel-05",
+    "trip_id": "trip-05",
+    "timestamp": "2026-09-12T04:00:00+00:00",
+    "latitude": 16.1172,
+    "longitude": 73.4286,
+    "speed_knots": 7.8,
+    "heading_deg": 330.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-05-21",
+    "vessel_id": "vessel-05",
+    "trip_id": "trip-05",
+    "timestamp": "2026-09-12T04:12:00+00:00",
+    "latitude": 16.1179,
+    "longitude": 73.4256,
+    "speed_knots": 8.5,
+    "heading_deg": 325.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-05-22",
+    "vessel_id": "vessel-05",
+    "trip_id": "trip-05",
+    "timestamp": "2026-09-12T04:24:00+00:00",
+    "latitude": 16.1217,
+    "longitude": 73.4245,
+    "speed_knots": 9.2,
+    "heading_deg": 327.5,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-05-23",
+    "vessel_id": "vessel-05",
+    "trip_id": "trip-05",
+    "timestamp": "2026-09-12T04:36:00+00:00",
+    "latitude": 16.1254,
+    "longitude": 73.4214,
+    "speed_knots": 9.9,
+    "heading_deg": 330.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-05-24",
+    "vessel_id": "vessel-05",
+    "trip_id": "trip-05",
+    "timestamp": "2026-09-12T04:48:00+00:00",
+    "latitude": 16.1262,
+    "longitude": 73.4203,
+    "speed_knots": 7.8,
+    "heading_deg": 325.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-05-25",
+    "vessel_id": "vessel-05",
+    "trip_id": "trip-05",
+    "timestamp": "2026-09-12T05:00:00+00:00",
+    "latitude": 16.13,
+    "longitude": 73.4173,
+    "speed_knots": 8.4,
+    "heading_deg": 327.5,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-05-26",
+    "vessel_id": "vessel-05",
+    "trip_id": "trip-05",
+    "timestamp": "2026-09-12T05:12:00+00:00",
+    "latitude": 16.1337,
+    "longitude": 73.4162,
+    "speed_knots": 9.1,
+    "heading_deg": 330.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-05-27",
+    "vessel_id": "vessel-05",
+    "trip_id": "trip-05",
+    "timestamp": "2026-09-12T05:24:00+00:00",
+    "latitude": 16.1345,
+    "longitude": 73.4131,
+    "speed_knots": 9.8,
+    "heading_deg": 325.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-05-28",
+    "vessel_id": "vessel-05",
+    "trip_id": "trip-05",
+    "timestamp": "2026-09-12T05:36:00+00:00",
+    "latitude": 16.1382,
+    "longitude": 73.4121,
+    "speed_knots": 7.7,
+    "heading_deg": 327.5,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-05-29",
+    "vessel_id": "vessel-05",
+    "trip_id": "trip-05",
+    "timestamp": "2026-09-12T05:48:00+00:00",
+    "latitude": 16.142,
+    "longitude": 73.409,
+    "speed_knots": 8.4,
+    "heading_deg": 330.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-06-00",
+    "vessel_id": "vessel-06",
+    "trip_id": "trip-06",
+    "timestamp": "2026-09-12T00:00:00+00:00",
+    "latitude": 16.06,
+    "longitude": 73.47,
+    "speed_knots": 9.5,
+    "heading_deg": 220.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-06-01",
+    "vessel_id": "vessel-06",
+    "trip_id": "trip-06",
+    "timestamp": "2026-09-12T00:12:00+00:00",
+    "latitude": 16.0562,
+    "longitude": 73.4631,
+    "speed_knots": 10.2,
+    "heading_deg": 222.5,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-06-02",
+    "vessel_id": "vessel-06",
+    "trip_id": "trip-06",
+    "timestamp": "2026-09-12T00:24:00+00:00",
+    "latitude": 16.0523,
+    "longitude": 73.4583,
+    "speed_knots": 10.9,
+    "heading_deg": 225.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-06-03",
+    "vessel_id": "vessel-06",
+    "trip_id": "trip-06",
+    "timestamp": "2026-09-12T00:36:00+00:00",
+    "latitude": 16.0455,
+    "longitude": 73.4514,
+    "speed_knots": 11.6,
+    "heading_deg": 220.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-06-04",
+    "vessel_id": "vessel-06",
+    "trip_id": "trip-06",
+    "timestamp": "2026-09-12T00:48:00+00:00",
+    "latitude": 16.0417,
+    "longitude": 73.4466,
+    "speed_knots": 9.5,
+    "heading_deg": 222.5,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-06-05",
+    "vessel_id": "vessel-06",
+    "trip_id": "trip-06",
+    "timestamp": "2026-09-12T01:00:00+00:00",
+    "latitude": 16.0379,
+    "longitude": 73.4397,
+    "speed_knots": 10.1,
+    "heading_deg": 225.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-06-06",
+    "vessel_id": "vessel-06",
+    "trip_id": "trip-06",
+    "timestamp": "2026-09-12T01:12:00+00:00",
+    "latitude": 16.031,
+    "longitude": 73.4348,
+    "speed_knots": 10.8,
+    "heading_deg": 220.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-06-07",
+    "vessel_id": "vessel-06",
+    "trip_id": "trip-06",
+    "timestamp": "2026-09-12T01:24:00+00:00",
+    "latitude": 16.0272,
+    "longitude": 73.428,
+    "speed_knots": 11.5,
+    "heading_deg": 222.5,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-06-08",
+    "vessel_id": "vessel-06",
+    "trip_id": "trip-06",
+    "timestamp": "2026-09-12T01:36:00+00:00",
+    "latitude": 16.0234,
+    "longitude": 73.4231,
+    "speed_knots": 9.4,
+    "heading_deg": 225.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-06-09",
+    "vessel_id": "vessel-06",
+    "trip_id": "trip-06",
+    "timestamp": "2026-09-12T01:48:00+00:00",
+    "latitude": 16.0166,
+    "longitude": 73.4162,
+    "speed_knots": 10.1,
+    "heading_deg": 220.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-06-10",
+    "vessel_id": "vessel-06",
+    "trip_id": "trip-06",
+    "timestamp": "2026-09-12T02:00:00+00:00",
+    "latitude": 16.0127,
+    "longitude": 73.4114,
+    "speed_knots": 10.8,
+    "heading_deg": 222.5,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-06-11",
+    "vessel_id": "vessel-06",
+    "trip_id": "trip-06",
+    "timestamp": "2026-09-12T02:12:00+00:00",
+    "latitude": 16.0089,
+    "longitude": 73.4045,
+    "speed_knots": 11.5,
+    "heading_deg": 225.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-06-12",
+    "vessel_id": "vessel-06",
+    "trip_id": "trip-06",
+    "timestamp": "2026-09-12T02:24:00+00:00",
+    "latitude": 16.0021,
+    "longitude": 73.3997,
+    "speed_knots": 9.4,
+    "heading_deg": 220.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-06-13",
+    "vessel_id": "vessel-06",
+    "trip_id": "trip-06",
+    "timestamp": "2026-09-12T02:36:00+00:00",
+    "latitude": 15.9982,
+    "longitude": 73.3928,
+    "speed_knots": 10.1,
+    "heading_deg": 222.5,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-06-14",
+    "vessel_id": "vessel-06",
+    "trip_id": "trip-06",
+    "timestamp": "2026-09-12T02:48:00+00:00",
+    "latitude": 15.9944,
+    "longitude": 73.3879,
+    "speed_knots": 10.8,
+    "heading_deg": 225.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-06-15",
+    "vessel_id": "vessel-06",
+    "trip_id": "trip-06",
+    "timestamp": "2026-09-12T03:00:00+00:00",
+    "latitude": 15.9876,
+    "longitude": 73.3811,
     "speed_knots": 11.4,
-    "heading_deg": 177.0,
+    "heading_deg": 220.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-06-16",
+    "vessel_id": "vessel-06",
+    "trip_id": "trip-06",
+    "timestamp": "2026-09-12T03:12:00+00:00",
+    "latitude": 15.9838,
+    "longitude": 73.3762,
+    "speed_knots": 9.3,
+    "heading_deg": 222.5,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-06-17",
+    "vessel_id": "vessel-06",
+    "trip_id": "trip-06",
+    "timestamp": "2026-09-12T03:24:00+00:00",
+    "latitude": 15.9799,
+    "longitude": 73.3693,
+    "speed_knots": 10.0,
+    "heading_deg": 225.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-06-18",
+    "vessel_id": "vessel-06",
+    "trip_id": "trip-06",
+    "timestamp": "2026-09-12T03:36:00+00:00",
+    "latitude": 15.9731,
+    "longitude": 73.3645,
+    "speed_knots": 10.7,
+    "heading_deg": 220.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-06-19",
+    "vessel_id": "vessel-06",
+    "trip_id": "trip-06",
+    "timestamp": "2026-09-12T03:48:00+00:00",
+    "latitude": 15.9693,
+    "longitude": 73.3576,
+    "speed_knots": 11.4,
+    "heading_deg": 222.5,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-06-20",
+    "vessel_id": "vessel-06",
+    "trip_id": "trip-06",
+    "timestamp": "2026-09-12T04:00:00+00:00",
+    "latitude": 15.9654,
+    "longitude": 73.3528,
+    "speed_knots": 9.3,
+    "heading_deg": 225.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-06-21",
+    "vessel_id": "vessel-06",
+    "trip_id": "trip-06",
+    "timestamp": "2026-09-12T04:12:00+00:00",
+    "latitude": 15.9586,
+    "longitude": 73.3459,
+    "speed_knots": 10.0,
+    "heading_deg": 220.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-06-22",
+    "vessel_id": "vessel-06",
+    "trip_id": "trip-06",
+    "timestamp": "2026-09-12T04:24:00+00:00",
+    "latitude": 15.9548,
+    "longitude": 73.341,
+    "speed_knots": 10.7,
+    "heading_deg": 222.5,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-06-23",
+    "vessel_id": "vessel-06",
+    "trip_id": "trip-06",
+    "timestamp": "2026-09-12T04:36:00+00:00",
+    "latitude": 15.951,
+    "longitude": 73.3342,
+    "speed_knots": 11.4,
+    "heading_deg": 225.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-06-24",
+    "vessel_id": "vessel-06",
+    "trip_id": "trip-06",
+    "timestamp": "2026-09-12T04:48:00+00:00",
+    "latitude": 15.9441,
+    "longitude": 73.3293,
+    "speed_knots": 9.3,
+    "heading_deg": 220.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-06-25",
+    "vessel_id": "vessel-06",
+    "trip_id": "trip-06",
+    "timestamp": "2026-09-12T05:00:00+00:00",
+    "latitude": 15.9403,
+    "longitude": 73.3224,
+    "speed_knots": 9.9,
+    "heading_deg": 222.5,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-06-26",
+    "vessel_id": "vessel-06",
+    "trip_id": "trip-06",
+    "timestamp": "2026-09-12T05:12:00+00:00",
+    "latitude": 15.9365,
+    "longitude": 73.3176,
+    "speed_knots": 10.6,
+    "heading_deg": 225.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-06-27",
+    "vessel_id": "vessel-06",
+    "trip_id": "trip-06",
+    "timestamp": "2026-09-12T05:24:00+00:00",
+    "latitude": 15.9297,
+    "longitude": 73.3107,
+    "speed_knots": 11.3,
+    "heading_deg": 220.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-06-28",
+    "vessel_id": "vessel-06",
+    "trip_id": "trip-06",
+    "timestamp": "2026-09-12T05:36:00+00:00",
+    "latitude": 15.9258,
+    "longitude": 73.3059,
+    "speed_knots": 9.2,
+    "heading_deg": 222.5,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-06-29",
+    "vessel_id": "vessel-06",
+    "trip_id": "trip-06",
+    "timestamp": "2026-09-12T05:48:00+00:00",
+    "latitude": 15.922,
+    "longitude": 73.299,
+    "speed_knots": 9.9,
+    "heading_deg": 225.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-07-00",
+    "vessel_id": "vessel-07",
+    "trip_id": "trip-07",
+    "timestamp": "2026-09-12T00:00:00+00:00",
+    "latitude": 16.06,
+    "longitude": 73.47,
+    "speed_knots": 4.8,
+    "heading_deg": 165.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-07-01",
+    "vessel_id": "vessel-07",
+    "trip_id": "trip-07",
+    "timestamp": "2026-09-12T00:12:00+00:00",
+    "latitude": 16.0593,
+    "longitude": 73.4697,
+    "speed_knots": 5.5,
+    "heading_deg": 167.5,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-07-02",
+    "vessel_id": "vessel-07",
+    "trip_id": "trip-07",
+    "timestamp": "2026-09-12T00:24:00+00:00",
+    "latitude": 16.0586,
+    "longitude": 73.4714,
+    "speed_knots": 6.2,
+    "heading_deg": 170.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-07-03",
+    "vessel_id": "vessel-07",
+    "trip_id": "trip-07",
+    "timestamp": "2026-09-12T00:36:00+00:00",
+    "latitude": 16.0548,
+    "longitude": 73.4711,
+    "speed_knots": 6.9,
+    "heading_deg": 165.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-07-04",
+    "vessel_id": "vessel-07",
+    "trip_id": "trip-07",
+    "timestamp": "2026-09-12T00:48:00+00:00",
+    "latitude": 16.0541,
+    "longitude": 73.4728,
+    "speed_knots": 4.8,
+    "heading_deg": 167.5,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-07-05",
+    "vessel_id": "vessel-07",
+    "trip_id": "trip-07",
+    "timestamp": "2026-09-12T01:00:00+00:00",
+    "latitude": 16.0534,
+    "longitude": 73.4724,
+    "speed_knots": 5.5,
+    "heading_deg": 170.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-07-06",
+    "vessel_id": "vessel-07",
+    "trip_id": "trip-07",
+    "timestamp": "2026-09-12T01:12:00+00:00",
+    "latitude": 16.0497,
+    "longitude": 73.4741,
+    "speed_knots": 6.1,
+    "heading_deg": 165.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-07-07",
+    "vessel_id": "vessel-07",
+    "trip_id": "trip-07",
+    "timestamp": "2026-09-12T01:24:00+00:00",
+    "latitude": 16.0489,
+    "longitude": 73.4738,
+    "speed_knots": 6.8,
+    "heading_deg": 167.5,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-07-08",
+    "vessel_id": "vessel-07",
+    "trip_id": "trip-07",
+    "timestamp": "2026-09-12T01:36:00+00:00",
+    "latitude": 16.0482,
+    "longitude": 73.4755,
+    "speed_knots": 4.7,
+    "heading_deg": 170.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-07-09",
+    "vessel_id": "vessel-07",
+    "trip_id": "trip-07",
+    "timestamp": "2026-09-12T01:48:00+00:00",
+    "latitude": 16.0445,
+    "longitude": 73.4752,
+    "speed_knots": 5.4,
+    "heading_deg": 165.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-07-10",
+    "vessel_id": "vessel-07",
+    "trip_id": "trip-07",
+    "timestamp": "2026-09-12T02:00:00+00:00",
+    "latitude": 16.0438,
+    "longitude": 73.4769,
+    "speed_knots": 6.1,
+    "heading_deg": 167.5,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-07-11",
+    "vessel_id": "vessel-07",
+    "trip_id": "trip-07",
+    "timestamp": "2026-09-12T02:12:00+00:00",
+    "latitude": 16.043,
+    "longitude": 73.4766,
+    "speed_knots": 6.8,
+    "heading_deg": 170.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-07-12",
+    "vessel_id": "vessel-07",
+    "trip_id": "trip-07",
+    "timestamp": "2026-09-12T02:24:00+00:00",
+    "latitude": 16.0393,
+    "longitude": 73.4783,
+    "speed_knots": 4.7,
+    "heading_deg": 165.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-07-13",
+    "vessel_id": "vessel-07",
+    "trip_id": "trip-07",
+    "timestamp": "2026-09-12T02:36:00+00:00",
+    "latitude": 16.0386,
+    "longitude": 73.478,
+    "speed_knots": 5.4,
+    "heading_deg": 167.5,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-07-14",
+    "vessel_id": "vessel-07",
+    "trip_id": "trip-07",
+    "timestamp": "2026-09-12T02:48:00+00:00",
+    "latitude": 16.0379,
+    "longitude": 73.4797,
+    "speed_knots": 6.1,
+    "heading_deg": 170.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-07-15",
+    "vessel_id": "vessel-07",
+    "trip_id": "trip-07",
+    "timestamp": "2026-09-12T03:00:00+00:00",
+    "latitude": 16.0341,
+    "longitude": 73.4793,
+    "speed_knots": 6.7,
+    "heading_deg": 165.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-07-16",
+    "vessel_id": "vessel-07",
+    "trip_id": "trip-07",
+    "timestamp": "2026-09-12T03:12:00+00:00",
+    "latitude": 16.0334,
+    "longitude": 73.481,
+    "speed_knots": 4.6,
+    "heading_deg": 167.5,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-07-17",
+    "vessel_id": "vessel-07",
+    "trip_id": "trip-07",
+    "timestamp": "2026-09-12T03:24:00+00:00",
+    "latitude": 16.0327,
+    "longitude": 73.4807,
+    "speed_knots": 5.3,
+    "heading_deg": 170.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-07-18",
+    "vessel_id": "vessel-07",
+    "trip_id": "trip-07",
+    "timestamp": "2026-09-12T03:36:00+00:00",
+    "latitude": 16.029,
+    "longitude": 73.4824,
+    "speed_knots": 6.0,
+    "heading_deg": 165.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-07-19",
+    "vessel_id": "vessel-07",
+    "trip_id": "trip-07",
+    "timestamp": "2026-09-12T03:48:00+00:00",
+    "latitude": 16.0282,
+    "longitude": 73.4821,
+    "speed_knots": 6.7,
+    "heading_deg": 167.5,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-07-20",
+    "vessel_id": "vessel-07",
+    "trip_id": "trip-07",
+    "timestamp": "2026-09-12T04:00:00+00:00",
+    "latitude": 16.0275,
+    "longitude": 73.4838,
+    "speed_knots": 4.6,
+    "heading_deg": 170.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-07-21",
+    "vessel_id": "vessel-07",
+    "trip_id": "trip-07",
+    "timestamp": "2026-09-12T04:12:00+00:00",
+    "latitude": 16.0238,
+    "longitude": 73.4835,
+    "speed_knots": 5.3,
+    "heading_deg": 165.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-07-22",
+    "vessel_id": "vessel-07",
+    "trip_id": "trip-07",
+    "timestamp": "2026-09-12T04:24:00+00:00",
+    "latitude": 16.0231,
+    "longitude": 73.4852,
+    "speed_knots": 6.0,
+    "heading_deg": 167.5,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-07-23",
+    "vessel_id": "vessel-07",
+    "trip_id": "trip-07",
+    "timestamp": "2026-09-12T04:36:00+00:00",
+    "latitude": 16.0223,
+    "longitude": 73.4849,
+    "speed_knots": 6.7,
+    "heading_deg": 170.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-07-24",
+    "vessel_id": "vessel-07",
+    "trip_id": "trip-07",
+    "timestamp": "2026-09-12T04:48:00+00:00",
+    "latitude": 16.0186,
+    "longitude": 73.4866,
+    "speed_knots": 4.6,
+    "heading_deg": 165.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-07-25",
+    "vessel_id": "vessel-07",
+    "trip_id": "trip-07",
+    "timestamp": "2026-09-12T05:00:00+00:00",
+    "latitude": 16.0179,
+    "longitude": 73.4862,
+    "speed_knots": 5.2,
+    "heading_deg": 167.5,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-07-26",
+    "vessel_id": "vessel-07",
+    "trip_id": "trip-07",
+    "timestamp": "2026-09-12T05:12:00+00:00",
+    "latitude": 16.0172,
+    "longitude": 73.4879,
+    "speed_knots": 5.9,
+    "heading_deg": 170.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-07-27",
+    "vessel_id": "vessel-07",
+    "trip_id": "trip-07",
+    "timestamp": "2026-09-12T05:24:00+00:00",
+    "latitude": 16.0134,
+    "longitude": 73.4876,
+    "speed_knots": 6.6,
+    "heading_deg": 165.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-07-28",
+    "vessel_id": "vessel-07",
+    "trip_id": "trip-07",
+    "timestamp": "2026-09-12T05:36:00+00:00",
+    "latitude": 16.0127,
+    "longitude": 73.4893,
+    "speed_knots": 4.5,
+    "heading_deg": 167.5,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-07-29",
+    "vessel_id": "vessel-07",
+    "trip_id": "trip-07",
+    "timestamp": "2026-09-12T05:48:00+00:00",
+    "latitude": 16.012,
+    "longitude": 73.489,
+    "speed_knots": 5.2,
+    "heading_deg": 170.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-08-00",
+    "vessel_id": "vessel-08",
+    "trip_id": "trip-08",
+    "timestamp": "2026-09-12T00:00:00+00:00",
+    "latitude": 16.06,
+    "longitude": 73.47,
+    "speed_knots": 8.5,
+    "heading_deg": 230.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-08-01",
+    "vessel_id": "vessel-08",
+    "trip_id": "trip-08",
+    "timestamp": "2026-09-12T00:12:00+00:00",
+    "latitude": 16.0538,
+    "longitude": 73.4597,
+    "speed_knots": 9.2,
+    "heading_deg": 232.5,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-08-02",
+    "vessel_id": "vessel-08",
+    "trip_id": "trip-08",
+    "timestamp": "2026-09-12T00:24:00+00:00",
+    "latitude": 16.0475,
+    "longitude": 73.4514,
+    "speed_knots": 9.9,
+    "heading_deg": 235.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-08-03",
+    "vessel_id": "vessel-08",
+    "trip_id": "trip-08",
+    "timestamp": "2026-09-12T00:36:00+00:00",
+    "latitude": 16.0383,
+    "longitude": 73.4411,
+    "speed_knots": 10.6,
+    "heading_deg": 230.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-08-04",
+    "vessel_id": "vessel-08",
+    "trip_id": "trip-08",
+    "timestamp": "2026-09-12T00:48:00+00:00",
+    "latitude": 16.032,
+    "longitude": 73.4328,
+    "speed_knots": 8.5,
+    "heading_deg": 232.5,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-08-05",
+    "vessel_id": "vessel-08",
+    "trip_id": "trip-08",
+    "timestamp": "2026-09-12T01:00:00+00:00",
+    "latitude": 16.0258,
+    "longitude": 73.4224,
+    "speed_knots": 9.1,
+    "heading_deg": 235.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-08-06",
+    "vessel_id": "vessel-08",
+    "trip_id": "trip-08",
+    "timestamp": "2026-09-12T01:12:00+00:00",
+    "latitude": 16.0166,
+    "longitude": 73.4141,
+    "speed_knots": 9.8,
+    "heading_deg": 230.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-08-07",
+    "vessel_id": "vessel-08",
+    "trip_id": "trip-08",
+    "timestamp": "2026-09-12T01:24:00+00:00",
+    "latitude": 16.0103,
+    "longitude": 73.4038,
+    "speed_knots": 10.5,
+    "heading_deg": 232.5,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-08-08",
+    "vessel_id": "vessel-08",
+    "trip_id": "trip-08",
+    "timestamp": "2026-09-12T01:36:00+00:00",
+    "latitude": 16.0041,
+    "longitude": 73.3955,
+    "speed_knots": 8.4,
+    "heading_deg": 235.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-08-09",
+    "vessel_id": "vessel-08",
+    "trip_id": "trip-08",
+    "timestamp": "2026-09-12T01:48:00+00:00",
+    "latitude": 15.9948,
+    "longitude": 73.3852,
+    "speed_knots": 9.1,
+    "heading_deg": 230.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-08-10",
+    "vessel_id": "vessel-08",
+    "trip_id": "trip-08",
+    "timestamp": "2026-09-12T02:00:00+00:00",
+    "latitude": 15.9886,
+    "longitude": 73.3769,
+    "speed_knots": 9.8,
+    "heading_deg": 232.5,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-08-11",
+    "vessel_id": "vessel-08",
+    "trip_id": "trip-08",
+    "timestamp": "2026-09-12T02:12:00+00:00",
+    "latitude": 15.9823,
+    "longitude": 73.3666,
+    "speed_knots": 10.5,
+    "heading_deg": 235.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-08-12",
+    "vessel_id": "vessel-08",
+    "trip_id": "trip-08",
+    "timestamp": "2026-09-12T02:24:00+00:00",
+    "latitude": 15.9731,
+    "longitude": 73.3583,
+    "speed_knots": 8.4,
+    "heading_deg": 230.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-08-13",
+    "vessel_id": "vessel-08",
+    "trip_id": "trip-08",
+    "timestamp": "2026-09-12T02:36:00+00:00",
+    "latitude": 15.9669,
+    "longitude": 73.348,
+    "speed_knots": 9.1,
+    "heading_deg": 232.5,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-08-14",
+    "vessel_id": "vessel-08",
+    "trip_id": "trip-08",
+    "timestamp": "2026-09-12T02:48:00+00:00",
+    "latitude": 15.9606,
+    "longitude": 73.3397,
+    "speed_knots": 9.8,
+    "heading_deg": 235.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-08-15",
+    "vessel_id": "vessel-08",
+    "trip_id": "trip-08",
+    "timestamp": "2026-09-12T03:00:00+00:00",
+    "latitude": 15.9514,
+    "longitude": 73.3293,
+    "speed_knots": 10.4,
+    "heading_deg": 230.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-08-16",
+    "vessel_id": "vessel-08",
+    "trip_id": "trip-08",
+    "timestamp": "2026-09-12T03:12:00+00:00",
+    "latitude": 15.9451,
+    "longitude": 73.321,
+    "speed_knots": 8.3,
+    "heading_deg": 232.5,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-08-17",
+    "vessel_id": "vessel-08",
+    "trip_id": "trip-08",
+    "timestamp": "2026-09-12T03:24:00+00:00",
+    "latitude": 15.9389,
+    "longitude": 73.3107,
+    "speed_knots": 9.0,
+    "heading_deg": 235.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-08-18",
+    "vessel_id": "vessel-08",
+    "trip_id": "trip-08",
+    "timestamp": "2026-09-12T03:36:00+00:00",
+    "latitude": 15.9297,
+    "longitude": 73.3024,
+    "speed_knots": 9.7,
+    "heading_deg": 230.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-08-19",
+    "vessel_id": "vessel-08",
+    "trip_id": "trip-08",
+    "timestamp": "2026-09-12T03:48:00+00:00",
+    "latitude": 15.9234,
+    "longitude": 73.2921,
+    "speed_knots": 10.4,
+    "heading_deg": 232.5,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-08-20",
+    "vessel_id": "vessel-08",
+    "trip_id": "trip-08",
+    "timestamp": "2026-09-12T04:00:00+00:00",
+    "latitude": 15.9172,
+    "longitude": 73.2838,
+    "speed_knots": 8.3,
+    "heading_deg": 235.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-08-21",
+    "vessel_id": "vessel-08",
+    "trip_id": "trip-08",
+    "timestamp": "2026-09-12T04:12:00+00:00",
+    "latitude": 15.9079,
+    "longitude": 73.2735,
+    "speed_knots": 9.0,
+    "heading_deg": 230.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-08-22",
+    "vessel_id": "vessel-08",
+    "trip_id": "trip-08",
+    "timestamp": "2026-09-12T04:24:00+00:00",
+    "latitude": 15.9017,
+    "longitude": 73.2652,
+    "speed_knots": 9.7,
+    "heading_deg": 232.5,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-08-23",
+    "vessel_id": "vessel-08",
+    "trip_id": "trip-08",
+    "timestamp": "2026-09-12T04:36:00+00:00",
+    "latitude": 15.8954,
+    "longitude": 73.2549,
+    "speed_knots": 10.4,
+    "heading_deg": 235.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-08-24",
+    "vessel_id": "vessel-08",
+    "trip_id": "trip-08",
+    "timestamp": "2026-09-12T04:48:00+00:00",
+    "latitude": 15.8862,
+    "longitude": 73.2466,
+    "speed_knots": 8.3,
+    "heading_deg": 230.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-08-25",
+    "vessel_id": "vessel-08",
+    "trip_id": "trip-08",
+    "timestamp": "2026-09-12T05:00:00+00:00",
+    "latitude": 15.88,
+    "longitude": 73.2362,
+    "speed_knots": 8.9,
+    "heading_deg": 232.5,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-08-26",
+    "vessel_id": "vessel-08",
+    "trip_id": "trip-08",
+    "timestamp": "2026-09-12T05:12:00+00:00",
+    "latitude": 15.8737,
+    "longitude": 73.2279,
+    "speed_knots": 9.6,
+    "heading_deg": 235.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-08-27",
+    "vessel_id": "vessel-08",
+    "trip_id": "trip-08",
+    "timestamp": "2026-09-12T05:24:00+00:00",
+    "latitude": 15.8645,
+    "longitude": 73.2176,
+    "speed_knots": 10.3,
+    "heading_deg": 230.0,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-08-28",
+    "vessel_id": "vessel-08",
+    "trip_id": "trip-08",
+    "timestamp": "2026-09-12T05:36:00+00:00",
+    "latitude": 15.8582,
+    "longitude": 73.2093,
+    "speed_knots": 8.2,
+    "heading_deg": 232.5,
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_VESSEL_TRACKING"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "pos-vessel-08-29",
+    "vessel_id": "vessel-08",
+    "trip_id": "trip-08",
+    "timestamp": "2026-09-12T05:48:00+00:00",
+    "latitude": 15.852,
+    "longitude": 73.199,
+    "speed_knots": 8.9,
+    "heading_deg": 235.0,
     "provenance_json": {
       "mode": "SYNTHETIC",
       "source": "synthetic-demo",

@@ -85,7 +85,8 @@
     "route_edges": 32,
     "hazards": 10,
     "notifications": 20,
-    "replay_positions": 60
+    "replay_positions": 240,
+    "sectors": 5
   },
   "intentional_quality_cases": [
     {

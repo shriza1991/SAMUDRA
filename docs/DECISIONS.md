@@ -90,6 +90,20 @@ Anchor the P0 MVP implementation around Ratnagiri, Malvan, and the Konkan marine
 Reason:
 Allows deep, end-to-end multi-source validation across real coastal landing centres before scaling nationally.
 
+## D014 — Single Source of Truth for Sector Surveillance and Zero Operational Frontend Mock Fallbacks
+Status: ACCEPTED
+
+Decision:
+1. Authority fleet surveillance sectors are authored and stored canonically in the backend synthetic dataset (`sectors.json` / `GET /api/v1/demo/sectors`). The frontend consumes this dynamically; `frontend/src/utils/geo.ts` retains presentation formatters and offline dropdown names only, never maintaining duplicate authoritative geometries.
+2. The frontend must never fabricate operational telemetry (vessel coordinates, GPS replay tracks, alert counts, or hazards) in offline mode. If the backend is unreachable or a sector contains zero vessels, the UI displays explicit offline/empty state banners rather than synthetic fallback tracks.
+3. All seeded vessels (`vessel-01` to `vessel-08`) have canonical synthetic replay data seeded in `replay_positions.json`, mapping strictly to their home harbors (Ratnagiri: `vessel-01`..`04`; Malvan: `vessel-05`..`08`).
+
+Reason:
+Eliminates ghost tracks, false operational telemetry, and hardcoded map locations across surveillance decks.
+
+Impact:
+Guarantees end-to-end data integrity from backend synthetic generator to MapLibre viewport.
+
 ## Decision template
 ### D0XX — <title>
 Status: PROPOSED / ACCEPTED / REJECTED

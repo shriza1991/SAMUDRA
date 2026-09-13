@@ -1,0 +1,222 @@
+[
+  {
+    "public_id": "sector-ratnagiri",
+    "name": "Ratnagiri Sector (MH-03)",
+    "harbor_id": "harbor-ratnagiri",
+    "center": [
+      73.28,
+      16.99
+    ],
+    "zoom": 8.8,
+    "station_name": "Ratnagiri Coast Guard & Fisheries Post",
+    "polygon": [
+      [
+        72.6,
+        16.5
+      ],
+      [
+        73.5,
+        16.5
+      ],
+      [
+        73.5,
+        17.5
+      ],
+      [
+        72.6,
+        17.5
+      ],
+      [
+        72.6,
+        16.5
+      ]
+    ],
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_MARITIME_AUTHORITY",
+      "note": "Demonstration surveillance sector boundary \u2014 not an official legal maritime demarcation"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "sector-malvan",
+    "name": "Malvan Marine Zone (MH-04)",
+    "harbor_id": "harbor-malvan",
+    "center": [
+      73.47,
+      16.06
+    ],
+    "zoom": 9.5,
+    "station_name": "Malvan Marine Surveillance Unit",
+    "polygon": [
+      [
+        73.35,
+        15.95
+      ],
+      [
+        73.58,
+        15.95
+      ],
+      [
+        73.58,
+        16.18
+      ],
+      [
+        73.35,
+        16.18
+      ],
+      [
+        73.35,
+        15.95
+      ]
+    ],
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_MARITIME_AUTHORITY",
+      "note": "Demonstration surveillance sector boundary \u2014 not an official legal maritime demarcation"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "sector-goa",
+    "name": "Goa Naval Corridor (GA-01)",
+    "harbor_id": null,
+    "center": [
+      73.83,
+      15.49
+    ],
+    "zoom": 9.0,
+    "station_name": "Goa Port & Naval Traffic Center",
+    "polygon": [
+      [
+        73.4,
+        15.15
+      ],
+      [
+        74.05,
+        15.15
+      ],
+      [
+        74.05,
+        15.8
+      ],
+      [
+        73.4,
+        15.8
+      ],
+      [
+        73.4,
+        15.15
+      ]
+    ],
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_MARITIME_AUTHORITY",
+      "note": "Demonstration surveillance sector boundary \u2014 not an official legal maritime demarcation"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "sector-mumbai",
+    "name": "Mumbai Offshore (MH-01)",
+    "harbor_id": null,
+    "center": [
+      72.87,
+      18.92
+    ],
+    "zoom": 8.8,
+    "station_name": "Mumbai Maritime Rescue Coordination Centre",
+    "polygon": [
+      [
+        72.2,
+        18.5
+      ],
+      [
+        73.15,
+        18.5
+      ],
+      [
+        73.15,
+        19.35
+      ],
+      [
+        72.2,
+        19.35
+      ],
+      [
+        72.2,
+        18.5
+      ]
+    ],
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_MARITIME_AUTHORITY",
+      "note": "Demonstration surveillance sector boundary \u2014 not an official legal maritime demarcation"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "sector-veraval",
+    "name": "Veraval Coastal Zone (GJ-02)",
+    "harbor_id": null,
+    "center": [
+      70.37,
+      20.9
+    ],
+    "zoom": 8.5,
+    "station_name": "Veraval Coastal Police & Fisheries Command",
+    "polygon": [
+      [
+        69.8,
+        20.4
+      ],
+      [
+        70.9,
+        20.4
+      ],
+      [
+        70.9,
+        21.3
+      ],
+      [
+        69.8,
+        21.3
+      ],
+      [
+        69.8,
+        20.4
+      ]
+    ],
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA_MARITIME_AUTHORITY",
+      "note": "Demonstration surveillance sector boundary \u2014 not an official legal maritime demarcation"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  }
+]

@@ -116,7 +116,8 @@ def test_dataset_generation_counts():
         "route_edges": 32,
         "hazards": 10,
         "notifications": 20,
-        "replay_positions": 60,
+        "replay_positions": 240,
+        "sectors": 5,
     }
 
     assert len(dataset) == len(expected_counts)
@@ -126,7 +127,7 @@ def test_dataset_generation_counts():
         )
 
     total_records = sum(len(v) for v in dataset.values())
-    assert total_records == 644
+    assert total_records == 829
 
 
 def test_dataset_determinism():

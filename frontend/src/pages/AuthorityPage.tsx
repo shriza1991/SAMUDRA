@@ -16,7 +16,17 @@ import ScenarioBenchmarkDeck from '../components/authority/ScenarioBenchmarkDeck
 import FleetTrackingDeck from '../components/authority/FleetTrackingDeck';
 import type { useChat } from '../hooks/useChat';
 import type { MapLayer } from '../types/contracts';
-import { createSectorLayers, getSectorConfig, fetchAndFormatBaseLayers } from '../utils/geo';
+import {
+  getDemoSectors,
+  getDemoHazards,
+  type DemoSector,
+  type DemoHazard,
+} from '../api/client';
+import {
+  createSectorLayers,
+  FALLBACK_DEMO_SECTORS,
+  fetchAndFormatBaseLayers,
+} from '../utils/geo';
 import { translateText } from '../i18n/translations';
 
 export interface AuthorityPageProps {
@@ -28,14 +38,6 @@ export interface AuthorityPageProps {
 }
 
 export type AuthorityTab = 'terminal' | 'fleet' | 'benchmarks' | 'audit';
-
-const SECTORS = [
-  'Ratnagiri Sector (MH-03)',
-  'Malvan Marine Zone (MH-04)',
-  'Goa Naval Corridor (GA-01)',
-  'Mumbai Offshore (MH-01)',
-  'Veraval Coastal Zone (GJ-02)',
-];
 
 /**
  * Authority Command Deck Page
@@ -51,35 +53,59 @@ export default function AuthorityPage({
   onOpenEvidence,
   onBack,
 }: AuthorityPageProps) {
-  const [selectedSector, setSelectedSector] = useState(SECTORS[0]);
+  const [sectors, setSectors] = useState<DemoSector[]>(FALLBACK_DEMO_SECTORS);
+  const [selectedSector, setSelectedSector] = useState<string>(FALLBACK_DEMO_SECTORS[0].name);
+  const [sectorHazards, setSectorHazards] = useState<DemoHazard[]>([]);
   const [authorityTab, setAuthorityTab] = useState<AuthorityTab>('terminal');
   const [replayLayer, setReplayLayer] = useState<MapLayer | null>(null);
   const [baseLayers, setBaseLayers] = useState<MapLayer[]>([]);
 
   useEffect(() => {
     fetchAndFormatBaseLayers().then(setBaseLayers);
+    getDemoSectors()
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) {
+          setSectors(data);
+        }
+      })
+      .catch(() => {
+        // Backend offline: FALLBACK_DEMO_SECTORS retained for dropdown continuity only
+      });
   }, []);
 
-  const sectorConfig = useMemo(() => getSectorConfig(selectedSector), [selectedSector]);
+  useEffect(() => {
+    getDemoHazards(selectedSector)
+      .then((hazards) => {
+        setSectorHazards(Array.isArray(hazards) ? hazards : []);
+      })
+      .catch(() => {
+        setSectorHazards([]);
+      });
+  }, [selectedSector]);
+
+  const activeSector = useMemo(() => {
+    return sectors.find((s) => s.name === selectedSector) || sectors[0];
+  }, [sectors, selectedSector]);
 
   // Combine official base boundaries + sector polygon + replay trajectory + active query layers
   const authorityLayers = useMemo(() => {
-    const sectorLayers = createSectorLayers(selectedSector);
+    const sectorLayers = createSectorLayers(activeSector);
     const responseLayers = chat.activeResponse?.map_layers ?? [];
     const activeReplay = replayLayer ? [replayLayer] : [];
     return [...baseLayers, ...sectorLayers, ...activeReplay, ...responseLayers];
-  }, [baseLayers, selectedSector, replayLayer, chat.activeResponse?.map_layers]);
+  }, [baseLayers, activeSector, replayLayer, chat.activeResponse?.map_layers]);
 
   const status = chat.activeResponse?.recommendation.status ?? 'READY';
   const evidenceList = chat.activeResponse?.evidence ?? [];
   const traceList = chat.activeResponse?.trace ?? [];
   const warningsList = chat.activeResponse?.warnings ?? [];
-  const hazardLayers = authorityLayers.filter((l) =>
+  const baseHazardLayers = authorityLayers.filter((l) =>
     `${l.layer_id} ${l.name}`.toLowerCase().includes('hazard') ||
     `${l.layer_id} ${l.name}`.toLowerCase().includes('warning') ||
     `${l.layer_id} ${l.name}`.toLowerCase().includes('squall') ||
     `${l.layer_id} ${l.name}`.toLowerCase().includes('sanctuary')
   );
+  const totalHazardsCount = Math.max(sectorHazards.length, baseHazardLayers.length);
 
   return (
     <div className={`authority-page view-${mobileView}`} role="region" aria-label="Authority Command Deck">
@@ -94,12 +120,15 @@ export default function AuthorityPage({
           <label className="authority-sector-selector">
             <select
               value={selectedSector}
-              onChange={(e) => setSelectedSector(e.target.value)}
+              onChange={(e) => {
+                setSelectedSector(e.target.value);
+                setReplayLayer(null);
+              }}
               className="authority-sector-select"
               aria-label={translateText('Sector:', chat.language)}
             >
-              {SECTORS.map((s) => (
-                <option key={s} value={s}>{s}</option>
+              {sectors.map((s) => (
+                <option key={s.public_id || s.name} value={s.name}>{s.name}</option>
               ))}
             </select>
           </label>
@@ -149,8 +178,8 @@ export default function AuthorityPage({
           </div>
 
           <div className="authority-kpi-chip">
-            <AlertTriangle size={13} className={hazardLayers.length > 0 ? 'status-no-go' : ''} />
-            <span><strong>{hazardLayers.length}</strong> {translateText('Hazards', chat.language)}</span>
+            <AlertTriangle size={13} className={totalHazardsCount > 0 ? 'status-no-go' : ''} />
+            <span><strong>{totalHazardsCount}</strong> {translateText('Hazards', chat.language)}</span>
           </div>
 
           {evidenceList.length > 0 && (
@@ -190,8 +219,8 @@ export default function AuthorityPage({
               <MapView
                 layers={authorityLayers}
                 theme={theme}
-                center={sectorConfig.center}
-                zoom={sectorConfig.zoom}
+                center={activeSector.center}
+                zoom={activeSector.zoom}
                 language={chat.language}
               />
             </div>
@@ -201,14 +230,18 @@ export default function AuthorityPage({
         {authorityTab === 'fleet' && (
           <div className="authority-workspace-grid authority-fleet-grid">
             <aside className="authority-fleet-pane" aria-label="Fleet Surveillance Pane">
-              <FleetTrackingDeck onReplayUpdate={setReplayLayer} language={chat.language} />
+              <FleetTrackingDeck
+                selectedSector={selectedSector}
+                onReplayUpdate={setReplayLayer}
+                language={chat.language}
+              />
             </aside>
             <div className="authority-map-pane">
               <MapView
                 layers={authorityLayers}
                 theme={theme}
-                center={sectorConfig.center}
-                zoom={sectorConfig.zoom}
+                center={activeSector.center}
+                zoom={activeSector.zoom}
                 language={chat.language}
               />
             </div>

@@ -181,7 +181,16 @@ export async function getRunDetails(runId: string): Promise<any> {
   return request<any>(`/runs/${runId}`);
 }
 
-import { MOCK_DEMO_VESSELS, MOCK_VESSEL_REPLAY, MOCK_NOTIFICATIONS } from './mock-data';
+export interface DemoSector {
+  public_id: string;
+  name: string;
+  code: string;
+  station_name: string;
+  harbor_id: string;
+  center: [number, number];
+  zoom: number;
+  polygon: [number, number][];
+}
 
 export interface DemoVessel {
   public_id: string;
@@ -219,29 +228,36 @@ export interface DemoNotification {
   timestamp: string;
 }
 
-export async function getDemoVessels(): Promise<DemoVessel[]> {
-  try {
-    const res = await request<DemoVessel[]>('/demo/vessels');
-    return res;
-  } catch {
-    return MOCK_DEMO_VESSELS;
-  }
+export interface DemoHazard {
+  public_id: string;
+  hazard_type: string;
+  severity: string;
+  description: string;
+  coordinates: [number, number] | [number, number][];
+  valid_from: string;
+  valid_until: string;
+  source: string;
+}
+
+export async function getDemoSectors(): Promise<DemoSector[]> {
+  return request<DemoSector[]>('/demo/sectors');
+}
+
+export async function getDemoVessels(sector?: string): Promise<DemoVessel[]> {
+  const url = sector ? `/demo/vessels?sector=${encodeURIComponent(sector)}` : '/demo/vessels';
+  return request<DemoVessel[]>(url);
 }
 
 export async function getDemoVesselReplay(vesselId: string): Promise<VesselPosition[]> {
-  try {
-    const res = await request<VesselPosition[]>(`/demo/vessels/${vesselId}/replay`);
-    return res;
-  } catch {
-    return MOCK_VESSEL_REPLAY[vesselId] || MOCK_VESSEL_REPLAY['vessel-01'];
-  }
+  return request<VesselPosition[]>(`/demo/vessels/${encodeURIComponent(vesselId)}/replay`);
 }
 
-export async function getDemoNotifications(): Promise<DemoNotification[]> {
-  try {
-    const res = await request<DemoNotification[]>('/demo/notifications');
-    return res;
-  } catch {
-    return MOCK_NOTIFICATIONS;
-  }
+export async function getDemoNotifications(sector?: string): Promise<DemoNotification[]> {
+  const url = sector ? `/demo/notifications?sector=${encodeURIComponent(sector)}` : '/demo/notifications';
+  return request<DemoNotification[]>(url);
+}
+
+export async function getDemoHazards(sector?: string): Promise<DemoHazard[]> {
+  const url = sector ? `/demo/hazards?sector=${encodeURIComponent(sector)}` : '/demo/hazards';
+  return request<DemoHazard[]>(url);
 }

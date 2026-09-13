@@ -217,6 +217,7 @@ class AgentRunService:
             MapLayerRepository,
             RunRepository,
         )
+        from backend.app.db.offline_store import offline_persistence_store
         from backend.app.db.session import SessionLocal
 
         if run_orca_graph is None:
@@ -225,7 +226,32 @@ class AgentRunService:
 
         run_uuid = uuid.UUID(run_id)
 
-        # 1. Create RUNNING record (prevent duplicate runs for same thread)
+        # 0. Check in-memory store for active runs in the same thread (concurrency check in offline mode)
+        active_in_mem = offline_persistence_store.get_active_run_in_thread(conversation_id)
+        if active_in_mem and str(active_in_mem.get("id")) != str(run_id):
+            raise _DuplicateRunError(run_id=str(active_in_mem["id"]))
+
+        # Generate request ID and persist full request envelope
+        request_id = str(uuid.uuid4())
+        metadata = {
+            "request_id": request_id,
+            "data_mode": self.data_mode,
+            "request": {
+                "message": user_message,
+                "conversation_id": conversation_id,
+                "user_context": user_context or {},
+            },
+        }
+
+        # Track in offline in-memory store
+        offline_persistence_store.create_run(
+            run_id=run_id,
+            thread_id=conversation_id,
+            metadata_json=metadata,
+            status=RunStatus.RUNNING.value,
+        )
+
+        # 1. Create RUNNING record in DB (if DB is online)
         try:
             with SessionLocal() as session:
                 from backend.app.db.models import Run
@@ -241,23 +267,16 @@ class AgentRunService:
                 if active_run:
                     raise _DuplicateRunError(run_id=str(active_run.id))
 
-                # Generate request ID and persist full request envelope
-                request_id = str(uuid.uuid4())
-                metadata = {
-                    "request_id": request_id,
-                    "data_mode": self.data_mode,
-                    "request": {
-                        "message": user_message,
-                        "conversation_id": conversation_id,
-                        "user_context": user_context or {},
-                    },
-                }
-
                 run_repo.create(thread_id=conversation_id, metadata_json=metadata, run_id=run_uuid)
 
                 # Update to RUNNING
                 run_repo.update_status(run_uuid, RunStatus.RUNNING)
         except _DuplicateRunError:
+            offline_persistence_store.update_run(
+                run_id=run_id,
+                status=RunStatus.FAILED.value,
+                error_message="Duplicate run in thread",
+            )
             raise
         except Exception as exc:
             logger.debug("Database run tracking unavailable (service offline): %s", exc)
@@ -281,6 +300,7 @@ class AgentRunService:
         try:
             final_state = await anyio.to_thread.run_sync(_run)
         except anyio.get_cancelled_exc_class():
+            offline_persistence_store.update_run(run_id=run_id, status=RunStatus.CANCELLED.value)
             try:
                 with SessionLocal() as session:
                     RunRepository(session).update_status(run_uuid, RunStatus.CANCELLED)
@@ -288,6 +308,9 @@ class AgentRunService:
                 pass
             raise
         except Exception as exc:
+            offline_persistence_store.update_run(
+                run_id=run_id, status=RunStatus.FAILED.value, error_message=str(exc)
+            )
             try:
                 with SessionLocal() as session:
                     RunRepository(session).update_status(
@@ -309,7 +332,67 @@ class AgentRunService:
         )
         final_status = RunStatus.PARTIAL if has_warnings else RunStatus.COMPLETED
 
-        # Persist results
+        # 2. Persist to offline in-memory store first (guarantees session retrieval)
+        response_envelope = {
+            "answer": response.answer,
+            "intent": response.intent,
+            "language": response.language,
+            "recommendation": response.recommendation.model_dump(),
+            "confidence": response.confidence.model_dump(),
+            "warnings": response.warnings,
+            "suggested_followups": response.suggested_followups,
+        }
+        trace_list = [
+            t.model_dump() if hasattr(t, "model_dump") else t for t in response.trace
+        ]
+        offline_persistence_store.update_run(
+            run_id=run_id,
+            status=final_status.value,
+            error_message="|".join(response.warnings) if has_warnings else None,
+            response=response_envelope,
+            trace=trace_list,
+        )
+
+        for ev in response.evidence:
+            ev_source = getattr(ev, "source_name", None) or getattr(ev, "source", "unknown")
+            raw_data = {
+                "evidence_id": ev.evidence_id,
+                "metric_name": ev.metric_name,
+                "metric_value": ev.metric_value,
+                "metric_unit": ev.metric_unit,
+                "observed_time": ev.observed_time,
+                "valid_from": ev.valid_from,
+                "valid_to": ev.valid_to,
+                "retrieved_at": ev.retrieved_at,
+                "source_url": ev.source_url,
+                "quality_flags": ev.quality_flags,
+                "geometry": ev.geometry,
+            }
+            offline_persistence_store.save_evidence(
+                run_id=run_id,
+                source=ev_source,
+                raw_data=raw_data,
+                extracted_entities={},
+            )
+
+        for layer in response.map_layers:
+            layer_dict = layer.model_dump() if hasattr(layer, "model_dump") else layer
+            geojson_payload = layer_dict.get("geojson", {})
+            ltype = layer_dict.get("layer_type", "feature")
+            props = {
+                "layer_id": layer_dict.get("layer_id"),
+                "name": layer_dict.get("name"),
+                "visible": layer_dict.get("visible", True),
+                "style": layer_dict.get("style", {}),
+            }
+            offline_persistence_store.save_map_layer(
+                run_id=run_id,
+                layer_type=ltype,
+                geojson_geom=geojson_payload,
+                properties=props,
+            )
+
+        # 3. Persist to Database (if DB is online)
         persistence_ok = True
         try:
             with SessionLocal() as session:
@@ -325,18 +408,8 @@ class AgentRunService:
                 if run:
                     updated_metadata = dict(run.metadata_json or {})
                     # Full response envelope for round-trip reconstruction
-                    updated_metadata["response"] = {
-                        "answer": response.answer,
-                        "intent": response.intent,
-                        "language": response.language,
-                        "recommendation": response.recommendation.model_dump(),
-                        "confidence": response.confidence.model_dump(),
-                        "warnings": response.warnings,
-                        "suggested_followups": response.suggested_followups,
-                    }
-                    updated_metadata["trace"] = [
-                        t.model_dump() if hasattr(t, "model_dump") else t for t in response.trace
-                    ]
+                    updated_metadata["response"] = response_envelope
+                    updated_metadata["trace"] = trace_list
                     run.metadata_json = updated_metadata
                     session.add(run)
                     session.commit()

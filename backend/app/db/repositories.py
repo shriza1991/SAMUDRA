@@ -355,8 +355,13 @@ class SyntheticDemoRepository(BaseRepository):
     def get_fishers(self, namespace: str = "SAMUDRA_DEMO_V1") -> list[DemoFisher]:
         return self.session.query(DemoFisher).filter_by(namespace=namespace).all()
 
-    def get_vessels(self, namespace: str = "SAMUDRA_DEMO_V1") -> list[DemoVessel]:
-        return self.session.query(DemoVessel).filter_by(namespace=namespace).all()
+    def get_vessels(
+        self, namespace: str = "SAMUDRA_DEMO_V1", harbor_id: str | None = None
+    ) -> list[DemoVessel]:
+        q = self.session.query(DemoVessel).filter_by(namespace=namespace)
+        if harbor_id:
+            q = q.filter_by(home_harbor_id=harbor_id)
+        return q.all()
 
     def get_trips(self, namespace: str = "SAMUDRA_DEMO_V1") -> list[DemoTrip]:
         return self.session.query(DemoTrip).filter_by(namespace=namespace).all()
@@ -405,13 +410,19 @@ class SyntheticDemoRepository(BaseRepository):
         return q.all()
 
     def get_notifications(
-        self, namespace: str = "SAMUDRA_DEMO_V1", role: str | None = None, is_read: bool | None = None
+        self,
+        namespace: str = "SAMUDRA_DEMO_V1",
+        role: str | None = None,
+        is_read: bool | None = None,
+        vessel_ids: list[str] | None = None,
     ) -> list[DemoNotification]:
         q = self.session.query(DemoNotification).filter_by(namespace=namespace)
         if role:
             q = q.filter_by(recipient_role=role)
         if is_read is not None:
             q = q.filter_by(is_read=is_read)
+        if vessel_ids is not None:
+            q = q.filter(DemoNotification.vessel_id.in_(vessel_ids))
         return q.order_by(DemoNotification.timestamp.desc()).all()
 
     def get_vessel_replay(

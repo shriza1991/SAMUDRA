@@ -58,6 +58,8 @@ export function createHarborLayer(harborName: string, status: string = 'GO'): Ma
   };
 }
 
+import type { DemoSector } from '../api/client';
+
 export interface SectorDefinition {
   center: [number, number];
   zoom: number;
@@ -67,12 +69,21 @@ export interface SectorDefinition {
   bufferPolygon?: [number, number][];
 }
 
-export const SECTOR_SURVEILLANCE_CONFIGS: Record<string, SectorDefinition> = {
-  'Ratnagiri Sector (MH-03)': {
+/**
+ * DEMO / SYNTHETIC FALLBACK ONLY
+ * Used solely for offline dropdown continuity when backend API is unreachable.
+ * Never used to fabricate operational telemetry, vessel coordinates, or alerts.
+ * Authoritative sector geometry is served dynamically via GET /api/v1/demo/sectors.
+ */
+export const FALLBACK_DEMO_SECTORS: DemoSector[] = [
+  {
+    public_id: 'sector-ratnagiri',
+    name: 'Ratnagiri Sector (MH-03)',
+    code: 'MH-03',
+    station_name: 'Ratnagiri Coast Guard & Fisheries Post',
+    harbor_id: 'harbor-ratnagiri',
     center: [73.28, 16.99],
     zoom: 8.8,
-    label: 'Ratnagiri Coastal Sector (MH-03)',
-    stationName: 'Ratnagiri Coast Guard & Fisheries Post',
     polygon: [
       [72.6, 16.5],
       [73.5, 16.5],
@@ -81,11 +92,14 @@ export const SECTOR_SURVEILLANCE_CONFIGS: Record<string, SectorDefinition> = {
       [72.6, 16.5],
     ],
   },
-  'Malvan Marine Zone (MH-04)': {
+  {
+    public_id: 'sector-malvan',
+    name: 'Malvan Marine Zone (MH-04)',
+    code: 'MH-04',
+    station_name: 'Malvan Marine Surveillance Unit',
+    harbor_id: 'harbor-malvan',
     center: [73.47, 16.06],
     zoom: 9.5,
-    label: 'Malvan Marine Sanctuary & Buffer (MH-04)',
-    stationName: 'Malvan Marine Surveillance Unit',
     polygon: [
       [73.35, 15.95],
       [73.58, 15.95],
@@ -94,11 +108,14 @@ export const SECTOR_SURVEILLANCE_CONFIGS: Record<string, SectorDefinition> = {
       [73.35, 15.95],
     ],
   },
-  'Goa Naval Corridor (GA-01)': {
+  {
+    public_id: 'sector-goa',
+    name: 'Goa Naval Corridor (GA-01)',
+    code: 'GA-01',
+    station_name: 'Goa Port & Naval Traffic Center',
+    harbor_id: 'harbor-panaji',
     center: [73.83, 15.49],
     zoom: 9.0,
-    label: 'Goa Naval Range & Exercise Corridor (GA-01)',
-    stationName: 'Goa Port & Naval Traffic Center',
     polygon: [
       [73.4, 15.15],
       [74.05, 15.15],
@@ -107,11 +124,14 @@ export const SECTOR_SURVEILLANCE_CONFIGS: Record<string, SectorDefinition> = {
       [73.4, 15.15],
     ],
   },
-  'Mumbai Offshore (MH-01)': {
+  {
+    public_id: 'sector-mumbai',
+    name: 'Mumbai Offshore (MH-01)',
+    code: 'MH-01',
+    station_name: 'Mumbai Maritime Rescue Coordination Centre',
+    harbor_id: 'harbor-mumbai',
     center: [72.87, 18.92],
     zoom: 8.8,
-    label: 'Mumbai Offshore & Harbor Security Zone (MH-01)',
-    stationName: 'Mumbai Maritime Rescue Coordination Centre',
     polygon: [
       [72.2, 18.5],
       [73.15, 18.5],
@@ -120,11 +140,14 @@ export const SECTOR_SURVEILLANCE_CONFIGS: Record<string, SectorDefinition> = {
       [72.2, 18.5],
     ],
   },
-  'Veraval Coastal Zone (GJ-02)': {
+  {
+    public_id: 'sector-veraval',
+    name: 'Veraval Coastal Zone (GJ-02)',
+    code: 'GJ-02',
+    station_name: 'Veraval Coastal Police & Fisheries Command',
+    harbor_id: 'harbor-veraval',
     center: [70.37, 20.90],
     zoom: 8.5,
-    label: 'Veraval Fisheries & International Buffer (GJ-02)',
-    stationName: 'Veraval Coastal Police & Fisheries Command',
     polygon: [
       [69.8, 20.4],
       [70.9, 20.4],
@@ -133,22 +156,41 @@ export const SECTOR_SURVEILLANCE_CONFIGS: Record<string, SectorDefinition> = {
       [69.8, 20.4],
     ],
   },
-};
+];
+
+export const SECTOR_SURVEILLANCE_CONFIGS: Record<string, SectorDefinition> = Object.fromEntries(
+  FALLBACK_DEMO_SECTORS.map((s) => [
+    s.name,
+    {
+      center: s.center,
+      zoom: s.zoom,
+      label: s.name,
+      stationName: s.station_name,
+      polygon: s.polygon,
+    },
+  ])
+);
 
 export function getSectorConfig(sectorName: string): SectorDefinition {
   return SECTOR_SURVEILLANCE_CONFIGS[sectorName] || SECTOR_SURVEILLANCE_CONFIGS['Ratnagiri Sector (MH-03)'];
 }
 
 /**
- * Creates GeoJSON MapLayers for authority sector surveillance.
+ * Presentation helper: maps a canonical backend DemoSector or sector name to MapLibre MapLayer objects.
  */
-export function createSectorLayers(sectorName: string): MapLayer[] {
-  const config = getSectorConfig(sectorName);
-  const sectorId = sectorName.toLowerCase().replace(/[^a-z0-9]/g, '_');
+export function createSectorLayers(sectorInput: DemoSector | string): MapLayer[] {
+  let sector: DemoSector;
+  if (typeof sectorInput === 'string') {
+    sector = FALLBACK_DEMO_SECTORS.find((s) => s.name === sectorInput) || FALLBACK_DEMO_SECTORS[0];
+  } else {
+    sector = sectorInput;
+  }
+
+  const sectorId = sector.public_id || sector.name.toLowerCase().replace(/[^a-z0-9]/g, '_');
 
   const sectorPolygonLayer: MapLayer = {
     layer_id: `sector_polygon_${sectorId}`,
-    name: config.label,
+    name: sector.name,
     layer_type: 'geojson',
     visible: true,
     style: {
@@ -164,10 +206,10 @@ export function createSectorLayers(sectorName: string): MapLayer[] {
           type: 'Feature',
           geometry: {
             type: 'Polygon',
-            coordinates: [config.polygon],
+            coordinates: [sector.polygon],
           },
           properties: {
-            sector: config.label,
+            sector: sector.name,
             type: 'Active Maritime Surveillance Sector',
             authority: 'Coastal Security & Fisheries Enforcement',
           },
@@ -178,7 +220,7 @@ export function createSectorLayers(sectorName: string): MapLayer[] {
 
   const sectorStationLayer: MapLayer = {
     layer_id: `sector_station_${sectorId}`,
-    name: config.stationName,
+    name: sector.station_name,
     layer_type: 'geojson',
     visible: true,
     style: {
@@ -191,11 +233,11 @@ export function createSectorLayers(sectorName: string): MapLayer[] {
       type: 'Feature',
       geometry: {
         type: 'Point',
-        coordinates: config.center,
+        coordinates: sector.center,
       },
       properties: {
-        station: config.stationName,
-        sector: config.label,
+        station: sector.station_name,
+        sector: sector.name,
         type: 'Maritime Command & Radar Station',
         status: 'ACTIVE_SURVEILLANCE',
       },
