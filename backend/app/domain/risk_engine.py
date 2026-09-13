@@ -91,6 +91,7 @@ class DeterministicRiskEngine:
         hazard: Optional[HazardBulletinPayload] = None,
         bundle: Optional[ObservationBundle] = None,
         data_mode: str = "SNAPSHOT",
+        reference_time: Optional[datetime | str] = None,
     ) -> RiskAssessmentPayload:
         """Computes a deterministic, explainable safety decision from domain observations."""
         if bundle is not None:
@@ -113,7 +114,14 @@ class DeterministicRiskEngine:
         provenance_list: List[DataProvenance] = []
         evidence_ids: List[str] = []
 
-        now_utc = datetime.now(UTC)
+        if reference_time is not None:
+            if isinstance(reference_time, str):
+                ref_dt = datetime.fromisoformat(reference_time.replace("Z", "+00:00"))
+            else:
+                ref_dt = reference_time
+            now_utc = ref_dt if ref_dt.tzinfo is not None else ref_dt.replace(tzinfo=timezone.utc)
+        else:
+            now_utc = datetime.now(UTC)
 
         # ---------------------------------------------------------------------
         # 1. Provenance & Stale / Missing Data Validation
@@ -421,8 +429,15 @@ def evaluate_deterministic_risk(
     hazard: Optional[HazardBulletinPayload] = None,
     bundle: Optional[ObservationBundle] = None,
     data_mode: str = "SNAPSHOT",
+    reference_time: Optional[datetime | str] = None,
 ) -> RiskAssessmentPayload:
     """Convenience helper to evaluate risk through the deterministic engine."""
     return DeterministicRiskEngine.evaluate(
-        context, marine=marine, weather=weather, hazard=hazard, bundle=bundle, data_mode=data_mode
+        context,
+        marine=marine,
+        weather=weather,
+        hazard=hazard,
+        bundle=bundle,
+        data_mode=data_mode,
+        reference_time=reference_time,
     )

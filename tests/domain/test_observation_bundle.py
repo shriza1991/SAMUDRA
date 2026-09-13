@@ -72,12 +72,20 @@ def test_2_same_value_lineage_to_risk_engine(data_service: DataService, context:
     """TEST 2: Same-instance/value lineage reaching DeterministicRiskEngine."""
     bundle = data_service.get_observation_bundle(context)
 
-    result = DeterministicRiskEngine.evaluate(context, bundle=bundle)
+    # Use a controlled reference time within the synthetic fixture's validity window
+    reference_now = "2026-09-12T12:00:00Z"
+    result = DeterministicRiskEngine.evaluate(context, bundle=bundle, reference_time=reference_now)
 
     assert result.status == RecommendationStatus.GO
     assert result.recommended_action == "Proceed with planned voyage under standard safety protocols."
     assert any("Significant wave height 1.4m is calm" in factor for factor in result.decisive_factors)
     assert any("Sustained wind 12.0 kt is favorable" in factor for factor in result.decisive_factors)
+
+    # Invariance check: evaluating the exact same bundle past validity produces UNKNOWN
+    expired_reference_time = "2026-09-14T12:00:00Z"
+    stale_result = DeterministicRiskEngine.evaluate(context, bundle=bundle, reference_time=expired_reference_time)
+    assert stale_result.status == RecommendationStatus.UNKNOWN
+    assert any("Missing, degraded, or expired" in factor for factor in stale_result.decisive_factors)
 
 
 def test_3_no_duplicate_retrieval_with_bundle(context: ToolInvocationContext):
