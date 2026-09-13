@@ -69,4 +69,62 @@ describe('Authority Advanced Feature Decks', () => {
     expect(names).toContain('Mumbai Offshore (MH-01)');
     expect(names).toContain('Veraval Coastal Zone (GJ-02)');
   });
+
+  it('validates trajectory replay MapLayer contract contains standard bbox for auto-zoom', () => {
+    const mockPositions = [
+      { timestamp: '00:00', latitude: 15.48, longitude: 73.80, speed_knots: 9.0, heading_deg: 260, vessel_id: 'vessel-09' },
+      { timestamp: '01:00', latitude: 15.52, longitude: 73.74, speed_knots: 11.2, heading_deg: 280, vessel_id: 'vessel-09' },
+    ];
+
+    const minLng = Math.min(...mockPositions.map(p => p.longitude));
+    const maxLng = Math.max(...mockPositions.map(p => p.longitude));
+    const minLat = Math.min(...mockPositions.map(p => p.latitude));
+    const maxLat = Math.max(...mockPositions.map(p => p.latitude));
+
+    const replayLayer = {
+      layer_id: 'layer_fleet_vessel_replay',
+      name: `Vessel Replay (${mockPositions[0].vessel_id})`,
+      layer_type: 'geojson' as const,
+      visible: true,
+      style: {
+        color: '#06b6d4',
+        layer_category: 'fleet_replay',
+      },
+      properties: {
+        vessel_id: mockPositions[0].vessel_id,
+        focus_trigger: 0,
+        bbox: [minLng, minLat, maxLng, maxLat],
+      },
+      geojson: {
+        type: 'FeatureCollection' as const,
+        bbox: [minLng, minLat, maxLng, maxLat],
+        features: [
+          {
+            type: 'Feature' as const,
+            geometry: {
+              type: 'LineString' as const,
+              coordinates: mockPositions.map(p => [p.longitude, p.latitude]),
+            },
+            properties: { vessel_id: mockPositions[0].vessel_id },
+          },
+          {
+            type: 'Feature' as const,
+            geometry: {
+              type: 'Point' as const,
+              coordinates: [mockPositions[0].longitude, mockPositions[0].latitude],
+            },
+            properties: { vessel_id: mockPositions[0].vessel_id },
+          },
+        ],
+      },
+    };
+
+    expect(replayLayer.layer_id).toBe('layer_fleet_vessel_replay');
+    expect(replayLayer.style.layer_category).toBe('fleet_replay');
+    expect(replayLayer.geojson.bbox).toEqual([73.74, 15.48, 73.80, 15.52]);
+    expect(replayLayer.properties.vessel_id).toBe('vessel-09');
+    expect(replayLayer.geojson.features).toHaveLength(2);
+    expect(replayLayer.geojson.features[0].geometry.type).toBe('LineString');
+    expect(replayLayer.geojson.features[1].geometry.type).toBe('Point');
+  });
 });

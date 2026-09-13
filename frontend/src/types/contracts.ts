@@ -86,6 +86,7 @@ export interface MapLayer {
   layer_type: 'geojson';
   visible: boolean;
   style?: Record<string, any>;
+  properties?: Record<string, any>;
   geojson: {
     type: 'Feature' | 'FeatureCollection';
     features?: any[];

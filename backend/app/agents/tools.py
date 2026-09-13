@@ -18,6 +18,7 @@ CRITICAL SECURITY & RELIABILITY RULES:
 - Tools must ALWAYS return normalized ToolResult objects (never raw JSON/HTML).
 """
 
+from contextlib import contextmanager
 from typing import Any, Callable, Dict, List, Optional
 from pydantic import BaseModel, Field
 
@@ -146,6 +147,29 @@ class AgentToolRegistry:
         self._registry.clear()
         self._handlers.clear()
         self._execution_history.clear()
+
+    def snapshot(self) -> Dict[str, Any]:
+        """Captures a snapshot of the current registry state for scoped restoration."""
+        return {
+            "registry": dict(self._registry),
+            "handlers": dict(self._handlers),
+            "execution_history": list(self._execution_history),
+        }
+
+    def restore(self, snapshot: Dict[str, Any]) -> None:
+        """Restores registry state from a previously captured snapshot."""
+        self._registry = dict(snapshot.get("registry", {}))
+        self._handlers = dict(snapshot.get("handlers", {}))
+        self._execution_history = list(snapshot.get("execution_history", []))
+
+    @contextmanager
+    def isolated_context(self):
+        """Context manager guaranteeing restoration of the registry state upon exit."""
+        snap = self.snapshot()
+        try:
+            yield self
+        finally:
+            self.restore(snap)
 
     def get_tool(self, tool_name: str) -> Optional[ToolDefinition]:
         """Retrieves the tool definition if registered, else None."""

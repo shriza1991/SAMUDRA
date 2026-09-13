@@ -66,11 +66,18 @@ export default function MapView({ layers, theme = 'light', center, zoom, languag
   }, []);
 
   const activePopupRef = useRef<maplibregl.Popup | null>(null);
+  const attachedListenersRef = useRef<Set<string>>(new Set());
+  const activeReplayVesselRef = useRef<string | null>(null);
+  const activeReplayTriggerRef = useRef<number | undefined>(undefined);
+  const prevCenterRef = useRef<[number, number] | undefined>(undefined);
+  const prevZoomRef = useRef<number | undefined>(undefined);
 
-  // Animate map when programmatic center or zoom changes
+  // Animate map when programmatic center or zoom changes (only if no active replay trajectory is being tracked)
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !center) return;
+
+    if (activeReplayVesselRef.current) return;
 
     const cur = map.getCenter();
     if (Math.abs(cur.lng - center[0]) > 0.001 || Math.abs(cur.lat - center[1]) > 0.001) {
@@ -98,37 +105,25 @@ export default function MapView({ layers, theme = 'light', center, zoom, languag
     const map = mapRef.current;
     if (!map) return;
 
-    const addLayers = () => {
-      // 1. Clean up ALL previously added layers and sources to prevent stale map state
-      for (const id of activeLayersRef.current.layers) {
-        if (map.getLayer(id)) map.removeLayer(id);
-      }
-      for (const id of activeLayersRef.current.sources) {
-        if (map.getSource(id)) map.removeSource(id);
-      }
-      activeLayersRef.current = { layers: [], sources: [] };
-
+    const syncLayers = () => {
       const vis: Record<string, boolean> = {};
-      const bounds = new maplibregl.LngLatBounds();
-      let hasCoordinates = false;
-      const registeredLayers: string[] = [];
-      const registeredSources: string[] = [];
+      const newRegisteredLayers: string[] = [];
+      const newRegisteredSources: string[] = [];
 
       for (const layer of layers) {
         const sourceId = `src-${layer.layer_id}`;
         const layerId = layer.layer_id;
         vis[layerId] = layer.visible;
+        newRegisteredSources.push(sourceId);
 
         const geojson = layer.geojson;
-        if (!map.getSource(sourceId)) {
-          map.addSource(sourceId, { type: 'geojson', data: geojson as GeoJSON.GeoJSON });
-          registeredSources.push(sourceId);
-        }
+        const existingSource = map.getSource(sourceId) as maplibregl.GeoJSONSource | undefined;
 
-        // Collect bounds dynamically from GeoJSON coordinates
-        collectBounds(geojson, bounds, () => {
-          hasCoordinates = true;
-        });
+        if (existingSource && typeof existingSource.setData === 'function') {
+          existingSource.setData(geojson as GeoJSON.GeoJSON);
+        } else if (!existingSource) {
+          map.addSource(sourceId, { type: 'geojson', data: geojson as GeoJSON.GeoJSON });
+        }
 
         const color = layer.style?.color || '#0284c7';
         const opacity = layer.style?.opacity ?? 0.6;
@@ -136,20 +131,42 @@ export default function MapView({ layers, theme = 'light', center, zoom, languag
         const circleRadius = layer.style?.circle_radius ?? 8;
 
         const geomType = getGeometryType(geojson);
+        const hasPointFeature =
+          geomType === 'Point' ||
+          geomType === 'MultiPoint' ||
+          (geojson.type === 'FeatureCollection' &&
+            Array.isArray(geojson.features) &&
+            geojson.features.some((f: any) => f.geometry?.type === 'Point' || f.geometry?.type === 'MultiPoint'));
 
-        if (geomType === 'Polygon' || geomType === 'MultiPolygon') {
+        const hasLineFeature =
+          geomType === 'LineString' ||
+          geomType === 'MultiLineString' ||
+          (geojson.type === 'FeatureCollection' &&
+            Array.isArray(geojson.features) &&
+            geojson.features.some((f: any) => f.geometry?.type === 'LineString' || f.geometry?.type === 'MultiLineString'));
+
+        const hasPolygonFeature =
+          geomType === 'Polygon' ||
+          geomType === 'MultiPolygon' ||
+          (geojson.type === 'FeatureCollection' &&
+            Array.isArray(geojson.features) &&
+            geojson.features.some((f: any) => f.geometry?.type === 'Polygon' || f.geometry?.type === 'MultiPolygon'));
+
+        // 1. Polygon fills & outlines
+        if (hasPolygonFeature) {
           if (!map.getLayer(layerId)) {
             map.addLayer({
               id: layerId,
               type: 'fill',
               source: sourceId,
+              filter: ['in', '$type', 'Polygon'],
               paint: {
                 'fill-color': color,
                 'fill-opacity': opacity,
               },
             });
-            registeredLayers.push(layerId);
           }
+          newRegisteredLayers.push(layerId);
 
           const outlineId = `${layerId}-outline`;
           if (!map.getLayer(outlineId)) {
@@ -157,20 +174,26 @@ export default function MapView({ layers, theme = 'light', center, zoom, languag
               id: outlineId,
               type: 'line',
               source: sourceId,
+              filter: ['in', '$type', 'Polygon'],
               paint: {
                 'line-color': color,
                 'line-width': lineWidth,
                 'line-opacity': Math.min(opacity + 0.35, 1),
               },
             });
-            registeredLayers.push(outlineId);
           }
-        } else if (geomType === 'LineString' || geomType === 'MultiLineString') {
-          if (!map.getLayer(layerId)) {
+          newRegisteredLayers.push(outlineId);
+        }
+
+        // 2. LineString tracks & routes
+        if (hasLineFeature) {
+          const lineLayerId = hasPolygonFeature ? `${layerId}-line` : layerId;
+          if (!map.getLayer(lineLayerId)) {
             map.addLayer({
-              id: layerId,
+              id: lineLayerId,
               type: 'line',
               source: sourceId,
+              filter: ['in', '$type', 'LineString'],
               paint: {
                 'line-color': color,
                 'line-width': lineWidth,
@@ -181,14 +204,19 @@ export default function MapView({ layers, theme = 'light', center, zoom, languag
                 'line-join': 'round',
               },
             });
-            registeredLayers.push(layerId);
           }
-        } else if (geomType === 'Point' || geomType === 'MultiPoint') {
-          if (!map.getLayer(layerId)) {
+          newRegisteredLayers.push(lineLayerId);
+        }
+
+        // 3. Point positions & markers
+        if (hasPointFeature) {
+          const pointLayerId = (hasPolygonFeature || hasLineFeature) ? `${layerId}-circle` : layerId;
+          if (!map.getLayer(pointLayerId)) {
             map.addLayer({
-              id: layerId,
+              id: pointLayerId,
               type: 'circle',
               source: sourceId,
+              filter: ['in', '$type', 'Point'],
               paint: {
                 'circle-radius': circleRadius,
                 'circle-color': color,
@@ -197,15 +225,20 @@ export default function MapView({ layers, theme = 'light', center, zoom, languag
                 'circle-stroke-color': '#ffffff',
               },
             });
-            registeredLayers.push(layerId);
           }
+          newRegisteredLayers.push(pointLayerId);
         }
 
-        // Only attach interactive popups to specific zones, points, and routes (NOT the entire sea background EEZ)
+        // Interactive popups for non-background layers
         const isBackgroundZone = layerId.toLowerCase().includes('eez') || layer.style?.layer_category === 'background';
+        const interactiveLayerId = hasPointFeature && (hasPolygonFeature || hasLineFeature)
+          ? `${layerId}-circle`
+          : layerId;
 
-        if (!isBackgroundZone) {
-          map.on('click', layerId, (e) => {
+        if (!isBackgroundZone && !attachedListenersRef.current.has(interactiveLayerId)) {
+          attachedListenersRef.current.add(interactiveLayerId);
+
+          map.on('click', interactiveLayerId, (e) => {
             if (!e.features?.length) return;
             const feature = e.features[0];
             const props = feature.properties || {};
@@ -234,39 +267,124 @@ export default function MapView({ layers, theme = 'light', center, zoom, languag
             activePopupRef.current = popup;
           });
 
-          // Change cursor on hover for clickable features
-          map.on('mouseenter', layerId, () => { map.getCanvas().style.cursor = 'pointer'; });
-          map.on('mouseleave', layerId, () => { map.getCanvas().style.cursor = ''; });
+          map.on('mouseenter', interactiveLayerId, () => { map.getCanvas().style.cursor = 'pointer'; });
+          map.on('mouseleave', interactiveLayerId, () => { map.getCanvas().style.cursor = ''; });
         }
       }
 
-      activeLayersRef.current = { layers: registeredLayers, sources: registeredSources };
+      // Clean up removed layers (cleanly removes layers no longer present)
+      for (const oldLayerId of activeLayersRef.current.layers) {
+        if (!newRegisteredLayers.includes(oldLayerId)) {
+          if (map.getLayer(oldLayerId)) map.removeLayer(oldLayerId);
+          attachedListenersRef.current.delete(oldLayerId);
+        }
+      }
+
+      // Clean up removed sources
+      for (const oldSourceId of activeLayersRef.current.sources) {
+        if (!newRegisteredSources.includes(oldSourceId)) {
+          if (map.getSource(oldSourceId)) map.removeSource(oldSourceId);
+        }
+      }
+
+      activeLayersRef.current = { layers: newRegisteredLayers, sources: newRegisteredSources };
       setLayerVisibility(vis);
 
-      // Dynamically fit map bounds or fly to target
-      if (hasCoordinates && !bounds.isEmpty()) {
-        const sw = bounds.getSouthWest();
-        const ne = bounds.getNorthEast();
-        // Check if bounds is a single coordinate point
-        if (Math.abs(sw.lng - ne.lng) < 0.001 && Math.abs(sw.lat - ne.lat) < 0.001) {
-          map.flyTo({ center: [sw.lng, sw.lat], zoom: 9.5, duration: 900 });
-        } else {
-          try {
-            map.fitBounds(bounds, { padding: 60, maxZoom: 12, duration: 1000 });
-          } catch {
-            map.flyTo({ center: [sw.lng, sw.lat], zoom: 9, duration: 900 });
+      // Trajectory Replay Auto-Zoom Logic
+      const replayLayer = layers.find(
+        (l) => l.layer_id === 'layer_fleet_vessel_replay' || l.style?.layer_category === 'fleet_replay'
+      );
+
+      if (replayLayer) {
+        const replayVesselId =
+          (replayLayer as any).properties?.vessel_id ||
+          (replayLayer.geojson as any)?.properties?.vessel_id ||
+          (replayLayer.geojson as any)?.features?.[0]?.properties?.vessel_id ||
+          replayLayer.name;
+        const focusTrigger = (replayLayer as any).properties?.focus_trigger;
+
+        const isNewVessel = replayVesselId !== activeReplayVesselRef.current;
+        const isFocusRequested = focusTrigger !== undefined && focusTrigger !== activeReplayTriggerRef.current;
+
+        if (isNewVessel || isFocusRequested) {
+          activeReplayVesselRef.current = replayVesselId;
+          activeReplayTriggerRef.current = focusTrigger;
+
+          const replayBounds = new maplibregl.LngLatBounds();
+          const bbox = (replayLayer as any).properties?.bbox || (replayLayer.geojson as any)?.bbox;
+          if (Array.isArray(bbox) && bbox.length === 4) {
+            replayBounds.extend([bbox[0], bbox[1]]);
+            replayBounds.extend([bbox[2], bbox[3]]);
+          } else {
+            collectBounds(replayLayer.geojson, replayBounds, () => {});
+          }
+
+          if (!replayBounds.isEmpty()) {
+            const sw = replayBounds.getSouthWest();
+            const ne = replayBounds.getNorthEast();
+            const isTightPoint = Math.abs(sw.lng - ne.lng) < 0.003 && Math.abs(sw.lat - ne.lat) < 0.003;
+
+            if (isTightPoint) {
+              map.flyTo({ center: [sw.lng, sw.lat], zoom: 12.5, duration: 900, essential: true });
+            } else {
+              try {
+                map.fitBounds(replayBounds, {
+                  padding: { top: 80, bottom: 80, left: 80, right: 80 },
+                  maxZoom: 13.0,
+                  duration: 900,
+                  essential: true,
+                });
+              } catch {
+                map.flyTo({
+                  center: [(sw.lng + ne.lng) / 2, (sw.lat + ne.lat) / 2],
+                  zoom: 12.0,
+                  duration: 900,
+                  essential: true,
+                });
+              }
+            }
           }
         }
-      } else if (center) {
-        map.flyTo({ center, zoom: zoom ?? 8.5, duration: 900 });
+        // When advancing replay timeline for the same vessel, do NOT fitBounds — leave user camera completely uninterrupted!
+      } else {
+        // No replay layer active: clear replay state
+        activeReplayVesselRef.current = null;
+        activeReplayTriggerRef.current = undefined;
+
+        // Auto-fit bounds ONLY for operational query response layers (e.g. PFZ polygons, hazard alerts), never base EEZ/sector polygons
+        const operationalLayers = layers.filter(
+          (l) =>
+            l.visible &&
+            !l.layer_id.startsWith('base_') &&
+            !l.layer_id.startsWith('sector_') &&
+            l.style?.layer_category !== 'base_geofence' &&
+            l.style?.layer_category !== 'surveillance' &&
+            l.style?.layer_category !== 'background' &&
+            !l.layer_id.toLowerCase().includes('eez')
+        );
+
+        if (operationalLayers.length > 0) {
+          const bounds = new maplibregl.LngLatBounds();
+          let hasOperationalCoords = false;
+          for (const l of operationalLayers) {
+            collectBounds(l.geojson, bounds, () => { hasOperationalCoords = true; });
+          }
+          if (hasOperationalCoords && !bounds.isEmpty()) {
+            try {
+              map.fitBounds(bounds, { padding: 60, maxZoom: 12, duration: 1000 });
+            } catch {
+              // fallback gracefully
+            }
+          }
+        }
       }
     };
 
     if (map.isStyleLoaded()) {
-      addLayers();
+      syncLayers();
     } else {
-      map.once('load', addLayers);
-      map.once('style.load', addLayers);
+      map.once('load', syncLayers);
+      map.once('style.load', syncLayers);
     }
   }, [layers, activeStyle]);
 

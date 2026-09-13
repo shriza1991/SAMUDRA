@@ -43,6 +43,7 @@ SELECTIVE CARRY-FORWARD POLICY:
 """
 
 from abc import ABC, abstractmethod
+from contextlib import contextmanager
 from copy import deepcopy
 from datetime import datetime, timezone
 import json
@@ -353,6 +354,16 @@ class MemoryManager:
     def set_store(self, store: ConversationStore) -> None:
         """Configures the active persistence backend."""
         self._store = store
+
+    @contextmanager
+    def isolated_store(self, temp_store: Optional[ConversationStore] = None):
+        """Context manager temporarily swapping the conversation store, restoring original upon exit."""
+        previous = self._store
+        self._store = temp_store or InMemoryConversationStore()
+        try:
+            yield self._store
+        finally:
+            self._store = previous
 
     def load_context(self, thread_id: str) -> ThreadContext:
         """Loads validated context for a thread, or initializes a clean ThreadContext."""

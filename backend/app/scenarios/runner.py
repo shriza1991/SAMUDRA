@@ -10,6 +10,7 @@ verifying safety immutability, evidence grounding, and multilingual fidelity.
 from __future__ import annotations
 
 import logging
+import threading
 from typing import Any, Dict, List, Optional, Union
 
 from backend.app.agents.evidence import EvidenceValidator
@@ -192,6 +193,9 @@ class ScenarioRiskEngine:
 # Scenario Runner Engine
 # =============================================================================
 
+_scenario_lock = threading.RLock()
+
+
 class ScenarioRunner:
     """Executes a ScenarioDefinition through the full SAMUDRA pipeline."""
 
@@ -209,112 +213,112 @@ class ScenarioRunner:
         else:
             scenario = scenario_or_id
 
-        # 1. Reset memory & configure tool doubles bound to scenario inputs
-        memory_manager.set_store(InMemoryConversationStore())
-        tool_registry.clear()
+        # 1. Reset memory & configure tool doubles bound to scenario inputs within an isolated scope
+        with _scenario_lock, memory_manager.isolated_store(), tool_registry.isolated_context():
+            tool_registry.clear()
 
-        marine_provider = ScenarioMarineProvider(scenario.inputs.marine)
-        weather_provider = ScenarioWeatherProvider(scenario.inputs.weather)
-        hazard_provider = ScenarioHazardProvider(scenario.inputs.hazard)
-        geospatial_engine = ScenarioGeospatialHazardEngine(scenario)
-        risk_engine = ScenarioRiskEngine(scenario)
+            marine_provider = ScenarioMarineProvider(scenario.inputs.marine)
+            weather_provider = ScenarioWeatherProvider(scenario.inputs.weather)
+            hazard_provider = ScenarioHazardProvider(scenario.inputs.hazard)
+            geospatial_engine = ScenarioGeospatialHazardEngine(scenario)
+            risk_engine = ScenarioRiskEngine(scenario)
 
-        register_m2_contract_mocks(
-            target_registry=tool_registry,
-            mock_marine=marine_provider,
-            mock_weather=weather_provider,
-            mock_hazard=hazard_provider,
-            mock_geospatial=geospatial_engine,
-            mock_risk=risk_engine,
-            override=True,
-        )
-
-        # 2. Select query based on requested language
-        query_lang = language if language else getattr(scenario, "language", "en")
-        user_query = scenario.multilingual_queries.get(query_lang, scenario.query)
-
-        # 3. Invoke true LangGraph pipeline
-        user_context = {
-            "origin_harbor": scenario.inputs.origin_harbor,
-            "destination": scenario.inputs.destination,
-            "craft_profile": scenario.inputs.craft_profile,
-            "language_preference": query_lang,
-        }
-
-        thread = thread_id or f"scenario-run-{scenario.id.lower()}-{query_lang}"
-        final_state = run_orca_graph(
-            user_message=user_query,
-            thread_id=thread,
-            user_context=user_context,
-            tool_mode="contract_mock",
-            llm_mode="deterministic",
-        )
-
-        # 4. Audit & Validate Result
-        actual_intent = final_state.get("intent", "UNKNOWN")
-        risk_assessment = final_state.get("risk_assessment")
-        confidence_obj = final_state.get("confidence")
-
-        actual_status = (
-            risk_assessment.status
-            if risk_assessment
-            else RecommendationStatus.UNKNOWN
-        )
-        if hasattr(confidence_obj, "level"):
-            actual_conf = confidence_obj.level
-        elif hasattr(risk_assessment, "confidence_level"):
-            actual_conf = risk_assessment.confidence_level
-        else:
-            actual_conf = ConfidenceLevel.HIGH if actual_status != RecommendationStatus.UNKNOWN else ConfidenceLevel.LOW
-
-        executed_tools = final_state.get("task_plan", [])
-        evidence_items: List[EvidenceItem] = final_state.get("evidence", [])
-        response_text = final_state.get("response", "")
-        trace_events = final_state.get("trace", [])
-        warnings = final_state.get("warnings", [])
-
-        # Validate against expectations
-        validation_notes: List[str] = []
-        passed = True
-
-        # Check status match
-        if actual_status != scenario.expected.status:
-            passed = False
-            validation_notes.append(
-                f"Status mismatch: expected {scenario.expected.status.value}, got {actual_status.value}"
-            )
-        else:
-            validation_notes.append(f"Status match: {actual_status.value}")
-
-        # Check intent match (or compatibility)
-        if actual_intent != scenario.expected.intent.value and actual_intent != "UNKNOWN":
-            validation_notes.append(
-                f"Intent: {actual_intent} (expected {scenario.expected.intent.value})"
+            register_m2_contract_mocks(
+                target_registry=tool_registry,
+                mock_marine=marine_provider,
+                mock_weather=weather_provider,
+                mock_hazard=hazard_provider,
+                mock_geospatial=geospatial_engine,
+                mock_risk=risk_engine,
+                override=True,
             )
 
-        # Check evidence grounding
-        evidence_grounded = True
-        if scenario.expected.expected_evidence_metrics:
-            for metric in scenario.expected.expected_evidence_metrics:
-                found = any(metric in (ev.metric_name or "") for ev in evidence_items)
-                if not found:
-                    validation_notes.append(f"Missing expected evidence metric citation: {metric}")
+            # 2. Select query based on requested language
+            query_lang = language if language else getattr(scenario, "language", "en")
+            user_query = scenario.multilingual_queries.get(query_lang, scenario.query)
 
-        return ScenarioExecutionResult(
-            scenario_id=scenario.id,
-            scenario_name=scenario.name,
-            passed=passed,
-            actual_intent=actual_intent,
-            expected_intent=scenario.expected.intent.value,
-            actual_status=actual_status,
-            expected_status=scenario.expected.status,
-            actual_confidence=actual_conf,
-            expected_confidence=scenario.expected.confidence,
-            executed_tools=executed_tools,
-            evidence_count=len(evidence_items),
-            evidence_grounded=evidence_grounded,
-            response_text=response_text,
-            trace_steps_count=len(trace_events),
-            warnings=warnings,
-            validation_notes=validation_notes,
-        )
+            # 3. Invoke true LangGraph pipeline
+            user_context = {
+                "origin_harbor": scenario.inputs.origin_harbor,
+                "destination": scenario.inputs.destination,
+                "craft_profile": scenario.inputs.craft_profile,
+                "language_preference": query_lang,
+            }
+
+            thread = thread_id or f"scenario-run-{scenario.id.lower()}-{query_lang}"
+            final_state = run_orca_graph(
+                user_message=user_query,
+                thread_id=thread,
+                user_context=user_context,
+                tool_mode="contract_mock",
+                llm_mode="deterministic",
+            )
+
+            # 4. Audit & Validate Result
+            actual_intent = final_state.get("intent", "UNKNOWN")
+            risk_assessment = final_state.get("risk_assessment")
+            confidence_obj = final_state.get("confidence")
+
+            actual_status = (
+                risk_assessment.status
+                if risk_assessment
+                else RecommendationStatus.UNKNOWN
+            )
+            if hasattr(confidence_obj, "level"):
+                actual_conf = confidence_obj.level
+            elif hasattr(risk_assessment, "confidence_level"):
+                actual_conf = risk_assessment.confidence_level
+            else:
+                actual_conf = ConfidenceLevel.HIGH if actual_status != RecommendationStatus.UNKNOWN else ConfidenceLevel.LOW
+
+            executed_tools = final_state.get("task_plan", [])
+            evidence_items: List[EvidenceItem] = final_state.get("evidence", [])
+            response_text = final_state.get("response", "")
+            trace_events = final_state.get("trace", [])
+            warnings = final_state.get("warnings", [])
+
+            # Validate against expectations
+            validation_notes: List[str] = []
+            passed = True
+
+            # Check status match
+            if actual_status != scenario.expected.status:
+                passed = False
+                validation_notes.append(
+                    f"Status mismatch: expected {scenario.expected.status.value}, got {actual_status.value}"
+                )
+            else:
+                validation_notes.append(f"Status match: {actual_status.value}")
+
+            # Check intent match (or compatibility)
+            if actual_intent != scenario.expected.intent.value and actual_intent != "UNKNOWN":
+                validation_notes.append(
+                    f"Intent: {actual_intent} (expected {scenario.expected.intent.value})"
+                )
+
+            # Check evidence grounding
+            evidence_grounded = True
+            if scenario.expected.expected_evidence_metrics:
+                for metric in scenario.expected.expected_evidence_metrics:
+                    found = any(metric in (ev.metric_name or "") for ev in evidence_items)
+                    if not found:
+                        validation_notes.append(f"Missing expected evidence metric citation: {metric}")
+
+            return ScenarioExecutionResult(
+                scenario_id=scenario.id,
+                scenario_name=scenario.name,
+                passed=passed,
+                actual_intent=actual_intent,
+                expected_intent=scenario.expected.intent.value,
+                actual_status=actual_status,
+                expected_status=scenario.expected.status,
+                actual_confidence=actual_conf,
+                expected_confidence=scenario.expected.confidence,
+                executed_tools=executed_tools,
+                evidence_count=len(evidence_items),
+                evidence_grounded=evidence_grounded,
+                response_text=response_text,
+                trace_steps_count=len(trace_events),
+                warnings=warnings,
+                validation_notes=validation_notes,
+            )

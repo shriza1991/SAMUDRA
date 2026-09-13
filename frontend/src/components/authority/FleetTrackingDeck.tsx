@@ -10,6 +10,7 @@ import {
   AlertTriangle,
   Radio,
   MapPin,
+  Crosshair,
 } from 'lucide-react';
 import {
   getDemoVessels,
@@ -41,6 +42,7 @@ export default function FleetTrackingDeck({
   const [notifications, setNotifications] = useState<DemoNotification[]>([]);
   const [isBackendOffline, setIsBackendOffline] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [focusTrigger, setFocusTrigger] = useState<number>(0);
 
   // Sector change effect: reload vessels & alerts, clear previous replay
   useEffect(() => {
@@ -151,6 +153,19 @@ export default function FleetTrackingDeck({
     const currentPos = positions[currentIndex] || positions[0];
     const pastCoordinates = positions.slice(0, currentIndex + 1).map((p) => [p.longitude, p.latitude]);
 
+    // Compute bounding box encompassing the entire vessel voyage
+    let minLng = positions[0].longitude;
+    let maxLng = positions[0].longitude;
+    let minLat = positions[0].latitude;
+    let maxLat = positions[0].latitude;
+
+    for (const p of positions) {
+      if (p.longitude < minLng) minLng = p.longitude;
+      if (p.longitude > maxLng) maxLng = p.longitude;
+      if (p.latitude < minLat) minLat = p.latitude;
+      if (p.latitude > maxLat) maxLat = p.latitude;
+    }
+
     const replayLayer: MapLayer = {
       layer_id: 'layer_fleet_vessel_replay',
       name: `Vessel Replay (${currentPos.vessel_id})`,
@@ -158,13 +173,19 @@ export default function FleetTrackingDeck({
       visible: true,
       style: {
         color: '#06b6d4',
-        opacity: 0.9,
-        line_width: 3,
+        opacity: 0.95,
+        line_width: 3.5,
         circle_radius: 9,
         layer_category: 'fleet_replay',
       },
+      properties: {
+        vessel_id: currentPos.vessel_id,
+        focus_trigger: focusTrigger,
+        bbox: [minLng, minLat, maxLng, maxLat],
+      },
       geojson: {
         type: 'FeatureCollection',
+        bbox: [minLng, minLat, maxLng, maxLat],
         features: [
           // Trajectory path
           {
@@ -197,7 +218,7 @@ export default function FleetTrackingDeck({
     };
 
     onReplayUpdate(replayLayer);
-  }, [positions, currentIndex, onReplayUpdate]);
+  }, [positions, currentIndex, focusTrigger, onReplayUpdate]);
 
   const currentPos = positions[currentIndex] || positions[0];
   const selectedVessel = vessels.find((v) => v.public_id === selectedVesselId) || null;
@@ -300,6 +321,15 @@ export default function FleetTrackingDeck({
                   <h4>{selectedVessel.name}</h4>
                 </div>
                 <div className="scrubber-controls">
+                  <button
+                    type="button"
+                    className="scrubber-btn focus-btn"
+                    onClick={() => setFocusTrigger((c) => c + 1)}
+                    title={translateText('Auto zoom into trajectory', language)}
+                  >
+                    <Crosshair size={13} />
+                    <span>{translateText('Focus', language)}</span>
+                  </button>
                   <button
                     type="button"
                     className="scrubber-btn"
