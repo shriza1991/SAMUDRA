@@ -19,14 +19,17 @@ import type { MapLayer } from '../types/contracts';
 import {
   getDemoSectors,
   getDemoSectorHazards,
+  getDemoSectorHazardAssociations,
   getDemoSectorSituation,
   type DemoSector,
   type SectorHazard,
+  type VesselHazardAssociation,
   type SectorSituation,
 } from '../api/client';
 import {
   createSectorLayers,
   createAuthorityHazardLayers,
+  createHazardAssociationLayers,
   FALLBACK_DEMO_SECTORS,
   fetchAndFormatBaseLayers,
 } from '../utils/geo';
@@ -67,6 +70,7 @@ export default function AuthorityPage({
   const [situationError, setSituationError] = useState<string | null>(null);
   const [sectorHazards, setSectorHazards] = useState<SectorHazard[]>([]);
   const [hazardError, setHazardError] = useState<string | null>(null);
+  const [hazardAssociations, setHazardAssociations] = useState<VesselHazardAssociation[]>([]);
 
   useEffect(() => {
     fetchAndFormatBaseLayers().then(setBaseLayers);
@@ -142,14 +146,24 @@ export default function AuthorityPage({
     };
   }, [activeSector.public_id]);
 
+  useEffect(() => {
+    let isCurrent = true;
+    setHazardAssociations([]);
+    getDemoSectorHazardAssociations(activeSector.public_id)
+      .then((data) => { if (isCurrent) setHazardAssociations(data.associations); })
+      .catch(() => { if (isCurrent) setHazardAssociations([]); });
+    return () => { isCurrent = false; };
+  }, [activeSector.public_id]);
+
   // Combine official base boundaries + sector polygon + replay trajectory + active query layers
   const authorityLayers = useMemo(() => {
     const sectorLayers = createSectorLayers(activeSector);
     const hazardLayers = createAuthorityHazardLayers(sectorHazards);
+    const associationLayers = createHazardAssociationLayers(hazardAssociations);
     const responseLayers = authorityActiveResponse?.map_layers ?? [];
     const activeReplay = replayLayer ? [replayLayer] : [];
-    return [...baseLayers, ...sectorLayers, ...hazardLayers, ...activeReplay, ...responseLayers];
-  }, [baseLayers, activeSector, sectorHazards, replayLayer, authorityActiveResponse?.map_layers]);
+    return [...baseLayers, ...sectorLayers, ...hazardLayers, ...associationLayers, ...activeReplay, ...responseLayers];
+  }, [baseLayers, activeSector, sectorHazards, hazardAssociations, replayLayer, authorityActiveResponse?.map_layers]);
 
   const evidenceList = useMemo(() => {
     if (authorityActiveResponse?.evidence && authorityActiveResponse.evidence.length > 0) {

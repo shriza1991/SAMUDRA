@@ -29,7 +29,7 @@ from backend.app.contracts.chat import (
     TranscribeResponse,
     VoiceChatResponse,
 )
-from backend.app.contracts.situation import SectorHazard, SectorHazardsResponse, SectorSituationResponse
+from backend.app.contracts.situation import SectorHazard, SectorHazardAssociationsResponse, SectorHazardsResponse, SectorSituationResponse, VesselHazardAssociation
 from backend.app.core.config import settings
 from backend.app.db.session import SessionLocal
 from backend.app.services.agent_run_service import (
@@ -1249,6 +1249,25 @@ def get_demo_sector_hazards(
             )
             for hazard in hazards
         ],
+    )
+
+
+@router.get(
+    "/demo/sectors/{sector_id}/hazard-associations",
+    response_model=SectorHazardAssociationsResponse,
+    tags=["Synthetic Demo"],
+)
+def get_demo_sector_hazard_associations(
+    sector_id: str, namespace: str = "SAMUDRA_DEMO_V1"
+) -> SectorHazardAssociationsResponse:
+    """Return observational vessel-in-active-hazard-area associations."""
+    from backend.app.domain.situation import get_canonical_vessel_hazard_associations_for_sector
+    associations = get_canonical_vessel_hazard_associations_for_sector(sector_id, namespace)
+    if associations is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Surveillance sector '{sector_id}' not found.")
+    return SectorHazardAssociationsResponse(
+        sector_id=sector_id,
+        associations=[VesselHazardAssociation(**association) for association in associations],
     )
 
 

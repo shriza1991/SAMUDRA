@@ -35,6 +35,13 @@ the seeded hazard ID, type, severity, status, validity window, provenance, and
 GeoJSON geometry. An unknown sector returns HTTP 404; an empty `hazards` list
 means no relevant active hazards, not unavailable data.
 
+### 2.0B Authority vessel-hazard associations
+
+`GET /api/v1/demo/sectors/{sector_id}/hazard-associations` returns only
+observational `IN_HAZARD_AREA` associations. It evaluates each sector vessel's
+latest canonical replay position against canonical active hazard geometry; it
+does not predict a collision, route, or future encounter.
+
 ### 2.1 The Canonical `ChatResponse`
 
 This is the payload returned by `POST /api/v1/chat` to the frontend.

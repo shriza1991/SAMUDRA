@@ -264,6 +264,20 @@ export interface SectorHazardsResponse {
   hazards: SectorHazard[];
 }
 
+export interface VesselHazardAssociation {
+  vessel_id: string;
+  hazard_id: string;
+  sector_id: string;
+  association_type: 'IN_HAZARD_AREA';
+  evaluated_at: string;
+  vessel_position: [number, number];
+}
+
+export interface SectorHazardAssociationsResponse {
+  sector_id: string;
+  associations: VesselHazardAssociation[];
+}
+
 export async function getDemoSectors(): Promise<DemoSector[]> {
   return request<DemoSector[]>('/demo/sectors');
 }
@@ -289,6 +303,10 @@ export async function getDemoHazards(sector?: string): Promise<DemoHazard[]> {
 
 export async function getDemoSectorHazards(sectorId: string): Promise<SectorHazardsResponse> {
   return request<SectorHazardsResponse>(`/demo/sectors/${encodeURIComponent(sectorId)}/hazards`);
+}
+
+export async function getDemoSectorHazardAssociations(sectorId: string): Promise<SectorHazardAssociationsResponse> {
+  return request<SectorHazardAssociationsResponse>(`/demo/sectors/${encodeURIComponent(sectorId)}/hazard-associations`);
 }
 
 export interface SectorSituation {

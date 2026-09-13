@@ -1,5 +1,5 @@
 import type { MapLayer } from '../types/contracts';
-import type { SectorHazard } from '../api/client';
+import type { SectorHazard, VesselHazardAssociation } from '../api/client';
 import { getBaseLayers } from '../api/client';
 
 /**
@@ -282,6 +282,27 @@ export function createAuthorityHazardLayers(hazards: SectorHazard[]): MapLayer[]
       },
     };
   });
+}
+
+/** Highlight current canonical vessel positions already inside an active hazard area. */
+export function createHazardAssociationLayers(associations: VesselHazardAssociation[]): MapLayer[] {
+  return associations.map((association) => ({
+    layer_id: `hazard_association_${association.vessel_id}_${association.hazard_id}`,
+    name: `Hazard association: ${association.vessel_id}`,
+    layer_type: 'geojson',
+    visible: true,
+    style: { color: '#ef4444', opacity: 1, circle_radius: 12, layer_category: 'hazard_association' },
+    geojson: {
+      type: 'Feature',
+      geometry: { type: 'Point', coordinates: association.vessel_position },
+      properties: {
+        vessel_id: association.vessel_id,
+        hazard_id: association.hazard_id,
+        association_type: association.association_type,
+        evaluated_at: association.evaluated_at,
+      },
+    },
+  }));
 }
 
 /**

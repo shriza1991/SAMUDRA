@@ -59,3 +59,17 @@ class SectorHazard(BaseModel):
 class SectorHazardsResponse(BaseModel):
     sector_id: str
     hazards: List[SectorHazard] = Field(default_factory=list)
+
+
+class VesselHazardAssociation(BaseModel):
+    vessel_id: str
+    hazard_id: str
+    sector_id: str
+    association_type: str = "IN_HAZARD_AREA"
+    evaluated_at: str
+    vessel_position: List[float]
+
+
+class SectorHazardAssociationsResponse(BaseModel):
+    sector_id: str
+    associations: List[VesselHazardAssociation] = Field(default_factory=list)

@@ -140,6 +140,47 @@ def get_canonical_active_hazards_for_sector(
     ]
 
 
+def get_canonical_vessel_hazard_associations_for_sector(
+    sector_id: str, namespace: str = "SAMUDRA_DEMO_V1"
+) -> Optional[List[Dict[str, Any]]]:
+    """Observational current-position containment in canonical active hazards."""
+    context = resolve_authority_sector_context(sector_id)
+    if context is None:
+        return None
+    from backend.app.domain.synthetic.generator import generate_synthetic_demo_dataset
+    from shapely.geometry import Point, shape
+
+    dataset = generate_synthetic_demo_dataset()
+    hazards = get_canonical_active_hazards_for_sector(sector_id, namespace) or []
+    vessels = [v for v in dataset["vessels"] if v.get("home_harbor_id") == context["harbor_id"]]
+    latest_by_vessel: Dict[str, Dict[str, Any]] = {}
+    for position in dataset["replay_positions"]:
+        if position.get("vessel_id") not in {v["public_id"] for v in vessels}:
+            continue
+        vessel_id = position["vessel_id"]
+        if vessel_id not in latest_by_vessel or position["timestamp"] > latest_by_vessel[vessel_id]["timestamp"]:
+            latest_by_vessel[vessel_id] = position
+
+    associations: List[Dict[str, Any]] = []
+    for vessel_id, position in latest_by_vessel.items():
+        vessel_point = Point(position["longitude"], position["latitude"])
+        for hazard in hazards:
+            try:
+                hazard_geometry = shape(hazard["geometry_geojson"])
+            except Exception:
+                continue
+            if hazard_geometry.covers(vessel_point):
+                associations.append({
+                    "vessel_id": vessel_id,
+                    "hazard_id": hazard["public_id"],
+                    "sector_id": sector_id,
+                    "association_type": "IN_HAZARD_AREA",
+                    "evaluated_at": position["timestamp"].isoformat(),
+                    "vessel_position": [position["longitude"], position["latitude"]],
+                })
+    return associations
+
+
 def _get_canonical_vessels(harbor_id: str, namespace: str = "SAMUDRA_DEMO_V1") -> List[Dict[str, Any]]:
     """Dynamically query canonical vessels assigned to a specific harbor."""
     try:

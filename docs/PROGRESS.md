@@ -17,6 +17,9 @@
 - Canonical active hazard applicability is resolved by sector public ID and shared with P0-6 situation counts.
 - The Authority map fetches and renders only the selected sector's canonical GeoJSON hazard layers, clearing them immediately on a sector change or unavailable response.
 
+### P0-8B — Authority vessel-hazard associations
+- Authority map highlights only vessels whose latest canonical replay position is inside a selected sector's active canonical hazard geometry.
+
 ---
 
 ## P0 Marine Data Providers Status Board

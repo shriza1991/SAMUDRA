@@ -151,6 +151,17 @@ No frontend hazard geometry or sector matching is fabricated. Empty results rema
 Owner: P0-8A integration
 Date: 2026-09-13
 
+## D018 — Observational Vessel-Hazard Containment
+Status: ACCEPTED
+
+Decision:
+P0-8B uses the latest canonical replay position as current vessel state and
+returns an association only when that point is covered by a canonical active
+hazard geometry. No proximity buffer, trajectory, or collision implication is used.
+
+Owner: P0-8B integration
+Date: 2026-09-13
+
 ## Decision template
 ### D0XX — <title>
 Status: PROPOSED / ACCEPTED / REJECTED
