@@ -12,6 +12,7 @@ Models official source structures for:
 
 from __future__ import annotations
 
+import math
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List
 
@@ -1059,42 +1060,89 @@ def generate_sectors() -> List[Dict[str, Any]]:
     ]
 
 
+def _calculate_bearing(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
+    """Calculate true forward bearing between two coordinates in degrees (0-360)."""
+    d_lat = lat2 - lat1
+    d_lon = lon2 - lon1
+    if abs(d_lat) < 1e-6 and abs(d_lon) < 1e-6:
+        return 0.0
+    mid_lat = math.radians((lat1 + lat2) / 2.0)
+    y = d_lon * math.cos(mid_lat)
+    x = d_lat
+    bearing = (math.degrees(math.atan2(y, x)) + 360.0) % 360.0
+    return round(bearing, 1)
+
+
+def _interpolate_corridor(wpts: list[tuple[float, float]], n_points: int = 30) -> list[tuple[float, float]]:
+    """Smoothly interpolate n points along a sequence of maritime waypoints."""
+    dists = [0.0]
+    for i in range(len(wpts) - 1):
+        d_lat = wpts[i + 1][0] - wpts[i][0]
+        d_lon = wpts[i + 1][1] - wpts[i][1]
+        seg_dist = math.hypot(d_lat, d_lon * math.cos(math.radians((wpts[i][0] + wpts[i + 1][0]) / 2.0)))
+        dists.append(dists[-1] + seg_dist)
+    total_dist = dists[-1]
+
+    pts = []
+    for step in range(n_points):
+        target_dist = (step / (n_points - 1)) * total_dist
+        for seg_idx in range(len(dists) - 1):
+            if dists[seg_idx] <= target_dist <= dists[seg_idx + 1] or seg_idx == len(dists) - 2:
+                seg_len = dists[seg_idx + 1] - dists[seg_idx]
+                seg_frac = 0.0 if seg_len == 0 else (target_dist - dists[seg_idx]) / seg_len
+                lat = wpts[seg_idx][0] + seg_frac * (wpts[seg_idx + 1][0] - wpts[seg_idx][0])
+                lon = wpts[seg_idx][1] + seg_frac * (wpts[seg_idx + 1][1] - wpts[seg_idx][1])
+                pts.append((round(lat, 4), round(lon, 4)))
+                break
+    return pts
+
+
 def generate_vessel_replay_positions() -> List[Dict[str, Any]]:
-    """420 Progressive GPS positions for 14 canonical vessels (30 points each)."""
+    """420 Geographically verified progressive GPS positions for 14 canonical vessels (30 points each).
+
+    Every vessel operates strictly within water/maritime channels and inside its designated
+    surveillance sector polygon, avoiding any land crossing.
+    """
     positions = []
 
-    # Specification for each vessel:
-    # (vessel_id, trip_id, start_lat, start_lon, dest_lat, dest_lon, base_speed, base_heading)
-    vessel_routes = [
-        # Ratnagiri vessels (vessel-01 to vessel-04)
-        ("vessel-01", "trip-01", 16.990, 73.280, 16.910, 73.160, 7.5, 235.0),
-        ("vessel-02", "trip-02", 16.990, 73.280, 16.080, 73.440, 9.0, 175.0),
-        ("vessel-03", "trip-03", 16.990, 73.280, 16.650, 73.150, 8.2, 205.0),
-        ("vessel-04", "trip-04", 16.990, 73.280, 17.010, 73.265, 5.0, 310.0),
-        # Malvan vessels (vessel-05 to vessel-08)
-        ("vessel-05", "trip-05", 16.060, 73.470, 16.140, 73.410, 8.0, 325.0),
-        ("vessel-06", "trip-06", 16.060, 73.470, 15.920, 73.300, 9.5, 220.0),
-        ("vessel-07", "trip-07", 16.060, 73.470, 16.010, 73.490, 4.8, 165.0),
-        ("vessel-08", "trip-08", 16.060, 73.470, 15.850, 73.200, 8.5, 230.0),
-        # Goa vessels (vessel-09 to vessel-10)
-        ("vessel-09", "trip-13", 15.490, 73.800, 15.350, 73.650, 7.5, 230.0),
-        ("vessel-10", "trip-14", 15.490, 73.800, 15.650, 73.680, 8.8, 330.0),
-        # Mumbai vessels (vessel-11 to vessel-12)
-        ("vessel-11", "trip-15", 18.920, 72.830, 18.720, 72.650, 8.0, 225.0),
-        ("vessel-12", "trip-16", 18.950, 72.800, 19.180, 72.550, 9.2, 315.0),
-        # Veraval vessels (vessel-13 to vessel-14)
-        ("vessel-13", "trip-17", 20.890, 70.360, 20.720, 70.180, 7.6, 230.0),
-        ("vessel-14", "trip-18", 20.890, 70.380, 20.650, 70.580, 8.6, 140.0),
+    # Canonical maritime corridor waypoints strictly in water within assigned sectors:
+    # (vessel_id, trip_id, [waypoint coordinates], base_speed_knots)
+    vessel_corridors = [
+        # Ratnagiri vessels (sector-ratnagiri / harbor-ratnagiri)
+        ("vessel-01", "trip-01", [(16.990, 73.280), (16.985, 73.245), (16.910, 73.170)], 7.5),
+        ("vessel-02", "trip-02", [(16.990, 73.280), (16.995, 73.230), (16.940, 73.060)], 9.0),
+        ("vessel-03", "trip-03", [(16.990, 73.280), (16.980, 73.240), (16.720, 73.140)], 8.2),
+        ("vessel-04", "trip-04", [(16.990, 73.280), (16.992, 73.255), (17.025, 73.250)], 5.0),
+        # Malvan vessels (sector-malvan / harbor-malvan)
+        ("vessel-05", "trip-05", [(16.060, 73.465), (16.090, 73.440), (16.140, 73.410)], 8.0),
+        ("vessel-06", "trip-06", [(16.060, 73.465), (16.045, 73.415), (16.010, 73.370)], 9.5),
+        ("vessel-07", "trip-07", [(16.060, 73.465), (16.035, 73.455), (16.010, 73.445)], 4.8),
+        ("vessel-08", "trip-08", [(16.060, 73.465), (16.045, 73.410), (16.030, 73.365)], 8.5),
+        # Goa vessels (sector-goa / harbor-panaji)
+        ("vessel-09", "trip-13", [(15.490, 73.790), (15.430, 73.720), (15.360, 73.660)], 7.5),
+        ("vessel-10", "trip-14", [(15.490, 73.790), (15.560, 73.730), (15.630, 73.670)], 8.8),
+        # Mumbai vessels (sector-mumbai / harbor-mumbai)
+        ("vessel-11", "trip-15", [(18.910, 72.825), (18.830, 72.750), (18.740, 72.670)], 8.0),
+        ("vessel-12", "trip-16", [(18.940, 72.790), (19.050, 72.670), (19.160, 72.560)], 9.2),
+        # Veraval vessels (sector-veraval / harbor-veraval)
+        ("vessel-13", "trip-17", [(20.890, 70.360), (20.810, 70.280), (20.730, 70.190)], 7.6),
+        ("vessel-14", "trip-18", [(20.890, 70.360), (20.780, 70.330), (20.680, 70.300)], 8.6),
     ]
 
-    for vid, tid, s_lat, s_lon, d_lat, d_lon, b_spd, b_hdg in vessel_routes:
+    for vid, tid, wpts, b_spd in vessel_corridors:
+        coords = _interpolate_corridor(wpts, 30)
         for step in range(30):
             t_step = REFERENCE_TIME - timedelta(hours=6) + timedelta(minutes=12 * step)
-            fraction = step / 29.0
-            lat = round(s_lat + (d_lat - s_lat) * fraction + 0.001 * (step % 3), 4)
-            lon = round(s_lon + (d_lon - s_lon) * fraction - 0.001 * (step % 2), 4)
-            speed = round(max(2.0, b_spd + 0.7 * (step % 4) - 0.1 * step / 10.0), 1)
-            heading = round((b_hdg + 2.5 * (step % 3)) % 360.0, 1)
+            lat, lon = coords[step]
+            if step == 0:
+                hdg = _calculate_bearing(lat, lon, coords[1][0], coords[1][1])
+                spd = round(max(2.5, b_spd * 0.65), 1)
+            elif step == 29:
+                hdg = _calculate_bearing(coords[28][0], coords[28][1], lat, lon)
+                spd = round(max(2.0, b_spd * 0.70), 1)
+            else:
+                hdg = _calculate_bearing(coords[step - 1][0], coords[step - 1][1], coords[step + 1][0], coords[step + 1][1])
+                spd = round(max(2.5, b_spd + 0.4 * math.sin(step * 0.5)), 1)
 
             positions.append({
                 "public_id": f"pos-{vid}-{step:02d}",
@@ -1103,8 +1151,8 @@ def generate_vessel_replay_positions() -> List[Dict[str, Any]]:
                 "timestamp": t_step,
                 "latitude": lat,
                 "longitude": lon,
-                "speed_knots": speed,
-                "heading_deg": heading,
+                "speed_knots": spd,
+                "heading_deg": hdg,
                 "provenance_json": {**PROVENANCE_BASE, "intended_provider": "SAMUDRA_VESSEL_TRACKING"},
                 "namespace": SYNTHETIC_NAMESPACE,
                 "created_at": REFERENCE_TIME,

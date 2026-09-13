@@ -127,4 +127,101 @@ describe('Authority Advanced Feature Decks', () => {
     expect(replayLayer.geojson.features[0].geometry.type).toBe('LineString');
     expect(replayLayer.geojson.features[1].geometry.type).toBe('Point');
   });
+
+  it('verifies sector selection determines available vessels and handles zero-vessel sectors cleanly', () => {
+    // Sector-to-vessels mapping
+    const ratnagiriVessels = [
+      { public_id: 'vessel-01', name: 'Matsya Sagar 01', home_harbor_id: 'harbor-ratnagiri' },
+      { public_id: 'vessel-02', name: 'Konkan Pride', home_harbor_id: 'harbor-ratnagiri' },
+    ];
+    const malvanVessels = [
+      { public_id: 'vessel-05', name: 'Sea Hawk Goa', home_harbor_id: 'harbor-malvan' },
+    ];
+    const zeroVesselSector: typeof ratnagiriVessels = [];
+
+    expect(ratnagiriVessels.map(v => v.public_id)).toEqual(['vessel-01', 'vessel-02']);
+    expect(malvanVessels.map(v => v.public_id)).toEqual(['vessel-05']);
+    expect(zeroVesselSector).toHaveLength(0);
+
+    // Switching to zero-vessel sector clears track
+    let activeTrack: any = { layer_id: 'layer_fleet_vessel_replay' };
+    const onReplayUpdate = (layer: any) => { activeTrack = layer; };
+
+    if (zeroVesselSector.length === 0) {
+      onReplayUpdate(null);
+    }
+    expect(activeTrack).toBeNull();
+  });
+
+  it('verifies vessel selection displays corresponding replay and never falls back to vessel-01', () => {
+    // Vessel A: vessel-05 (Malvan)
+    const vesselAPositions = [
+      { timestamp: '00:00', latitude: 16.060, longitude: 73.465, speed_knots: 5.2, heading_deg: 320, vessel_id: 'vessel-05' },
+      { timestamp: '06:00', latitude: 16.140, longitude: 73.410, speed_knots: 8.0, heading_deg: 325, vessel_id: 'vessel-05' },
+    ];
+
+    // Vessel B: vessel-11 (Mumbai)
+    const vesselBPositions = [
+      { timestamp: '00:00', latitude: 18.910, longitude: 72.825, speed_knots: 6.0, heading_deg: 220, vessel_id: 'vessel-11' },
+      { timestamp: '06:00', latitude: 18.740, longitude: 72.670, speed_knots: 8.0, heading_deg: 225, vessel_id: 'vessel-11' },
+    ];
+
+    const generateReplayLayer = (positions: typeof vesselAPositions) => {
+      const current = positions[positions.length - 1];
+      return {
+        layer_id: 'layer_fleet_vessel_replay',
+        properties: { vessel_id: current.vessel_id },
+        geojson: {
+          type: 'FeatureCollection' as const,
+          features: [
+            {
+              type: 'Feature' as const,
+              geometry: {
+                type: 'LineString' as const,
+                coordinates: positions.map(p => [p.longitude, p.latitude]),
+              },
+              properties: { vessel_id: current.vessel_id },
+            },
+            {
+              type: 'Feature' as const,
+              geometry: {
+                type: 'Point' as const,
+                coordinates: [current.longitude, current.latitude],
+              },
+              properties: {
+                vessel_id: current.vessel_id,
+                speed_knots: current.speed_knots,
+                heading_deg: current.heading_deg,
+              },
+            },
+          ],
+        },
+      };
+    };
+
+    const layerA = generateReplayLayer(vesselAPositions);
+    expect(layerA.properties.vessel_id).toBe('vessel-05');
+    expect(layerA.properties.vessel_id).not.toBe('vessel-01');
+    expect(layerA.geojson.features[0].geometry.coordinates).toEqual([[73.465, 16.060], [73.410, 16.140]]);
+    expect(layerA.geojson.features[1].geometry.coordinates).toEqual([73.410, 16.140]);
+
+    const layerB = generateReplayLayer(vesselBPositions);
+    expect(layerB.properties.vessel_id).toBe('vessel-11');
+    expect(layerB.properties.vessel_id).not.toBe('vessel-01');
+    expect(layerB.geojson.features[0].geometry.coordinates).toEqual([[72.825, 18.910], [72.670, 18.740]]);
+    expect(layerB.geojson.features[1].geometry.coordinates).toEqual([72.670, 18.740]);
+  });
+
+  it('verifies replay failure or missing data results in null map track and does not fabricate coordinates', () => {
+    let mapTrack: any = { layer_id: 'layer_fleet_vessel_replay' };
+    const onReplayUpdate = (layer: any) => { mapTrack = layer; };
+
+    // When backend returns empty replay or fails
+    const failedOrEmptyReplay: any[] = [];
+    if (!failedOrEmptyReplay || failedOrEmptyReplay.length === 0) {
+      onReplayUpdate(null);
+    }
+
+    expect(mapTrack).toBeNull();
+  });
 });

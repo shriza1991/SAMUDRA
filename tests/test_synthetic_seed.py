@@ -663,9 +663,21 @@ def test_authority_fleet_surveillance_sectors(sqlite_session):
 
     # 9, 10, 11. Geographic validation against sector polygons via Shapely
     sectors = {s["public_id"]: s for s in dataset["sectors"]}
+    poly_ratnagiri = Polygon(sectors["sector-ratnagiri"]["polygon"])
+    poly_malvan = Polygon(sectors["sector-malvan"]["polygon"])
     poly_goa = Polygon(sectors["sector-goa"]["polygon"])
     poly_mumbai = Polygon(sectors["sector-mumbai"]["polygon"])
     poly_veraval = Polygon(sectors["sector-veraval"]["polygon"])
+
+    for vid in ("vessel-01", "vessel-02", "vessel-03", "vessel-04"):
+        for p in replays_by_vessel[vid]:
+            pt = Point(p["longitude"], p["latitude"])
+            assert poly_ratnagiri.contains(pt), f"Ratnagiri vessel {vid} point ({p['longitude']}, {p['latitude']}) outside Ratnagiri sector polygon"
+
+    for vid in ("vessel-05", "vessel-06", "vessel-07", "vessel-08"):
+        for p in replays_by_vessel[vid]:
+            pt = Point(p["longitude"], p["latitude"])
+            assert poly_malvan.contains(pt), f"Malvan vessel {vid} point ({p['longitude']}, {p['latitude']}) outside Malvan sector polygon"
 
     for vid in ("vessel-09", "vessel-10"):
         for p in replays_by_vessel[vid]:

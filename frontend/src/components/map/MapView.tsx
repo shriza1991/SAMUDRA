@@ -69,8 +69,6 @@ export default function MapView({ layers, theme = 'light', center, zoom, languag
   const attachedListenersRef = useRef<Set<string>>(new Set());
   const activeReplayVesselRef = useRef<string | null>(null);
   const activeReplayTriggerRef = useRef<number | undefined>(undefined);
-  const prevCenterRef = useRef<[number, number] | undefined>(undefined);
-  const prevZoomRef = useRef<number | undefined>(undefined);
 
   // Animate map when programmatic center or zoom changes (only if no active replay trajectory is being tracked)
   useEffect(() => {

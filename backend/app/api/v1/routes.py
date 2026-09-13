@@ -960,16 +960,33 @@ def _resolve_sector_to_harbor_id(sector: str | None) -> str | None:
     """Helper to map a surveillance sector identifier or display name to canonical harbor ID."""
     if not sector:
         return None
-    s = sector.lower()
-    if "ratnagiri" in s:
+    s = sector.strip()
+    s_lower = s.lower()
+    try:
+        sectors_path = pathlib.Path(__file__).resolve().parent.parent.parent.parent / "data" / "fixtures" / "synthetic" / "samudra" / "sectors.json"
+        if sectors_path.exists():
+            with open(sectors_path, "r", encoding="utf-8") as f:
+                sectors_data = json.load(f)
+                for sec in sectors_data:
+                    if (
+                        sec.get("public_id") == s
+                        or sec.get("name") == s
+                        or sec.get("public_id", "").lower() == s_lower
+                        or sec.get("name", "").lower() == s_lower
+                    ):
+                        return sec.get("harbor_id")
+    except Exception:
+        pass
+
+    if "ratnagiri" in s_lower:
         return "harbor-ratnagiri"
-    if "malvan" in s:
+    if "malvan" in s_lower:
         return "harbor-malvan"
-    if "goa" in s or "panaji" in s:
+    if "goa" in s_lower or "panaji" in s_lower:
         return "harbor-panaji"
-    if "mumbai" in s:
+    if "mumbai" in s_lower:
         return "harbor-mumbai"
-    if "veraval" in s:
+    if "veraval" in s_lower:
         return "harbor-veraval"
     return "unseeded"
 
@@ -999,13 +1016,14 @@ def get_demo_vessels(
         with SessionLocal() as session:
             repo = SyntheticDemoRepository(session)
             items = repo.get_vessels(namespace=namespace, harbor_id=effective_harbor)
-            if items:
-                return [_model_to_dict(item) for item in items]
+            return [_model_to_dict(item) for item in items]
     except Exception as exc:
         logger.debug("Database get_demo_vessels failed (service offline): %s", exc)
     records = _get_synthetic_records("vessels", namespace=namespace)
     if effective_harbor:
         records = [r for r in records if r.get("home_harbor_id") == effective_harbor]
+    elif sector:
+        records = []
     return records
 
 
@@ -1209,8 +1227,7 @@ def get_demo_vessel_replay(
         with SessionLocal() as session:
             repo = SyntheticDemoRepository(session)
             items = repo.get_vessel_replay(namespace=namespace, vessel_id=vessel_id)
-            if items:
-                return [_model_to_dict(item) for item in items]
+            return [_model_to_dict(item) for item in items]
     except Exception as exc:
         logger.debug("Database get_demo_vessel_replay failed (service offline): %s", exc)
     records = _get_synthetic_records("replay_positions", namespace=namespace)

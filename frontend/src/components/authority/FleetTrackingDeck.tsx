@@ -42,6 +42,8 @@ export default function FleetTrackingDeck({
   const [notifications, setNotifications] = useState<DemoNotification[]>([]);
   const [isBackendOffline, setIsBackendOffline] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isReplayLoading, setIsReplayLoading] = useState<boolean>(false);
+  const [isReplayUnavailable, setIsReplayUnavailable] = useState<boolean>(false);
   const [focusTrigger, setFocusTrigger] = useState<number>(0);
 
   // Sector change effect: reload vessels & alerts, clear previous replay
@@ -52,6 +54,8 @@ export default function FleetTrackingDeck({
     setIsPlaying(false);
     setCurrentIndex(0);
     setPositions([]);
+    setIsReplayUnavailable(false);
+    setIsReplayLoading(false);
     onReplayUpdate?.(null);
 
     Promise.allSettled([
@@ -64,8 +68,13 @@ export default function FleetTrackingDeck({
         const vesselList = vesselsRes.value;
         setVessels(vesselList);
         if (vesselList.length > 0) {
-          setSelectedVesselId(vesselList[0].public_id);
+          // Preserve previously selected vessel if it belongs to the new sector; else select first vessel
+          setSelectedVesselId((prev) => {
+            const stillInSector = vesselList.some((v) => v.public_id === prev);
+            return stillInSector ? prev : vesselList[0].public_id;
+          });
         } else {
+          // Zero vessels in sector: clear selection, telemetry, and map track
           setSelectedVesselId(null);
           setPositions([]);
           onReplayUpdate?.(null);
@@ -98,25 +107,36 @@ export default function FleetTrackingDeck({
     let isCancelled = false;
     if (!selectedVesselId) {
       setPositions([]);
+      setIsReplayUnavailable(false);
+      setIsReplayLoading(false);
       onReplayUpdate?.(null);
       return;
     }
 
+    setIsReplayLoading(true);
+    setIsReplayUnavailable(false);
+
     getDemoVesselReplay(selectedVesselId)
       .then((pos) => {
         if (isCancelled) return;
+        setIsReplayLoading(false);
         if (Array.isArray(pos) && pos.length > 0) {
           setPositions(pos);
-          setCurrentIndex(0);
+          // Default to latest/selected point, rendering full historical track and latest marker
+          setCurrentIndex(pos.length - 1);
           setIsPlaying(false);
+          setIsReplayUnavailable(false);
         } else {
           setPositions([]);
+          setIsReplayUnavailable(true);
           onReplayUpdate?.(null);
         }
       })
       .catch(() => {
         if (isCancelled) return;
+        setIsReplayLoading(false);
         setPositions([]);
+        setIsReplayUnavailable(true);
         onReplayUpdate?.(null);
       });
 
@@ -151,7 +171,11 @@ export default function FleetTrackingDeck({
     }
 
     const currentPos = positions[currentIndex] || positions[0];
-    const pastCoordinates = positions.slice(0, currentIndex + 1).map((p) => [p.longitude, p.latitude]);
+    const pastCoordinates = (
+      positions.length >= 2 && currentIndex === 0
+        ? positions.slice(0, 2)
+        : positions.slice(0, currentIndex + 1)
+    ).map((p) => [p.longitude, p.latitude]);
 
     // Compute bounding box encompassing the entire vessel voyage
     let minLng = positions[0].longitude;
@@ -280,10 +304,10 @@ export default function FleetTrackingDeck({
             }}>
               <Ship size={28} style={{ margin: '0 auto 8px auto', opacity: 0.4 }} />
               <p style={{ margin: 0, fontWeight: 600, fontSize: '13px' }}>
-                {translateText('No Monitored Vessels Seeded in this Sector', language)}
+                {translateText('No Monitored Vessels in this Sector', language)}
               </p>
               <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: '#94a3b8' }}>
-                {translateText('Active canonical surveillance logs are seeded for Ratnagiri Sector (MH-03) and Malvan Marine Zone (MH-04).', language)}
+                {translateText('No coastal vessels currently operating in this surveillance sector.', language)}
               </p>
             </div>
           ) : (
@@ -312,8 +336,35 @@ export default function FleetTrackingDeck({
             </div>
           )}
 
+          {/* Telemetry Replay Status / Unavailable State */}
+          {selectedVessel && isReplayLoading && (
+            <div style={{ padding: '20px 0', textAlign: 'center', color: '#94a3b8', fontSize: '13px' }}>
+              {translateText('Loading vessel replay telemetry...', language)}
+            </div>
+          )}
+
+          {selectedVessel && !isReplayLoading && isReplayUnavailable && (
+            <div className="fleet-replay-unavailable-card" style={{
+              padding: '14px 16px',
+              backgroundColor: 'rgba(239, 68, 68, 0.08)',
+              border: '1px solid rgba(239, 68, 68, 0.25)',
+              borderRadius: '8px',
+              margin: '12px 0',
+              fontSize: '13px',
+              color: '#f87171',
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px', fontWeight: 600 }}>
+                <AlertTriangle size={15} />
+                <span>{translateText('Surveillance Replay Unavailable', language)}</span>
+              </div>
+              <p style={{ margin: 0, fontSize: '12px', opacity: 0.9 }}>
+                {translateText(`GPS replay trajectory is unavailable for ${selectedVessel.name}. Operational coordinates will not be fabricated.`, language)}
+              </p>
+            </div>
+          )}
+
           {/* Time-series GPS Scrubber */}
-          {selectedVessel && currentPos && positions.length > 0 && (
+          {selectedVessel && !isReplayLoading && !isReplayUnavailable && currentPos && positions.length > 0 && (
             <div className="fleet-scrubber-card">
               <div className="scrubber-header">
                 <div>
