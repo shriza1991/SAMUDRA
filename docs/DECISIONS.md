@@ -121,6 +121,21 @@ Eliminates crashes on partial marine payloads across agent evaluations while str
 Owner: Dev 2 / Dev 3
 Date: 2026-09-13
 
+## D016 — Request-Scoped Authority Chat Sector Context
+Status: ACCEPTED
+
+Decision:
+Authority chat sends a canonical sector `public_id` in `ChatRequest.user_context.sector_id`. The API validates it against canonical sector data and derives the harbor and coordinates for that request. This explicit request context takes precedence over stored conversation context and client-provided harbor values.
+
+Reason:
+An Authority operator can switch sectors while retaining conversation history. The current request must never inherit a previous sector or the Ratnagiri fallback.
+
+Impact:
+No global current-sector state is introduced. Existing chats without `sector_id` remain backward compatible; invalid sector IDs are rejected with HTTP 422.
+
+Owner: P0-7 integration
+Date: 2026-09-13
+
 ## Decision template
 ### D0XX — <title>
 Status: PROPOSED / ACCEPTED / REJECTED

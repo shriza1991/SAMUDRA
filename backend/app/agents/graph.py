@@ -354,8 +354,9 @@ def intent_locale_node(state: ORCAState) -> Dict[str, Any]:
             # M9: Deterministic normalization & canonicalization of LLM output
             thread_ctx = memory_manager.load_context(thread_id)
             user_prof = state.get("user_profile") or {}
-            if not thread_ctx.active_harbor and (user_prof.get("active_harbor") or user_prof.get("harbor")):
-                thread_ctx.active_harbor = user_prof.get("active_harbor") or user_prof.get("harbor")
+            request_harbor = user_prof.get("origin_harbor") or user_prof.get("active_harbor") or user_prof.get("harbor")
+            if request_harbor:
+                thread_ctx.active_harbor = request_harbor
 
             # Canonicalize extracted entities via maritime glossary
             canonical_entities = canonicalize_extracted_entities(
@@ -364,6 +365,8 @@ def intent_locale_node(state: ORCAState) -> Dict[str, Any]:
                 context_language=thread_ctx.preferred_language,
             )
             extraction.entities = canonical_entities
+            if request_harbor:
+                extraction.entities.origin_harbor = request_harbor
 
             # Validate language code against supported set
             detected_lang = extraction.detected_language
@@ -378,6 +381,8 @@ def intent_locale_node(state: ORCAState) -> Dict[str, Any]:
                 detected_language=detected_lang,
                 raw_user_message=raw_msg,
             )
+            if user_prof.get("coordinates"):
+                updated_ctx.active_coordinates = user_prof["coordinates"]
             memory_manager.save_context(updated_ctx)
 
             # Origin & Destination Resolution (M6.3):
@@ -498,8 +503,9 @@ def intent_locale_node(state: ORCAState) -> Dict[str, Any]:
     # 3. Deterministic Fallback Classifier
     thread_ctx = memory_manager.load_context(thread_id)
     user_prof = state.get("user_profile") or {}
-    if not thread_ctx.active_harbor and (user_prof.get("active_harbor") or user_prof.get("harbor")):
-        thread_ctx.active_harbor = user_prof.get("active_harbor") or user_prof.get("harbor")
+    request_harbor = user_prof.get("origin_harbor") or user_prof.get("active_harbor") or user_prof.get("harbor")
+    if request_harbor:
+        thread_ctx.active_harbor = request_harbor
 
     # M9: Normalization & Language Detection
     norm = normalize_maritime_entities(raw_msg, context_language=thread_ctx.preferred_language)
@@ -510,7 +516,7 @@ def intent_locale_node(state: ORCAState) -> Dict[str, Any]:
         lang = state.get("language") or norm.detected_language
     msg_lower = raw_msg.lower()
 
-    explicit_harbor = norm.origin_harbor
+    explicit_harbor = request_harbor or norm.origin_harbor
     explicit_dest = norm.destination
     craft_type = norm.craft_type
     dep_time = norm.departure_time
@@ -581,6 +587,8 @@ def intent_locale_node(state: ORCAState) -> Dict[str, Any]:
         detected_language=lang,
         raw_user_message=raw_msg,
     )
+    if user_prof.get("coordinates"):
+        updated_ctx.active_coordinates = user_prof["coordinates"]
     memory_manager.save_context(updated_ctx)
 
     # Origin & Destination Resolution (M6.3):
@@ -887,6 +895,7 @@ def specialist_tools_node(state: ORCAState) -> Dict[str, Any]:
     task_plan = state.get("task_plan", [])
     harbor = state.get("origin_harbor") or state.get("location", {}).get("harbor", "Ratnagiri")
     craft_type = state.get("user_profile", {}).get("craft_profile", "motorized_boat")
+    sector_id = state.get("user_profile", {}).get("sector_id")
 
     tool_results: Dict[str, Any] = dict(state.get("tool_results", {}))
     observations: Dict[str, Any] = dict(state.get("observations", {}))
@@ -1029,6 +1038,9 @@ def specialist_tools_node(state: ORCAState) -> Dict[str, Any]:
         elif tool_name in ["route_stub", "route_analysis"]:
             params["origin_harbor"] = harbor
             params["destination"] = destination or "Outer Bank"
+
+        if sector_id and "origin_harbor" in params:
+            params["sector_id"] = sector_id
 
         # Execute through typed registry with reliability support
         def on_retry(attempt: int, exc: Exception):

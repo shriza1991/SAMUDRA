@@ -25,6 +25,10 @@ class ConfidenceLevel(str, Enum):
 
 
 class UserContext(BaseModel):
+    sector_id: Optional[str] = Field(
+        None,
+        description="Canonical Authority surveillance sector public_id (e.g., 'sector-ratnagiri')",
+    )
     origin_harbor: Optional[str] = Field(
         None, description="Departure landing center or harbor name (e.g., 'Ratnagiri')"
     )
@@ -236,5 +240,4 @@ class VoiceChatResponse(ChatResponse):
         None, description="Base64-encoded synthesized speech audio (WAV format)"
     )
     audio_format: str = Field("audio/wav", description="MIME format of the synthesized audio")
-
 

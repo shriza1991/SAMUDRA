@@ -38,6 +38,21 @@ describe('API Client', () => {
     expect(response.recommendation.status).toBe('NO_GO');
   });
 
+  it('preserves a canonical Authority sector ID in the chat request', async () => {
+    (globalThis.fetch as any).mockResolvedValueOnce({
+      ok: true,
+      json: async () => MOCK_SAFETY_RESPONSE,
+    });
+
+    await sendMessage({
+      message: 'Why is this sector safe?',
+      user_context: { sector_id: 'sector-goa' },
+    });
+
+    const [, options] = (globalThis.fetch as any).mock.calls[0];
+    expect(JSON.parse(options.body).user_context.sector_id).toBe('sector-goa');
+  });
+
   it('throws ApiError on non-200 responses', async () => {
     (globalThis.fetch as any).mockResolvedValueOnce({
       ok: false,

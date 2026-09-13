@@ -17,6 +17,16 @@ To enable four developers to work asynchronously without blocking each other:
 
 ## 2. Shared Core Data Models
 
+### 2.0 Authority chat sector context
+
+`ChatRequest.user_context.sector_id` is optional and is reserved for the
+Authority Command Deck. It must be a canonical surveillance sector `public_id`
+(for example, `sector-ratnagiri`). When present, the backend validates it and
+derives the harbor and coordinates from canonical sector metadata for that
+request. It takes precedence over conversation memory and client-supplied
+harbor values; unknown IDs return HTTP 422. Requests without it retain the
+existing chat behavior.
+
 ### 2.1 The Canonical `ChatResponse`
 
 This is the payload returned by `POST /api/v1/chat` to the frontend.

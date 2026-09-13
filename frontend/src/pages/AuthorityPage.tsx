@@ -54,7 +54,7 @@ export default function AuthorityPage({
   onBack,
 }: AuthorityPageProps) {
   const [sectors, setSectors] = useState<DemoSector[]>(FALLBACK_DEMO_SECTORS);
-  const [selectedSector, setSelectedSector] = useState<string>(FALLBACK_DEMO_SECTORS[0].name);
+  const [selectedSector, setSelectedSector] = useState<string>(FALLBACK_DEMO_SECTORS[0].public_id);
   const [authorityTab, setAuthorityTab] = useState<AuthorityTab>('terminal');
   const [replayLayer, setReplayLayer] = useState<MapLayer | null>(null);
   const [baseLayers, setBaseLayers] = useState<MapLayer[]>([]);
@@ -77,8 +77,20 @@ export default function AuthorityPage({
   }, []);
 
   const activeSector = useMemo(() => {
-    return sectors.find((s) => s.name === selectedSector) || sectors[0];
+    return sectors.find((s) => s.public_id === selectedSector) || sectors[0];
   }, [sectors, selectedSector]);
+
+  // Chat history is retained across sector changes, but current-sector UI must
+  // never present an earlier sector's response as the active response.
+  const authorityActiveResponse = useMemo(() => {
+    for (let index = chat.messages.length - 1; index >= 0; index -= 1) {
+      const message = chat.messages[index];
+      if (message.role === 'assistant' && message.sectorId === activeSector.public_id && message.response) {
+        return message.response;
+      }
+    }
+    return null;
+  }, [activeSector.public_id, chat.messages]);
 
   useEffect(() => {
     let isCurrent = true;
@@ -110,26 +122,26 @@ export default function AuthorityPage({
   // Combine official base boundaries + sector polygon + replay trajectory + active query layers
   const authorityLayers = useMemo(() => {
     const sectorLayers = createSectorLayers(activeSector);
-    const responseLayers = chat.activeResponse?.map_layers ?? [];
+    const responseLayers = authorityActiveResponse?.map_layers ?? [];
     const activeReplay = replayLayer ? [replayLayer] : [];
     return [...baseLayers, ...sectorLayers, ...activeReplay, ...responseLayers];
-  }, [baseLayers, activeSector, replayLayer, chat.activeResponse?.map_layers]);
+  }, [baseLayers, activeSector, replayLayer, authorityActiveResponse?.map_layers]);
 
   const evidenceList = useMemo(() => {
-    if (chat.activeResponse?.evidence && chat.activeResponse.evidence.length > 0) {
-      return chat.activeResponse.evidence;
+    if (authorityActiveResponse?.evidence && authorityActiveResponse.evidence.length > 0) {
+      return authorityActiveResponse.evidence;
     }
     return sectorSituation?.evidence ?? [];
-  }, [chat.activeResponse?.evidence, sectorSituation?.evidence]);
+  }, [authorityActiveResponse?.evidence, sectorSituation?.evidence]);
 
-  const traceList = chat.activeResponse?.trace ?? [];
+  const traceList = authorityActiveResponse?.trace ?? [];
 
   const warningsList = useMemo(() => {
-    if (chat.activeResponse?.warnings && chat.activeResponse.warnings.length > 0) {
-      return chat.activeResponse.warnings;
+    if (authorityActiveResponse?.warnings && authorityActiveResponse.warnings.length > 0) {
+      return authorityActiveResponse.warnings;
     }
     return sectorSituation?.warnings ?? [];
-  }, [chat.activeResponse?.warnings, sectorSituation?.warnings]);
+  }, [authorityActiveResponse?.warnings, sectorSituation?.warnings]);
 
   return (
     <div className={`authority-page view-${mobileView}`} role="region" aria-label="Authority Command Deck">
@@ -152,7 +164,7 @@ export default function AuthorityPage({
               aria-label={translateText('Sector:', chat.language)}
             >
               {sectors.map((s) => (
-                <option key={s.public_id || s.name} value={s.name}>{s.name}</option>
+                <option key={s.public_id || s.name} value={s.public_id}>{s.name}</option>
               ))}
             </select>
           </label>
@@ -264,9 +276,11 @@ export default function AuthorityPage({
               <ChatPanel
                 language={chat.language}
                 messages={chat.messages}
-                activeResponse={chat.activeResponse}
+                activeResponse={authorityActiveResponse}
                 isLoading={chat.isLoading}
-                onSend={chat.send}
+                onSend={(text, languageOverride) => chat.send(text, languageOverride, {
+                  sector_id: activeSector.public_id,
+                })}
                 onBack={onBack}
                 onReset={chat.clearChat}
                 onEvidenceClick={onOpenEvidence}

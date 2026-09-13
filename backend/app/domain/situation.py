@@ -74,6 +74,44 @@ def _resolve_canonical_sector(sector_id: str) -> Optional[Dict[str, Any]]:
     return None
 
 
+def resolve_authority_sector_context(sector_id: str) -> Optional[Dict[str, Any]]:
+    """Resolve a canonical Authority sector public ID to request-scoped context.
+
+    Display names are intentionally not accepted here: Authority chat sends the
+    canonical public ID, then derives its harbor and coordinates from canonical
+    fixture metadata.
+    """
+    normalized_id = sector_id.strip()
+    sector = next(
+        (item for item in _load_canonical_sectors() if item.get("public_id") == normalized_id),
+        None,
+    )
+    if sector is None:
+        return None
+
+    harbor_id = sector.get("harbor_id")
+    harbors_path = FIXTURES_DIR / "harbors.json"
+    try:
+        with open(harbors_path, "r", encoding="utf-8") as fixture:
+            harbor = next(
+                (item for item in json.load(fixture) if item.get("public_id") == harbor_id),
+                None,
+            )
+    except Exception as exc:
+        logger.debug("Failed reading canonical harbors fixture: %s", exc)
+        harbor = None
+    if harbor is None:
+        return None
+
+    return {
+        "sector_id": sector["public_id"],
+        "sector_name": sector.get("name"),
+        "harbor_id": harbor_id,
+        "origin_harbor": harbor["name"],
+        "coordinates": [harbor["longitude"], harbor["latitude"]],
+    }
+
+
 def _get_canonical_vessels(harbor_id: str, namespace: str = "SAMUDRA_DEMO_V1") -> List[Dict[str, Any]]:
     """Dynamically query canonical vessels assigned to a specific harbor."""
     try:

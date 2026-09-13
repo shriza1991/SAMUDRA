@@ -94,6 +94,7 @@ class ToolInvocationContext(BaseModel):
     """Normalized operational context passed into tool adapters and engines."""
 
     origin_harbor: Optional[str] = Field(None, description="Departure harbor name (e.g. 'Ratnagiri')")
+    sector_id: Optional[str] = Field(None, description="Canonical Authority surveillance sector public_id")
     coordinates: Optional[List[float]] = Field(None, description="[longitude, latitude] in EPSG:4326")
     departure_time: Optional[str] = Field(None, description="ISO-8601 UTC departure timestamp or offset")
     duration_hours: float = Field(8.0, description="Voyage duration in hours")

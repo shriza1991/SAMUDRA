@@ -67,12 +67,30 @@ def _build_user_context(request: ChatRequest) -> dict[str, Any]:
     if request.user_context is None:
         return {}
     ctx = request.user_context
-    return {
+    context = {
+        "sector_id": ctx.sector_id,
         "origin_harbor": ctx.origin_harbor,
         "coordinates": ctx.coordinates,
         "craft_profile": ctx.craft_profile or "motorized_boat",
         "language_preference": ctx.language_preference or "auto",
     }
+    if ctx.sector_id:
+        from backend.app.domain.situation import resolve_authority_sector_context
+
+        sector_context = resolve_authority_sector_context(ctx.sector_id)
+        if sector_context is None:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                detail=f"Unknown canonical Authority sector '{ctx.sector_id}'.",
+            )
+        # A validated Authority sector is authoritative for this request; no
+        # client-provided harbor or coordinates can cross-contaminate it.
+        context.update({
+            "sector_id": sector_context["sector_id"],
+            "origin_harbor": sector_context["origin_harbor"],
+            "coordinates": sector_context["coordinates"],
+        })
+    return context
 
 
 # ---------------------------------------------------------------------------

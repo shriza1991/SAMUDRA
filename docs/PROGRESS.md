@@ -8,6 +8,11 @@
 - Current milestone: **P0 Marine Data & API Integration Foundation**
 - Completion status: **COMPLETE & OFFLINE VERIFIED**
 
+### P0-7 — Authority chat sector context
+- Authority chat now sends the active canonical sector `public_id` per request.
+- The chat API validates the sector and derives canonical harbor and coordinates before graph execution.
+- Explicit Authority context takes precedence over remembered conversation context; history remains retained and prior-sector responses are not shown as the current sector's active response.
+
 ---
 
 ## P0 Marine Data Providers Status Board

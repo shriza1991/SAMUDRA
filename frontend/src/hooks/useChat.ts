@@ -11,6 +11,8 @@ export interface ChatMessage {
   response?: ChatResponse;
   isLoading?: boolean;
   error?: string;
+  /** Request-scoped Authority sector, when the message originated in that deck. */
+  sectorId?: string;
 }
 
 function generateId(): string {
@@ -26,7 +28,11 @@ export function useChat() {
   const [missionContext, setMissionContext] = useState<MissionContext>(DEFAULT_MISSION_CONTEXT);
   const [activeDiff, setActiveDiff] = useState<DecisionDiff | null>(null);
 
-  const send = useCallback(async (text: string, languageOverride?: 'en' | 'hi' | 'mr') => {
+  const send = useCallback(async (
+    text: string,
+    languageOverride?: 'en' | 'hi' | 'mr',
+    requestContext?: Partial<NonNullable<ChatRequest['user_context']>>,
+  ) => {
     const targetLanguage = languageOverride || language;
     if (languageOverride && languageOverride !== language) {
       setLanguage(languageOverride);
@@ -37,6 +43,7 @@ export function useChat() {
       role: 'user',
       content: text,
       timestamp: new Date(),
+      sectorId: requestContext?.sector_id,
     };
 
     const loadingMsg: ChatMessage = {
@@ -45,6 +52,7 @@ export function useChat() {
       content: '',
       timestamp: new Date(),
       isLoading: true,
+      sectorId: requestContext?.sector_id,
     };
 
     setMessages(prev => [...prev, userMsg, loadingMsg]);
@@ -57,6 +65,7 @@ export function useChat() {
         user_context: {
           ...missionContext,
           language_preference: targetLanguage,
+          ...requestContext,
         },
       };
 
@@ -74,6 +83,7 @@ export function useChat() {
         content: response.answer,
         timestamp: new Date(),
         response,
+        sectorId: requestContext?.sector_id,
       };
 
       setMessages(prev => prev.map(m => m.id === loadingMsg.id ? assistantMsg : m));

@@ -10,6 +10,8 @@ export type RecommendationStatus = 'GO' | 'CAUTION' | 'NO_GO' | 'UNKNOWN' | 'INF
 export type ConfidenceLevel = 'HIGH' | 'MEDIUM' | 'LOW';
 
 export interface UserContext {
+  /** Canonical surveillance sector selected in the Authority Command Deck. */
+  sector_id?: string;
   origin_harbor?: string;
   coordinates?: [number, number]; // [lon, lat]
   craft_profile?: 'traditional_non_motorized' | 'motorized_boat' | 'mechanized_trawler';
@@ -129,4 +131,3 @@ export interface VoiceChatResponse extends ChatResponse {
   audio_base64?: string;
   audio_format?: string;
 }
-
