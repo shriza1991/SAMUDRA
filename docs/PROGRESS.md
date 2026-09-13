@@ -26,6 +26,9 @@
 ### P0-8D — Authority alert inspection
 - Selecting a current operational alert reuses the canonical vessel replay focus and highlights the matching canonical hazard and association geometry. Inspection state is local to the active sector and is cleared on sector switch, unavailable data, or alert reconciliation.
 
+### P0-8E — Authority evidence and audit flow
+- Alert inspection opens the existing Audit view with direct canonical containment facts, separately labeled sector-situation evidence, and an explicit unavailable trace when no alert-to-run linkage exists.
+
 ---
 
 ## P0 Marine Data Providers Status Board

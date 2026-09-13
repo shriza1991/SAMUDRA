@@ -135,6 +135,7 @@ export default function AuthorityPage({
     // Alert inspection is scoped to a single Authority sector and must never
     // survive a sector switch while its replacement data is loading.
     setSelectedOperationalAlert(null);
+    if (authorityTab === 'audit') setAuthorityTab('terminal');
     setSectorHazards([]);
     setHazardError(null);
 
@@ -178,6 +179,14 @@ export default function AuthorityPage({
   }, [authorityActiveResponse?.evidence, sectorSituation?.evidence]);
 
   const traceList = authorityActiveResponse?.trace ?? [];
+  const selectedAlertAssociation = selectedOperationalAlert
+    ? hazardAssociations.find((item) => item.vessel_id === selectedOperationalAlert.vessel_id && item.hazard_id === selectedOperationalAlert.hazard_id)
+    : null;
+  const selectedAlertHazard = selectedOperationalAlert
+    ? sectorHazards.find((item) => item.hazard_id === selectedOperationalAlert.hazard_id)
+    : null;
+  const auditEvidenceList = selectedOperationalAlert ? sectorSituation?.evidence ?? [] : evidenceList;
+  const auditTraceList = selectedOperationalAlert ? [] : traceList;
 
   const warningsList = useMemo(() => {
     if (authorityActiveResponse?.warnings && authorityActiveResponse.warnings.length > 0) {
@@ -356,6 +365,11 @@ export default function AuthorityPage({
                   // highlight a different sector.
                   setSelectedOperationalAlert(alert?.sector_id === activeSector.public_id ? alert : null);
                 }}
+                onAlertWhy={(alert) => {
+                  if (alert.sector_id !== activeSector.public_id) return;
+                  setSelectedOperationalAlert(alert);
+                  setAuthorityTab('audit');
+                }}
                 language={chat.language}
               />
             </aside>
@@ -381,19 +395,29 @@ export default function AuthorityPage({
           /* Audit View: Direct In-Page Evidence & Agent Trace Logs */
           <div className="authority-audit-view">
             <div className="authority-audit-column">
+              {selectedOperationalAlert && (
+                <section className="fleet-alert-inspection" aria-label="Alert evidence" style={{ marginBottom: '14px', padding: '12px', border: '1px solid rgba(250, 204, 21, 0.5)', borderRadius: '8px' }}>
+                  <div className="audit-section-header"><AlertTriangle size={16} /><h3>{translateText('Alert Evidence', chat.language)}</h3></div>
+                  <p className="authority-empty-note">{translateText('Canonical containment observation; this is not a risk prediction.', chat.language)}</p>
+                  <div className="alert-card-footer"><span>Sector: {selectedOperationalAlert.sector_id}</span><span>Vessel: {selectedOperationalAlert.vessel_id}</span></div>
+                  <div className="alert-card-footer"><span>Hazard: {selectedOperationalAlert.hazard_id}</span><span>Association: IN_HAZARD_AREA</span></div>
+                  <div className="alert-card-footer"><span>Position observed: {selectedAlertAssociation?.evaluated_at ?? 'Unavailable'}</span><span>Hazard status: {selectedAlertHazard?.status ?? 'Unavailable'}</span></div>
+                  <div className="alert-card-footer"><span>Hazard validity: {selectedAlertHazard?.valid_to ?? 'Unavailable'}</span><span>Severity: {selectedOperationalAlert.severity}</span></div>
+                </section>
+              )}
               <div className="audit-section-header">
                 <FileCheck2 size={16} />
-                <h3>{translateText('Verified Official Evidence', chat.language)} ({evidenceList.length})</h3>
+                <h3>{translateText(selectedOperationalAlert ? 'Sector Situation Evidence' : 'Verified Official Evidence', chat.language)} ({auditEvidenceList.length})</h3>
               </div>
-              {evidenceList.length > 0 ? (
+              {auditEvidenceList.length > 0 ? (
                 <div className="authority-evidence-grid">
-                  {evidenceList.map((ev, idx) => (
+                  {auditEvidenceList.map((ev, idx) => (
                     <EvidenceCard key={idx} evidence={ev} />
                   ))}
                 </div>
               ) : (
                 <p className="authority-empty-note">
-                  {translateText('No active evidence items. Run an advisory query to inspect official telemetry.', chat.language)}
+                  {translateText(selectedOperationalAlert ? 'Sector situation evidence unavailable for this alert.' : 'No active evidence items. Run an advisory query to inspect official telemetry.', chat.language)}
                 </p>
               )}
 
@@ -412,15 +436,15 @@ export default function AuthorityPage({
             <div className="authority-audit-column">
               <div className="audit-section-header">
                 <Activity size={16} />
-                <h3>{translateText('Autonomous Agent Execution Trail', chat.language)} ({traceList.length} {translateText('Steps', chat.language)})</h3>
+                <h3>{translateText('Autonomous Agent Execution Trail', chat.language)} ({auditTraceList.length} {translateText('Steps', chat.language)})</h3>
               </div>
-              {traceList.length > 0 ? (
+              {auditTraceList.length > 0 ? (
                 <div className="authority-timeline-card">
-                  <AgentTimeline trace={traceList} />
+                  <AgentTimeline trace={auditTraceList} />
                 </div>
               ) : (
                 <p className="authority-empty-note">
-                  {translateText('No trace recorded. Queries processed by the cognitive graph will log execution steps here.', chat.language)}
+                  {translateText(selectedOperationalAlert ? 'Agent reasoning trace unavailable for this alert.' : 'No trace recorded. Queries processed by the cognitive graph will log execution steps here.', chat.language)}
                 </p>
               )}
             </div>

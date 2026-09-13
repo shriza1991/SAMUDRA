@@ -29,6 +29,7 @@ interface FleetTrackingDeckProps {
   selectedSector?: string;
   onReplayUpdate?: (layer: MapLayer | null) => void;
   onAlertSelectionChange?: (alert: VesselHazardOperationalAlert | null) => void;
+  onAlertWhy?: (alert: VesselHazardOperationalAlert) => void;
   language?: SupportedLanguage;
 }
 
@@ -36,6 +37,7 @@ export default function FleetTrackingDeck({
   selectedSector,
   onReplayUpdate,
   onAlertSelectionChange,
+  onAlertWhy,
   language = 'en',
 }: FleetTrackingDeckProps) {
   const [vessels, setVessels] = useState<DemoVessel[]>([]);
@@ -546,6 +548,9 @@ export default function FleetTrackingDeck({
               <div className="alert-card-footer"><span>{translateText('Observed:', language)} {new Date(selectedOperationalAlert.observed_at).toLocaleString()}</span><span>{translateText('Association:', language)} IN_HAZARD_AREA</span></div>
               <button type="button" className="scrubber-btn" onClick={clearOperationalAlertInspection}>
                 {translateText('Return to Surveillance', language)}
+              </button>
+              <button type="button" className="scrubber-btn focus-btn" onClick={() => onAlertWhy?.(selectedOperationalAlert)}>
+                {translateText('Why? Evidence & Audit', language)}
               </button>
             </section>
           )}
