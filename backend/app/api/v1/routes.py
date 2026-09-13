@@ -20,7 +20,7 @@ import uuid
 from datetime import UTC, datetime
 from typing import Any
 
-from fastapi import APIRouter, File, Form, UploadFile, status
+from fastapi import APIRouter, File, Form, HTTPException, UploadFile, status
 from fastapi.responses import JSONResponse
 
 from backend.app.contracts.chat import (
@@ -29,6 +29,7 @@ from backend.app.contracts.chat import (
     TranscribeResponse,
     VoiceChatResponse,
 )
+from backend.app.contracts.situation import SectorSituationResponse
 from backend.app.core.config import settings
 from backend.app.db.session import SessionLocal
 from backend.app.services.agent_run_service import (
@@ -1002,6 +1003,34 @@ def get_demo_sectors(namespace: str = "SAMUDRA_DEMO_V1") -> list[dict[str, Any]]
         except Exception as exc:
             logger.debug("Failed reading sectors fixture: %s", exc)
     return _get_synthetic_records("sectors", namespace=namespace)
+
+
+@router.get(
+    "/demo/sectors/{sector_id}/situation",
+    response_model=SectorSituationResponse,
+    tags=["Synthetic Demo"],
+)
+def get_demo_sector_situation(
+    sector_id: str,
+    reference_time: str | None = None,
+    craft_profile: str = "motorized_boat",
+    namespace: str = "SAMUDRA_DEMO_V1",
+) -> SectorSituationResponse:
+    """Retrieve authoritative situation, fleet count, active hazards, and deterministic risk for a sector."""
+    from backend.app.domain.situation import evaluate_sector_situation
+
+    situation = evaluate_sector_situation(
+        sector_id=sector_id,
+        reference_time=reference_time,
+        craft_profile=craft_profile,
+        namespace=namespace,
+    )
+    if situation is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Surveillance sector '{sector_id}' not found.",
+        )
+    return situation
 
 
 @router.get("/demo/vessels", tags=["Synthetic Demo"])

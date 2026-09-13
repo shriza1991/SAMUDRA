@@ -18,9 +18,9 @@ import type { useChat } from '../hooks/useChat';
 import type { MapLayer } from '../types/contracts';
 import {
   getDemoSectors,
-  getDemoHazards,
+  getDemoSectorSituation,
   type DemoSector,
-  type DemoHazard,
+  type SectorSituation,
 } from '../api/client';
 import {
   createSectorLayers,
@@ -55,10 +55,13 @@ export default function AuthorityPage({
 }: AuthorityPageProps) {
   const [sectors, setSectors] = useState<DemoSector[]>(FALLBACK_DEMO_SECTORS);
   const [selectedSector, setSelectedSector] = useState<string>(FALLBACK_DEMO_SECTORS[0].name);
-  const [sectorHazards, setSectorHazards] = useState<DemoHazard[]>([]);
   const [authorityTab, setAuthorityTab] = useState<AuthorityTab>('terminal');
   const [replayLayer, setReplayLayer] = useState<MapLayer | null>(null);
   const [baseLayers, setBaseLayers] = useState<MapLayer[]>([]);
+
+  const [sectorSituation, setSectorSituation] = useState<SectorSituation | null>(null);
+  const [situationLoading, setSituationLoading] = useState<boolean>(false);
+  const [situationError, setSituationError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchAndFormatBaseLayers().then(setBaseLayers);
@@ -73,19 +76,36 @@ export default function AuthorityPage({
       });
   }, []);
 
-  useEffect(() => {
-    getDemoHazards(selectedSector)
-      .then((hazards) => {
-        setSectorHazards(Array.isArray(hazards) ? hazards : []);
-      })
-      .catch(() => {
-        setSectorHazards([]);
-      });
-  }, [selectedSector]);
-
   const activeSector = useMemo(() => {
     return sectors.find((s) => s.name === selectedSector) || sectors[0];
   }, [sectors, selectedSector]);
+
+  useEffect(() => {
+    let isCurrent = true;
+    setSituationLoading(true);
+    setSituationError(null);
+    // Crucial: immediately clear previous sector's situation to avoid stale state leakage
+    setSectorSituation(null);
+
+    const sectorKey = activeSector.public_id || activeSector.name;
+    getDemoSectorSituation(sectorKey)
+      .then((data) => {
+        if (isCurrent) {
+          setSectorSituation(data);
+          setSituationLoading(false);
+        }
+      })
+      .catch(() => {
+        if (isCurrent) {
+          setSituationError('Situation Unavailable');
+          setSituationLoading(false);
+        }
+      });
+
+    return () => {
+      isCurrent = false;
+    };
+  }, [activeSector]);
 
   // Combine official base boundaries + sector polygon + replay trajectory + active query layers
   const authorityLayers = useMemo(() => {
@@ -95,17 +115,21 @@ export default function AuthorityPage({
     return [...baseLayers, ...sectorLayers, ...activeReplay, ...responseLayers];
   }, [baseLayers, activeSector, replayLayer, chat.activeResponse?.map_layers]);
 
-  const status = chat.activeResponse?.recommendation.status ?? 'READY';
-  const evidenceList = chat.activeResponse?.evidence ?? [];
+  const evidenceList = useMemo(() => {
+    if (chat.activeResponse?.evidence && chat.activeResponse.evidence.length > 0) {
+      return chat.activeResponse.evidence;
+    }
+    return sectorSituation?.evidence ?? [];
+  }, [chat.activeResponse?.evidence, sectorSituation?.evidence]);
+
   const traceList = chat.activeResponse?.trace ?? [];
-  const warningsList = chat.activeResponse?.warnings ?? [];
-  const baseHazardLayers = authorityLayers.filter((l) =>
-    `${l.layer_id} ${l.name}`.toLowerCase().includes('hazard') ||
-    `${l.layer_id} ${l.name}`.toLowerCase().includes('warning') ||
-    `${l.layer_id} ${l.name}`.toLowerCase().includes('squall') ||
-    `${l.layer_id} ${l.name}`.toLowerCase().includes('sanctuary')
-  );
-  const totalHazardsCount = Math.max(sectorHazards.length, baseHazardLayers.length);
+
+  const warningsList = useMemo(() => {
+    if (chat.activeResponse?.warnings && chat.activeResponse.warnings.length > 0) {
+      return chat.activeResponse.warnings;
+    }
+    return sectorSituation?.warnings ?? [];
+  }, [chat.activeResponse?.warnings, sectorSituation?.warnings]);
 
   return (
     <div className={`authority-page view-${mobileView}`} role="region" aria-label="Authority Command Deck">
@@ -170,27 +194,62 @@ export default function AuthorityPage({
 
         {/* Right: Live KPIs & Verified Sources */}
         <div className="authority-bar-right">
-          <div className="authority-kpi-chip">
+          {/* Situation Verdict */}
+          <div className="authority-kpi-chip" data-testid="kpi-verdict">
             <span className="chip-label">{translateText('Verdict:', chat.language)}</span>
-            <span className={`status-pill status-${status.toLowerCase().replace('_', '-')}`}>
-              {status.replace('_', '-')}
+            {situationError ? (
+              <span className="status-pill status-unknown">
+                {translateText('UNAVAILABLE', chat.language)}
+              </span>
+            ) : situationLoading ? (
+              <span className="status-pill status-ready">...</span>
+            ) : (
+              <span
+                className={`status-pill status-${(sectorSituation?.situation_status || 'UNKNOWN').toLowerCase().replace('_', '-')}`}
+              >
+                {sectorSituation?.situation_status.replace('_', '-') || 'UNKNOWN'}
+              </span>
+            )}
+          </div>
+
+          {/* Dynamic Fleet Count */}
+          <div className="authority-kpi-chip" data-testid="kpi-fleet">
+            <Ship size={13} />
+            <span>
+              <strong>
+                {situationError ? '—' : situationLoading ? '...' : (sectorSituation?.fleet_count ?? '—')}
+              </strong>{' '}
+              {translateText('Fleet', chat.language)}
             </span>
           </div>
 
-          <div className="authority-kpi-chip">
-            <AlertTriangle size={13} className={totalHazardsCount > 0 ? 'status-no-go' : ''} />
-            <span><strong>{totalHazardsCount}</strong> {translateText('Hazards', chat.language)}</span>
+          {/* Active Hazards Count */}
+          <div className="authority-kpi-chip" data-testid="kpi-hazards">
+            <AlertTriangle
+              size={13}
+              className={(sectorSituation?.active_hazard_count ?? 0) > 0 ? 'status-no-go' : ''}
+            />
+            <span>
+              <strong>
+                {situationError ? '—' : situationLoading ? '...' : (sectorSituation?.active_hazard_count ?? '—')}
+              </strong>{' '}
+              {translateText('Hazards', chat.language)}
+            </span>
           </div>
 
+          {/* Grounded Evidence Button */}
           {evidenceList.length > 0 && (
             <button
               type="button"
               className={`authority-kpi-chip authority-evidence-btn ${authorityTab === 'audit' ? 'active' : ''}`}
               onClick={() => setAuthorityTab(authorityTab === 'audit' ? 'terminal' : 'audit')}
               title={translateText('Inspect verified evidence & execution trace', chat.language)}
+              data-testid="kpi-evidence"
             >
               <FileCheck2 size={13} className="status-accent" />
-              <span><strong>{evidenceList.length}</strong> {translateText('Evidence', chat.language)}</span>
+              <span>
+                <strong>{evidenceList.length}</strong> {translateText('Evidence', chat.language)}
+              </span>
             </button>
           )}
         </div>

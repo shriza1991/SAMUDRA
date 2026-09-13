@@ -1,4 +1,12 @@
-import type { ChatRequest, ChatResponse, TranscribeResponse, VoiceChatResponse } from '../types/contracts';
+import type {
+  ChatRequest,
+  ChatResponse,
+  EvidenceItem,
+  Recommendation,
+  RecommendationStatus,
+  TranscribeResponse,
+  VoiceChatResponse,
+} from '../types/contracts';
 
 const API_BASE = '/api/v1';
 
@@ -260,4 +268,31 @@ export async function getDemoNotifications(sector?: string): Promise<DemoNotific
 export async function getDemoHazards(sector?: string): Promise<DemoHazard[]> {
   const url = sector ? `/demo/hazards?sector=${encodeURIComponent(sector)}` : '/demo/hazards';
   return request<DemoHazard[]>(url);
+}
+
+export interface SectorSituation {
+  sector_id: string;
+  sector_name: string;
+  harbor_id: string;
+  harbor_name: string;
+  situation_status: RecommendationStatus;
+  fleet_count: number;
+  active_hazard_count: number;
+  evaluated_at: string;
+  summary: string;
+  recommendation: Recommendation;
+  evidence: EvidenceItem[];
+  warnings: string[];
+}
+
+export async function getDemoSectorSituation(
+  sectorId: string,
+  referenceTime?: string,
+): Promise<SectorSituation> {
+  const params = new URLSearchParams();
+  if (referenceTime) {
+    params.set('reference_time', referenceTime);
+  }
+  const qs = params.toString() ? `?${params.toString()}` : '';
+  return request<SectorSituation>(`/demo/sectors/${encodeURIComponent(sectorId)}/situation${qs}`);
 }

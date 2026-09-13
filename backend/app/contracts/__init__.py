@@ -13,6 +13,7 @@ from backend.app.contracts.chat import (
     UserContext,
 )
 from backend.app.contracts.observation import ObservationBundle
+from backend.app.contracts.situation import SectorSituationResponse
 from backend.app.contracts.tools import ToolResult, ToolStatus
 
 __all__ = [
@@ -26,6 +27,7 @@ __all__ = [
     "ObservationBundle",
     "Recommendation",
     "RecommendationStatus",
+    "SectorSituationResponse",
     "UserContext",
     "ToolResult",
     "ToolStatus",

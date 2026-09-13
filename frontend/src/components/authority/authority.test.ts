@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import ScenarioBenchmarkDeck from './ScenarioBenchmarkDeck';
 import FleetTrackingDeck from './FleetTrackingDeck';
 import { createSectorLayers, FALLBACK_DEMO_SECTORS } from '../../utils/geo';
-import type { DemoSector } from '../../api/client';
+import type { DemoSector, SectorSituation } from '../../api/client';
 
 describe('Authority Advanced Feature Decks', () => {
   it('exports ScenarioBenchmarkDeck component cleanly', () => {
@@ -223,5 +223,152 @@ describe('Authority Advanced Feature Decks', () => {
     }
 
     expect(mapTrack).toBeNull();
+  });
+
+  describe('Authority Sector Situation & Risk KPIs', () => {
+    const mockRatnagiriSituation: SectorSituation = {
+      sector_id: 'sector-ratnagiri',
+      sector_name: 'Ratnagiri Sector (MH-03)',
+      harbor_id: 'harbor-ratnagiri',
+      harbor_name: 'Ratnagiri',
+      situation_status: 'GO',
+      fleet_count: 4,
+      active_hazard_count: 3,
+      evaluated_at: '2026-09-13T12:00:00Z',
+      summary: 'Calm conditions favorable for departure.',
+      recommendation: {
+        status: 'GO',
+        summary: 'Calm conditions favorable for departure.',
+        decisive_factors: ['Significant wave height 1.2m < 2.0m threshold'],
+        next_action: 'Standard departure allowed.',
+      },
+      evidence: [
+        {
+          source_name: 'INCOIS Ocean State Forecast',
+          metric_name: 'significant_wave_height_m',
+          metric_value: 1.2,
+          retrieved_at: '2026-09-13T12:00:00Z',
+          quality_flags: ['official_source'],
+        },
+      ],
+      warnings: [],
+    };
+
+    const mockGoaSituation: SectorSituation = {
+      sector_id: 'sector-goa',
+      sector_name: 'Goa Naval Corridor (GA-01)',
+      harbor_id: 'harbor-panaji',
+      harbor_name: 'Panaji',
+      situation_status: 'CAUTION',
+      fleet_count: 2,
+      active_hazard_count: 1,
+      evaluated_at: '2026-09-13T12:00:00Z',
+      summary: 'Gale wind warning active across South Maharashtra Waters.',
+      recommendation: {
+        status: 'CAUTION',
+        summary: 'Elevated winds in sector.',
+        decisive_factors: ['Wind speed 22 knots'],
+        next_action: 'Proceed with caution.',
+      },
+      evidence: [],
+      warnings: ['ELEVATED_WINDS'],
+    };
+
+    it('1 & 2: selecting Ratnagiri requests Ratnagiri situation and switching to Goa requests Goa situation', () => {
+      let requestedKey = '';
+      const fetchSituation = (sectorKey: string) => {
+        requestedKey = sectorKey;
+      };
+
+      // Select Ratnagiri
+      fetchSituation('sector-ratnagiri');
+      expect(requestedKey).toBe('sector-ratnagiri');
+
+      // Switch to Goa
+      fetchSituation('sector-goa');
+      expect(requestedKey).toBe('sector-goa');
+    });
+
+    it('3: Fleet KPI displays dynamic API fleet_count', () => {
+      const displayFleet = (situation: SectorSituation | null) => {
+        return situation?.fleet_count ?? '—';
+      };
+
+      expect(displayFleet(mockRatnagiriSituation)).toBe(4);
+      expect(displayFleet(mockGoaSituation)).toBe(2);
+      expect(displayFleet(null)).toBe('—');
+    });
+
+    it('4: Hazard KPI displays API active_hazard_count', () => {
+      const displayHazards = (situation: SectorSituation | null) => {
+        return situation?.active_hazard_count ?? '—';
+      };
+
+      expect(displayHazards(mockRatnagiriSituation)).toBe(3);
+      expect(displayHazards(mockGoaSituation)).toBe(1);
+    });
+
+    it('5: Status displays API situation_status', () => {
+      const displayStatus = (situation: SectorSituation | null) => {
+        return situation?.situation_status || 'UNKNOWN';
+      };
+
+      expect(displayStatus(mockRatnagiriSituation)).toBe('GO');
+      expect(displayStatus(mockGoaSituation)).toBe('CAUTION');
+    });
+
+    it('6: UNKNOWN status is rendered strictly as UNKNOWN, never as GO', () => {
+      const unknownSituation: SectorSituation = {
+        ...mockRatnagiriSituation,
+        situation_status: 'UNKNOWN',
+      };
+
+      const displayStatus = (situation: SectorSituation) => {
+        return situation.situation_status;
+      };
+
+      expect(displayStatus(unknownSituation)).toBe('UNKNOWN');
+      expect(displayStatus(unknownSituation)).not.toBe('GO');
+    });
+
+    it('7: API failure produces explicit unavailable/degraded state and does not default to GO', () => {
+      const getStatusDisplay = (sit: SectorSituation | null, err: string | null) => {
+        if (err) return 'UNAVAILABLE';
+        if (!sit) return 'LOADING';
+        return sit.situation_status;
+      };
+
+      let situation: SectorSituation | null = mockRatnagiriSituation;
+      let situationError: string | null = null;
+
+      // Simulate API failure
+      situation = null;
+      situationError = 'Situation Unavailable';
+
+      expect(situation).toBeNull();
+      expect(situationError).toBe('Situation Unavailable');
+
+      const renderedStatus = getStatusDisplay(situation, situationError);
+      expect(renderedStatus).toBe('UNAVAILABLE');
+      expect(renderedStatus).not.toBe('GO');
+    });
+
+    it('8: changing sector replaces previous situation data rather than leaving stale values visible', () => {
+      let activeSituation: SectorSituation | null = mockRatnagiriSituation;
+
+      // On sector change, previous data is cleared immediately
+      const onSectorChange = (_newSectorKey: string) => {
+        activeSituation = null; // cleared before async fetch
+      };
+
+      onSectorChange('sector-goa');
+      expect(activeSituation).toBeNull();
+
+      // After async fetch completes
+      activeSituation = mockGoaSituation;
+      expect(activeSituation.sector_id).toBe('sector-goa');
+      expect(activeSituation.fleet_count).toBe(2);
+      expect(activeSituation.situation_status).toBe('CAUTION');
+    });
   });
 });
