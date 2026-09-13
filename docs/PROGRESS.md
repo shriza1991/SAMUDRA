@@ -20,6 +20,9 @@
 ### P0-8B — Authority vessel-hazard associations
 - Authority map highlights only vessels whose latest canonical replay position is inside a selected sector's active canonical hazard geometry.
 
+### P0-8C — Authority operational hazard alerts
+- Current, stable operational alerts are derived from P0-8B associations and displayed separately from historical broadcast notifications.
+
 ---
 
 ## P0 Marine Data Providers Status Board

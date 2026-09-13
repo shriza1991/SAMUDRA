@@ -73,3 +73,20 @@ class VesselHazardAssociation(BaseModel):
 class SectorHazardAssociationsResponse(BaseModel):
     sector_id: str
     associations: List[VesselHazardAssociation] = Field(default_factory=list)
+
+
+class VesselHazardOperationalAlert(BaseModel):
+    alert_id: str
+    alert_type: str = "VESSEL_IN_ACTIVE_HAZARD_AREA"
+    sector_id: str
+    vessel_id: str
+    hazard_id: str
+    severity: str
+    status: str = "ACTIVE"
+    observed_at: str
+    summary: str
+
+
+class SectorOperationalAlertsResponse(BaseModel):
+    sector_id: str
+    alerts: List[VesselHazardOperationalAlert] = Field(default_factory=list)

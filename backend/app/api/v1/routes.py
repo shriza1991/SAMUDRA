@@ -29,7 +29,7 @@ from backend.app.contracts.chat import (
     TranscribeResponse,
     VoiceChatResponse,
 )
-from backend.app.contracts.situation import SectorHazard, SectorHazardAssociationsResponse, SectorHazardsResponse, SectorSituationResponse, VesselHazardAssociation
+from backend.app.contracts.situation import SectorHazard, SectorHazardAssociationsResponse, SectorHazardsResponse, SectorOperationalAlertsResponse, SectorSituationResponse, VesselHazardAssociation, VesselHazardOperationalAlert
 from backend.app.core.config import settings
 from backend.app.db.session import SessionLocal
 from backend.app.services.agent_run_service import (
@@ -1268,6 +1268,25 @@ def get_demo_sector_hazard_associations(
     return SectorHazardAssociationsResponse(
         sector_id=sector_id,
         associations=[VesselHazardAssociation(**association) for association in associations],
+    )
+
+
+@router.get(
+    "/demo/sectors/{sector_id}/operational-alerts",
+    response_model=SectorOperationalAlertsResponse,
+    tags=["Synthetic Demo"],
+)
+def get_demo_sector_operational_alerts(
+    sector_id: str, namespace: str = "SAMUDRA_DEMO_V1"
+) -> SectorOperationalAlertsResponse:
+    """Return current derived vessel-in-active-hazard-area alerts."""
+    from backend.app.domain.situation import get_canonical_operational_alerts_for_sector
+    alerts = get_canonical_operational_alerts_for_sector(sector_id, namespace)
+    if alerts is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Surveillance sector '{sector_id}' not found.")
+    return SectorOperationalAlertsResponse(
+        sector_id=sector_id,
+        alerts=[VesselHazardOperationalAlert(**alert) for alert in alerts],
     )
 
 

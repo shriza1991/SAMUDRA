@@ -287,6 +287,13 @@ describe('API Client', () => {
     );
     expect(notifs).toHaveLength(1);
   });
+
+  it('requests derived operational alerts using the canonical sector ID', async () => {
+    (globalThis.fetch as any).mockResolvedValueOnce({ ok: true, json: async () => ({ sector_id: 'sector-goa', alerts: [] }) });
+    const { getDemoSectorOperationalAlerts } = await import('./client');
+    await expect(getDemoSectorOperationalAlerts('sector-goa')).resolves.toEqual({ sector_id: 'sector-goa', alerts: [] });
+    expect(globalThis.fetch).toHaveBeenCalledWith('/api/v1/demo/sectors/sector-goa/operational-alerts', expect.anything());
+  });
 });
 
 

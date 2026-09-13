@@ -16,9 +16,11 @@ import {
   getDemoVessels,
   getDemoVesselReplay,
   getDemoNotifications,
+  getDemoSectorOperationalAlerts,
   type DemoVessel,
   type VesselPosition,
   type DemoNotification,
+  type VesselHazardOperationalAlert,
 } from '../../api/client';
 import type { MapLayer } from '../../types/contracts';
 import { translateText, type SupportedLanguage } from '../../i18n/translations';
@@ -40,6 +42,8 @@ export default function FleetTrackingDeck({
   const [currentIndex, setCurrentIndex] = useState<number>(0);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [notifications, setNotifications] = useState<DemoNotification[]>([]);
+  const [operationalAlerts, setOperationalAlerts] = useState<VesselHazardOperationalAlert[]>([]);
+  const [operationalAlertsUnavailable, setOperationalAlertsUnavailable] = useState<boolean>(false);
   const [isBackendOffline, setIsBackendOffline] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isReplayLoading, setIsReplayLoading] = useState<boolean>(false);
@@ -56,12 +60,15 @@ export default function FleetTrackingDeck({
     setPositions([]);
     setIsReplayUnavailable(false);
     setIsReplayLoading(false);
+    setOperationalAlerts([]);
+    setOperationalAlertsUnavailable(false);
     onReplayUpdate?.(null);
 
     Promise.allSettled([
       getDemoVessels(selectedSector),
       getDemoNotifications(selectedSector),
-    ]).then(([vesselsRes, notifsRes]) => {
+      selectedSector ? getDemoSectorOperationalAlerts(selectedSector) : Promise.resolve({ alerts: [] }),
+    ]).then(([vesselsRes, notifsRes, operationalAlertsRes]) => {
       if (isCancelled) return;
 
       if (vesselsRes.status === 'fulfilled') {
@@ -92,6 +99,13 @@ export default function FleetTrackingDeck({
         setNotifications(notifsRes.value);
       } else {
         setNotifications([]);
+      }
+
+      if (operationalAlertsRes.status === 'fulfilled') {
+        setOperationalAlerts(operationalAlertsRes.value.alerts);
+      } else {
+        setOperationalAlerts([]);
+        setOperationalAlertsUnavailable(true);
       }
 
       setIsLoading(false);
@@ -447,9 +461,32 @@ export default function FleetTrackingDeck({
         <section className="fleet-alerts-pane">
           <div className="fleet-section-title">
             <Radio size={16} />
-            <span>{translateText('Maritime Broadcast Alerts', language)} ({notifications.length})</span>
+            <span>{translateText('Operational Hazard Alerts', language)} ({operationalAlerts.length})</span>
           </div>
 
+          {operationalAlertsUnavailable ? (
+            <p style={{ color: '#f97316', fontSize: '13px', padding: '8px 0' }}>
+              {translateText('Operational hazard alerts unavailable.', language)}
+            </p>
+          ) : operationalAlerts.length === 0 ? (
+            <p style={{ color: '#94a3b8', fontSize: '13px', padding: '8px 0' }}>
+              {translateText('No vessels currently in an active hazard area.', language)}
+            </p>
+          ) : operationalAlerts.map((alert) => (
+            <article key={alert.alert_id} className={`fleet-alert-card ${alert.severity === 'WARNING' ? 'warning' : 'info'}`}>
+              <div className="alert-card-top">
+                <div className="alert-title-group"><AlertTriangle size={15} className="alert-icon" /><strong>{translateText('Vessel in Active Hazard Area', language)}</strong></div>
+                <span className="alert-severity-pill">{alert.severity}</span>
+              </div>
+              <p className="alert-message">{alert.summary}</p>
+              <div className="alert-card-footer"><span>{alert.vessel_id} · {alert.hazard_id}</span><span>{new Date(alert.observed_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span></div>
+            </article>
+          ))}
+
+          <div className="fleet-section-title" style={{ marginTop: '14px' }}>
+            <Bell size={16} />
+            <span>{translateText('Maritime Broadcast Alerts', language)} ({notifications.length})</span>
+          </div>
           <div className="fleet-alerts-list">
             {notifications.length === 0 ? (
               <p style={{ color: '#94a3b8', fontSize: '13px', padding: '16px 0', textAlign: 'center' }}>

@@ -181,6 +181,34 @@ def get_canonical_vessel_hazard_associations_for_sector(
     return associations
 
 
+def get_canonical_operational_alerts_for_sector(
+    sector_id: str, namespace: str = "SAMUDRA_DEMO_V1"
+) -> Optional[List[Dict[str, Any]]]:
+    """Derive stable current operational alerts from P0-8B associations."""
+    associations = get_canonical_vessel_hazard_associations_for_sector(sector_id, namespace)
+    if associations is None:
+        return None
+    hazards = {
+        hazard["public_id"]: hazard
+        for hazard in get_canonical_active_hazards_for_sector(sector_id, namespace) or []
+    }
+    alerts: List[Dict[str, Any]] = []
+    for association in associations:
+        hazard = hazards.get(association["hazard_id"])
+        if hazard is None:
+            continue
+        alerts.append({
+            "alert_id": f"alert-{sector_id}-{association['vessel_id']}-{association['hazard_id']}",
+            "sector_id": sector_id,
+            "vessel_id": association["vessel_id"],
+            "hazard_id": association["hazard_id"],
+            "severity": hazard["severity"],
+            "observed_at": association["evaluated_at"],
+            "summary": f"Vessel {association['vessel_id']} is in active hazard area: {hazard['headline']}",
+        })
+    return alerts
+
+
 def _get_canonical_vessels(harbor_id: str, namespace: str = "SAMUDRA_DEMO_V1") -> List[Dict[str, Any]]:
     """Dynamically query canonical vessels assigned to a specific harbor."""
     try:

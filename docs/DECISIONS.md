@@ -162,6 +162,22 @@ hazard geometry. No proximity buffer, trajectory, or collision implication is us
 Owner: P0-8B integration
 Date: 2026-09-13
 
+## D019 — Derived Authority Operational Alerts
+Status: ACCEPTED
+
+Decision:
+Operational alerts are derived deterministically and request-scoped from P0-8B
+`IN_HAZARD_AREA` associations. Their stable ID combines sector, vessel, and
+hazard; their severity is copied from the canonical active hazard.
+
+Impact:
+No notification table mutation, scheduler, alert lifecycle, risk scoring, or
+duplicate records are introduced. Historical broadcast notifications remain
+separate from current operational alerts.
+
+Owner: P0-8C integration
+Date: 2026-09-13
+
 ## Decision template
 ### D0XX — <title>
 Status: PROPOSED / ACCEPTED / REJECTED

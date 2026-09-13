@@ -42,6 +42,13 @@ observational `IN_HAZARD_AREA` associations. It evaluates each sector vessel's
 latest canonical replay position against canonical active hazard geometry; it
 does not predict a collision, route, or future encounter.
 
+### 2.0C Authority operational hazard alerts
+
+`GET /api/v1/demo/sectors/{sector_id}/operational-alerts` derives stable active
+alerts from P0-8B associations. Alert severity is copied from the canonical
+hazard; empty results mean no current association, while endpoint failure is
+shown as unavailable by the Authority UI.
+
 ### 2.1 The Canonical `ChatResponse`
 
 This is the payload returned by `POST /api/v1/chat` to the frontend.
