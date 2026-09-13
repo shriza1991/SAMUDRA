@@ -28,6 +28,7 @@ import { translateText, type SupportedLanguage } from '../../i18n/translations';
 
 interface FleetTrackingDeckProps {
   selectedSector?: string;
+  onVesselSelect?: (vesselId: string | null) => void;
   onReplayUpdate?: (layer: MapLayer | null) => void;
   onAlertSelectionChange?: (alert: VesselHazardOperationalAlert | null) => void;
   onAlertWhy?: (alert: VesselHazardOperationalAlert) => void;
@@ -37,6 +38,7 @@ interface FleetTrackingDeckProps {
 
 export default function FleetTrackingDeck({
   selectedSector,
+  onVesselSelect,
   onReplayUpdate,
   onAlertSelectionChange,
   onAlertWhy,
@@ -192,6 +194,11 @@ export default function FleetTrackingDeck({
     };
   }, [selectedVesselId]);
 
+  // Synchronize active selected vessel with parent deck
+  useEffect(() => {
+    onVesselSelect?.(selectedVesselId);
+  }, [selectedVesselId, onVesselSelect]);
+
   // Autoplay ticker for trajectory scrubber
   useEffect(() => {
     if (!isPlaying || positions.length === 0) return;
@@ -237,6 +244,65 @@ export default function FleetTrackingDeck({
       if (p.latitude > maxLat) maxLat = p.latitude;
     }
 
+    const replayFeatures: any[] = [
+      // Trajectory path
+      {
+        type: 'Feature',
+        geometry: {
+          type: 'LineString',
+          coordinates: pastCoordinates,
+        },
+        properties: {
+          label: 'Historical Trajectory',
+          vessel_id: currentPos.vessel_id,
+        },
+      },
+      // Current vessel point
+      {
+        type: 'Feature',
+        geometry: {
+          type: 'Point',
+          coordinates: [currentPos.longitude, currentPos.latitude],
+        },
+        properties: {
+          label: `Vessel Position @ ${currentPos.timestamp}`,
+          speed_knots: currentPos.speed_knots,
+          heading_deg: currentPos.heading_deg,
+          vessel_id: currentPos.vessel_id,
+        },
+      },
+    ];
+
+    // Canonical heading indicator vector (when heading is valid and available)
+    if (
+      typeof currentPos.heading_deg === 'number' &&
+      !isNaN(currentPos.heading_deg) &&
+      currentPos.heading_deg >= 0 &&
+      currentPos.heading_deg <= 360
+    ) {
+      const headingRad = (currentPos.heading_deg * Math.PI) / 180;
+      const latRad = (currentPos.latitude * Math.PI) / 180;
+      const vectorLengthDeg = 0.015;
+      const targetLng = currentPos.longitude + (vectorLengthDeg * Math.sin(headingRad)) / Math.max(Math.cos(latRad), 0.1);
+      const targetLat = currentPos.latitude + vectorLengthDeg * Math.cos(headingRad);
+
+      replayFeatures.push({
+        type: 'Feature',
+        geometry: {
+          type: 'LineString',
+          coordinates: [
+            [currentPos.longitude, currentPos.latitude],
+            [targetLng, targetLat],
+          ],
+        },
+        properties: {
+          label: `Heading: ${currentPos.heading_deg}°`,
+          vessel_id: currentPos.vessel_id,
+          is_heading_indicator: true,
+        },
+      });
+    }
+
     const replayLayer: MapLayer = {
       layer_id: 'layer_fleet_vessel_replay',
       name: `Vessel Replay (${currentPos.vessel_id})`,
@@ -257,34 +323,7 @@ export default function FleetTrackingDeck({
       geojson: {
         type: 'FeatureCollection',
         bbox: [minLng, minLat, maxLng, maxLat],
-        features: [
-          // Trajectory path
-          {
-            type: 'Feature',
-            geometry: {
-              type: 'LineString',
-              coordinates: pastCoordinates,
-            },
-            properties: {
-              label: 'Historical Trajectory',
-              vessel_id: currentPos.vessel_id,
-            },
-          },
-          // Current vessel point
-          {
-            type: 'Feature',
-            geometry: {
-              type: 'Point',
-              coordinates: [currentPos.longitude, currentPos.latitude],
-            },
-            properties: {
-              label: `Vessel Position @ ${currentPos.timestamp}`,
-              speed_knots: currentPos.speed_knots,
-              heading_deg: currentPos.heading_deg,
-              vessel_id: currentPos.vessel_id,
-            },
-          },
-        ],
+        features: replayFeatures,
       },
     };
 

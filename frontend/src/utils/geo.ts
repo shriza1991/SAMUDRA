@@ -178,26 +178,72 @@ export function getSectorConfig(sectorName: string): SectorDefinition {
 
 /**
  * Presentation helper: maps a canonical backend DemoSector or sector name to MapLibre MapLayer objects.
+ * When allSectors is provided, only the active sector receives colored operational visualization,
+ * while other sectors remain subtle faint background boundaries.
  */
-export function createSectorLayers(sectorInput: DemoSector | string): MapLayer[] {
-  let sector: DemoSector;
+export function createSectorLayers(
+  sectorInput: DemoSector | string,
+  allSectors?: DemoSector[],
+): MapLayer[] {
+  let activeSector: DemoSector;
   if (typeof sectorInput === 'string') {
-    sector = FALLBACK_DEMO_SECTORS.find((s) => s.name === sectorInput) || FALLBACK_DEMO_SECTORS[0];
+    activeSector = FALLBACK_DEMO_SECTORS.find((s) => s.name === sectorInput || s.public_id === sectorInput) || FALLBACK_DEMO_SECTORS[0];
   } else {
-    sector = sectorInput;
+    activeSector = sectorInput;
   }
 
-  const sectorId = sector.public_id || sector.name.toLowerCase().replace(/[^a-z0-9]/g, '_');
+  const activeSectorId = activeSector.public_id || activeSector.name.toLowerCase().replace(/[^a-z0-9]/g, '_');
+  const layers: MapLayer[] = [];
 
+  // 1. Inactive sector boundaries as subtle background context (faint outline only, no active colored operational fill)
+  if (allSectors && allSectors.length > 0) {
+    for (const sec of allSectors) {
+      const secId = sec.public_id || sec.name.toLowerCase().replace(/[^a-z0-9]/g, '_');
+      if (secId === activeSectorId) continue;
+
+      layers.push({
+        layer_id: `sector_boundary_inactive_${secId}`,
+        name: `${sec.name} (Boundary)`,
+        layer_type: 'geojson',
+        visible: true,
+        style: {
+          color: '#64748b',
+          opacity: 0.02,
+          line_width: 1,
+          line_dasharray: [4, 4],
+          layer_category: 'background',
+        },
+        geojson: {
+          type: 'FeatureCollection',
+          features: [
+            {
+              type: 'Feature',
+              geometry: {
+                type: 'Polygon',
+                coordinates: [sec.polygon],
+              },
+              properties: {
+                sector: sec.name,
+                status: 'INACTIVE_SECTOR_BOUNDARY',
+                is_active_sector: false,
+              },
+            },
+          ],
+        },
+      });
+    }
+  }
+
+  // 2. Active selected sector: prominent colored operational zone & station marker
   const sectorPolygonLayer: MapLayer = {
-    layer_id: `sector_polygon_${sectorId}`,
-    name: sector.name,
+    layer_id: `sector_polygon_${activeSectorId}`,
+    name: activeSector.name,
     layer_type: 'geojson',
     visible: true,
     style: {
       color: '#a855f7',
       opacity: 0.25,
-      line_width: 2,
+      line_width: 2.5,
       layer_category: 'surveillance',
     },
     geojson: {
@@ -207,12 +253,13 @@ export function createSectorLayers(sectorInput: DemoSector | string): MapLayer[]
           type: 'Feature',
           geometry: {
             type: 'Polygon',
-            coordinates: [sector.polygon],
+            coordinates: [activeSector.polygon],
           },
           properties: {
-            sector: sector.name,
+            sector: activeSector.name,
             type: 'Active Maritime Surveillance Sector',
             authority: 'Coastal Security & Fisheries Enforcement',
+            is_active_sector: true,
           },
         },
       ],
@@ -220,8 +267,8 @@ export function createSectorLayers(sectorInput: DemoSector | string): MapLayer[]
   };
 
   const sectorStationLayer: MapLayer = {
-    layer_id: `sector_station_${sectorId}`,
-    name: sector.station_name,
+    layer_id: `sector_station_${activeSectorId}`,
+    name: activeSector.station_name,
     layer_type: 'geojson',
     visible: true,
     style: {
@@ -234,18 +281,20 @@ export function createSectorLayers(sectorInput: DemoSector | string): MapLayer[]
       type: 'Feature',
       geometry: {
         type: 'Point',
-        coordinates: sector.center,
+        coordinates: activeSector.center,
       },
       properties: {
-        station: sector.station_name,
-        sector: sector.name,
+        station: activeSector.station_name,
+        sector: activeSector.name,
         type: 'Maritime Command & Radar Station',
         status: 'ACTIVE_SURVEILLANCE',
+        is_active_sector: true,
       },
     },
   };
 
-  return [sectorPolygonLayer, sectorStationLayer];
+  layers.push(sectorPolygonLayer, sectorStationLayer);
+  return layers;
 }
 
 /** Convert canonical Authority hazard geometry into inspectable MapLibre layers. */
@@ -255,6 +304,7 @@ export function createAuthorityHazardLayers(
 ): MapLayer[] {
   return hazards.map((hazard) => {
     const isSelected = hazard.hazard_id === selectedHazardId;
+    const isActive = hazard.status !== 'INACTIVE' && hazard.status !== 'EXPIRED';
     const color = isSelected
       ? '#facc15'
       : hazard.severity === 'WARNING'
@@ -274,6 +324,16 @@ export function createAuthorityHazardLayers(
         line_width: isSelected ? 4.5 : 2.5,
         layer_category: 'authority_hazard',
       },
+      properties: {
+        hazard_id: hazard.hazard_id,
+        hazard_type: hazard.hazard_type,
+        severity: hazard.severity,
+        status: hazard.status,
+        is_active: isActive,
+        valid_from: hazard.valid_from,
+        valid_to: hazard.valid_to,
+        selected_for_alert_inspection: isSelected,
+      },
       geojson: {
         type: 'Feature',
         geometry: hazard.geometry,
@@ -282,6 +342,7 @@ export function createAuthorityHazardLayers(
           hazard_type: hazard.hazard_type,
           severity: hazard.severity,
           status: hazard.status,
+          is_active: isActive,
           valid_from: hazard.valid_from,
           valid_to: hazard.valid_to,
           selected_for_alert_inspection: isSelected,

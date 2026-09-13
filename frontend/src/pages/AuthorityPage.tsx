@@ -65,6 +65,7 @@ export default function AuthorityPage({
   const [sectors, setSectors] = useState<DemoSector[]>(FALLBACK_DEMO_SECTORS);
   const [selectedSector, setSelectedSector] = useState<string>(FALLBACK_DEMO_SECTORS[0].public_id);
   const [authorityTab, setAuthorityTab] = useState<AuthorityTab>('terminal');
+  const [selectedVesselId, setSelectedVesselId] = useState<string | null>(null);
   const [replayLayer, setReplayLayer] = useState<MapLayer | null>(null);
   const [trajectoryLayer, setTrajectoryLayer] = useState<MapLayer | null>(null);
   const [baseLayers, setBaseLayers] = useState<MapLayer[]>([]);
@@ -165,10 +166,19 @@ export default function AuthorityPage({
     return () => { isCurrent = false; };
   }, [activeSector.public_id]);
 
+  // Route alternatives are contextual to the active vessel's mission
   useEffect(() => {
     let isCurrent = true;
     const controller = new AbortController();
     setSectorRouteLayers([]);
+
+    // When in Fleet tab or general Authority mode, only render routes if a vessel is active
+    if (!selectedVesselId) {
+      return () => {
+        isCurrent = false;
+        controller.abort();
+      };
+    }
 
     getDemoRouteAlternatives({ sector_id: activeSector.public_id }, controller.signal)
       .then((data) => {
@@ -187,19 +197,20 @@ export default function AuthorityPage({
       isCurrent = false;
       controller.abort();
     };
-  }, [activeSector.public_id]);
+  }, [activeSector.public_id, selectedVesselId]);
 
   // Combine official base boundaries + sector polygon + replay trajectory + active query layers
   const authorityLayers = useMemo(() => {
-    const sectorLayers = createSectorLayers(activeSector);
+    const sectorLayers = createSectorLayers(activeSector, sectors);
     const hazardLayers = createAuthorityHazardLayers(sectorHazards, selectedOperationalAlert?.hazard_id);
     const associationLayers = createHazardAssociationLayers(hazardAssociations, selectedOperationalAlert);
     const responseLayers = authorityActiveResponse?.map_layers ?? [];
-    const activeReplay = replayLayer ? [replayLayer] : [];
+    const activeReplay = (selectedVesselId && replayLayer) ? [replayLayer] : [];
+    const activeTrajectory = (selectedVesselId && trajectoryLayer) ? [trajectoryLayer] : [];
     const hasResponseRoutes = responseLayers.some(
       (l) => l.layer_id === 'layer_recommended_route' || l.layer_id === 'layer_candidate_routes'
     );
-    const routeLayersToInclude = hasResponseRoutes ? [] : sectorRouteLayers;
+    const routeLayersToInclude = (hasResponseRoutes || !selectedVesselId) ? [] : sectorRouteLayers;
 
     return [
       ...baseLayers,
@@ -208,12 +219,14 @@ export default function AuthorityPage({
       ...associationLayers,
       ...routeLayersToInclude,
       ...activeReplay,
-      ...(trajectoryLayer ? [trajectoryLayer] : []),
+      ...activeTrajectory,
       ...responseLayers,
     ];
   }, [
     baseLayers,
     activeSector,
+    sectors,
+    selectedVesselId,
     sectorHazards,
     hazardAssociations,
     sectorRouteLayers,
@@ -262,7 +275,10 @@ export default function AuthorityPage({
               value={selectedSector}
               onChange={(e) => {
                 setSelectedSector(e.target.value);
+                setSelectedVesselId(null);
                 setReplayLayer(null);
+                setTrajectoryLayer(null);
+                setSectorRouteLayers([]);
               }}
               className="authority-sector-select"
               aria-label={translateText('Sector:', chat.language)}
@@ -410,6 +426,7 @@ export default function AuthorityPage({
             <aside className="authority-fleet-pane" aria-label="Fleet Surveillance Pane">
               <FleetTrackingDeck
                 selectedSector={selectedSector}
+                onVesselSelect={setSelectedVesselId}
                 onReplayUpdate={setReplayLayer}
                 onTrajectoryUpdate={setTrajectoryLayer}
                 onAlertSelectionChange={(alert) => {

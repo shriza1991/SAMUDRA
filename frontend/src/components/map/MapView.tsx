@@ -74,48 +74,26 @@ export default function MapView({ layers, theme = 'light', center, zoom, languag
       selectedFeat = allRouteFeatures[0];
     }
 
-    const otherFeats = allRouteFeatures.filter((f) => f !== selectedFeat);
-    const dynamicRouteLayers: MapLayer[] = [];
-
-    if (otherFeats.length > 0) {
-      dynamicRouteLayers.push({
-        layer_id: 'layer_candidate_routes',
-        name: 'Candidate Passage Routes',
+    // P0-8I: Render ONLY the single currently selected route on the map to prevent visual overload/clutter.
+    // The candidate alternatives are represented and selectable via the Mission Map & Corridors controls.
+    const dynamicRouteLayers: MapLayer[] = [
+      {
+        layer_id: 'layer_recommended_route',
+        name: `Selected Corridor (${selectedFeat.properties?.name || selectedFeat.properties?.route_id || 'Route'})`,
         layer_type: 'geojson',
         visible: true,
         style: {
-          color: '#38bdf8',
-          opacity: 0.5,
-          line_width: 2.5,
-          line_dasharray: [3, 3],
+          color: '#06b6d4',
+          opacity: 0.95,
+          line_width: 4,
           layer_category: 'navigation',
         },
         geojson: {
-          type: 'FeatureCollection',
-          features: otherFeats.map((f) => ({
-            ...f,
-            properties: { ...f.properties, is_recommended: false },
-          })),
+          ...selectedFeat,
+          properties: { ...selectedFeat.properties, is_recommended: true },
         },
-      });
-    }
-
-    dynamicRouteLayers.push({
-      layer_id: 'layer_recommended_route',
-      name: `Selected Corridor (${selectedFeat.properties?.name || selectedFeat.properties?.route_id || 'Route'})`,
-      layer_type: 'geojson',
-      visible: true,
-      style: {
-        color: '#06b6d4',
-        opacity: 0.95,
-        line_width: 4,
-        layer_category: 'navigation',
       },
-      geojson: {
-        ...selectedFeat,
-        properties: { ...selectedFeat.properties, is_recommended: true },
-      },
-    });
+    ];
 
     return [...nonRouteLayers, ...dynamicRouteLayers];
   }, [layers, selectedCorridorMode]);
@@ -157,6 +135,9 @@ export default function MapView({ layers, theme = 'light', center, zoom, languag
   const activeReplayVesselRef = useRef<string | null>(null);
   const activeReplayTriggerRef = useRef<number | undefined>(undefined);
   const lastFittedSignatureRef = useRef<string>('');
+  const animFrameRef = useRef<number | null>(null);
+  const animatedHazardLayersRef = useRef<Array<{ fillId: string; outlineId: string; baseOpacity: number; baseLineWidth: number }>>([]);
+  const animatedVesselLayersRef = useRef<Array<{ pointId: string; baseRadius: number }>>([]);
 
   // Animate map when programmatic center or zoom changes (only if no active replay trajectory is being tracked)
   useEffect(() => {
@@ -186,6 +167,60 @@ export default function MapView({ layers, theme = 'light', center, zoom, languag
     map.setStyle(activeStyle, { diff: false });
   }, [activeStyle]);
 
+  // Shared Animation Loop for Active Hazard Warning Pulse and Calm Live Vessel Tracking
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+
+    let isRunning = true;
+
+    const animate = (timestamp: number) => {
+      if (!isRunning || !mapRef.current) return;
+
+      try {
+        // Active warning pulse (approx 2.0s period)
+        const hazardFactor = (Math.sin((timestamp / 2000) * 2 * Math.PI) + 1) / 2;
+        // Calm vessel tracking telemetry pulse (approx 1.8s period)
+        const vesselFactor = (Math.sin((timestamp / 1800) * 2 * Math.PI) + 1) / 2;
+
+        // 1. Hazard active pulse (subtle red warning pulse on active hazards only)
+        for (const h of animatedHazardLayersRef.current) {
+          if (map.getLayer(h.fillId)) {
+            map.setPaintProperty(h.fillId, 'fill-opacity', h.baseOpacity + hazardFactor * 0.18);
+          }
+          if (map.getLayer(h.outlineId)) {
+            map.setPaintProperty(h.outlineId, 'line-opacity', 0.50 + hazardFactor * 0.45);
+            map.setPaintProperty(h.outlineId, 'line-width', h.baseLineWidth + hazardFactor * 1.5);
+          }
+        }
+
+        // 2. Vessel live tracking dot (gentle calm telemetry pulse)
+        for (const v of animatedVesselLayersRef.current) {
+          if (map.getLayer(v.pointId)) {
+            map.setPaintProperty(v.pointId, 'circle-radius', v.baseRadius + vesselFactor * 3.5);
+            map.setPaintProperty(v.pointId, 'circle-stroke-width', 2 + vesselFactor * 1.5);
+          }
+        }
+      } catch {
+        // Suppress errors during style reload or unmount transitions
+      }
+
+      if (isRunning) {
+        animFrameRef.current = requestAnimationFrame(animate);
+      }
+    };
+
+    animFrameRef.current = requestAnimationFrame(animate);
+
+    return () => {
+      isRunning = false;
+      if (animFrameRef.current) {
+        cancelAnimationFrame(animFrameRef.current);
+        animFrameRef.current = null;
+      }
+    };
+  }, [effectiveRenderLayers]);
+
   // Manage GeoJSON layers dynamically
   useEffect(() => {
     const map = mapRef.current;
@@ -195,6 +230,8 @@ export default function MapView({ layers, theme = 'light', center, zoom, languag
       const vis: Record<string, boolean> = {};
       const newRegisteredLayers: string[] = [];
       const newRegisteredSources: string[] = [];
+      const newAnimatedHazards: Array<{ fillId: string; outlineId: string; baseOpacity: number; baseLineWidth: number }> = [];
+      const newAnimatedVessels: Array<{ pointId: string; baseRadius: number }> = [];
 
       for (const layer of effectiveRenderLayers) {
         const sourceId = `src-${layer.layer_id}`;
@@ -277,6 +314,13 @@ export default function MapView({ layers, theme = 'light', center, zoom, languag
             map.setPaintProperty(outlineId, 'line-opacity', Math.min(opacity + 0.35, 1));
           }
           newRegisteredLayers.push(outlineId);
+
+          // Register active hazards for warning pulse animation (inactive/expired hazards are excluded)
+          const isHazard = layerId.startsWith('authority_hazard_') || layer.style?.layer_category === 'authority_hazard';
+          const isActiveHazard = isHazard && (layer.properties?.is_active ?? true) && layer.properties?.status !== 'INACTIVE' && layer.properties?.status !== 'EXPIRED';
+          if (isActiveHazard) {
+            newAnimatedHazards.push({ fillId: layerId, outlineId, baseOpacity: opacity, baseLineWidth: lineWidth });
+          }
         }
 
         // 2. LineString tracks & routes
@@ -337,6 +381,12 @@ export default function MapView({ layers, theme = 'light', center, zoom, languag
             map.setPaintProperty(pointLayerId, 'circle-opacity', opacity);
           }
           newRegisteredLayers.push(pointLayerId);
+
+          // Register active vessel marker for calm telemetry tracking pulse
+          const isVesselPoint = layerId === 'layer_fleet_vessel_replay' || layer.style?.layer_category === 'fleet_replay' || layerId === 'layer_vessel_position';
+          if (isVesselPoint) {
+            newAnimatedVessels.push({ pointId: pointLayerId, baseRadius: circleRadius });
+          }
         }
 
         // Interactive popups for non-background layers
@@ -398,6 +448,8 @@ export default function MapView({ layers, theme = 'light', center, zoom, languag
       }
 
       activeLayersRef.current = { layers: newRegisteredLayers, sources: newRegisteredSources };
+      animatedHazardLayersRef.current = newAnimatedHazards;
+      animatedVesselLayersRef.current = newAnimatedVessels;
       setLayerVisibility(vis);
 
       // Trajectory Replay Auto-Zoom Logic
