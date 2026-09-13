@@ -1,4 +1,5 @@
 import type { MapLayer } from '../types/contracts';
+import type { SectorHazard } from '../api/client';
 import { getBaseLayers } from '../api/client';
 
 /**
@@ -245,6 +246,42 @@ export function createSectorLayers(sectorInput: DemoSector | string): MapLayer[]
   };
 
   return [sectorPolygonLayer, sectorStationLayer];
+}
+
+/** Convert canonical Authority hazard geometry into inspectable MapLibre layers. */
+export function createAuthorityHazardLayers(hazards: SectorHazard[]): MapLayer[] {
+  return hazards.map((hazard) => {
+    const color = hazard.severity === 'WARNING'
+      ? '#ef4444'
+      : hazard.severity === 'ALERT'
+      ? '#f97316'
+      : '#eab308';
+
+    return {
+      layer_id: `authority_hazard_${hazard.hazard_id}`,
+      name: hazard.headline,
+      layer_type: 'geojson',
+      visible: true,
+      style: {
+        color,
+        opacity: 0.32,
+        line_width: 2.5,
+        layer_category: 'authority_hazard',
+      },
+      geojson: {
+        type: 'Feature',
+        geometry: hazard.geometry,
+        properties: {
+          hazard_id: hazard.hazard_id,
+          hazard_type: hazard.hazard_type,
+          severity: hazard.severity,
+          status: hazard.status,
+          valid_from: hazard.valid_from,
+          valid_to: hazard.valid_to,
+        },
+      },
+    };
+  });
 }
 
 /**

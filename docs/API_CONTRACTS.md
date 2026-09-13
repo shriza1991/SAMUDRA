@@ -27,6 +27,14 @@ request. It takes precedence over conversation memory and client-supplied
 harbor values; unknown IDs return HTTP 422. Requests without it retain the
 existing chat behavior.
 
+### 2.0A Authority sector hazards
+
+`GET /api/v1/demo/sectors/{sector_id}/hazards` accepts a canonical sector
+`public_id` and returns only its canonical `ACTIVE` hazards. Each item preserves
+the seeded hazard ID, type, severity, status, validity window, provenance, and
+GeoJSON geometry. An unknown sector returns HTTP 404; an empty `hazards` list
+means no relevant active hazards, not unavailable data.
+
 ### 2.1 The Canonical `ChatResponse`
 
 This is the payload returned by `POST /api/v1/chat` to the frontend.

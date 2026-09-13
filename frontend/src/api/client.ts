@@ -247,6 +247,23 @@ export interface DemoHazard {
   source: string;
 }
 
+export interface SectorHazard {
+  hazard_id: string;
+  hazard_type: string;
+  severity: string;
+  status: string;
+  headline: string;
+  geometry: GeoJSON.Geometry;
+  valid_from: string;
+  valid_to: string;
+  provenance: Record<string, unknown>;
+}
+
+export interface SectorHazardsResponse {
+  sector_id: string;
+  hazards: SectorHazard[];
+}
+
 export async function getDemoSectors(): Promise<DemoSector[]> {
   return request<DemoSector[]>('/demo/sectors');
 }
@@ -268,6 +285,10 @@ export async function getDemoNotifications(sector?: string): Promise<DemoNotific
 export async function getDemoHazards(sector?: string): Promise<DemoHazard[]> {
   const url = sector ? `/demo/hazards?sector=${encodeURIComponent(sector)}` : '/demo/hazards';
   return request<DemoHazard[]>(url);
+}
+
+export async function getDemoSectorHazards(sectorId: string): Promise<SectorHazardsResponse> {
+  return request<SectorHazardsResponse>(`/demo/sectors/${encodeURIComponent(sectorId)}/hazards`);
 }
 
 export interface SectorSituation {

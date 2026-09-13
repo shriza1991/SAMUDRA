@@ -6,9 +6,26 @@ import {
   SECTOR_SURVEILLANCE_CONFIGS,
   getSectorConfig,
   createSectorLayers,
+  createAuthorityHazardLayers,
 } from './geo';
 
 describe('Geospatial Utilities & Baseline Situational Layers', () => {
+  it('maps only supplied canonical Authority hazards and clears old-sector layers', () => {
+    const ratnagiriLayers = createAuthorityHazardLayers([{
+      hazard_id: 'hazard-01', hazard_type: 'CYCLONE_SQUALL', severity: 'WARNING', status: 'ACTIVE',
+      headline: 'Konkan warning', geometry: { type: 'Polygon', coordinates: [[[72.8, 16.4], [73.4, 16.4], [73.4, 17.1], [72.8, 16.4]]] },
+      valid_from: '2026-09-12T00:00:00Z', valid_to: '2026-09-12T10:00:00Z', provenance: {},
+    }]);
+    const goaLayers = createAuthorityHazardLayers([{
+      hazard_id: 'hazard-03', hazard_type: 'HIGH_WIND', severity: 'WARNING', status: 'ACTIVE',
+      headline: 'Goa wind warning', geometry: { type: 'Polygon', coordinates: [[[73.4, 15.2], [73.8, 15.2], [73.8, 15.6], [73.4, 15.2]]] },
+      valid_from: '2026-09-12T00:00:00Z', valid_to: '2026-09-12T10:00:00Z', provenance: {},
+    }]);
+
+    expect(ratnagiriLayers.map(layer => layer.layer_id)).toEqual(['authority_hazard_hazard-01']);
+    expect(goaLayers.map(layer => layer.layer_id)).toEqual(['authority_hazard_hazard-03']);
+    expect(createAuthorityHazardLayers([])).toEqual([]);
+  });
   it('resolves canonical harbor coordinates accurately', () => {
     expect(getHarborCoordinates('Ratnagiri')).toEqual([73.28, 16.99]);
     expect(getHarborCoordinates('Mumbai')).toEqual([72.87, 18.92]);

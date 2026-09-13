@@ -7,7 +7,7 @@ sector hazards, and deterministic risk evaluation from ObservationBundle.
 
 from __future__ import annotations
 
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 from pydantic import BaseModel, Field
 
 from backend.app.contracts.chat import Recommendation, RecommendationStatus, EvidenceItem
@@ -40,3 +40,22 @@ class SectorSituationResponse(BaseModel):
     warnings: List[str] = Field(
         default_factory=list, description="Data quality, staleness, or operational advisory warnings"
     )
+
+
+class SectorHazard(BaseModel):
+    """Canonical active hazard relevant to one Authority sector."""
+
+    hazard_id: str
+    hazard_type: str
+    severity: str
+    status: str
+    headline: str
+    geometry: Dict[str, Any]
+    valid_from: str
+    valid_to: str
+    provenance: Dict[str, Any] = Field(default_factory=dict)
+
+
+class SectorHazardsResponse(BaseModel):
+    sector_id: str
+    hazards: List[SectorHazard] = Field(default_factory=list)

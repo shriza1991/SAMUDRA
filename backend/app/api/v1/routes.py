@@ -29,7 +29,7 @@ from backend.app.contracts.chat import (
     TranscribeResponse,
     VoiceChatResponse,
 )
-from backend.app.contracts.situation import SectorSituationResponse
+from backend.app.contracts.situation import SectorHazard, SectorHazardsResponse, SectorSituationResponse
 from backend.app.core.config import settings
 from backend.app.db.session import SessionLocal
 from backend.app.services.agent_run_service import (
@@ -1182,15 +1182,11 @@ def get_demo_routes(namespace: str = "SAMUDRA_DEMO_V1") -> dict[str, Any]:
     }
 
 
-def _filter_hazards_by_sector(records: list[dict[str, Any]], sector: str) -> list[dict[str, Any]]:
-    s = sector.lower()
-    if "ratnagiri" in s:
-        return [r for r in records if any(k in f"{r.get('headline', '')} {r.get('public_id', '')}".lower() for k in ("ratnagiri", "konkan", "hazard-01", "hazard-02", "hazard-05", "hazard-06"))]
-    if "malvan" in s:
-        return [r for r in records if any(k in f"{r.get('headline', '')} {r.get('public_id', '')}".lower() for k in ("malvan", "sindhudurg", "hazard-04", "hazard-07"))]
-    if "goa" in s:
-        return [r for r in records if any(k in f"{r.get('headline', '')} {r.get('public_id', '')}".lower() for k in ("goa", "hazard-03", "hazard-08"))]
-    return []
+def _canonical_sector_hazards(sector_id: str, namespace: str) -> list[dict[str, Any]] | None:
+    """Delegate Authority hazard relevance to the shared domain resolver."""
+    from backend.app.domain.situation import get_canonical_active_hazards_for_sector
+
+    return get_canonical_active_hazards_for_sector(sector_id, namespace=namespace)
 
 
 @router.get("/demo/hazards", tags=["Synthetic Demo"])
@@ -1200,23 +1196,60 @@ def get_demo_hazards(
     namespace: str = "SAMUDRA_DEMO_V1",
 ) -> list[dict[str, Any]]:
     """List synthetic demo marine weather hazard advisories, optionally filtered by sector."""
+    if sector:
+        # Backwards-compatible filtered view, now using the same canonical
+        # assignment/status semantics as P0-6 and the sector endpoint.
+        return _canonical_sector_hazards(sector, namespace) or []
+
     try:
         with SessionLocal() as session:
             repo = SyntheticDemoRepository(session)
             items = repo.get_hazards(namespace=namespace, status=status)
             if items:
                 items_dict = [_model_to_dict(item) for item in items]
-                if sector:
-                    items_dict = _filter_hazards_by_sector(items_dict, sector)
                 return items_dict
     except Exception as exc:
         logger.debug("Database get_demo_hazards failed (service offline): %s", exc)
     records = _get_synthetic_records("hazards", namespace=namespace)
     if status:
         records = [r for r in records if r.get("status") == status]
-    if sector:
-        records = _filter_hazards_by_sector(records, sector)
     return records
+
+
+@router.get(
+    "/demo/sectors/{sector_id}/hazards",
+    response_model=SectorHazardsResponse,
+    tags=["Synthetic Demo"],
+)
+def get_demo_sector_hazards(
+    sector_id: str,
+    namespace: str = "SAMUDRA_DEMO_V1",
+) -> SectorHazardsResponse:
+    """Return only canonical active hazards relevant to one Authority sector."""
+    hazards = _canonical_sector_hazards(sector_id, namespace)
+    if hazards is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Surveillance sector '{sector_id}' not found.",
+        )
+
+    return SectorHazardsResponse(
+        sector_id=sector_id,
+        hazards=[
+            SectorHazard(
+                hazard_id=hazard["public_id"],
+                hazard_type=hazard["event_type"],
+                severity=hazard["severity"],
+                status=hazard["status"],
+                headline=hazard["headline"],
+                geometry=hazard["geometry_geojson"],
+                valid_from=hazard["start_time"].isoformat(),
+                valid_to=hazard["end_time"].isoformat(),
+                provenance=hazard.get("provenance_json", {}),
+            )
+            for hazard in hazards
+        ],
+    )
 
 
 @router.get("/demo/notifications", tags=["Synthetic Demo"])

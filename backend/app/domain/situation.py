@@ -112,6 +112,34 @@ def resolve_authority_sector_context(sector_id: str) -> Optional[Dict[str, Any]]
     }
 
 
+def get_canonical_active_hazards_for_sector(
+    sector_id: str, namespace: str = "SAMUDRA_DEMO_V1"
+) -> Optional[List[Dict[str, Any]]]:
+    """Return the canonical active hazards assigned to a canonical sector.
+
+    The synthetic records carry their Authority-sector applicability in
+    provenance metadata. Status remains the established active/expired/future
+    discriminator; no client-side or display-name inference is involved.
+    """
+    sector = next(
+        (item for item in _load_canonical_sectors() if item.get("public_id") == sector_id),
+        None,
+    )
+    if sector is None:
+        return None
+
+    from backend.app.domain.synthetic.generator import generate_synthetic_demo_dataset
+
+    hazards = generate_synthetic_demo_dataset()["hazards"]
+    return [
+        hazard
+        for hazard in hazards
+        if hazard.get("namespace") == namespace
+        and hazard.get("status") == "ACTIVE"
+        and sector_id in hazard.get("provenance_json", {}).get("affected_sector_ids", [])
+    ]
+
+
 def _get_canonical_vessels(harbor_id: str, namespace: str = "SAMUDRA_DEMO_V1") -> List[Dict[str, Any]]:
     """Dynamically query canonical vessels assigned to a specific harbor."""
     try:
@@ -135,16 +163,6 @@ def _get_canonical_vessels(harbor_id: str, namespace: str = "SAMUDRA_DEMO_V1") -
         except Exception as exc:
             logger.debug("Failed reading vessels fixture: %s", exc)
     return []
-
-
-def _get_canonical_active_hazards(sector_name: str, namespace: str = "SAMUDRA_DEMO_V1") -> List[Dict[str, Any]]:
-    """Retrieve canonical active hazards relevant to the sector."""
-    from backend.app.api.v1.routes import get_demo_hazards
-    try:
-        return get_demo_hazards(sector=sector_name, status="ACTIVE", namespace=namespace)
-    except Exception as exc:
-        logger.debug("get_demo_hazards failed for %s: %s", sector_name, exc)
-        return []
 
 
 def _harbor_id_to_name(harbor_id: str) -> str:
@@ -185,7 +203,7 @@ def evaluate_sector_situation(
     fleet_count = len(vessels)
 
     # 2. Active hazards relevant to this sector
-    active_hazards = _get_canonical_active_hazards(sector_name=sector_name, namespace=namespace)
+    active_hazards = get_canonical_active_hazards_for_sector(public_id, namespace=namespace) or []
     active_hazard_count = len(active_hazards)
 
     # 3. Assemble context & observation bundle

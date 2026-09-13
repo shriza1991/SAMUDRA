@@ -18,12 +18,15 @@ import type { useChat } from '../hooks/useChat';
 import type { MapLayer } from '../types/contracts';
 import {
   getDemoSectors,
+  getDemoSectorHazards,
   getDemoSectorSituation,
   type DemoSector,
+  type SectorHazard,
   type SectorSituation,
 } from '../api/client';
 import {
   createSectorLayers,
+  createAuthorityHazardLayers,
   FALLBACK_DEMO_SECTORS,
   fetchAndFormatBaseLayers,
 } from '../utils/geo';
@@ -62,6 +65,8 @@ export default function AuthorityPage({
   const [sectorSituation, setSectorSituation] = useState<SectorSituation | null>(null);
   const [situationLoading, setSituationLoading] = useState<boolean>(false);
   const [situationError, setSituationError] = useState<string | null>(null);
+  const [sectorHazards, setSectorHazards] = useState<SectorHazard[]>([]);
+  const [hazardError, setHazardError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchAndFormatBaseLayers().then(setBaseLayers);
@@ -119,13 +124,32 @@ export default function AuthorityPage({
     };
   }, [activeSector]);
 
+  useEffect(() => {
+    let isCurrent = true;
+    setSectorHazards([]);
+    setHazardError(null);
+
+    getDemoSectorHazards(activeSector.public_id)
+      .then((data) => {
+        if (isCurrent) setSectorHazards(data.hazards);
+      })
+      .catch(() => {
+        if (isCurrent) setHazardError('Hazard data unavailable');
+      });
+
+    return () => {
+      isCurrent = false;
+    };
+  }, [activeSector.public_id]);
+
   // Combine official base boundaries + sector polygon + replay trajectory + active query layers
   const authorityLayers = useMemo(() => {
     const sectorLayers = createSectorLayers(activeSector);
+    const hazardLayers = createAuthorityHazardLayers(sectorHazards);
     const responseLayers = authorityActiveResponse?.map_layers ?? [];
     const activeReplay = replayLayer ? [replayLayer] : [];
-    return [...baseLayers, ...sectorLayers, ...activeReplay, ...responseLayers];
-  }, [baseLayers, activeSector, replayLayer, authorityActiveResponse?.map_layers]);
+    return [...baseLayers, ...sectorLayers, ...hazardLayers, ...activeReplay, ...responseLayers];
+  }, [baseLayers, activeSector, sectorHazards, replayLayer, authorityActiveResponse?.map_layers]);
 
   const evidenceList = useMemo(() => {
     if (authorityActiveResponse?.evidence && authorityActiveResponse.evidence.length > 0) {
@@ -289,6 +313,7 @@ export default function AuthorityPage({
 
             {/* Right: Reused MapView with live coastal polygons */}
             <div className="authority-map-pane">
+              {hazardError && <p className="authority-empty-note" role="status">{hazardError}</p>}
               <MapView
                 layers={authorityLayers}
                 theme={theme}

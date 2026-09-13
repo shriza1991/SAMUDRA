@@ -13,6 +13,10 @@
 - The chat API validates the sector and derives canonical harbor and coordinates before graph execution.
 - Explicit Authority context takes precedence over remembered conversation context; history remains retained and prior-sector responses are not shown as the current sector's active response.
 
+### P0-8A — Authority sector hazards on map
+- Canonical active hazard applicability is resolved by sector public ID and shared with P0-6 situation counts.
+- The Authority map fetches and renders only the selected sector's canonical GeoJSON hazard layers, clearing them immediately on a sector change or unavailable response.
+
 ---
 
 ## P0 Marine Data Providers Status Board

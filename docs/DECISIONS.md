@@ -136,6 +136,21 @@ No global current-sector state is introduced. Existing chats without `sector_id`
 Owner: P0-7 integration
 Date: 2026-09-13
 
+## D017 — Canonical Authority Hazard Applicability
+Status: ACCEPTED
+
+Decision:
+Synthetic hazard provenance contains canonical `affected_sector_ids`. The shared domain resolver selects only `ACTIVE` hazards for a canonical sector. P0-6 situation counts, the sector-hazards API, and the Authority map use that resolver.
+
+Reason:
+The prior `/demo/hazards` sector query inferred relevance from display text and IDs, which was neither complete nor safe for map display.
+
+Impact:
+No frontend hazard geometry or sector matching is fabricated. Empty results remain distinct from a request failure.
+
+Owner: P0-8A integration
+Date: 2026-09-13
+
 ## Decision template
 ### D0XX — <title>
 Status: PROPOSED / ACCEPTED / REJECTED

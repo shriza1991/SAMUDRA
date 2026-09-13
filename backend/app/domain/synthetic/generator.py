@@ -675,6 +675,14 @@ def generate_route_graph() -> tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
 
 def generate_hazards() -> List[Dict[str, Any]]:
     """10 Synthetic Hazard events matching IMD Cyclone & Marine Warning Bulletins."""
+    # Canonical Authority-sector applicability.  This preserves the existing
+    # operational assignments without inferring membership from UI labels.
+    affected_sector_ids = {
+        "hazard-01": ["sector-ratnagiri"],
+        "hazard-02": ["sector-ratnagiri"],
+        "hazard-03": ["sector-goa"],
+        "hazard-05": ["sector-ratnagiri"],
+    }
     hazards_def = [
         (
             "hazard-01",
@@ -903,6 +911,7 @@ def generate_hazards() -> List[Dict[str, Any]]:
                 "intended_provider": "IMD_CYCLONE_DIVISION",
                 "source_product": "IMD Severe Weather & Cyclone Warning Bulletin",
                 "official_documentation": "https://rsmcnewdelhi.imd.gov.in",
+                "affected_sector_ids": affected_sector_ids.get(hid, []),
             },
             "namespace": SYNTHETIC_NAMESPACE,
             "created_at": REFERENCE_TIME,
