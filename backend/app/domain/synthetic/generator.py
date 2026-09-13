@@ -52,7 +52,7 @@ def generate_stakeholders() -> List[Dict[str, Any]]:
 
 
 def generate_harbors() -> List[Dict[str, Any]]:
-    """2 Nearby geographically coherent demo harbors in Maharashtra."""
+    """Demo harbors for coastal surveillance and fishing operations."""
     harbors = [
         {
             "public_id": "harbor-ratnagiri",
@@ -77,6 +77,47 @@ def generate_harbors() -> List[Dict[str, Any]]:
             "created_at": REFERENCE_TIME,
         },
     ]
+
+    existing_ids = {h["public_id"] for h in harbors}
+    required_additional_harbors = [
+        {
+            "public_id": "harbor-panaji",
+            "name": "Panaji",
+            "latitude": 15.49,
+            "longitude": 73.83,
+            "state": "Goa",
+            "metadata_json": {"coastal_zone": "Goa Coast", "vhf_channel": 16, "tide_station_id": "PAN-01"},
+            "provenance_json": {**PROVENANCE_BASE, "intended_provider": "SAMUDRA"},
+            "namespace": SYNTHETIC_NAMESPACE,
+            "created_at": REFERENCE_TIME,
+        },
+        {
+            "public_id": "harbor-mumbai",
+            "name": "Mumbai",
+            "latitude": 18.92,
+            "longitude": 72.87,
+            "state": "Maharashtra",
+            "metadata_json": {"coastal_zone": "Mumbai Coastal", "vhf_channel": 16, "tide_station_id": "BOM-01"},
+            "provenance_json": {**PROVENANCE_BASE, "intended_provider": "SAMUDRA"},
+            "namespace": SYNTHETIC_NAMESPACE,
+            "created_at": REFERENCE_TIME,
+        },
+        {
+            "public_id": "harbor-veraval",
+            "name": "Veraval",
+            "latitude": 20.90,
+            "longitude": 70.37,
+            "state": "Gujarat",
+            "metadata_json": {"coastal_zone": "Saurashtra Coast", "vhf_channel": 16, "tide_station_id": "VER-01"},
+            "provenance_json": {**PROVENANCE_BASE, "intended_provider": "SAMUDRA"},
+            "namespace": SYNTHETIC_NAMESPACE,
+            "created_at": REFERENCE_TIME,
+        },
+    ]
+    for h in required_additional_harbors:
+        if h["public_id"] not in existing_ids:
+            harbors.append(h)
+            existing_ids.add(h["public_id"])
     return harbors
 
 
@@ -110,7 +151,7 @@ def generate_fishers() -> List[Dict[str, Any]]:
 
 
 def generate_vessels() -> List[Dict[str, Any]]:
-    """8 Vessels with varied specifications."""
+    """14 Vessels with varied specifications across 5 coastal sectors."""
     vessels_def = [
         ("vessel-01", "Matsya Sagar 01", "fisher-01", "motorized_boat", 9.5, 3.0, "harbor-ratnagiri", "OPERATIONAL", {"engine_hp": 30, "hull_material": "FRP"}),
         ("vessel-02", "Konkan Pride", "fisher-02", "mechanized_trawler", 18.0, 15.0, "harbor-ratnagiri", "OPERATIONAL", {"engine_hp": 120, "hull_material": "Wood"}),
@@ -120,6 +161,15 @@ def generate_vessels() -> List[Dict[str, Any]]:
         ("vessel-06", "Sindhudurg Queen", "fisher-06", "mechanized_trawler", 20.5, 22.0, "harbor-malvan", "OPERATIONAL", {"engine_hp": 160, "hull_material": "Steel"}),
         ("vessel-07", "Kripa Sagar", "fisher-07", "artisanal_craft", 7.0, 1.5, "harbor-malvan", "DOCKED", {"engine_hp": 9.9, "hull_material": "Wood"}),
         ("vessel-08", "Pawan Putra", "fisher-08", "motorized_boat", 9.8, 3.2, "harbor-malvan", "OPERATIONAL", {"engine_hp": 35, "hull_material": "FRP"}),
+        # Goa vessels (harbor-panaji)
+        ("vessel-09", "Goa Pearl", "fisher-05", "motorized_boat", 10.5, 3.8, "harbor-panaji", "OPERATIONAL", {"engine_hp": 38, "hull_material": "FRP"}),
+        ("vessel-10", "Zuari Pioneer", "fisher-06", "mechanized_trawler", 19.0, 18.0, "harbor-panaji", "OPERATIONAL", {"engine_hp": 130, "hull_material": "Steel"}),
+        # Mumbai vessels (harbor-mumbai)
+        ("vessel-11", "Mumbai Sagarika", "fisher-01", "motorized_boat", 11.2, 4.2, "harbor-mumbai", "OPERATIONAL", {"engine_hp": 42, "hull_material": "FRP"}),
+        ("vessel-12", "Bombay Sentinel", "fisher-02", "mechanized_trawler", 21.0, 24.0, "harbor-mumbai", "OPERATIONAL", {"engine_hp": 175, "hull_material": "Steel"}),
+        # Veraval vessels (harbor-veraval)
+        ("vessel-13", "Somnath Jyoti", "fisher-03", "motorized_boat", 9.6, 3.1, "harbor-veraval", "OPERATIONAL", {"engine_hp": 32, "hull_material": "FRP"}),
+        ("vessel-14", "Saurashtra Sagar", "fisher-04", "mechanized_trawler", 18.5, 16.5, "harbor-veraval", "OPERATIONAL", {"engine_hp": 125, "hull_material": "Wood"}),
     ]
     return [
         {
@@ -141,7 +191,7 @@ def generate_vessels() -> List[Dict[str, Any]]:
 
 
 def generate_trips() -> List[Dict[str, Any]]:
-    """12 Trips overlapping calm, elevated, hazard, PFZ, and geofence conditions."""
+    """18 Trips overlapping calm, elevated, hazard, PFZ, and geofence conditions across 5 sectors."""
     trips_def = [
         ("trip-01", "fisher-01", "vessel-01", "harbor-ratnagiri", "Ratnagiri Inshore Fishing Zone", REFERENCE_TIME - timedelta(hours=6), REFERENCE_TIME + timedelta(hours=2), "IN_PROGRESS", {"target_catch": "Mackerel", "condition_overlap": "CALM"}),
         ("trip-02", "fisher-02", "vessel-02", "harbor-ratnagiri", "Ratnagiri Outer Bank", REFERENCE_TIME - timedelta(hours=12), REFERENCE_TIME - timedelta(hours=1), "COMPLETED", {"target_catch": "Ribbonfish", "condition_overlap": "ELEVATED"}),
@@ -155,6 +205,15 @@ def generate_trips() -> List[Dict[str, Any]]:
         ("trip-10", "fisher-05", "vessel-05", "harbor-malvan", "Sindhudurg Bio-Station", REFERENCE_TIME + timedelta(hours=18), REFERENCE_TIME + timedelta(hours=30), "PLANNED", {"target_catch": "Water Samples", "condition_overlap": "RESEARCHER_CRUISE"}),
         ("trip-11", "fisher-02", "vessel-02", "harbor-ratnagiri", "Monsoon Wave Baseline Sector", REFERENCE_TIME + timedelta(hours=24), REFERENCE_TIME + timedelta(hours=36), "PLANNED", {"target_catch": "Mixed Pelagic", "condition_overlap": "HIGH_WAVE"}),
         ("trip-12", "fisher-06", "vessel-06", "harbor-malvan", "Emergency Standby Sector", REFERENCE_TIME - timedelta(hours=1), REFERENCE_TIME + timedelta(hours=6), "IN_PROGRESS", {"target_catch": "Standby Escort", "condition_overlap": "DISASTER_MANAGEMENT_STANDBY"}),
+        # Goa trips for vessel-09 and vessel-10
+        ("trip-13", "fisher-05", "vessel-09", "harbor-panaji", "Goa Coastal Patrol Zone", REFERENCE_TIME - timedelta(hours=6), REFERENCE_TIME + timedelta(hours=2), "IN_PROGRESS", {"target_catch": "Kingfish", "condition_overlap": "CALM"}),
+        ("trip-14", "fisher-06", "vessel-10", "harbor-panaji", "Mormugao Deep Water Corridor", REFERENCE_TIME - timedelta(hours=5), REFERENCE_TIME + timedelta(hours=3), "IN_PROGRESS", {"target_catch": "Tuna", "condition_overlap": "ELEVATED"}),
+        # Mumbai trips for vessel-11 and vessel-12
+        ("trip-15", "fisher-01", "vessel-11", "harbor-mumbai", "Mumbai Offshore Nearshore", REFERENCE_TIME - timedelta(hours=6), REFERENCE_TIME + timedelta(hours=2), "IN_PROGRESS", {"target_catch": "Pomfret", "condition_overlap": "CALM"}),
+        ("trip-16", "fisher-02", "vessel-12", "harbor-mumbai", "Bombay High Perimeter", REFERENCE_TIME - timedelta(hours=5), REFERENCE_TIME + timedelta(hours=3), "IN_PROGRESS", {"target_catch": "Ribbonfish", "condition_overlap": "OPERATOR_SURVEILLANCE"}),
+        # Veraval trips for vessel-13 and vessel-14
+        ("trip-17", "fisher-03", "vessel-13", "harbor-veraval", "Veraval Coastal Zone", REFERENCE_TIME - timedelta(hours=6), REFERENCE_TIME + timedelta(hours=2), "IN_PROGRESS", {"target_catch": "Prawns", "condition_overlap": "CALM"}),
+        ("trip-18", "fisher-04", "vessel-14", "harbor-veraval", "Saurashtra Deep Bank", REFERENCE_TIME - timedelta(hours=5), REFERENCE_TIME + timedelta(hours=3), "IN_PROGRESS", {"target_catch": "Mixed Pelagic", "condition_overlap": "HIGH_WAVE"}),
     ]
     return [
         {
@@ -935,7 +994,7 @@ def generate_sectors() -> List[Dict[str, Any]]:
         (
             "sector-goa",
             "Goa Naval Corridor (GA-01)",
-            None,
+            "harbor-panaji",
             [73.83, 15.49],
             9.0,
             "Goa Port & Naval Traffic Center",
@@ -950,7 +1009,7 @@ def generate_sectors() -> List[Dict[str, Any]]:
         (
             "sector-mumbai",
             "Mumbai Offshore (MH-01)",
-            None,
+            "harbor-mumbai",
             [72.87, 18.92],
             8.8,
             "Mumbai Maritime Rescue Coordination Centre",
@@ -965,7 +1024,7 @@ def generate_sectors() -> List[Dict[str, Any]]:
         (
             "sector-veraval",
             "Veraval Coastal Zone (GJ-02)",
-            None,
+            "harbor-veraval",
             [70.37, 20.90],
             8.5,
             "Veraval Coastal Police & Fisheries Command",
@@ -1001,7 +1060,7 @@ def generate_sectors() -> List[Dict[str, Any]]:
 
 
 def generate_vessel_replay_positions() -> List[Dict[str, Any]]:
-    """240 Progressive GPS positions for all 8 canonical vessels (30 points each)."""
+    """420 Progressive GPS positions for 14 canonical vessels (30 points each)."""
     positions = []
 
     # Specification for each vessel:
@@ -1017,6 +1076,15 @@ def generate_vessel_replay_positions() -> List[Dict[str, Any]]:
         ("vessel-06", "trip-06", 16.060, 73.470, 15.920, 73.300, 9.5, 220.0),
         ("vessel-07", "trip-07", 16.060, 73.470, 16.010, 73.490, 4.8, 165.0),
         ("vessel-08", "trip-08", 16.060, 73.470, 15.850, 73.200, 8.5, 230.0),
+        # Goa vessels (vessel-09 to vessel-10)
+        ("vessel-09", "trip-13", 15.490, 73.800, 15.350, 73.650, 7.5, 230.0),
+        ("vessel-10", "trip-14", 15.490, 73.800, 15.650, 73.680, 8.8, 330.0),
+        # Mumbai vessels (vessel-11 to vessel-12)
+        ("vessel-11", "trip-15", 18.920, 72.830, 18.720, 72.650, 8.0, 225.0),
+        ("vessel-12", "trip-16", 18.950, 72.800, 19.180, 72.550, 9.2, 315.0),
+        # Veraval vessels (vessel-13 to vessel-14)
+        ("vessel-13", "trip-17", 20.890, 70.360, 20.720, 70.180, 7.6, 230.0),
+        ("vessel-14", "trip-18", 20.890, 70.380, 20.650, 70.580, 8.6, 140.0),
     ]
 
     for vid, tid, s_lat, s_lon, d_lat, d_lon, b_spd, b_hdg in vessel_routes:

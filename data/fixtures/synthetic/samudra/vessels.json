@@ -190,5 +190,149 @@
     },
     "namespace": "SAMUDRA_DEMO_V1",
     "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "vessel-09",
+    "name": "Goa Pearl",
+    "owner_fisher_id": "fisher-05",
+    "vessel_type": "motorized_boat",
+    "length_m": 10.5,
+    "capacity_tons": 3.8,
+    "home_harbor_id": "harbor-panaji",
+    "status": "OPERATIONAL",
+    "metadata_json": {
+      "engine_hp": 38,
+      "hull_material": "FRP"
+    },
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "vessel-10",
+    "name": "Zuari Pioneer",
+    "owner_fisher_id": "fisher-06",
+    "vessel_type": "mechanized_trawler",
+    "length_m": 19.0,
+    "capacity_tons": 18.0,
+    "home_harbor_id": "harbor-panaji",
+    "status": "OPERATIONAL",
+    "metadata_json": {
+      "engine_hp": 130,
+      "hull_material": "Steel"
+    },
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "vessel-11",
+    "name": "Mumbai Sagarika",
+    "owner_fisher_id": "fisher-01",
+    "vessel_type": "motorized_boat",
+    "length_m": 11.2,
+    "capacity_tons": 4.2,
+    "home_harbor_id": "harbor-mumbai",
+    "status": "OPERATIONAL",
+    "metadata_json": {
+      "engine_hp": 42,
+      "hull_material": "FRP"
+    },
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "vessel-12",
+    "name": "Bombay Sentinel",
+    "owner_fisher_id": "fisher-02",
+    "vessel_type": "mechanized_trawler",
+    "length_m": 21.0,
+    "capacity_tons": 24.0,
+    "home_harbor_id": "harbor-mumbai",
+    "status": "OPERATIONAL",
+    "metadata_json": {
+      "engine_hp": 175,
+      "hull_material": "Steel"
+    },
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "vessel-13",
+    "name": "Somnath Jyoti",
+    "owner_fisher_id": "fisher-03",
+    "vessel_type": "motorized_boat",
+    "length_m": 9.6,
+    "capacity_tons": 3.1,
+    "home_harbor_id": "harbor-veraval",
+    "status": "OPERATIONAL",
+    "metadata_json": {
+      "engine_hp": 32,
+      "hull_material": "FRP"
+    },
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "vessel-14",
+    "name": "Saurashtra Sagar",
+    "owner_fisher_id": "fisher-04",
+    "vessel_type": "mechanized_trawler",
+    "length_m": 18.5,
+    "capacity_tons": 16.5,
+    "home_harbor_id": "harbor-veraval",
+    "status": "OPERATIONAL",
+    "metadata_json": {
+      "engine_hp": 125,
+      "hull_material": "Wood"
+    },
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
   }
 ]

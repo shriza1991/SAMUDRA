@@ -90,7 +90,7 @@
   {
     "public_id": "sector-goa",
     "name": "Goa Naval Corridor (GA-01)",
-    "harbor_id": null,
+    "harbor_id": "harbor-panaji",
     "center": [
       73.83,
       15.49
@@ -134,7 +134,7 @@
   {
     "public_id": "sector-mumbai",
     "name": "Mumbai Offshore (MH-01)",
-    "harbor_id": null,
+    "harbor_id": "harbor-mumbai",
     "center": [
       72.87,
       18.92
@@ -178,7 +178,7 @@
   {
     "public_id": "sector-veraval",
     "name": "Veraval Coastal Zone (GJ-02)",
-    "harbor_id": null,
+    "harbor_id": "harbor-veraval",
     "center": [
       70.37,
       20.9

@@ -286,5 +286,149 @@
     },
     "namespace": "SAMUDRA_DEMO_V1",
     "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "trip-13",
+    "fisher_id": "fisher-05",
+    "vessel_id": "vessel-09",
+    "origin_harbor_id": "harbor-panaji",
+    "destination_name": "Goa Coastal Patrol Zone",
+    "start_time": "2026-09-12T00:00:00+00:00",
+    "end_time": "2026-09-12T08:00:00+00:00",
+    "status": "IN_PROGRESS",
+    "metadata_json": {
+      "target_catch": "Kingfish",
+      "condition_overlap": "CALM"
+    },
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "trip-14",
+    "fisher_id": "fisher-06",
+    "vessel_id": "vessel-10",
+    "origin_harbor_id": "harbor-panaji",
+    "destination_name": "Mormugao Deep Water Corridor",
+    "start_time": "2026-09-12T01:00:00+00:00",
+    "end_time": "2026-09-12T09:00:00+00:00",
+    "status": "IN_PROGRESS",
+    "metadata_json": {
+      "target_catch": "Tuna",
+      "condition_overlap": "ELEVATED"
+    },
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "trip-15",
+    "fisher_id": "fisher-01",
+    "vessel_id": "vessel-11",
+    "origin_harbor_id": "harbor-mumbai",
+    "destination_name": "Mumbai Offshore Nearshore",
+    "start_time": "2026-09-12T00:00:00+00:00",
+    "end_time": "2026-09-12T08:00:00+00:00",
+    "status": "IN_PROGRESS",
+    "metadata_json": {
+      "target_catch": "Pomfret",
+      "condition_overlap": "CALM"
+    },
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "trip-16",
+    "fisher_id": "fisher-02",
+    "vessel_id": "vessel-12",
+    "origin_harbor_id": "harbor-mumbai",
+    "destination_name": "Bombay High Perimeter",
+    "start_time": "2026-09-12T01:00:00+00:00",
+    "end_time": "2026-09-12T09:00:00+00:00",
+    "status": "IN_PROGRESS",
+    "metadata_json": {
+      "target_catch": "Ribbonfish",
+      "condition_overlap": "OPERATOR_SURVEILLANCE"
+    },
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "trip-17",
+    "fisher_id": "fisher-03",
+    "vessel_id": "vessel-13",
+    "origin_harbor_id": "harbor-veraval",
+    "destination_name": "Veraval Coastal Zone",
+    "start_time": "2026-09-12T00:00:00+00:00",
+    "end_time": "2026-09-12T08:00:00+00:00",
+    "status": "IN_PROGRESS",
+    "metadata_json": {
+      "target_catch": "Prawns",
+      "condition_overlap": "CALM"
+    },
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
+  },
+  {
+    "public_id": "trip-18",
+    "fisher_id": "fisher-04",
+    "vessel_id": "vessel-14",
+    "origin_harbor_id": "harbor-veraval",
+    "destination_name": "Saurashtra Deep Bank",
+    "start_time": "2026-09-12T01:00:00+00:00",
+    "end_time": "2026-09-12T09:00:00+00:00",
+    "status": "IN_PROGRESS",
+    "metadata_json": {
+      "target_catch": "Mixed Pelagic",
+      "condition_overlap": "HIGH_WAVE"
+    },
+    "provenance_json": {
+      "mode": "SYNTHETIC",
+      "source": "synthetic-demo",
+      "dataset_version": "synthetic_demo_v1",
+      "namespace": "SAMUDRA_DEMO_V1",
+      "generated_at": "2026-09-12T06:00:00+00:00",
+      "intended_provider": "SAMUDRA"
+    },
+    "namespace": "SAMUDRA_DEMO_V1",
+    "created_at": "2026-09-12T06:00:00+00:00"
   }
 ]

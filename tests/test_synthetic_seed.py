@@ -16,6 +16,7 @@ Verifies:
 from __future__ import annotations
 
 import json
+import pathlib
 from datetime import UTC, datetime
 from unittest.mock import patch
 
@@ -104,10 +105,10 @@ def test_dataset_generation_counts():
 
     expected_counts = {
         "stakeholders": 5,
-        "harbors": 2,
+        "harbors": 5,
         "fishers": 8,
-        "vessels": 8,
-        "trips": 12,
+        "vessels": 14,
+        "trips": 18,
         "marine_observations": 96,
         "eo_grid_cells": 350,
         "pfz_candidates": 12,
@@ -116,7 +117,7 @@ def test_dataset_generation_counts():
         "route_edges": 32,
         "hazards": 10,
         "notifications": 20,
-        "replay_positions": 240,
+        "replay_positions": 420,
         "sectors": 5,
     }
 
@@ -127,7 +128,7 @@ def test_dataset_generation_counts():
         )
 
     total_records = sum(len(v) for v in dataset.values())
-    assert total_records == 829
+    assert total_records == 1024
 
 
 def test_dataset_determinism():
@@ -390,7 +391,7 @@ def test_seeder_db_lifecycle(sqlite_session):
 
     counts1 = repo.get_counts_by_namespace(SYNTHETIC_NAMESPACE)
     assert counts1["stakeholders"] == 5
-    assert counts1["vessels"] == 8
+    assert counts1["vessels"] == 14
     assert counts1["eo_grid_cells"] == 350
 
     # 2. Idempotent Second Seed (no duplicates)
@@ -506,7 +507,7 @@ def test_demo_api_endpoints(sqlite_session):
             # 3. Harbors
             res = test_client.get("/api/v1/demo/harbors")
             assert res.status_code == 200
-            assert len(res.json()) == 2
+            assert len(res.json()) == 5
 
             # 4. Fishers
             res = test_client.get("/api/v1/demo/fishers")
@@ -516,12 +517,12 @@ def test_demo_api_endpoints(sqlite_session):
             # 5. Vessels
             res = test_client.get("/api/v1/demo/vessels")
             assert res.status_code == 200
-            assert len(res.json()) == 8
+            assert len(res.json()) == 14
 
             # 6. Trips
             res = test_client.get("/api/v1/demo/trips")
             assert res.status_code == 200
-            assert len(res.json()) == 12
+            assert len(res.json()) == 18
 
             # 7. Marine observations
             res = test_client.get("/api/v1/demo/marine-observations?harbor_id=harbor-ratnagiri")
@@ -564,3 +565,217 @@ def test_demo_api_endpoints(sqlite_session):
             res = test_client.get("/api/v1/demo/vessels/vessel-01/replay")
             assert res.status_code == 200
             assert len(res.json()) == 30
+
+
+# ---------------------------------------------------------------------------
+# 10. Authority Fleet Surveillance Synthetic Sector Expansion Tests
+# ---------------------------------------------------------------------------
+def test_authority_fleet_surveillance_sectors(sqlite_session):
+    """Exhaustively verify all 20+ acceptance criteria for the Authority fleet surveillance expansion.
+
+    Validates:
+    1. Exactly 14 monitored vessels exist.
+    2. Exactly 2 vessels belong to Goa (vessel-09, vessel-10).
+    3. Exactly 2 vessels belong to Mumbai (vessel-11, vessel-12).
+    4. Exactly 2 vessels belong to Veraval (vessel-13, vessel-14).
+    5. Existing Ratnagiri vessels (vessel-01 to vessel-04) remain intact & structurally identical.
+    6. Existing Malvan vessels (vessel-05 to vessel-08) remain intact & structurally identical.
+    7. Exactly 420 replay positions exist after generation.
+    8. Every vessel has exactly 30 replay positions.
+    9. vessel-09 and vessel-10 coordinates are geographically strictly inside Goa sector polygon.
+    10. vessel-11 and vessel-12 coordinates are geographically strictly inside Mumbai sector polygon.
+    11. vessel-13 and vessel-14 coordinates are geographically strictly inside Veraval sector polygon.
+    12. No new vessel accidentally uses a Ratnagiri/Malvan harbor ID (uses harbor-panaji, harbor-mumbai, harbor-veraval).
+    13. All coordinates use valid EPSG:4326 [lon, lat] GeoJSON ordering.
+    14. Replay timestamps are chronologically strictly ordered.
+    15. Speed values are positive synthetic telemetry.
+    16. Heading values are within 0–360 degrees.
+    17. No replay track contains an implausible geographic jump (< 0.1 deg between successive points).
+    18. All replay records reference valid vessel IDs.
+    19. All replay records reference valid trip IDs.
+    20. Existing 240 replay records are unchanged and structurally identical to baseline.
+    21. Harbors derived programmatically: harbor-panaji, harbor-mumbai, harbor-veraval exist exactly once,
+        and pre-existing harbors are preserved.
+    22. Sector-to-harbor mapping: sector-goa->harbor-panaji, sector-mumbai->harbor-mumbai, sector-veraval->harbor-veraval.
+    23. REST API verification:
+        GET /api/v1/demo/vessels?sector=Goa -> 2 vessels
+        GET /api/v1/demo/vessels?sector=Mumbai -> 2 vessels
+        GET /api/v1/demo/vessels?sector=Veraval -> 2 vessels
+        GET /api/v1/demo/vessels?sector=Ratnagiri -> 4 vessels
+        GET /api/v1/demo/vessels?sector=Malvan -> 4 vessels
+        GET /api/v1/demo/vessels/{vessel_id}/replay -> 30 replay points for all 14 vessels.
+    """
+    from shapely.geometry import Point, Polygon
+
+    dataset = generate_synthetic_demo_dataset()
+    val_report = validate_synthetic_dataset(dataset)
+    assert val_report["status"] == "VALID"
+
+    # 1. Total vessels == 14
+    vessels = dataset["vessels"]
+    assert len(vessels) == 14
+    vessel_map = {v["public_id"]: v for v in vessels}
+
+    # 2, 3, 4. Sector breakdown
+    goa_vessels = [v for v in vessels if v["home_harbor_id"] == "harbor-panaji"]
+    mumbai_vessels = [v for v in vessels if v["home_harbor_id"] == "harbor-mumbai"]
+    veraval_vessels = [v for v in vessels if v["home_harbor_id"] == "harbor-veraval"]
+    ratnagiri_vessels = [v for v in vessels if v["home_harbor_id"] == "harbor-ratnagiri"]
+    malvan_vessels = [v for v in vessels if v["home_harbor_id"] == "harbor-malvan"]
+
+    assert len(goa_vessels) == 2
+    assert {v["public_id"] for v in goa_vessels} == {"vessel-09", "vessel-10"}
+    assert len(mumbai_vessels) == 2
+    assert {v["public_id"] for v in mumbai_vessels} == {"vessel-11", "vessel-12"}
+    assert len(veraval_vessels) == 2
+    assert {v["public_id"] for v in veraval_vessels} == {"vessel-13", "vessel-14"}
+    assert len(ratnagiri_vessels) == 4
+    assert {v["public_id"] for v in ratnagiri_vessels} == {"vessel-01", "vessel-02", "vessel-03", "vessel-04"}
+    assert len(malvan_vessels) == 4
+    assert {v["public_id"] for v in malvan_vessels} == {"vessel-05", "vessel-06", "vessel-07", "vessel-08"}
+
+    # 5, 6, 20. Immutability check against existing fixture baseline
+    fixture_path = pathlib.Path(__file__).resolve().parent.parent / "data" / "fixtures" / "synthetic" / "samudra"
+    with open(fixture_path / "vessels.json", "r", encoding="utf-8") as f:
+        fixture_vessels = json.load(f)
+    for i in range(8):
+        # Assert first 8 vessels match fixture exactly
+        for k in ("public_id", "name", "owner_fisher_id", "vessel_type", "length_m", "capacity_tons", "home_harbor_id", "status", "metadata_json"):
+            assert vessels[i][k] == fixture_vessels[i][k]
+
+    # 7, 8. Total replay positions == 420, 30 per vessel
+    replays = dataset["replay_positions"]
+    assert len(replays) == 420
+    replays_by_vessel = {}
+    for r in replays:
+        replays_by_vessel.setdefault(r["vessel_id"], []).append(r)
+
+    assert len(replays_by_vessel) == 14
+    for vid, pts in replays_by_vessel.items():
+        assert len(pts) == 30, f"Vessel {vid} has {len(pts)} replay positions, expected 30"
+
+    # 20. Immutability of first 240 replay positions
+    with open(fixture_path / "replay_positions.json", "r", encoding="utf-8") as f:
+        fixture_replays = json.load(f)
+    for i in range(240):
+        for k in ("public_id", "vessel_id", "trip_id", "latitude", "longitude", "speed_knots", "heading_deg"):
+            assert replays[i][k] == fixture_replays[i][k], f"Replay pos {i} mismatch on {k}"
+
+    # 9, 10, 11. Geographic validation against sector polygons via Shapely
+    sectors = {s["public_id"]: s for s in dataset["sectors"]}
+    poly_goa = Polygon(sectors["sector-goa"]["polygon"])
+    poly_mumbai = Polygon(sectors["sector-mumbai"]["polygon"])
+    poly_veraval = Polygon(sectors["sector-veraval"]["polygon"])
+
+    for vid in ("vessel-09", "vessel-10"):
+        for p in replays_by_vessel[vid]:
+            pt = Point(p["longitude"], p["latitude"])
+            assert poly_goa.contains(pt), f"Goa vessel {vid} point ({p['longitude']}, {p['latitude']}) outside Goa sector polygon"
+
+    for vid in ("vessel-11", "vessel-12"):
+        for p in replays_by_vessel[vid]:
+            pt = Point(p["longitude"], p["latitude"])
+            assert poly_mumbai.contains(pt), f"Mumbai vessel {vid} point ({p['longitude']}, {p['latitude']}) outside Mumbai sector polygon"
+
+    for vid in ("vessel-13", "vessel-14"):
+        for p in replays_by_vessel[vid]:
+            pt = Point(p["longitude"], p["latitude"])
+            assert poly_veraval.contains(pt), f"Veraval vessel {vid} point ({p['longitude']}, {p['latitude']}) outside Veraval sector polygon"
+
+    # 12. No new vessel uses Ratnagiri/Malvan harbors
+    for v in (vessel_map["vessel-09"], vessel_map["vessel-10"]):
+        assert v["home_harbor_id"] == "harbor-panaji"
+    for v in (vessel_map["vessel-11"], vessel_map["vessel-12"]):
+        assert v["home_harbor_id"] == "harbor-mumbai"
+    for v in (vessel_map["vessel-13"], vessel_map["vessel-14"]):
+        assert v["home_harbor_id"] == "harbor-veraval"
+
+    # 13, 14, 15, 16, 17, 18, 19. Telemetry integrity
+    vessel_ids = {v["public_id"] for v in vessels}
+    trip_ids = {t["public_id"] for t in dataset["trips"]}
+
+    for vid, pts in replays_by_vessel.items():
+        prev_time = None
+        prev_lat, prev_lon = None, None
+        for p in pts:
+            # 13. [lon, lat] bounds
+            assert -180.0 <= p["longitude"] <= 180.0
+            assert -90.0 <= p["latitude"] <= 90.0
+            # 14. Timestamps ordered
+            t = p["timestamp"]
+            if prev_time is not None:
+                assert t > prev_time
+            prev_time = t
+            # 15. Speed positive
+            assert p["speed_knots"] > 0.0
+            # 16. Heading 0-360
+            assert 0.0 <= p["heading_deg"] <= 360.0
+            # 17. No jump (< 0.1 degree ~ 11 km in 12 min step)
+            if prev_lat is not None:
+                step_dist = ((p["latitude"] - prev_lat) ** 2 + (p["longitude"] - prev_lon) ** 2) ** 0.5
+                assert step_dist < 0.1, f"Implausible jump for {vid}: {step_dist} deg"
+            prev_lat, prev_lon = p["latitude"], p["longitude"]
+            # 18. References valid vessel
+            assert p["vessel_id"] in vessel_ids
+            # 19. References valid trip
+            assert p["trip_id"] in trip_ids
+
+    # 21. Harbors validation
+    harbor_ids = [h["public_id"] for h in dataset["harbors"]]
+    assert harbor_ids.count("harbor-panaji") == 1
+    assert harbor_ids.count("harbor-mumbai") == 1
+    assert harbor_ids.count("harbor-veraval") == 1
+    assert "harbor-ratnagiri" in harbor_ids
+    assert "harbor-malvan" in harbor_ids
+
+    # 22. Sector-to-harbor mapping
+    assert sectors["sector-ratnagiri"]["harbor_id"] == "harbor-ratnagiri"
+    assert sectors["sector-malvan"]["harbor_id"] == "harbor-malvan"
+    assert sectors["sector-goa"]["harbor_id"] == "harbor-panaji"
+    assert sectors["sector-mumbai"]["harbor_id"] == "harbor-mumbai"
+    assert sectors["sector-veraval"]["harbor_id"] == "harbor-veraval"
+
+    # 23. REST API validation
+    seed_synthetic_demo(session=sqlite_session)
+
+    class SessionContext:
+        def __enter__(self):
+            return sqlite_session
+        def __exit__(self, exc_type, exc_val, exc_tb):
+            pass
+
+    with patch("backend.app.api.v1.routes.SessionLocal", side_effect=SessionContext):
+        with TestClient(app) as client:
+            # Sector queries
+            res_goa = client.get("/api/v1/demo/vessels?sector=Goa")
+            assert res_goa.status_code == 200
+            assert len(res_goa.json()) == 2
+            assert {v["public_id"] for v in res_goa.json()} == {"vessel-09", "vessel-10"}
+
+            res_mum = client.get("/api/v1/demo/vessels?sector=Mumbai")
+            assert res_mum.status_code == 200
+            assert len(res_mum.json()) == 2
+            assert {v["public_id"] for v in res_mum.json()} == {"vessel-11", "vessel-12"}
+
+            res_ver = client.get("/api/v1/demo/vessels?sector=Veraval")
+            assert res_ver.status_code == 200
+            assert len(res_ver.json()) == 2
+            assert {v["public_id"] for v in res_ver.json()} == {"vessel-13", "vessel-14"}
+
+            res_rat = client.get("/api/v1/demo/vessels?sector=Ratnagiri")
+            assert res_rat.status_code == 200
+            assert len(res_rat.json()) == 4
+            assert {v["public_id"] for v in res_rat.json()} == {"vessel-01", "vessel-02", "vessel-03", "vessel-04"}
+
+            res_mal = client.get("/api/v1/demo/vessels?sector=Malvan")
+            assert res_mal.status_code == 200
+            assert len(res_mal.json()) == 4
+            assert {v["public_id"] for v in res_mal.json()} == {"vessel-05", "vessel-06", "vessel-07", "vessel-08"}
+
+            # Replay queries for all vessels
+            for vid in [f"vessel-{i:02d}" for i in range(1, 15)]:
+                res_replay = client.get(f"/api/v1/demo/vessels/{vid}/replay")
+                assert res_replay.status_code == 200
+                pts = res_replay.json()
+                assert len(pts) == 30
+                assert all(p["vessel_id"] == vid for p in pts)

@@ -68,15 +68,30 @@
         "id": "harbor-malvan",
         "name": "Malvan",
         "coordinates": [73.47, 16.06]
+      },
+      {
+        "id": "harbor-panaji",
+        "name": "Panaji",
+        "coordinates": [73.83, 15.49]
+      },
+      {
+        "id": "harbor-mumbai",
+        "name": "Mumbai",
+        "coordinates": [72.87, 18.92]
+      },
+      {
+        "id": "harbor-veraval",
+        "name": "Veraval",
+        "coordinates": [70.37, 20.90]
       }
     ]
   },
   "entity_counts": {
     "stakeholders": 5,
-    "harbors": 2,
+    "harbors": 5,
     "fishers": 8,
-    "vessels": 8,
-    "trips": 12,
+    "vessels": 14,
+    "trips": 18,
     "marine_observations": 96,
     "eo_grid_cells": 350,
     "pfz_candidates": 12,
@@ -85,7 +100,7 @@
     "route_edges": 32,
     "hazards": 10,
     "notifications": 20,
-    "replay_positions": 240,
+    "replay_positions": 420,
     "sectors": 5
   },
   "intentional_quality_cases": [

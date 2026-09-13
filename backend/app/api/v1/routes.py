@@ -965,7 +965,12 @@ def _resolve_sector_to_harbor_id(sector: str | None) -> str | None:
         return "harbor-ratnagiri"
     if "malvan" in s:
         return "harbor-malvan"
-    # Sectors like Goa, Mumbai, Veraval have no seeded vessels in SAMUDRA_DEMO_V1
+    if "goa" in s or "panaji" in s:
+        return "harbor-panaji"
+    if "mumbai" in s:
+        return "harbor-mumbai"
+    if "veraval" in s:
+        return "harbor-veraval"
     return "unseeded"
 
 
