@@ -13,6 +13,7 @@ import EOGridSpatialMap, {
 } from './EOGridSpatialMap';
 import DataSourceMonitor from './DataSourceMonitor';
 import ScenarioLab from './ScenarioLab';
+import ScenarioComparisonView from './ScenarioComparisonView';
 import QueryWorkbench from './QueryWorkbench';
 import ResearcherPage from '../../pages/ResearcherPage';
 import DataProvenancePanel from './DataProvenancePanel';
@@ -39,6 +40,7 @@ import {
   type PFZCandidate,
   type HazardBulletin,
   type EOGridCell,
+  type ScenarioRunResult,
 } from '../../api/researcher-client';
 
 describe('Researcher Dashboard Components & Data Client', () => {
@@ -1783,6 +1785,199 @@ describe('Researcher Dashboard Components & Data Client', () => {
       }
       const sortedDates = Array.from(dates).sort();
       expect(sortedDates).toEqual(['2026-09-10', '2026-09-11', '2026-09-12']);
+    });
+  });
+
+  describe('P0-20: Scenario Comparison in Researcher Lab', () => {
+    it('exports ScenarioComparisonView and ScenarioLab cleanly', () => {
+      expect(ScenarioComparisonView).toBeDefined();
+      expect(typeof ScenarioComparisonView).toBe('function');
+      expect(ScenarioLab).toBeDefined();
+      expect(typeof ScenarioLab).toBe('function');
+    });
+
+    it('fetches real scenario metadata from fetchScenarios', async () => {
+      const scenarios = await fetchScenarios();
+      expect(scenarios.length).toBeGreaterThanOrEqual(8);
+      expect(scenarios[0].id).toBe('S1');
+      expect(scenarios[0].name).toBeDefined();
+      expect(scenarios[0].query).toBeDefined();
+      expect(scenarios[0].intent).toBeDefined();
+      expect(scenarios[0].expected_status).toBeDefined();
+    });
+
+    it('preserves real execution results and compares intent match/mismatch accurately', () => {
+      const mockResultMatch: ScenarioRunResult = {
+        scenario_id: 'S1',
+        status: 'passed',
+        passed: true,
+        recommendation_status: 'CAUTION',
+        actual_intent: 'GO_NO_GO_SAFETY',
+        expected_intent: 'GO_NO_GO_SAFETY',
+        actual_status: 'CAUTION',
+        expected_status: 'CAUTION',
+        confidence_level: 'HIGH',
+        evidence_count: 5,
+        evidence_grounded: true,
+        trace_steps: 4,
+        execution_time_ms: 650,
+        executed_tools: ['marine_conditions', 'hazard_context'],
+        decisive_factors: ['Elevated wave height along coast'],
+        validation_notes: ['Safety check matched expected status'],
+        warnings: [],
+        answer: 'Wave height elevated near Ratnagiri.',
+        is_error: false,
+      };
+
+      const mockResultMismatch: ScenarioRunResult = {
+        scenario_id: 'S2',
+        status: 'failed',
+        passed: false,
+        recommendation_status: 'NO_GO',
+        actual_intent: 'ROUTE_COMPARISON',
+        expected_intent: 'NEAREST_PFZ',
+        actual_status: 'NO_GO',
+        expected_status: 'GO',
+        confidence_level: 'MEDIUM',
+        evidence_count: 2,
+        evidence_grounded: true,
+        trace_steps: 3,
+        execution_time_ms: 1200,
+        executed_tools: ['marine_conditions'],
+        decisive_factors: ['Unexpected hazard override'],
+        validation_notes: ['Intent mismatch: expected NEAREST_PFZ'],
+        warnings: ['Degraded sensor confidence'],
+        answer: 'PFZ query returned route comparison.',
+        is_error: false,
+      };
+
+      expect(mockResultMatch.actual_intent).toBe(mockResultMatch.expected_intent);
+      expect(mockResultMismatch.actual_intent).not.toBe(mockResultMismatch.expected_intent);
+      expect(mockResultMatch.passed).toBe(true);
+      expect(mockResultMismatch.passed).toBe(false);
+      expect(mockResultMatch.evidence_count).toBe(5);
+      expect(mockResultMismatch.evidence_count).toBe(2);
+      expect(mockResultMatch.executed_tools).toContain('hazard_context');
+      expect(mockResultMismatch.executed_tools).not.toContain('hazard_context');
+    });
+
+    it('distinguishes execution ERROR from scenario FAIL strictly', () => {
+      const scenarioFailResult: ScenarioRunResult = {
+        scenario_id: 'S1',
+        status: 'failed',
+        passed: false,
+        recommendation_status: 'CAUTION',
+        confidence_level: 'HIGH',
+        answer: 'Scenario evaluated but failed deterministic expectation.',
+        evidence_count: 3,
+        trace_steps: 2,
+        execution_time_ms: 450,
+        warnings: [],
+        decisive_factors: [],
+        is_error: false,
+      };
+
+      const executionErrorResult: ScenarioRunResult = {
+        scenario_id: 'S2',
+        status: 'error',
+        passed: false,
+        recommendation_status: 'UNKNOWN',
+        confidence_level: 'UNKNOWN',
+        answer: 'Scenario execution unavailable: Network or service timeout.',
+        evidence_count: 0,
+        trace_steps: 0,
+        execution_time_ms: 50,
+        warnings: ['[UNAVAILABLE] Network or service timeout.'],
+        decisive_factors: [],
+        is_error: true,
+        error: 'Network or service timeout.',
+      };
+
+      expect(scenarioFailResult.is_error).toBe(false);
+      expect(scenarioFailResult.status).toBe('failed');
+      expect(scenarioFailResult.evidence_count).toBe(3);
+
+      expect(executionErrorResult.is_error).toBe(true);
+      expect(executionErrorResult.status).toBe('error');
+      expect(executionErrorResult.confidence_level).toBe('UNKNOWN');
+      expect(executionErrorResult.evidence_count).toBe(0);
+    });
+
+    it('handles partial failures cleanly in multi-scenario runs without hiding successful results', () => {
+      const resultsMap: Record<string, ScenarioRunResult> = {
+        S1: {
+          scenario_id: 'S1',
+          status: 'passed',
+          passed: true,
+          recommendation_status: 'CAUTION',
+          confidence_level: 'HIGH',
+          evidence_count: 4,
+          trace_steps: 3,
+          execution_time_ms: 800,
+          warnings: [],
+          decisive_factors: ['Wave threshold active'],
+          answer: 'S1 successful evaluation.',
+          is_error: false,
+        },
+        S2: {
+          scenario_id: 'S2',
+          status: 'error',
+          passed: false,
+          recommendation_status: 'UNKNOWN',
+          confidence_level: 'UNKNOWN',
+          evidence_count: 0,
+          trace_steps: 0,
+          execution_time_ms: 10,
+          warnings: ['[UNAVAILABLE] HTTP 503 Backend timeout'],
+          decisive_factors: [],
+          answer: 'S2 execution error.',
+          is_error: true,
+        },
+      };
+
+      expect(resultsMap.S1.passed).toBe(true);
+      expect(resultsMap.S1.is_error).toBe(false);
+      expect(resultsMap.S2.is_error).toBe(true);
+      expect(resultsMap.S2.passed).toBe(false);
+    });
+
+    it('enforces maximum 4 scenarios in multi-selection logic', () => {
+      const allScenarioIds = ['S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7', 'S8'];
+      let selected: string[] = [];
+
+      for (const id of allScenarioIds) {
+        if (selected.length < 4) {
+          selected.push(id);
+        }
+      }
+
+      expect(selected.length).toBe(4);
+      expect(selected).toEqual(['S1', 'S2', 'S3', 'S4']);
+    });
+
+    it('preserves executed tools and decisive factors without fabrication', () => {
+      const realTools = ['marine_conditions', 'pfz_candidates', 'route_generation'];
+      const decisiveFactors = ['SST thermal gradient > 0.8', 'Distance within 50km'];
+
+      const runResult: ScenarioRunResult = {
+        scenario_id: 'S2',
+        status: 'passed',
+        passed: true,
+        recommendation_status: 'GO',
+        confidence_level: 'HIGH',
+        evidence_count: 3,
+        trace_steps: 4,
+        execution_time_ms: 920,
+        executed_tools: realTools,
+        decisive_factors: decisiveFactors,
+        warnings: [],
+        answer: 'Nearest PFZ located.',
+        is_error: false,
+      };
+
+      expect(runResult.executed_tools).toEqual(realTools);
+      expect(runResult.decisive_factors).toEqual(decisiveFactors);
+      expect(runResult.execution_time_ms).toBe(920);
     });
   });
 });

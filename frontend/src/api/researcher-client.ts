@@ -111,6 +111,7 @@ export interface ScenarioRunResult {
   recommendation_status: string;
   answer: string;
   evidence_count: number;
+  evidence_grounded?: boolean;
   trace_steps: number;
   execution_time_ms: number;
   warnings: string[];

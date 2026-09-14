@@ -171,6 +171,29 @@
   - Discloses discrete 5×5 synthetic grid observation semantics without claiming continuous raster or live satellite telemetry.
 - **Validation**: 71 researcher tests (165 total frontend tests passing across 11 suites), 31 backend contract/domain tests passing, and clean `tsc && vite build` production bundle.
 
+### P0-20 — Scenario Comparison in Researcher Lab
+- Implemented `ScenarioComparisonView.tsx` enabling side-by-side analytical comparison of multiple (2–4) synthetic scenario executions over the real `/api/v1/scenarios/{id}/run` ORCA execution pipeline.
+- **Multi-Scenario Selection & Limiting**:
+  - Scenario list cards support multi-select checkboxes with a strict 4-scenario ceiling to prevent UI clutter and unreadable comparison matrices.
+  - Added segmented view switcher between `[Single Inspection]` and `[Scenario Comparison (N)]` modes, preserving the single-scenario execution workflow completely intact.
+  - Multi-selection actions include "Run Selected (N)", individual rerun buttons, and "Reset Comparison" state clearing.
+- **Execution State & Honest Verdict Distinction**:
+  - Distinguishes execution `ERROR` (network/server failure, `is_error: true`, amber badge) from scenario `FAIL` (`passed === false` on valid run, rose badge).
+  - Unexecuted scenarios display as `NOT RUN` / `IDLE` without fabricated metrics or results.
+  - Partial failure resilience: If one scenario errors and another succeeds, the successful real result is preserved and displayed alongside the explicit error card.
+- **Side-by-Side Comparison Matrix**:
+  - **Intent Comparison**: Evaluates `expected_intent` vs `actual_intent` with high-visibility `MATCH` / `MISMATCH` badges.
+  - **Status & Recommendation**: Compares `expected_status` vs `actual_status` (e.g. `GO` vs `NO_GO` / `CAUTION`).
+  - **Confidence Scale**: Displays actual backend confidence (`HIGH`, `MEDIUM`, `LOW`, `UNKNOWN`) on its native scale without normalized conversions or artificial safety percentages.
+  - **Evidence & Grounding**: Displays verified evidence item counts and ground truth badges (`Grounded` vs `Unverified`).
+  - **Executed Tools**: Compares executed domain tools (`marine_conditions`, `hazard_context`, `pfz_candidates`, `route_generation`).
+  - **Execution Latency & Trace Steps**: Displays real milliseconds elapsed (`ms`) and node execution step count.
+- **Deep Inspection Cards**:
+  - Expandable side-by-side panels detailing Mariner Synthesis answers, backend Decisive Factors, System & Expectation Validation notes, and runtime Warnings.
+- **Synthetic Data Disclosure**:
+  - Persistent `DATA MODE: SYNTHETIC DEMO / SNAPSHOT` footer disclosing deterministic scenario evaluations without live operational claims.
+- **Validation**: 78 researcher tests (172 total frontend tests passing across 11 suites), 31 backend domain/contract tests passing, and clean `tsc && vite build` production bundle.
+
 ---
 
 ## P0 Marine Data Providers Status Board
