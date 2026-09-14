@@ -102,6 +102,23 @@
 - Compact provenance caption: `Synthetic hazard polygons · source-faithful demonstration data`.
 - Validated with 8 automated unit & feature transformation tests (128 total frontend tests passing), full TypeScript typecheck, and clean `tsc && vite build`.
 
+### P0-16 — Earth Observation 14-Day Temporal Analysis in Researcher Lab
+- Resolved temporal truncation by preserving all 350 multi-day satellite grid cell observations (14 daily time slices × 25 spatial cells) in `fetchEOGridCells()`, while preserving `getLatestEOGridCells()` for the latest spatial snapshot table.
+- Implemented `EOTemporalAnalysisChart.tsx` featuring pure-SVG 14-day temporal trend line chart with metric switcher:
+  - **SST (°C)**: absolute Sea Surface Temperature from INSAT-3D/Oceansat thermal sensors (never confounded with PFZ `sst_gradient`).
+  - **Chlorophyll-a (mg/m³)**: surface chlorophyll concentration from Oceansat-3 OCM.
+  - **Cloud Cover (%)**: pixel cloud fraction percentage across the 5×5 satellite grid.
+- Implemented deterministic daily spatial aggregation (`aggregateEOTemporalSeries`):
+  - Strictly groups records by ISO date (`2026-08-30` through `2026-09-12`).
+  - Calculates arithmetic daily spatial mean across valid (non-null) grid cells only, without coercing nulls/missing to zero.
+  - Generates min-max spatial spread ribbon (shaded variability envelope between daily min and max cell values).
+  - Renders null days (e.g. 100% cloud obscuration) as explicit line gaps with 0 valid count.
+  - Tracks valid-cell count (e.g. `24 / 25 cells`) and mean pixel uncertainty (e.g. `±0.12`).
+- Interactive hover cursor and tooltip with full QC status breakdown (`VALID`, `CLOUD_OBSCURED`, `DEGRADED_QC_WARNING`, `NO_DATA`).
+- Summary KPI cards for 14-day overall mean, observed spatial range, and valid cell coverage rate.
+- Compact provenance caption: `MOSDAC/EO-style daily observations · 14-day synthetic snapshot · Spatial mean across valid grid cells`.
+- Validated with 13 automated unit & feature transformation tests (141 total frontend tests passing), full TypeScript typecheck, and clean `tsc && vite build`.
+
 ---
 
 ## P0 Marine Data Providers Status Board

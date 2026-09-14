@@ -6701,6 +6701,294 @@ button.fleet-alert-card.active {
   flex-wrap: wrap;
 }
 
+/* Earth Observation 14-Day Temporal Analysis Chart */
+.researcher-eo-temporal-wrapper {
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.researcher-eo-temporal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: rgba(15, 23, 42, 0.6);
+  border-bottom: 1px solid var(--color-border);
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.researcher-eo-temporal-title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.researcher-eo-temporal-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--font-size-md);
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.researcher-eo-icon {
+  color: #10b981;
+}
+
+.researcher-eo-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 1px 7px;
+  border-radius: var(--radius-full);
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+}
+
+.researcher-eo-subtitle {
+  font-size: 11px;
+  color: var(--color-text-muted);
+}
+
+.researcher-eo-metric-pills {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(15, 23, 42, 0.6);
+  padding: 3px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+}
+
+.researcher-eo-metric-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 4px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--color-text-muted);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.researcher-eo-metric-btn:hover:not(.active) {
+  color: var(--color-text-primary);
+  background: rgba(51, 65, 85, 0.3);
+}
+
+.researcher-eo-metric-btn.active {
+  background: rgba(30, 41, 59, 0.85);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+.eo-metric-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.eo-metric-unit {
+  font-size: 9px;
+  color: var(--color-text-dim);
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.researcher-eo-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-md);
+  padding: 12px 16px;
+  background: rgba(15, 23, 42, 0.3);
+  border-bottom: 1px solid var(--color-border);
+}
+
+@media (max-width: 768px) {
+  .researcher-eo-summary-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.researcher-eo-summary-card {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.eo-summary-label {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-dim);
+}
+
+.eo-summary-val {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.eo-summary-val.mono {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+}
+
+.eo-summary-val small {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--color-text-dim);
+}
+
+.eo-summary-sub {
+  font-size: 10px;
+  color: var(--color-text-muted);
+}
+
+.researcher-eo-canvas-wrap {
+  position: relative;
+  width: 100%;
+  padding: 8px 12px;
+  overflow: hidden;
+}
+
+.researcher-eo-svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.eo-axis-tick {
+  font-size: 10px;
+  font-family: 'JetBrains Mono', monospace;
+  fill: #94a3b8;
+}
+
+.researcher-eo-tooltip {
+  position: absolute;
+  transform: translate(-50%, -115%);
+  pointer-events: none;
+  background: rgba(15, 23, 42, 0.96);
+  border: 1px solid rgba(51, 65, 85, 0.85);
+  border-radius: 6px;
+  padding: 8px 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
+  color: #f8fafc;
+  min-width: 210px;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 11px;
+}
+
+.eo-tooltip-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border-bottom: 1px solid rgba(51, 65, 85, 0.6);
+  padding-bottom: 3px;
+  color: #94a3b8;
+  font-size: 10px;
+}
+
+.eo-tooltip-metric {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 0;
+}
+
+.eo-tooltip-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #94a3b8;
+}
+
+.eo-tooltip-val {
+  font-size: 13px;
+  font-weight: 700;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.eo-tooltip-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  font-size: 10px;
+  color: #cbd5e1;
+}
+
+.eo-tooltip-row .mono {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 500;
+}
+
+.eo-tooltip-qc-list {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  margin-top: 2px;
+  border-top: 1px dashed rgba(51, 65, 85, 0.4);
+  padding-top: 3px;
+}
+
+.eo-tooltip-qc-badge {
+  font-size: 8px;
+  padding: 1px 4px;
+  border-radius: 2px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.eo-tooltip-qc-badge.valid { background: rgba(16, 185, 129, 0.2); color: #10b981; }
+.eo-tooltip-qc-badge.cloud_obscured { background: rgba(148, 163, 184, 0.2); color: #94a3b8; }
+.eo-tooltip-qc-badge.degraded_qc_warning { background: rgba(245, 158, 11, 0.2); color: #f59e0b; }
+.eo-tooltip-qc-badge.no_data { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
+
+.researcher-eo-empty-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(4px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: var(--color-text-muted);
+  font-size: 12px;
+  padding: 20px;
+  text-align: center;
+}
+
+.eo-empty-icon {
+  color: #f59e0b;
+}
+
+.researcher-eo-temporal-footer {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: rgba(15, 23, 42, 0.4);
+  border-top: 1px solid var(--color-border);
+  font-size: 11px;
+  color: var(--color-text-dim);
+}
+
 /* Data Source Monitor */
 .researcher-source-monitor {
   display: flex;

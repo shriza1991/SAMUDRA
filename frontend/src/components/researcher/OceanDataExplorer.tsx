@@ -5,13 +5,14 @@ import {
 } from 'lucide-react';
 import {
   fetchHarbors, fetchMarineObservations, fetchEOGridCells,
-  fetchPFZCandidates, fetchHazards,
+  fetchPFZCandidates, fetchHazards, getLatestEOGridCells,
   type HarborData, type MarineObservation, type EOGridCell,
   type PFZCandidate, type HazardBulletin,
 } from '../../api/researcher-client';
 import OceanTimeSeriesChart from './OceanTimeSeriesChart';
 import PFZSpatialMap from './PFZSpatialMap';
 import HazardSpatialMap from './HazardSpatialMap';
+import EOTemporalAnalysisChart from './EOTemporalAnalysisChart';
 
 export default function OceanDataExplorer() {
   const [harbors, setHarbors] = useState<HarborData[]>([]);
@@ -24,6 +25,8 @@ export default function OceanDataExplorer() {
   const [selectedHazardId, setSelectedHazardId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [obsLoading, setObsLoading] = useState(false);
+
+  const latestEoCells = useMemo(() => getLatestEOGridCells(eoCells), [eoCells]);
 
   useEffect(() => {
     loadInitialData();
@@ -210,13 +213,18 @@ export default function OceanDataExplorer() {
         </div>
       </section>
 
+      {/* 14-Day Earth Observation Temporal Analysis Chart */}
+      <section className="researcher-section">
+        <EOTemporalAnalysisChart records={eoCells} loading={loading} />
+      </section>
+
       {/* Two-Column: EO Grid + PFZ */}
       <div className="researcher-two-col">
-        {/* EO Satellite Data */}
+        {/* EO Satellite Data (Latest Snapshot) */}
         <section className="researcher-section">
           <h3 className="researcher-section-title">
             <Satellite size={14} />
-            Earth Observation Grid
+            Earth Observation Grid (Latest Snapshot)
           </h3>
           <div className="researcher-table-wrap">
             <table className="researcher-table researcher-table-compact">
@@ -231,7 +239,7 @@ export default function OceanDataExplorer() {
                 </tr>
               </thead>
               <tbody>
-                {eoCells.map((cell, idx) => (
+                {latestEoCells.map((cell, idx) => (
                   <tr key={cell.public_id || `${cell.cell_id}-${cell.pass_time || idx}`}>
                     <td className="researcher-cell-mono">{cell.cell_id}</td>
                     <td style={{ color: (cell.chlorophyll_a_mg_m3 ?? 0) > 1.5 ? '#10b981' : undefined, fontWeight: (cell.chlorophyll_a_mg_m3 ?? 0) > 1.5 ? 600 : undefined }}>

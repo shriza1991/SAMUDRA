@@ -48,10 +48,14 @@ export interface EOGridCell {
   chlorophyll_a_mg_m3: number | null;
   sst_celsius: number | null;
   cloud_cover_pct: number | null;
+  cloud_fraction?: number | null;
+  uncertainty?: number | null;
+  qc_status?: string;
   satellite: string;
   pass_time: string;
   resolution_m: number;
   source: string;
+  provenance_json?: Record<string, any>;
 }
 
 export interface PFZCandidate {
@@ -267,16 +271,7 @@ export async function fetchMarineObservations(harborId?: string): Promise<Marine
 
 export async function fetchEOGridCells(): Promise<EOGridCell[]> {
   const raw = await fetchOrMock<any[]>('/demo/eo-grid-cells', MOCK_EO_CELLS);
-  // De-duplicate multi-day time slices down to the unique spatial cells (taking most recent observation)
-  const cellMap = new Map<string, any>();
-  for (const c of raw || []) {
-    const key = c.cell_id || c.public_id;
-    if (!cellMap.has(key) || (c.observation_time && c.observation_time > (cellMap.get(key).observation_time || ''))) {
-      cellMap.set(key, c);
-    }
-  }
-  const uniqueCells = Array.from(cellMap.values());
-  return uniqueCells.map((c, i) => ({
+  return (raw || []).map((c, i) => ({
     public_id: c.public_id || `cell-${i}`,
     cell_id: c.cell_id || c.public_id || `cell-${i}`,
     center_lat: typeof c.center_lat === 'number' ? c.center_lat : typeof c.latitude === 'number' ? c.latitude : 0,
@@ -284,11 +279,30 @@ export async function fetchEOGridCells(): Promise<EOGridCell[]> {
     chlorophyll_a_mg_m3: typeof c.chlorophyll_a_mg_m3 === 'number' ? c.chlorophyll_a_mg_m3 : typeof c.chlorophyll_mg_m3 === 'number' ? c.chlorophyll_mg_m3 : typeof c.CHL_A === 'number' ? c.CHL_A : null,
     sst_celsius: typeof c.sst_celsius === 'number' ? c.sst_celsius : typeof c.sst_c === 'number' ? c.sst_c : typeof c.SST === 'number' ? c.SST : null,
     cloud_cover_pct: typeof c.cloud_cover_pct === 'number' ? c.cloud_cover_pct : typeof c.cloud_fraction === 'number' ? Math.round(c.cloud_fraction * 100) : null,
+    cloud_fraction: typeof c.cloud_fraction === 'number' ? c.cloud_fraction : typeof c.cloud_cover_pct === 'number' ? +(c.cloud_cover_pct / 100).toFixed(2) : null,
+    uncertainty: typeof c.uncertainty === 'number' ? c.uncertainty : typeof c.PIXEL_UNCERTAINTY === 'number' ? c.PIXEL_UNCERTAINTY : null,
+    qc_status: c.qc_status || (c.QA_FLAGS === 0 ? 'VALID' : 'CLOUD_OBSCURED'),
     satellite: c.satellite || (c.source_name ? c.source_name.split(' ')[2] || 'Oceansat-3' : 'Oceansat-3 OCM'),
     pass_time: c.pass_time || c.observation_time || new Date().toISOString(),
     resolution_m: typeof c.resolution_m === 'number' ? c.resolution_m : 360,
     source: c.source || c.source_name || 'ISRO MOSDAC',
+    provenance_json: c.provenance_json,
   }));
+}
+
+/**
+ * Deduplicates multi-day EO grid cells down to the unique spatial cells taking the latest observation.
+ * Used for static latest spatial grid rendering.
+ */
+export function getLatestEOGridCells(cells: EOGridCell[]): EOGridCell[] {
+  const cellMap = new Map<string, EOGridCell>();
+  for (const c of cells || []) {
+    const key = c.cell_id || c.public_id || '';
+    if (!cellMap.has(key) || (c.pass_time && c.pass_time > (cellMap.get(key)!.pass_time || ''))) {
+      cellMap.set(key, c);
+    }
+  }
+  return Array.from(cellMap.values());
 }
 
 export async function fetchPFZCandidates(): Promise<PFZCandidate[]> {

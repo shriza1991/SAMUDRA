@@ -3,6 +3,7 @@ import OceanDataExplorer from './OceanDataExplorer';
 import OceanTimeSeriesChart from './OceanTimeSeriesChart';
 import PFZSpatialMap, { buildPFZGeoJSON } from './PFZSpatialMap';
 import HazardSpatialMap, { buildHazardGeoJSON } from './HazardSpatialMap';
+import EOTemporalAnalysisChart, { aggregateEOTemporalSeries } from './EOTemporalAnalysisChart';
 import DataSourceMonitor from './DataSourceMonitor';
 import ScenarioLab from './ScenarioLab';
 import QueryWorkbench from './QueryWorkbench';
@@ -11,6 +12,7 @@ import {
   fetchHarbors,
   fetchMarineObservations,
   fetchEOGridCells,
+  getLatestEOGridCells,
   fetchPFZCandidates,
   fetchHazards,
   fetchScenarios,
@@ -20,6 +22,7 @@ import {
   type MarineObservation,
   type PFZCandidate,
   type HazardBulletin,
+  type EOGridCell,
 } from '../../api/researcher-client';
 
 describe('Researcher Dashboard Components & Data Client', () => {
@@ -819,7 +822,209 @@ describe('Researcher Dashboard Components & Data Client', () => {
       expect(geojson.features).toHaveLength(0);
     });
   });
+
+  // =========================================================================
+  // P0-16 Earth Observation 14-Day Temporal Analysis Tests
+  // =========================================================================
+
+  describe('P0-16 Earth Observation 14-Day Temporal Analysis', () => {
+    // Generate synthetic multi-day grid dataset simulating 14 daily slices of 5 cells each
+    const mockEODataset: EOGridCell[] = [];
+    const baseDate = new Date('2026-08-30T06:00:00Z').getTime();
+
+    for (let day = 0; day < 14; day++) {
+      const dateIso = new Date(baseDate + day * 86400 * 1000).toISOString();
+      for (let cell = 0; cell < 5; cell++) {
+        // Create intentional cloud obscuration / null day on day 3 for cell 0..4
+        const isCloudDay = day === 3;
+        // Create partial cloud on day 7 for cell 4
+        const isPartialCloud = day === 7 && cell === 4;
+        const isNull = isCloudDay || isPartialCloud;
+
+        mockEODataset.push({
+          public_id: `eo-cell-0${cell}-d${day}`,
+          cell_id: `cell-0${cell}`,
+          center_lat: 16.0 + cell * 0.2,
+          center_lon: 72.4 + cell * 0.2,
+          pass_time: dateIso,
+          sst_celsius: isNull ? null : +(28.5 + day * 0.1 + cell * 0.05).toFixed(2),
+          chlorophyll_a_mg_m3: isNull ? null : +(1.2 + Math.sin(day / 2) * 0.4 + cell * 0.1).toFixed(2),
+          cloud_cover_pct: isCloudDay ? 90 : isPartialCloud ? 80 : 10,
+          cloud_fraction: isCloudDay ? 0.90 : isPartialCloud ? 0.80 : 0.10,
+          uncertainty: isNull ? null : 0.12,
+          qc_status: isCloudDay ? 'CLOUD_OBSCURED' : 'VALID',
+          satellite: 'Oceansat-3 OCM',
+          resolution_m: 360,
+          source: 'ISRO MOSDAC',
+        });
+      }
+    }
+
+    it('exports EOTemporalAnalysisChart component cleanly', () => {
+      expect(EOTemporalAnalysisChart).toBeDefined();
+      expect(typeof EOTemporalAnalysisChart).toBe('function');
+    });
+
+    it('preserves all 14 distinct dates without de-duplicating or dropping earlier dates', () => {
+      const dailySST = aggregateEOTemporalSeries(mockEODataset, 'sst_celsius');
+      expect(dailySST).toHaveLength(14);
+      expect(dailySST[0].date).toBe('2026-08-30');
+      expect(dailySST[13].date).toBe('2026-09-12');
+    });
+
+    it('ensures daily aggregates are strictly sorted chronologically ascending', () => {
+      // Shuffle the dataset
+      const shuffled = [...mockEODataset].sort(() => Math.random() - 0.5);
+      const daily = aggregateEOTemporalSeries(shuffled, 'sst_celsius');
+
+      expect(daily).toHaveLength(14);
+      for (let i = 0; i < daily.length - 1; i++) {
+        expect(new Date(daily[i].date).getTime()).toBeLessThan(new Date(daily[i + 1].date).getTime());
+      }
+    });
+
+    it('calculates arithmetic daily spatial mean accurately across valid cells only', () => {
+      const dailySST = aggregateEOTemporalSeries(mockEODataset, 'sst_celsius');
+      const day0 = dailySST[0];
+
+      // Day 0: 5 cells with SST: 28.50, 28.55, 28.60, 28.65, 28.70
+      // Sum = 143.0, Mean = 28.60
+      expect(day0.validCount).toBe(5);
+      expect(day0.totalCount).toBe(5);
+      expect(day0.mean).toBeCloseTo(28.60, 2);
+      expect(day0.min).toBeCloseTo(28.50, 2);
+      expect(day0.max).toBeCloseTo(28.70, 2);
+    });
+
+    it('never treats null/missing values as zero in spatial mean calculations', () => {
+      const dailySST = aggregateEOTemporalSeries(mockEODataset, 'sst_celsius');
+      const day7 = dailySST[7];
+
+      // Day 7 has 4 valid cells and 1 null cell (partial cloud)
+      expect(day7.validCount).toBe(4);
+      expect(day7.totalCount).toBe(5);
+      expect(day7.mean).not.toBeNull();
+      // Mean should be around 29.35 (not dragged down to ~23 by treating null as 0)
+      expect(day7.mean!).toBeGreaterThan(28.0);
+    });
+
+    it('produces null mean and 0 valid count for fully cloud-obscured dates (chart gap)', () => {
+      const dailySST = aggregateEOTemporalSeries(mockEODataset, 'sst_celsius');
+      const day3 = dailySST[3]; // Day 3 is fully obscured
+
+      expect(day3.validCount).toBe(0);
+      expect(day3.totalCount).toBe(5);
+      expect(day3.mean).toBeNull();
+      expect(day3.min).toBeNull();
+      expect(day3.max).toBeNull();
+      expect(day3.qcCounts['CLOUD_OBSCURED']).toBe(5);
+    });
+
+    it('preserves absolute SST semantics without confounding with PFZ sst_gradient', () => {
+      const dailySST = aggregateEOTemporalSeries(mockEODataset, 'sst_celsius');
+      for (const d of dailySST) {
+        if (d.mean !== null) {
+          // Absolute SST is ~28–31 °C (never gradient < 2.0)
+          expect(d.mean).toBeGreaterThan(20);
+          expect(d.mean).toBeLessThan(35);
+        }
+      }
+    });
+
+    it('calculates Chlorophyll-a temporal series with mg/m³ values', () => {
+      const dailyChla = aggregateEOTemporalSeries(mockEODataset, 'chlorophyll_a_mg_m3');
+      expect(dailyChla).toHaveLength(14);
+      const day0 = dailyChla[0];
+      expect(day0.validCount).toBe(5);
+      expect(day0.mean).toBeGreaterThan(0.5);
+      expect(day0.mean).toBeLessThan(3.0);
+    });
+
+    it('calculates Cloud Cover percentage series correctly', () => {
+      const dailyCloud = aggregateEOTemporalSeries(mockEODataset, 'cloud_cover_pct');
+      expect(dailyCloud).toHaveLength(14);
+      const day3 = dailyCloud[3];
+      // On cloud day, cloud cover is 90%
+      expect(day3.validCount).toBe(5);
+      expect(day3.mean).toBe(90);
+    });
+
+    it('computes mean pixel uncertainty when available and does not coerce missing to 0', () => {
+      const dailySST = aggregateEOTemporalSeries(mockEODataset, 'sst_celsius');
+      const day0 = dailySST[0];
+      expect(day0.meanUncertainty).toBe(0.12);
+
+      const day3 = dailySST[3]; // All uncertainties null on cloud day
+      expect(day3.meanUncertainty).toBeNull();
+    });
+
+    it('correctly de-duplicates cells to latest observation for spatial grid table via getLatestEOGridCells', () => {
+      const latest = getLatestEOGridCells(mockEODataset);
+      // 5 unique spatial cells
+      expect(latest).toHaveLength(5);
+      // All latest cells should have pass_time from the last day (2026-09-12)
+      for (const cell of latest) {
+        expect(cell.pass_time.slice(0, 10)).toBe('2026-09-12');
+      }
+    });
+
+    it('gracefully handles empty records array without errors', () => {
+      const empty = aggregateEOTemporalSeries([], 'sst_celsius');
+      expect(empty).toEqual([]);
+    });
+
+    it('regression: fetchEOGridCells returns all 350 raw multi-day observations from backend', async () => {
+      // Create mock 350 item payload
+      const mockBackendCells: any[] = [];
+      for (let day = 0; day < 14; day++) {
+        const dateIso = new Date(baseDate + day * 86400 * 1000).toISOString();
+        for (let cell = 0; cell < 25; cell++) {
+          mockBackendCells.push({
+            public_id: `eo-CELL-${cell}-d${day}`,
+            cell_id: `CELL-${cell}`,
+            latitude: 16.0 + (cell % 5) * 0.2,
+            longitude: 72.4 + Math.floor(cell / 5) * 0.2,
+            observation_time: dateIso,
+            SST: 29.5,
+            CHL_A: 1.4,
+            sst_c: 29.5,
+            chlorophyll_mg_m3: 1.4,
+            cloud_fraction: 0.1,
+            uncertainty: 0.12,
+            qc_status: 'VALID',
+            source_name: 'MOSDAC / ISRO Oceansat-3 OCM (SYNTHETIC)',
+          });
+        }
+      }
+
+      const originalFetch = globalThis.fetch;
+      try {
+        globalThis.fetch = vi.fn().mockResolvedValue({
+          ok: true,
+          status: 200,
+          json: async () => mockBackendCells,
+        } as any);
+
+        const cells = await fetchEOGridCells();
+        // Must preserve all 350 multi-day observations
+        expect(cells).toHaveLength(350);
+
+        // Verify temporal aggregation operates on all 14 days
+        const aggregated = aggregateEOTemporalSeries(cells, 'sst_celsius');
+        expect(aggregated).toHaveLength(14);
+        expect(aggregated[0].totalCount).toBe(25);
+        expect(aggregated[0].mean).toBeCloseTo(29.5, 1);
+
+        // Verify getLatestEOGridCells extracts only the 25 unique cells
+        const latest = getLatestEOGridCells(cells);
+        expect(latest).toHaveLength(25);
+      } finally {
+        globalThis.fetch = originalFetch;
+      }
+    });
+  });
 });
+
 
 
 
