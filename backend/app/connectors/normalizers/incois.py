@@ -28,7 +28,13 @@ class IncoisOSFNormalizer:
         - QC flags (0 = Valid, 1 = Degraded/Suspect, 9 = Missing)
         - Explicit provenance tagging
         """
-        harbor = source_record.get("harbor") or source_record.get("station_name") or "Ratnagiri"
+        harbor = (
+            source_record.get("harbor")
+            or source_record.get("station_name")
+            or (source_record.get("provenance_json") or {}).get("harbor")
+            or (source_record.get("coverage_metadata") or {}).get("station")
+            or "Ratnagiri"
+        )
 
         # Missing value handling: -999.0 is INCOIS sentinel for missing
         def clean_val(v: Any) -> Optional[float]:
@@ -48,11 +54,19 @@ class IncoisOSFNormalizer:
         current_speed = clean_val(source_record.get("current_speed", source_record.get("surface_current_knots")))
         sst = clean_val(source_record.get("sst", source_record.get("sea_surface_temp_c")))
 
-        obs_time = source_record.get("timestamp_utc") or source_record.get("observed_at")
+        obs_time = (
+            source_record.get("timestamp_utc")
+            or source_record.get("observed_at")
+            or source_record.get("observation_time")
+        )
+        if isinstance(obs_time, datetime):
+            obs_time = obs_time.isoformat()
         if not obs_time:
             obs_time = datetime.now(timezone.utc).isoformat()
 
         valid_to = source_record.get("valid_to_utc") or source_record.get("valid_to")
+        if isinstance(valid_to, datetime):
+            valid_to = valid_to.isoformat()
         if not valid_to:
             try:
                 dt = datetime.fromisoformat(obs_time.replace("Z", "+00:00"))

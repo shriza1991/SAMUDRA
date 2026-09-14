@@ -40,6 +40,12 @@
 - Integrated dynamic sector route fetching in `AuthorityPage` with request cancellation and stale-state clearing on sector switch.
 - Stabilized map camera bounds to prevent abrupt jumping/refitting during Safest / Balanced / Direct corridor switching.
 
+### P0-9 — Authoritative Marine Observation Single Source of Truth
+- Eliminated architectural source-of-truth split between legacy static `marine_dataset.py` and deterministic synthetic OSF time-series fixture (`data/fixtures/synthetic/incois/osf_hourly_observations.json`).
+- Updated `SnapshotConnector` to directly load `osf_hourly_observations.json` and normalize records through `IncoisOSFNormalizer.normalize()`.
+- Refactored `DataService` in SNAPSHOT and SYNTHETIC modes to route through `SnapshotConnector`, eliminating hardcoded dummy payloads and silent dataset fallbacks.
+- Verified single source-of-truth consistency across fixture -> INCOIS adapter -> ObservationBundle -> Risk Engine -> Situation Assessment -> Researcher Demo API with dedicated test suite (`test_marine_source_of_truth.py`).
+
 ---
 
 ## P0 Marine Data Providers Status Board

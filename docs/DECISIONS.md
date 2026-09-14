@@ -198,6 +198,24 @@ Extends SAMUDRA's user taxonomy into research and analytics while keeping the co
 Owner: Dev 1 / Dev 4 (Researcher persona)
 Date: 2026-09-13
 
+## D021 — Authoritative Marine Observation Source of Truth (OSF Fixture)
+Status: ACCEPTED
+
+Decision:
+1. Establish `data/fixtures/synthetic/incois/osf_hourly_observations.json` as the authoritative single source of truth for SNAPSHOT/SYNTHETIC marine observations across SAMUDRA.
+2. `SnapshotConnector` loads `osf_hourly_observations.json` directly and normalizes records via `IncoisOSFNormalizer.normalize()`.
+3. `DataService` in `SNAPSHOT` and `SYNTHETIC` modes routes directly through `SnapshotConnector` without hardcoded dummy dictionaries or silent fallback to legacy static dataset files.
+4. Legacy `marine_dataset.py` is isolated and cannot override or bypass fixture-backed observation values.
+
+Reason:
+Eliminates architectural source-of-truth contradictions where agent reasoning, `ObservationBundle`, and Researcher Lab demo APIs could evaluate differing marine values.
+
+Impact:
+End-to-end consistency from synthetic fixture -> INCOIS adapter -> ObservationBundle -> DeterministicRiskEngine -> Agent reasoning -> Researcher Lab API.
+
+Owner: Dev 2 / Dev 4 (Integration & Marine Domain)
+Date: 2026-09-14
+
 ## Decision template
 ### D0XX — <title>
 Status: PROPOSED / ACCEPTED / REJECTED
@@ -207,3 +225,4 @@ Alternatives:
 Impact:
 Owner:
 Date:
+

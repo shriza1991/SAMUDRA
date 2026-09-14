@@ -51,8 +51,11 @@ class SnapshotMetadata(BaseModel):
 class SnapshotConnector:
     """Offline snapshot connector — reads versioned JSON files from disk."""
 
-    def __init__(self, snapshots_path: str | None = None) -> None:
+    def __init__(self, snapshots_path: str | None = None, fixtures_path: str | None = None) -> None:
         self._snapshots_dir = Path(snapshots_path or "data/source_snapshots")
+        self._fixtures_dir = Path(fixtures_path or "data/fixtures/synthetic/incois")
+        self._custom_snapshots_path = snapshots_path is not None
+        self._osf_cache: list[dict[str, Any]] | None = None
 
     @staticmethod
     def _normalize_harbor(harbor: str | None) -> str:
@@ -62,23 +65,70 @@ class SnapshotConnector:
         data_str = json.dumps(payload, sort_keys=True).encode("utf-8")
         return hashlib.sha256(data_str).hexdigest()
 
+    def _find_fixture_file(self, filename: str) -> Path | None:
+        candidates = [
+            self._snapshots_dir / filename,
+            self._fixtures_dir / filename,
+            Path("data/fixtures/synthetic/incois") / filename,
+            Path(__file__).resolve().parent.parent.parent.parent / "data" / "fixtures" / "synthetic" / "incois" / filename,
+        ]
+        for p in candidates:
+            if p.exists():
+                return p
+        return None
+
+    def _load_osf_fixture(self) -> list[dict[str, Any]]:
+        if self._osf_cache is not None:
+            return self._osf_cache
+
+        if self._custom_snapshots_path:
+            p = self._snapshots_dir / "osf_hourly_observations.json"
+            if p.exists():
+                with open(p, "r", encoding="utf-8") as fh:
+                    self._osf_cache = json.load(fh)
+                    return self._osf_cache
+            return []
+
+        try:
+            from backend.app.db.repositories import SyntheticDemoRepository
+            from backend.app.db.session import SessionLocal
+
+            with SessionLocal() as session:
+                repo = SyntheticDemoRepository(session)
+                items = repo.get_marine_observations(namespace="SAMUDRA_DEMO_V1")
+                if items:
+                    from backend.app.api.v1.routes import _model_to_dict
+                    self._osf_cache = [_model_to_dict(it) for it in items]
+                    return self._osf_cache
+        except Exception:
+            pass
+
+        fix_path = self._find_fixture_file("osf_hourly_observations.json")
+        if fix_path and fix_path.exists():
+            with open(fix_path, "r", encoding="utf-8") as fh:
+                self._osf_cache = json.load(fh)
+                return self._osf_cache
+
+        return []
+
     def _load_snapshot(self, filename: str) -> dict[str, Any]:
         """Load and validate a versioned snapshot from DB, fallback to file."""
         source_name = filename.replace(".json", "")
         data = None
 
-        # Try DB first
-        try:
-            from backend.app.db.repositories import ConnectorSnapshotRepository
-            from backend.app.db.session import SessionLocal
+        # Try DB first only if not using a custom snapshots path
+        if not self._custom_snapshots_path:
+            try:
+                from backend.app.db.repositories import ConnectorSnapshotRepository
+                from backend.app.db.session import SessionLocal
 
-            with SessionLocal() as session:
-                repo = ConnectorSnapshotRepository(session)
-                snap = repo.get_by_source(source_name)
-                if snap and snap.payload:
-                    data = snap.payload
-        except Exception as exc:
-            logger.debug(f"DB snapshot lookup failed for {source_name}: {exc}")
+                with SessionLocal() as session:
+                    repo = ConnectorSnapshotRepository(session)
+                    snap = repo.get_by_source(source_name)
+                    if snap and snap.payload:
+                        data = snap.payload
+            except Exception as exc:
+                logger.debug(f"DB snapshot lookup failed for {source_name}: {exc}")
 
         # Fallback to file
         if not data:
@@ -132,7 +182,43 @@ class SnapshotConnector:
     # ------------------------------------------------------------------
 
     def get_marine_conditions(self, context: ToolInvocationContext) -> MarineConditionsPayload:
+        from backend.app.connectors.normalizers.incois import IncoisOSFNormalizer
+
         harbor = context.origin_harbor or "Ratnagiri"
+        key = self._normalize_harbor(harbor)
+
+        records = self._load_osf_fixture()
+        if records:
+            harbor_records = [
+                r for r in records
+                if r.get("harbor_id") == f"harbor-{key}"
+                or (r.get("provenance_json") or {}).get("harbor", "").lower() == key
+                or (r.get("coverage_metadata") or {}).get("station", "").lower() == key
+            ]
+            if not harbor_records:
+                harbor_records = [
+                    r for r in records
+                    if r.get("harbor_id") == "harbor-ratnagiri"
+                    or (r.get("provenance_json") or {}).get("harbor", "").lower() == "ratnagiri"
+                ]
+
+            if harbor_records:
+                chosen = None
+                for r in harbor_records:
+                    prov = r.get("provenance_json") or {}
+                    if prov.get("hour_offset") == 0:
+                        chosen = r
+                        break
+                    if r.get("observation_time") in ("2026-09-12T06:00:00+00:00", "2026-09-12T06:00:00Z"):
+                        chosen = r
+                        break
+                if chosen is None:
+                    chosen = harbor_records[0]
+
+                payload = IncoisOSFNormalizer.normalize(chosen)
+                payload.harbor = harbor
+                return payload
+
         raw = self._resolve_fixture("marine", harbor)
         raw["harbor"] = harbor
         return MarineConditionsPayload(**raw)

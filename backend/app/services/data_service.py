@@ -73,37 +73,15 @@ class DataService:
     def get_marine_conditions(self, context: ToolInvocationContext) -> MarineConditionsPayload:
         """Route to the appropriate marine connector based on DATA_MODE.
 
-        SNAPSHOT → SnapshotConnector (guaranteed offline, reproducible)
+        SNAPSHOT → SnapshotConnector (guaranteed offline, reproducible from OSF fixture)
+        SYNTHETIC → SnapshotConnector (authoritative synthetic OSF pipeline)
         LIVE     → IncoisOceanStateConnector (live INCOIS only)
-        HYBRID   → IncoisOceanStateConnector (falls back internally to Open-Meteo)
+        HYBRID   → IncoisOceanStateConnector (falls back internally to Open-Meteo / snapshot)
         """
         harbor = context.origin_harbor or "Ratnagiri"
-        if self.data_mode == "SYNTHETIC":
-            from backend.app.connectors.normalizers.incois import IncoisOSFNormalizer
-            raw = {
-                "harbor": harbor,
-                "swh": 1.4,
-                "swell_height": 0.9,
-                "swell_period": 7.5,
-                "current_speed": 0.8,
-                "sst": 28.3,
-                "observed_at": "2026-09-12T06:00:00Z",
-                "valid_to": "2026-09-13T06:00:00Z",
-                "qc_flag": 0,
-            }
-            return IncoisOSFNormalizer.normalize(raw)
-
-        if self.data_mode == "SNAPSHOT":
-            logger.debug("DataService: SNAPSHOT mode — marine conditions from fixture.")
-            try:
-                return self._snapshot.get_marine_conditions(context)
-            except Exception as exc:
-                logger.warning("DataService: snapshot load failed (%s). Using in-memory dataset.", exc)
-                from backend.app.domain.marine_dataset import get_marine_record
-
-                raw = get_marine_record(harbor)
-                raw["harbor"] = harbor
-                return MarineConditionsPayload(**raw)
+        if self.data_mode in ("SNAPSHOT", "SYNTHETIC"):
+            logger.debug("DataService: %s mode — marine conditions from fixture.", self.data_mode)
+            return self._snapshot.get_marine_conditions(context)
 
         try:
             payload = self._incois.get_marine_conditions(context)
@@ -111,15 +89,7 @@ class DataService:
             return payload
         except Exception as exc:
             logger.warning("DataService: marine provider chain failed (%s). Using snapshot.", exc)
-            try:
-                return self._snapshot.get_marine_conditions(context)
-            except Exception as snap_exc:
-                logger.warning("DataService: snapshot load failed (%s). Using in-memory dataset.", snap_exc)
-                from backend.app.domain.marine_dataset import get_marine_record
-
-                raw = get_marine_record(harbor)
-                raw["harbor"] = harbor
-                return MarineConditionsPayload(**raw)
+            return self._snapshot.get_marine_conditions(context)
 
     # ------------------------------------------------------------------
     # Weather Conditions
