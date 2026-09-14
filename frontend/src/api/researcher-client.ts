@@ -82,6 +82,10 @@ export interface HazardBulletin {
   source: string;
   affected_area?: string;
   description?: string;
+  event_type?: string;
+  geometry_geojson?: any;
+  qc_status?: string;
+  provenance_json?: Record<string, any>;
 }
 
 export interface ScenarioMeta {
@@ -313,13 +317,17 @@ export async function fetchHazards(): Promise<HazardBulletin[]> {
   return (raw || []).map((h, i) => ({
     public_id: h.public_id || `hazard-${i}`,
     headline: h.headline || h.title || 'Marine Hazard Alert',
-    severity: h.severity || 'WARNING',
+    event_type: h.event_type || h.hazard_type || 'GENERAL_HAZARD',
+    severity: h.severity || 'UNKNOWN',
     status: h.status || 'ACTIVE',
-    issued_at: h.issued_at || h.created_at || new Date().toISOString(),
-    valid_until: h.valid_until || h.expires_at || new Date().toISOString(),
-    source: h.source || (h.provenance_json?.intended_provider ? `${h.provenance_json.intended_provider} Coastal` : 'IMD Coastal Bulletin'),
+    issued_at: h.start_time || h.issued_at || h.created_at || new Date().toISOString(),
+    valid_until: h.end_time || h.valid_until || h.expires_at || new Date().toISOString(),
+    source: h.source || (h.provenance_json?.intended_provider ? `${h.provenance_json.intended_provider}` : 'IMD Coastal Bulletin'),
     affected_area: h.affected_area || h.sector_id || 'Konkan Coast',
-    description: h.description || '',
+    description: h.description || h.headline || '',
+    geometry_geojson: h.geometry_geojson || h.geometry || null,
+    qc_status: h.qc_status || 'VALID',
+    provenance_json: h.provenance_json,
   }));
 }
 

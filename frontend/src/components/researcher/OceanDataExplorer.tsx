@@ -11,6 +11,7 @@ import {
 } from '../../api/researcher-client';
 import OceanTimeSeriesChart from './OceanTimeSeriesChart';
 import PFZSpatialMap from './PFZSpatialMap';
+import HazardSpatialMap from './HazardSpatialMap';
 
 export default function OceanDataExplorer() {
   const [harbors, setHarbors] = useState<HarborData[]>([]);
@@ -20,6 +21,7 @@ export default function OceanDataExplorer() {
   const [pfzCandidates, setPfzCandidates] = useState<PFZCandidate[]>([]);
   const [hazards, setHazards] = useState<HazardBulletin[]>([]);
   const [selectedPfzId, setSelectedPfzId] = useState<string | null>(null);
+  const [selectedHazardId, setSelectedHazardId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [obsLoading, setObsLoading] = useState(false);
 
@@ -301,23 +303,41 @@ export default function OceanDataExplorer() {
       <section className="researcher-section">
         <h3 className="researcher-section-title">
           <AlertTriangle size={14} />
-          Active Hazard Bulletins
+          Observed / Advisory Hazard Bulletins
         </h3>
-        <div className="researcher-hazard-list">
-          {hazards.map(hz => (
-            <div key={hz.public_id} className={`researcher-hazard-card severity-${hz.severity.toLowerCase()}`}>
-              <div className="researcher-hazard-header">
-                <span className={`researcher-severity-badge ${hz.severity.toLowerCase()}`}>{hz.severity}</span>
-                <span className="researcher-hazard-title">{hz.headline}</span>
+        <div className="researcher-hazard-spatial-container">
+          <HazardSpatialMap
+            hazards={hazards}
+            selectedHazardId={selectedHazardId}
+            onSelectHazard={setSelectedHazardId}
+            loading={loading}
+          />
+          <div className="researcher-hazard-list">
+            {hazards.map(hz => (
+              <div
+                key={hz.public_id}
+                className={`researcher-hazard-card severity-${hz.severity.toLowerCase()} ${selectedHazardId === hz.public_id ? 'selected' : ''} ${hz.status === 'EXPIRED' ? 'status-expired' : ''}`}
+                onClick={() => setSelectedHazardId(hz.public_id === selectedHazardId ? null : hz.public_id)}
+                role="button"
+                tabIndex={0}
+                aria-label={`Select hazard bulletin ${hz.public_id}`}
+              >
+                <div className="researcher-hazard-header">
+                  <span className={`researcher-severity-badge ${hz.severity.toLowerCase()}`}>{hz.severity}</span>
+                  <span className={`researcher-hazard-status-badge ${hz.status.toLowerCase()}`}>{hz.status}</span>
+                  <span className="researcher-hazard-type-badge">{hz.event_type || 'GENERAL'}</span>
+                  <span className="researcher-hazard-title">{hz.headline}</span>
+                </div>
+                {hz.description && <p className="researcher-hazard-desc">{hz.description}</p>}
+                <div className="researcher-hazard-meta">
+                  <span>Source: {hz.source}</span>
+                  <span>Area: {hz.affected_area ?? '—'}</span>
+                  <span>Valid: {formatTime(hz.issued_at)} → {formatTime(hz.valid_until)}</span>
+                  {hz.qc_status && <span>QC: {hz.qc_status}</span>}
+                </div>
               </div>
-              {hz.description && <p className="researcher-hazard-desc">{hz.description}</p>}
-              <div className="researcher-hazard-meta">
-                <span>Source: {hz.source}</span>
-                <span>Area: {hz.affected_area ?? '—'}</span>
-                <span>Valid until: {formatTime(hz.valid_until)}</span>
-              </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </section>
     </div>

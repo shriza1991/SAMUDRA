@@ -6286,11 +6286,279 @@ button.fleet-alert-card.active {
   color: var(--color-unknown);
 }
 
+/* Hazard Spatial Exploration Layout */
+.researcher-hazard-spatial-container {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: var(--space-md);
+  align-items: start;
+}
+
+@media (max-width: 1024px) {
+  .researcher-hazard-spatial-container {
+    grid-template-columns: 1fr;
+  }
+}
+
+.researcher-hazard-map-wrapper {
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.researcher-hazard-map-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: rgba(15, 23, 42, 0.6);
+  border-bottom: 1px solid var(--color-border);
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.researcher-hazard-map-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.researcher-hazard-map-icon {
+  color: #ef4444;
+}
+
+.researcher-hazard-count-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 1px 7px;
+  border-radius: var(--radius-full);
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+}
+
+.researcher-hazard-legend {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 11px;
+  color: var(--color-text-muted);
+  flex-wrap: wrap;
+}
+
+.hazard-legend-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.hazard-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.hazard-legend-line {
+  display: inline-block;
+  width: 14px;
+  height: 2px;
+  background: #ef4444;
+}
+
+.hazard-legend-line.solid {
+  background: #ef4444;
+}
+
+.hazard-legend-line.dashed {
+  background: #94a3b8;
+  border-top: 1px dashed #94a3b8;
+  height: 0;
+}
+
+.hazard-legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.hazard-legend-dot.warning { background: #ef4444; }
+.hazard-legend-dot.alert { background: #f97316; }
+.hazard-legend-dot.watch { background: #f59e0b; }
+.hazard-legend-dot.advisory { background: #38bdf8; }
+
+.researcher-hazard-map-canvas-wrap {
+  position: relative;
+  width: 100%;
+  height: 380px;
+}
+
+.researcher-hazard-map-canvas {
+  width: 100%;
+  height: 100%;
+}
+
+.researcher-hazard-empty-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(4px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: var(--color-text-muted);
+  font-size: 12px;
+  padding: 20px;
+  text-align: center;
+}
+
+.hazard-empty-icon {
+  color: #f59e0b;
+}
+
+.researcher-hazard-map-footer {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: rgba(15, 23, 42, 0.4);
+  border-top: 1px solid var(--color-border);
+  font-size: 11px;
+  color: var(--color-text-dim);
+}
+
+/* MapLibre Popup Styling for Hazards */
+.hazard-spatial-popup-wrapper .maplibregl-popup-content {
+  background: rgba(15, 23, 42, 0.96) !important;
+  border: 1px solid rgba(51, 65, 85, 0.8) !important;
+  border-radius: 6px !important;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6) !important;
+  padding: 10px 12px !important;
+  color: #f8fafc !important;
+  font-family: var(--font-family, sans-serif) !important;
+  min-width: 240px;
+  max-width: 320px;
+}
+
+.hazard-spatial-popup-wrapper .maplibregl-popup-close-button {
+  color: #94a3b8;
+  font-size: 16px;
+  padding: 2px 6px;
+}
+
+.hazard-spatial-popup-wrapper .maplibregl-popup-tip {
+  border-top-color: rgba(15, 23, 42, 0.96) !important;
+}
+
+.hazard-map-popup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.hazard-popup-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border-bottom: 1px solid rgba(51, 65, 85, 0.6);
+  padding-bottom: 4px;
+}
+
+.hazard-popup-type {
+  font-size: 11px;
+  font-weight: 700;
+  color: #f8fafc;
+  flex: 1;
+}
+
+.hazard-popup-severity {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 2px;
+  text-transform: uppercase;
+}
+
+.hazard-popup-severity.warning { background: rgba(239, 68, 68, 0.25); color: #ef4444; }
+.hazard-popup-severity.alert { background: rgba(249, 115, 22, 0.25); color: #f97316; }
+.hazard-popup-severity.watch { background: rgba(245, 158, 11, 0.25); color: #f59e0b; }
+.hazard-popup-severity.advisory { background: rgba(56, 189, 248, 0.25); color: #38bdf8; }
+.hazard-popup-severity.normal { background: rgba(100, 116, 139, 0.25); color: #94a3b8; }
+
+.hazard-popup-status {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 2px;
+  text-transform: uppercase;
+}
+
+.hazard-popup-status.active { background: rgba(16, 185, 129, 0.2); color: #10b981; }
+.hazard-popup-status.expired { background: rgba(100, 116, 139, 0.2); color: #94a3b8; }
+
+.hazard-popup-headline {
+  font-size: 11px;
+  font-weight: 600;
+  color: #f1f5f9;
+  line-height: 1.3;
+}
+
+.hazard-popup-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 4px;
+  background: rgba(30, 41, 59, 0.5);
+  padding: 6px;
+  border-radius: 4px;
+}
+
+.hazard-popup-metric {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.hazard-popup-label {
+  font-size: 9px;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.hazard-popup-val {
+  font-size: 10px;
+  color: #f1f5f9;
+  font-weight: 500;
+  text-align: right;
+}
+
+.hazard-popup-val.mono {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+}
+
+.hazard-popup-desc {
+  font-size: 10px;
+  color: #94a3b8;
+  line-height: 1.3;
+  margin-top: 2px;
+}
+
 /* Hazard Cards */
 .researcher-hazard-list {
   display: flex;
   flex-direction: column;
   gap: var(--space-sm);
+  max-height: 480px;
+  overflow-y: auto;
 }
 
 .researcher-hazard-card {
@@ -6299,10 +6567,31 @@ button.fleet-alert-card.active {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   border-left: 3px solid var(--color-border);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.researcher-hazard-card:hover {
+  border-color: rgba(56, 189, 248, 0.4);
+  transform: translateY(-1px);
+}
+
+.researcher-hazard-card.selected {
+  border-color: #ffffff;
+  background: rgba(30, 41, 59, 0.7);
+  box-shadow: 0 0 0 1px #ffffff, 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.researcher-hazard-card.status-expired {
+  opacity: 0.7;
 }
 
 .researcher-hazard-card.severity-warning {
   border-left-color: var(--color-no-go);
+}
+
+.researcher-hazard-card.severity-alert {
+  border-left-color: #f97316;
 }
 
 .researcher-hazard-card.severity-watch {
@@ -6313,11 +6602,16 @@ button.fleet-alert-card.active {
   border-left-color: var(--color-informational);
 }
 
+.researcher-hazard-card.severity-normal {
+  border-left-color: #64748b;
+}
+
 .researcher-hazard-header {
   display: flex;
   align-items: center;
   gap: var(--space-sm);
   margin-bottom: var(--space-xs);
+  flex-wrap: wrap;
 }
 
 .researcher-severity-badge {
@@ -6330,24 +6624,67 @@ button.fleet-alert-card.active {
 }
 
 .researcher-severity-badge.warning {
-  background: rgba(239, 68, 68, 0.12);
+  background: rgba(239, 68, 68, 0.15);
   color: var(--color-no-go);
 }
 
+.researcher-severity-badge.alert {
+  background: rgba(249, 115, 22, 0.15);
+  color: #f97316;
+}
+
 .researcher-severity-badge.watch {
-  background: rgba(234, 179, 8, 0.12);
+  background: rgba(234, 179, 8, 0.15);
   color: var(--color-caution);
 }
 
 .researcher-severity-badge.advisory {
-  background: rgba(56, 189, 248, 0.12);
+  background: rgba(56, 189, 248, 0.15);
   color: var(--color-informational);
+}
+
+.researcher-severity-badge.normal {
+  background: rgba(100, 116, 139, 0.15);
+  color: #94a3b8;
+}
+
+.researcher-hazard-status-badge {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 3px;
+  text-transform: uppercase;
+}
+
+.researcher-hazard-status-badge.active {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+}
+
+.researcher-hazard-status-badge.planned {
+  background: rgba(56, 189, 248, 0.15);
+  color: #38bdf8;
+}
+
+.researcher-hazard-status-badge.expired {
+  background: rgba(148, 163, 184, 0.15);
+  color: #94a3b8;
+}
+
+.researcher-hazard-type-badge {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--color-text-dim);
+  background: rgba(51, 65, 85, 0.4);
+  padding: 1px 5px;
+  border-radius: 3px;
 }
 
 .researcher-hazard-title {
   font-weight: 600;
   color: var(--color-text-primary);
   font-size: var(--font-size-sm);
+  flex: 1;
 }
 
 .researcher-hazard-desc {
@@ -6358,9 +6695,10 @@ button.fleet-alert-card.active {
 
 .researcher-hazard-meta {
   display: flex;
-  gap: var(--space-lg);
+  gap: var(--space-md);
   font-size: var(--font-size-xs);
   color: var(--color-text-dim);
+  flex-wrap: wrap;
 }
 
 /* Data Source Monitor */

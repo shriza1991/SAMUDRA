@@ -87,6 +87,21 @@
 - Compact map provenance caption: `INCOIS PFZ-style candidate data · synthetic snapshot`.
 - Validated with 7 automated unit & feature transformation tests (119 total frontend tests passing) and clean `tsc && vite build`.
 
+### P0-15 — Hazard Spatial Polygon Visualization in Researcher Lab
+- Implemented `HazardSpatialMap.tsx` reusing MapLibre GL conventions and dark basemap styling for spatial exploration of observed/advisory hazard polygons.
+- Converted actual backend hazard polygon geometries (`geometry_geojson` Polygon/MultiPolygon) into GeoJSON FeatureCollections, preserving exact polygon vertices.
+- Handled coordinate normalizations (numeric pairs and space-separated string pairs `"lon lat"`) with strict validation (filtering out invalid geometries safely without inventing coordinates).
+- Established clear visual hierarchy for `ACTIVE` / `PLANNED` vs `EXPIRED` (historical) hazards:
+  - ACTIVE/PLANNED hazards render with prominent fill opacity (0.28) and solid outline (width 2.2).
+  - EXPIRED historical hazards render with subdued fill opacity (0.08) and dashed outline (`[3, 3]`, width 1.4).
+- Preserved categorical severity mapping (`WARNING` #ef4444, `ALERT` #f97316, `WATCH` #f59e0b, `ADVISORY` #38bdf8, `NORMAL` #64748b, missing -> `UNKNOWN` #94a3b8) without calculating fake risk scores or converting missing severity to zero.
+- Interactive MapLibre popup with Event Type, Severity, Status badge, Validity window, Affected Area, QC status, Source, and Description.
+- Bidirectional interactive selection linking between map polygon features and hazard cards in `OceanDataExplorer.tsx` (card click fits/centers map; map polygon click selects card).
+- Preserved overlapping polygons as independent inspectable records without conflation.
+- Resilient fallback handling: text-only fallback without geometry renders explicit spatial empty state ("No spatial hazard polygons available for rendering.") without fabricating coordinates.
+- Compact provenance caption: `Synthetic hazard polygons · source-faithful demonstration data`.
+- Validated with 8 automated unit & feature transformation tests (128 total frontend tests passing), full TypeScript typecheck, and clean `tsc && vite build`.
+
 ---
 
 ## P0 Marine Data Providers Status Board

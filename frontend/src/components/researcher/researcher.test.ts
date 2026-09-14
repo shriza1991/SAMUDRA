@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import OceanDataExplorer from './OceanDataExplorer';
 import OceanTimeSeriesChart from './OceanTimeSeriesChart';
 import PFZSpatialMap, { buildPFZGeoJSON } from './PFZSpatialMap';
+import HazardSpatialMap, { buildHazardGeoJSON } from './HazardSpatialMap';
 import DataSourceMonitor from './DataSourceMonitor';
 import ScenarioLab from './ScenarioLab';
 import QueryWorkbench from './QueryWorkbench';
@@ -18,6 +19,7 @@ import {
   DATA_SOURCES,
   type MarineObservation,
   type PFZCandidate,
+  type HazardBulletin,
 } from '../../api/researcher-client';
 
 describe('Researcher Dashboard Components & Data Client', () => {
@@ -522,6 +524,302 @@ describe('Researcher Dashboard Components & Data Client', () => {
       expect(geojson.features).toHaveLength(0);
     });
   });
+
+  // =========================================================================
+  // P0-15 Hazard Spatial Map & Polygon Feature Tests
+  // =========================================================================
+
+  describe('P0-15 Hazard Spatial Polygon Visualizations', () => {
+    const mockHazards: HazardBulletin[] = [
+      {
+        public_id: 'hazard-01',
+        event_type: 'CYCLONE_SQUALL',
+        severity: 'WARNING',
+        headline: 'Severe Cyclone Squall Warning - Konkan Offshore Sector',
+        status: 'ACTIVE',
+        issued_at: '2026-09-12T04:00:00Z',
+        valid_until: '2026-09-12T16:00:00Z',
+        source: 'IMD Severe Weather Bulletin',
+        affected_area: 'Ratnagiri Offshore',
+        description: 'Squally winds 45-55 kmph gusting to 65 kmph.',
+        qc_status: 'VALID',
+        provenance_json: {
+          intended_provider: 'IMD_CYCLONE_DIVISION',
+          source_product: 'IMD Cyclone Warning Bulletin',
+        },
+        geometry_geojson: {
+          type: 'Polygon',
+          coordinates: [
+            [
+              [72.8, 16.4],
+              [73.4, 16.4],
+              [73.4, 17.1],
+              [72.8, 17.1],
+              [72.8, 16.4],
+            ],
+          ],
+        },
+      },
+      {
+        public_id: 'hazard-02',
+        event_type: 'HIGH_WAVE',
+        severity: 'ALERT',
+        headline: 'High Wave Alert (2.8m - 3.4m) off Ratnagiri',
+        status: 'ACTIVE',
+        issued_at: '2026-09-12T06:00:00Z',
+        valid_until: '2026-09-13T00:00:00Z',
+        source: 'INCOIS OSF',
+        affected_area: 'Ratnagiri Coast',
+        description: 'High wave heights 2.8m to 3.4m.',
+        qc_status: 'VALID',
+        provenance_json: {
+          intended_provider: 'INCOIS',
+        },
+        // Coordinates as string pairs to test parser resilience
+        geometry_geojson: {
+          type: 'Polygon',
+          coordinates: [
+            [
+              '73.0 16.8',
+              '73.35 16.8',
+              '73.35 17.2',
+              '73.0 17.2',
+              '73.0 16.8',
+            ],
+          ],
+        },
+      },
+      {
+        public_id: 'hazard-06-expired',
+        event_type: 'CYCLONE_SQUALL',
+        severity: 'WARNING',
+        headline: 'Past Squall Alert (Expired Historical)',
+        status: 'EXPIRED',
+        issued_at: '2026-09-10T18:00:00Z',
+        valid_until: '2026-09-11T18:00:00Z',
+        source: 'IMD Coastal Bulletin',
+        affected_area: 'Central Konkan',
+        description: 'Past squall advisory from previous week.',
+        qc_status: 'VALID',
+        geometry_geojson: {
+          type: 'Polygon',
+          coordinates: [
+            [
+              [72.5, 16.2],
+              [73.0, 16.2],
+              [73.0, 16.8],
+              [72.5, 16.8],
+              [72.5, 16.2],
+            ],
+          ],
+        },
+      },
+      {
+        public_id: 'hazard-missing-severity',
+        event_type: 'ADVISORY',
+        severity: '', // Missing severity
+        headline: 'Advisory without explicit severity',
+        status: 'ACTIVE',
+        issued_at: '2026-09-12T00:00:00Z',
+        valid_until: '2026-09-12T12:00:00Z',
+        source: 'IMD Marine Weather',
+        affected_area: 'Goa Coast',
+        description: 'General sea condition advisory.',
+        qc_status: 'VALID',
+        geometry_geojson: {
+          type: 'Polygon',
+          coordinates: [
+            [
+              [73.2, 15.4],
+              [73.6, 15.4],
+              [73.6, 15.9],
+              [73.2, 15.9],
+              [73.2, 15.4],
+            ],
+          ],
+        },
+      },
+      {
+        public_id: 'hazard-no-geometry',
+        event_type: 'HIGH_WIND',
+        severity: 'WATCH',
+        headline: 'Text-only bulletin without geometry',
+        status: 'ACTIVE',
+        issued_at: '2026-09-12T00:00:00Z',
+        valid_until: '2026-09-12T12:00:00Z',
+        source: 'IMD Coastal Bulletin',
+        geometry_geojson: null, // Null geometry
+      },
+    ];
+
+    it('exports HazardSpatialMap component cleanly', () => {
+      expect(HazardSpatialMap).toBeDefined();
+      expect(typeof HazardSpatialMap).toBe('function');
+    });
+
+    it('converts valid hazard polygons into GeoJSON FeatureCollection with exact coordinates', () => {
+      const geojson = buildHazardGeoJSON(mockHazards);
+      expect(geojson.type).toBe('FeatureCollection');
+      // 4 valid geometries, 1 null geometry filtered out
+      expect(geojson.features).toHaveLength(4);
+
+      const h1 = geojson.features.find((f) => f.properties?.public_id === 'hazard-01');
+      expect(h1).toBeDefined();
+      expect(h1?.geometry.type).toBe('Polygon');
+
+      const rings = (h1?.geometry as GeoJSON.Polygon).coordinates;
+      expect(rings).toHaveLength(1);
+      expect(rings[0]).toHaveLength(5);
+      expect(rings[0][0]).toEqual([72.8, 16.4]);
+      expect(rings[0][2]).toEqual([73.4, 17.1]);
+    });
+
+    it('parses space-separated coordinate pairs into numeric [lon, lat] pairs', () => {
+      const geojson = buildHazardGeoJSON(mockHazards);
+      const h2 = geojson.features.find((f) => f.properties?.public_id === 'hazard-02');
+      expect(h2).toBeDefined();
+      expect(h2?.geometry.type).toBe('Polygon');
+
+      const rings = (h2?.geometry as GeoJSON.Polygon).coordinates;
+      expect(rings[0][0]).toEqual([73.0, 16.8]);
+      expect(rings[0][1]).toEqual([73.35, 16.8]);
+      expect(rings[0][2]).toEqual([73.35, 17.2]);
+    });
+
+    it('preserves ACTIVE vs EXPIRED status explicitly on features', () => {
+      const geojson = buildHazardGeoJSON(mockHazards);
+
+      const active = geojson.features.find((f) => f.properties?.public_id === 'hazard-01');
+      expect(active?.properties?.status).toBe('ACTIVE');
+      expect(active?.properties?.is_active).toBe(true);
+      expect(active?.properties?.is_expired).toBe(false);
+
+      const expired = geojson.features.find((f) => f.properties?.public_id === 'hazard-06-expired');
+      expect(expired?.properties?.status).toBe('EXPIRED');
+      expect(expired?.properties?.is_active).toBe(false);
+      expect(expired?.properties?.is_expired).toBe(true);
+    });
+
+    it('preserves severity from backend data and falls back to UNKNOWN rather than zero', () => {
+      const geojson = buildHazardGeoJSON(mockHazards);
+
+      const warning = geojson.features.find((f) => f.properties?.public_id === 'hazard-01');
+      expect(warning?.properties?.severity).toBe('WARNING');
+
+      const alert = geojson.features.find((f) => f.properties?.public_id === 'hazard-02');
+      expect(alert?.properties?.severity).toBe('ALERT');
+
+      const missing = geojson.features.find((f) => f.properties?.public_id === 'hazard-missing-severity');
+      expect(missing?.properties?.severity).toBe('UNKNOWN');
+      expect(missing?.properties?.severity).not.toBe(0);
+    });
+
+    it('preserves validity period and provenance metadata', () => {
+      const geojson = buildHazardGeoJSON(mockHazards);
+      const h1 = geojson.features.find((f) => f.properties?.public_id === 'hazard-01');
+
+      expect(h1?.properties?.issued_at).toBe('2026-09-12T04:00:00Z');
+      expect(h1?.properties?.valid_until).toBe('2026-09-12T16:00:00Z');
+      expect(h1?.properties?.source).toBe('IMD Severe Weather Bulletin');
+      expect(h1?.properties?.qc_status).toBe('VALID');
+      expect(h1?.properties?.provenance_json?.intended_provider).toBe('IMD_CYCLONE_DIVISION');
+    });
+
+    it('preserves overlapping polygons as independent features', () => {
+      // Create two overlapping polygons
+      const overlappingHazards: HazardBulletin[] = [
+        {
+          public_id: 'overlap-1',
+          event_type: 'HIGH_WAVE',
+          severity: 'WARNING',
+          headline: 'High wave zone',
+          status: 'ACTIVE',
+          issued_at: '2026-09-12T00:00:00Z',
+          valid_until: '2026-09-12T12:00:00Z',
+          source: 'IMD',
+          geometry_geojson: {
+            type: 'Polygon',
+            coordinates: [[[72.8, 16.0], [73.5, 16.0], [73.5, 17.0], [72.8, 17.0], [72.8, 16.0]]],
+          },
+        },
+        {
+          public_id: 'overlap-2',
+          event_type: 'CURRENT_SHEAR',
+          severity: 'ALERT',
+          headline: 'Current shear zone',
+          status: 'ACTIVE',
+          issued_at: '2026-09-12T00:00:00Z',
+          valid_until: '2026-09-12T12:00:00Z',
+          source: 'INCOIS',
+          geometry_geojson: {
+            type: 'Polygon',
+            coordinates: [[[73.0, 16.5], [73.8, 16.5], [73.8, 17.5], [73.0, 17.5], [73.0, 16.5]]],
+          },
+        },
+      ];
+
+      const geojson = buildHazardGeoJSON(overlappingHazards);
+      expect(geojson.features).toHaveLength(2);
+      expect(geojson.features[0].properties?.public_id).toBe('overlap-1');
+      expect(geojson.features[1].properties?.public_id).toBe('overlap-2');
+      // Overlapping features remain distinct with independent severity and event types
+      expect(geojson.features[0].properties?.event_type).toBe('HIGH_WAVE');
+      expect(geojson.features[1].properties?.event_type).toBe('CURRENT_SHEAR');
+    });
+
+    it('gracefully handles missing or null geometry without fabricating coordinates', () => {
+      const textOnly = [
+        {
+          public_id: 'text-1',
+          headline: 'No spatial data',
+          severity: 'ADVISORY',
+          status: 'ACTIVE',
+          issued_at: '2026-09-12T00:00:00Z',
+          valid_until: '2026-09-12T12:00:00Z',
+          source: 'IMD',
+          geometry_geojson: null,
+        },
+      ];
+      const geojson = buildHazardGeoJSON(textOnly);
+      expect(geojson.type).toBe('FeatureCollection');
+      expect(geojson.features).toHaveLength(0);
+    });
+
+    it('safely rejects corrupted polygon rings (fewer than 3 points, NaN, out-of-range)', () => {
+      const corrupted: any[] = [
+        {
+          public_id: 'bad-1',
+          geometry_geojson: {
+            type: 'Polygon',
+            coordinates: [
+              [[73.0, 16.0], [73.5, 16.0]], // Only 2 points (< 3 points)
+            ],
+          },
+        },
+        {
+          public_id: 'bad-2',
+          geometry_geojson: {
+            type: 'Polygon',
+            coordinates: [
+              [[NaN, 16.0], [73.5, NaN], [73.5, 17.0]],
+            ],
+          },
+        },
+        {
+          public_id: 'bad-3',
+          geometry_geojson: {
+            type: 'Polygon',
+            coordinates: [
+              [[250.0, 16.0], [73.5, 120.0], [73.5, 17.0]], // Out-of-range lon/lat
+            ],
+          },
+        },
+      ];
+      const geojson = buildHazardGeoJSON(corrupted);
+      expect(geojson.features).toHaveLength(0);
+    });
+  });
 });
+
 
 
