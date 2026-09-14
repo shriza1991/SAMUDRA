@@ -101,15 +101,16 @@ def test_snapshot_load_and_checksum(tmp_path, snapshot_connector, valid_snapshot
     file_path = tmp_path / "marine_ratnagiri.json"
     
     import hashlib
-    data_str = json.dumps({"harbor": "Ratnagiri"}).encode("utf-8")
+    payload = {"harbor": "Ratnagiri", "significant_wave_height_m": "not_a_float"}
+    data_str = json.dumps(payload, sort_keys=True).encode("utf-8")
     valid_snapshot_data["metadata"]["checksum"] = hashlib.sha256(data_str).hexdigest()
-    valid_snapshot_data["payload"] = {"harbor": "Ratnagiri"}
+    valid_snapshot_data["payload"] = payload
     
     with open(file_path, "w") as f:
         json.dump(valid_snapshot_data, f)
         
     context = ToolInvocationContext(origin_harbor="Ratnagiri")
-    # Will fail pydantic validation of MarineConditionsPayload because it's missing fields,
+    # Will fail pydantic validation of MarineConditionsPayload because of invalid field type,
     # but the checksum and metadata load will pass.
     with pytest.raises(Exception):
         snapshot_connector.get_marine_conditions(context)

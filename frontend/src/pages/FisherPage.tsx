@@ -5,7 +5,7 @@ import MapView from '../components/map/MapView';
 import MissionContextPanel from '../components/mission/MissionContextPanel';
 import type { useChat } from '../hooks/useChat';
 import type { MapLayer } from '../types/contracts';
-import { createHarborLayer, getHarborCoordinates, fetchAndFormatBaseLayers } from '../utils/geo';
+import { createHarborLayer, getHarborCoordinates, fetchAndFormatBaseLayers, filterLayersByRegion } from '../utils/geo';
 import { translateText } from '../i18n/translations';
 
 export interface FisherPageProps {
@@ -55,8 +55,12 @@ export default function FisherPage({
     );
 
     const baselineHarborLayer = hasOriginLayer ? [] : [createHarborLayer(originHarbor, status)];
-    return [...baseLayers, ...baselineHarborLayer, ...responseLayers];
-  }, [baseLayers, chat.activeResponse?.map_layers, originHarbor, status]);
+    // Filter base layers to only show geofences/restrictions near the selected harbor
+    const regionBaseLayers = filterLayersByRegion(baseLayers, harborCoords, 2.0);
+    // Filter response layers (routes, hazards, vessels) to only show those in the selected harbor region
+    const regionResponseLayers = filterLayersByRegion(responseLayers, harborCoords, 2.5);
+    return [...regionBaseLayers, ...baselineHarborLayer, ...regionResponseLayers];
+  }, [baseLayers, chat.activeResponse?.map_layers, originHarbor, harborCoords, status]);
 
   return (
     <main className={`app-main fisher-page view-${mobileView}`} role="main">

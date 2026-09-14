@@ -183,7 +183,7 @@ export function getSectorConfig(sectorName: string): SectorDefinition {
  */
 export function createSectorLayers(
   sectorInput: DemoSector | string,
-  allSectors?: DemoSector[],
+  _allSectors?: DemoSector[],
 ): MapLayer[] {
   let activeSector: DemoSector;
   if (typeof sectorInput === 'string') {
@@ -196,8 +196,8 @@ export function createSectorLayers(
   const layers: MapLayer[] = [];
 
   // 1. Inactive sector boundaries as subtle background context (faint outline only, no active colored operational fill)
-  if (allSectors && allSectors.length > 0) {
-    for (const sec of allSectors) {
+  if (_allSectors && _allSectors.length > 0) {
+    for (const sec of _allSectors) {
       const secId = sec.public_id || sec.name.toLowerCase().replace(/[^a-z0-9]/g, '_');
       if (secId === activeSectorId) continue;
 
@@ -425,6 +425,113 @@ export async function fetchAndFormatBaseLayers(): Promise<MapLayer[]> {
   } catch {
     return [];
   }
+}
+
+/**
+ * Extracts a bounding box from a GeoJSON Feature or FeatureCollection.
+ */
+function extractGeojsonBBox(geojson: any): [number, number, number, number] | null {
+  if (!geojson) return null;
+
+  const coords: [number, number][] = [];
+
+  function collectCoords(obj: any): void {
+    if (!obj) return;
+    if (obj.type === 'FeatureCollection' && Array.isArray(obj.features)) {
+      obj.features.forEach(collectCoords);
+    } else if (obj.type === 'Feature') {
+      collectCoords(obj.geometry);
+    } else if (obj.coordinates) {
+      flattenCoords(obj.coordinates);
+    }
+  }
+
+  function flattenCoords(c: any): void {
+    if (typeof c[0] === 'number' && typeof c[1] === 'number') {
+      coords.push([c[0], c[1]]);
+    } else if (Array.isArray(c)) {
+      c.forEach(flattenCoords);
+    }
+  }
+
+  collectCoords(geojson);
+  if (coords.length === 0) return null;
+
+  let minLng = coords[0][0], maxLng = coords[0][0];
+  let minLat = coords[0][1], maxLat = coords[0][1];
+  for (const [lng, lat] of coords) {
+    if (lng < minLng) minLng = lng;
+    if (lng > maxLng) maxLng = lng;
+    if (lat < minLat) minLat = lat;
+    if (lat > maxLat) maxLat = lat;
+  }
+  return [minLng, minLat, maxLng, maxLat];
+}
+
+/**
+ * Filters MapLayers to only include those whose GeoJSON geometry falls within
+ * a region defined by a center point and a padding (in degrees).
+ *
+ * Used by Fisher and Authority pages to show only region-specific base layers
+ * (IMBL, MPAs, Naval ranges) instead of all global boundaries.
+ */
+export function filterLayersByRegion(
+  layers: MapLayer[],
+  regionCenter: [number, number],
+  paddingDeg: number = 2.0,
+): MapLayer[] {
+  const [centerLng, centerLat] = regionCenter;
+  const bbox: [number, number, number, number] = [
+    centerLng - paddingDeg,
+    centerLat - paddingDeg,
+    centerLng + paddingDeg,
+    centerLat + paddingDeg,
+  ];
+
+  return layers.filter((layer) => {
+    if (!layer.geojson) return true;
+    const layerBBox = extractGeojsonBBox(layer.geojson);
+    if (!layerBBox) return true;
+    const [lMinLng, lMinLat, lMaxLng, lMaxLat] = layerBBox;
+    return lMinLng <= bbox[2] && lMaxLng >= bbox[0] && lMinLat <= bbox[3] && lMaxLat >= bbox[1];
+  });
+}
+
+/**
+ * Filters MapLayers to only include those whose GeoJSON geometry falls within
+ * a sector's bounding polygon (with padding).
+ */
+export function filterLayersBySectorPolygon(
+  layers: MapLayer[],
+  polygon: [number, number][],
+  paddingDeg: number = 1.0,
+): MapLayer[] {
+  if (!polygon || polygon.length < 3) return layers;
+
+  // Compute bbox from sector polygon with padding
+  let minLng = polygon[0][0], maxLng = polygon[0][0];
+  let minLat = polygon[0][1], maxLat = polygon[0][1];
+  for (const [lng, lat] of polygon) {
+    if (lng < minLng) minLng = lng;
+    if (lng > maxLng) maxLng = lng;
+    if (lat < minLat) minLat = lat;
+    if (lat > maxLat) maxLat = lat;
+  }
+
+  const bbox: [number, number, number, number] = [
+    minLng - paddingDeg,
+    minLat - paddingDeg,
+    maxLng + paddingDeg,
+    maxLat + paddingDeg,
+  ];
+
+  return layers.filter((layer) => {
+    if (!layer.geojson) return true;
+    const layerBBox = extractGeojsonBBox(layer.geojson);
+    if (!layerBBox) return true;
+    const [lMinLng, lMinLat, lMaxLng, lMaxLat] = layerBBox;
+    return lMinLng <= bbox[2] && lMaxLng >= bbox[0] && lMinLat <= bbox[3] && lMaxLat >= bbox[1];
+  });
 }
 
 /**

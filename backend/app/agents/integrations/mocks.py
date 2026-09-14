@@ -274,6 +274,15 @@ class MockRouteExposureEngine:
         if self.routes is not None:
             routes = self.routes
         else:
+            # Derive origin coordinates from context instead of hardcoding Ratnagiri
+            origin_coords = context.coordinates
+            if not origin_coords and context.origin_harbor:
+                from backend.app.domain.map_layers import _get_harbor_lon_lat
+                origin_coords = _get_harbor_lon_lat(context.origin_harbor)
+            origin_coords = origin_coords or [73.28, 16.99]
+            origin_lng = origin_coords[0]
+            origin_lat = origin_coords[1]
+
             routes = [
                 EvaluatedRouteItem(
                     route_id="ROUTE-A-INSHORE",
@@ -282,7 +291,10 @@ class MockRouteExposureEngine:
                     max_wave_height_m=1.3,
                     risk_rating="LOW",
                     exposure_score=2.1,
-                    waypoints=[[73.28, 16.99], [73.20, 16.95]],
+                    waypoints=[
+                        [origin_lng, origin_lat],
+                        [origin_lng - 0.08, origin_lat - 0.04],
+                    ],
                 ),
                 EvaluatedRouteItem(
                     route_id="ROUTE-B-DIRECT",
@@ -291,7 +303,10 @@ class MockRouteExposureEngine:
                     max_wave_height_m=2.1,
                     risk_rating="MODERATE",
                     exposure_score=4.8,
-                    waypoints=[[73.28, 16.99], [73.10, 16.92]],
+                    waypoints=[
+                        [origin_lng, origin_lat],
+                        [origin_lng - 0.18, origin_lat - 0.07],
+                    ],
                 ),
                 EvaluatedRouteItem(
                     route_id="ROUTE-C-BALANCED",
@@ -300,7 +315,10 @@ class MockRouteExposureEngine:
                     max_wave_height_m=1.7,
                     risk_rating="LOW",
                     exposure_score=3.4,
-                    waypoints=[[73.28, 16.99], [73.15, 16.94]],
+                    waypoints=[
+                        [origin_lng, origin_lat],
+                        [origin_lng - 0.13, origin_lat - 0.05],
+                    ],
                 ),
             ]
 

@@ -40,6 +40,13 @@
 - Integrated dynamic sector route fetching in `AuthorityPage` with request cancellation and stale-state clearing on sector switch.
 - Stabilized map camera bounds to prevent abrupt jumping/refitting during Safest / Balanced / Direct corridor switching.
 
+### P0-8J — Region-specific map layer filtering on Fisher & Authority views
+- Integrated `filterLayersByRegion` and `filterLayersBySectorPolygon` in `geo.ts` to geographically scope base boundaries and response layers.
+- Scoped Fisher page map layers to the active departure harbor region, preventing out-of-region geofences, routes, and hazards from cluttering the local view.
+- Scoped Authority page map layers to the active surveillance sector polygon, preventing cross-sector geofence and route leakage.
+- Updated `MockRouteExposureEngine` to anchor passage route waypoints dynamically to the active sector or origin harbor coordinates instead of a hardcoded default.
+- Resolved in-memory offline store re-entrancy deadlock (`RLock`).
+
 ---
 
 ## P0 Marine Data Providers Status Board
