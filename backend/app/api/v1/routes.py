@@ -1236,7 +1236,7 @@ def get_demo_route_alternatives(
     else:
         effective_dest = destination or "Outer Bank"
 
-    # Contextualize to active fleet vessel if provided
+    v_base_waypoints = None
     if vessel_id:
         from backend.app.domain.synthetic.generator import generate_synthetic_demo_dataset
         ds = generate_synthetic_demo_dataset()
@@ -1247,6 +1247,7 @@ def get_demo_route_alternatives(
             if v_positions:
                 effective_coords = [v_positions[0]["longitude"], v_positions[0]["latitude"]]
                 effective_dest_coords = [v_positions[-1]["longitude"], v_positions[-1]["latitude"]]
+                v_base_waypoints = [[p["longitude"], p["latitude"]] for p in v_positions]
             trip = next((t for t in ds.get("trips", []) if t.get("vessel_id") == vessel_id), None)
             if trip and trip.get("destination_name"):
                 effective_dest = trip["destination_name"]
@@ -1270,7 +1271,13 @@ def get_demo_route_alternatives(
 
     try:
         engine = MockRouteExposureEngine()
-        payload = engine.evaluate_routes(ctx, marine, effective_dest, dest_coords=effective_dest_coords)
+        payload = engine.evaluate_routes(
+            ctx,
+            marine,
+            effective_dest,
+            dest_coords=effective_dest_coords,
+            base_waypoints=v_base_waypoints,
+        )
 
         if not payload.routes:
             return {

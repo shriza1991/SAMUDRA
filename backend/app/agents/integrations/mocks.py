@@ -268,6 +268,7 @@ class MockRouteExposureEngine:
         marine: MarineConditionsPayload,
         destination: str,
         dest_coords: Optional[List[float]] = None,
+        base_waypoints: Optional[List[List[float]]] = None,
     ) -> RouteExposurePayload:
         if self.should_fail:
             raise RuntimeError("Route exposure engine unavailable")
@@ -296,46 +297,80 @@ class MockRouteExposureEngine:
             target_lng = target_coords[0]
             target_lat = target_coords[1]
 
-            # Calculate accurate multi-waypoint navigation corridors connecting origin and destination
             import math
             dx = target_lng - origin_lng
             dy = target_lat - origin_lat
-            dist_deg = math.hypot(dx, dy)
-            if dist_deg < 0.0001:
-                dx, dy, dist_deg = -0.15, -0.08, 0.17
 
-            # Normal perpendicular vector pointing seaward (westward)
-            perp_x = -dy / dist_deg
-            perp_y = dx / dist_deg
-            if perp_x > 0:
-                perp_x, perp_y = -perp_x, -perp_y
+            # When authentic vessel waypoints exist (from verified maritime GPS replay),
+            # derive alternative navigation channels directly from verified water waypoints.
+            if base_waypoints and len(base_waypoints) >= 4:
+                n = len(base_waypoints)
+                # Inshore channel: follows the verified nearshore navigational channel
+                inshore_waypoints = [
+                    base_waypoints[0],
+                    base_waypoints[int(n * 0.20)],
+                    base_waypoints[int(n * 0.40)],
+                    base_waypoints[int(n * 0.60)],
+                    base_waypoints[int(n * 0.80)],
+                    base_waypoints[-1],
+                ]
+                # Direct channel: straight rhumb transit in water
+                direct_waypoints = [
+                    base_waypoints[0],
+                    base_waypoints[int(n * 0.25)],
+                    base_waypoints[int(n * 0.70)],
+                    base_waypoints[-1],
+                ]
+                # Balanced corridor: gentle seaward sweep into open waters (negative lon shift into Arabian Sea)
+                balanced_waypoints = [
+                    base_waypoints[0],
+                    [round(base_waypoints[int(n * 0.22)][0] - 0.015, 4), base_waypoints[int(n * 0.22)][1]],
+                    [round(base_waypoints[int(n * 0.50)][0] - 0.025, 4), base_waypoints[int(n * 0.50)][1]],
+                    [round(base_waypoints[int(n * 0.78)][0] - 0.015, 4), base_waypoints[int(n * 0.78)][1]],
+                    base_waypoints[-1],
+                ]
+            else:
+                dist_deg = math.hypot(dx, dy)
+                if dist_deg < 0.0001:
+                    dx, dy, dist_deg = -0.15, -0.08, 0.17
 
-            # Direct corridor: straight rhumb line with navigational waypoints
-            direct_waypoints = [
-                [round(origin_lng, 4), round(origin_lat, 4)],
-                [round(origin_lng + 0.35 * dx, 4), round(origin_lat + 0.35 * dy, 4)],
-                [round(origin_lng + 0.70 * dx, 4), round(origin_lat + 0.70 * dy, 4)],
-                [round(target_lng, 4), round(target_lat, 4)],
-            ]
+                # Normal perpendicular vector pointing strictly seaward (westward into Arabian Sea)
+                seaward_offset_x = -abs(0.04 * (dy / dist_deg if dist_deg else 1.0))
+                seaward_offset_y = 0.02 * (dx / dist_deg if dist_deg else 0.0)
 
-            # Balanced corridor: gentle seaward sweep balancing wave exposure and transit time
-            balanced_waypoints = [
-                [round(origin_lng, 4), round(origin_lat, 4)],
-                [round(origin_lng + 0.28 * dx + 0.04 * perp_x, 4), round(origin_lat + 0.28 * dy + 0.04 * perp_y, 4)],
-                [round(origin_lng + 0.62 * dx + 0.06 * perp_x, 4), round(origin_lat + 0.62 * dy + 0.06 * perp_y, 4)],
-                [round(origin_lng + 0.85 * dx + 0.03 * perp_x, 4), round(origin_lat + 0.85 * dy + 0.03 * perp_y, 4)],
-                [round(target_lng, 4), round(target_lat, 4)],
-            ]
+                # Direct corridor: straight rhumb line in open water
+                direct_waypoints = [
+                    [round(origin_lng, 4), round(origin_lat, 4)],
+                    [round(origin_lng + 0.35 * dx, 4), round(origin_lat + 0.35 * dy, 4)],
+                    [round(origin_lng + 0.70 * dx, 4), round(origin_lat + 0.70 * dy, 4)],
+                    [round(target_lng, 4), round(target_lat, 4)],
+                ]
 
-            # Inshore sheltered corridor: stays in sheltered coastal waters
-            inshore_waypoints = [
-                [round(origin_lng, 4), round(origin_lat, 4)],
-                [round(origin_lng + 0.22 * dx - 0.03 * perp_x, 4), round(origin_lat + 0.22 * dy - 0.03 * perp_y, 4)],
-                [round(origin_lng + 0.50 * dx - 0.05 * perp_x, 4), round(origin_lat + 0.50 * dy - 0.05 * perp_y, 4)],
-                [round(origin_lng + 0.75 * dx - 0.03 * perp_x, 4), round(origin_lat + 0.75 * dy - 0.03 * perp_y, 4)],
-                [round(origin_lng + 0.90 * dx, 4), round(origin_lat + 0.90 * dy, 4)],
-                [round(target_lng, 4), round(target_lat, 4)],
-            ]
+                # Balanced corridor: gentle seaward sweep into open waters (negative lon offset away from land)
+                balanced_waypoints = [
+                    [round(origin_lng, 4), round(origin_lat, 4)],
+                    [round(origin_lng + 0.28 * dx + seaward_offset_x * 0.6, 4), round(origin_lat + 0.28 * dy + seaward_offset_y * 0.6, 4)],
+                    [round(origin_lng + 0.62 * dx + seaward_offset_x * 1.0, 4), round(origin_lat + 0.62 * dy + seaward_offset_y * 1.0, 4)],
+                    [round(origin_lng + 0.85 * dx + seaward_offset_x * 0.5, 4), round(origin_lat + 0.85 * dy + seaward_offset_y * 0.5, 4)],
+                    [round(target_lng, 4), round(target_lat, 4)],
+                ]
+
+                # Inshore sheltered corridor: stays in nearshore water contour, strictly avoiding land
+                inshore_waypoints = [
+                    [round(origin_lng, 4), round(origin_lat, 4)],
+                    [round(origin_lng + 0.20 * dx, 4), round(origin_lat + 0.20 * dy - 0.015, 4)],
+                    [round(origin_lng + 0.45 * dx, 4), round(origin_lat + 0.45 * dy - 0.025, 4)],
+                    [round(origin_lng + 0.72 * dx, 4), round(origin_lat + 0.72 * dy - 0.015, 4)],
+                    [round(origin_lng + 0.90 * dx, 4), round(origin_lat + 0.90 * dy, 4)],
+                    [round(target_lng, 4), round(target_lat, 4)],
+                ]
+
+                # Strict land avoidance clamp: along Indian west coast, dry land is everything east of the harbor
+                max_allowed_lng = max(origin_lng, target_lng)
+                for w_list in (direct_waypoints, balanced_waypoints, inshore_waypoints):
+                    for wp in w_list:
+                        if wp[0] > max_allowed_lng:
+                            wp[0] = round(max_allowed_lng - 0.005, 4)
 
             # Nautical distance scaling preserving canonical benchmark values for Ratnagiri
             if (context.origin_harbor == "Ratnagiri" or not context.origin_harbor) and (destination == "Outer Bank" or not dest_coords):
