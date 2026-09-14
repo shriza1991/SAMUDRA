@@ -70,7 +70,20 @@ export const MOCK_SAFETY_RESPONSE: ChatResponse = {
             type: 'Feature',
             geometry: {
               type: 'Polygon',
-              coordinates: [[[72.5, 16.5], [73.5, 16.5], [73.5, 17.5], [72.5, 17.5], [72.5, 16.5]]],
+              coordinates: [
+                [
+                  [72.60, 16.50],
+                  [72.95, 16.45],
+                  [73.30, 16.65],
+                  [73.38, 16.90],
+                  [73.35, 17.20],
+                  [73.10, 17.38],
+                  [72.75, 17.30],
+                  [72.55, 17.00],
+                  [72.50, 16.70],
+                  [72.60, 16.50],
+                ],
+              ],
             },
             properties: { severity: 'CRITICAL', label: 'IMD Squall Advisory Zone' },
           },
@@ -157,7 +170,19 @@ export const MOCK_PFZ_RESPONSE: ChatResponse = {
             type: 'Feature',
             geometry: {
               type: 'Polygon',
-              coordinates: [[[72.85, 16.72], [73.05, 16.72], [73.05, 16.92], [72.85, 16.92], [72.85, 16.72]]],
+              coordinates: [
+                [
+                  [72.86, 16.80],
+                  [72.90, 16.74],
+                  [72.98, 16.73],
+                  [73.04, 16.78],
+                  [73.05, 16.86],
+                  [73.01, 16.91],
+                  [72.93, 16.92],
+                  [72.87, 16.87],
+                  [72.86, 16.80],
+                ],
+              ],
             },
             properties: { label: 'PFZ-MH-20260905-01', sst: 28.4, chlorophyll: 1.2, rank: 1 },
           },
