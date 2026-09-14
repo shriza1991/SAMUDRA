@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   Ship,
   Play,
@@ -37,6 +37,15 @@ interface FleetTrackingDeckProps {
   language?: SupportedLanguage;
 }
 
+function formatTimestamp(ts?: string): string {
+  if (!ts) return '--:--';
+  if (ts.includes('T')) {
+    const timePart = ts.split('T')[1];
+    return timePart ? timePart.slice(0, 5) : ts;
+  }
+  return ts;
+}
+
 export default function FleetTrackingDeck({
   selectedSector,
   onVesselSelect,
@@ -50,7 +59,7 @@ export default function FleetTrackingDeck({
   const [selectedVesselId, setSelectedVesselId] = useState<string | null>(null);
   const [positions, setPositions] = useState<VesselPosition[]>([]);
   const [currentIndex, setCurrentIndex] = useState<number>(0);
-  const [isPlaying, setIsPlaying] = useState<boolean>(false);
+  const [isPlaying, setIsPlaying] = useState<boolean>(true);
   const [notifications, setNotifications] = useState<DemoNotification[]>([]);
   const [operationalAlerts, setOperationalAlerts] = useState<VesselHazardOperationalAlert[]>([]);
   const [selectedOperationalAlertId, setSelectedOperationalAlertId] = useState<string | null>(null);
@@ -61,6 +70,8 @@ export default function FleetTrackingDeck({
   const [isReplayUnavailable, setIsReplayUnavailable] = useState<boolean>(false);
   const [trajectoryStatus, setTrajectoryStatus] = useState<{ available: boolean; reason?: string } | null>(null);
   const [focusTrigger, setFocusTrigger] = useState<number>(0);
+  const endHoldCountRef = useRef<number>(0);
+  const alertInspectionRef = useRef<boolean>(false);
 
   // Sector change effect: reload vessels & alerts, clear previous replay
   useEffect(() => {
@@ -166,12 +177,20 @@ export default function FleetTrackingDeck({
         setIsReplayLoading(false);
         if (Array.isArray(pos) && pos.length > 0) {
           setPositions(pos);
-          // Default to latest/selected point, rendering full historical track and latest marker
-          setCurrentIndex(pos.length - 1);
-          setIsPlaying(false);
+          endHoldCountRef.current = 0;
+          if (alertInspectionRef.current) {
+            alertInspectionRef.current = false;
+            setCurrentIndex(pos.length - 1);
+            setIsPlaying(false);
+          } else {
+            // Autoplay from departure
+            setCurrentIndex(0);
+            setIsPlaying(true);
+          }
           setIsReplayUnavailable(false);
         } else {
           setPositions([]);
+          setIsPlaying(false);
           setIsReplayUnavailable(true);
           onReplayUpdate?.(null);
         }
@@ -180,6 +199,7 @@ export default function FleetTrackingDeck({
         if (isCancelled) return;
         setIsReplayLoading(false);
         setPositions([]);
+        setIsPlaying(false);
         setIsReplayUnavailable(true);
         onReplayUpdate?.(null);
       });
@@ -200,19 +220,25 @@ export default function FleetTrackingDeck({
     onVesselSelect?.(selectedVesselId);
   }, [selectedVesselId, onVesselSelect]);
 
-  // Autoplay ticker for trajectory scrubber
+  // Autoplay ticker for trajectory scrubber: continuously advances along voyage track
+  // and smoothly loops back to departure after a brief hold at destination
   useEffect(() => {
     if (!isPlaying || positions.length === 0) return;
 
     const timer = setInterval(() => {
       setCurrentIndex((prev) => {
         if (prev >= positions.length - 1) {
-          setIsPlaying(false);
-          return prev;
+          if (endHoldCountRef.current < 2) {
+            endHoldCountRef.current += 1;
+            return prev;
+          }
+          endHoldCountRef.current = 0;
+          return 0;
         }
+        endHoldCountRef.current = 0;
         return prev + 1;
       });
-    }, 1200);
+    }, 1000);
 
     return () => clearInterval(timer);
   }, [isPlaying, positions]);
@@ -266,7 +292,7 @@ export default function FleetTrackingDeck({
           coordinates: [currentPos.longitude, currentPos.latitude],
         },
         properties: {
-          label: `Vessel Position @ ${currentPos.timestamp}`,
+          label: `Vessel Position @ ${formatTimestamp(currentPos.timestamp)}`,
           speed_knots: currentPos.speed_knots,
           heading_deg: currentPos.heading_deg,
           vessel_id: currentPos.vessel_id,
@@ -348,9 +374,15 @@ export default function FleetTrackingDeck({
       return;
     }
 
+    if (alert.vessel_id !== selectedVesselId) {
+      alertInspectionRef.current = true;
+      setSelectedVesselId(alert.vessel_id);
+    } else {
+      setCurrentIndex(positions.length > 0 ? positions.length - 1 : 0);
+      setIsPlaying(false);
+      endHoldCountRef.current = 0;
+    }
     setSelectedOperationalAlertId(alert.alert_id);
-    setSelectedVesselId(alert.vessel_id);
-    setIsPlaying(false);
     // Existing replay focus maps the canonical latest replay position. It
     // remains the sole source for vessel coordinates.
     setFocusTrigger((count) => count + 1);
@@ -434,7 +466,15 @@ export default function FleetTrackingDeck({
                     key={v.public_id}
                     type="button"
                     className={`fleet-vessel-card ${isSelected ? 'active' : ''}`}
-                    onClick={() => setSelectedVesselId(v.public_id)}
+                    onClick={() => {
+                      if (selectedVesselId === v.public_id) {
+                        setCurrentIndex(0);
+                        endHoldCountRef.current = 0;
+                        setIsPlaying(true);
+                      } else {
+                        setSelectedVesselId(v.public_id);
+                      }
+                    }}
                   >
                     <div className="vessel-card-top">
                       <strong className="vessel-name">{v.name}</strong>
@@ -499,7 +539,13 @@ export default function FleetTrackingDeck({
                   <button
                     type="button"
                     className="scrubber-btn"
-                    onClick={() => setIsPlaying(!isPlaying)}
+                    onClick={() => {
+                      if (!isPlaying && currentIndex >= positions.length - 1) {
+                        setCurrentIndex(0);
+                        endHoldCountRef.current = 0;
+                      }
+                      setIsPlaying(!isPlaying);
+                    }}
                     title={isPlaying ? translateText('Pause', language) : translateText('Play', language)}
                   >
                     {isPlaying ? <Pause size={14} /> : <Play size={14} />}
@@ -510,7 +556,8 @@ export default function FleetTrackingDeck({
                     className="scrubber-btn reset"
                     onClick={() => {
                       setCurrentIndex(0);
-                      setIsPlaying(false);
+                      endHoldCountRef.current = 0;
+                      setIsPlaying(true);
                     }}
                     title={translateText('Reset to departure', language)}
                   >
@@ -528,14 +575,15 @@ export default function FleetTrackingDeck({
                   value={currentIndex}
                   onChange={(e) => {
                     setCurrentIndex(Number(e.target.value));
+                    endHoldCountRef.current = 0;
                     setIsPlaying(false);
                   }}
                   className="scrubber-slider"
                 />
                 <div className="scrubber-time-labels">
-                  <span>{translateText('Start', language)} ({positions[0]?.timestamp || '00:00'})</span>
-                  <span className="current-time-pill">T = {currentPos.timestamp}</span>
-                  <span>{translateText('End', language)} ({positions[positions.length - 1]?.timestamp || '03:30'})</span>
+                  <span>{translateText('Start', language)} ({formatTimestamp(positions[0]?.timestamp)})</span>
+                  <span className="current-time-pill">T = {formatTimestamp(currentPos.timestamp)}</span>
+                  <span>{translateText('End', language)} ({formatTimestamp(positions[positions.length - 1]?.timestamp)})</span>
                 </div>
               </div>
 
