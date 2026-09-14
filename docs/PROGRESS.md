@@ -148,6 +148,29 @@
 - **Harbor Switching**: Dynamically updates tide observations, SVG curve, phase distribution, and provenance when switching between Ratnagiri and Malvan, with explicit empty/degraded states if unavailable.
 - **Validation**: 62 researcher tests (156 total frontend tests passing across 11 suites), 31 backend contract/domain tests passing, and clean `tsc && vite build` bundle.
 
+### P0-19 — Earth Observation Spatial Grid Visualization in Researcher Lab
+- Implemented `EOGridSpatialMap.tsx` reusing project MapLibre GL conventions with CartoDB dark matter basemap for spatial exploration of the 5×5 Earth Observation satellite grid across the Konkan coast.
+- **14-Date Snapshot Selector**:
+  - Dynamically extracts available observation dates (`Aug 30, 2026` → `Sep 12, 2026`) chronologically.
+  - Slices only the chosen date's 25 grid cells without contaminating the P0-16 14-day temporal baseline.
+  - Features quick step buttons (`<` / `>`) and dropdown picker.
+- **Multi-Metric Switcher**:
+  - **SST (°C)**: Absolute Sea Surface Temperature from INSAT-3D/Oceansat thermal sensors with calibrated continuous Blue → Amber → Red colormap.
+  - **Chlorophyll-a (mg/m³)**: Surface ocean color chlorophyll concentration with Emerald → Green → Cyan colormap.
+  - **Cloud Cover (%)**: Pixel cloud fraction percentage with Sky Cyan → Slate → White colormap.
+- **Data Quality & QC Semantics**:
+  - `VALID` cells render with continuous metric colors.
+  - `CLOUD_OBSCURED` cells render with distinct cloud-slate color (`#64748b`) and explicit tooltip status.
+  - `DEGRADED_QC_WARNING` / `SUSPECT` cells render with amber warning color (`#f59e0b`).
+  - `NO_DATA` / null values render as dark slate (`#334155`) — never converted to zero.
+- **Spatial Statistics & Inspection**:
+  - 4-card KPI strip displaying Coverage (`X / 25 cells`, cloud-obscured count), Spatial Minimum, Spatial Mean (*strictly across valid cells only*), and Spatial Maximum.
+  - Interactive MapLibre hover tooltips and click selection opening an in-depth cell inspector panel (coordinates, pass time, all metrics, uncertainty, and satellite source).
+- **Provenance & Trust Integration**:
+  - Added `deriveEOSpatialTrustMetadata` in `src/utils/provenance.ts` integrating the reusable `DataProvenancePanel.tsx`.
+  - Discloses discrete 5×5 synthetic grid observation semantics without claiming continuous raster or live satellite telemetry.
+- **Validation**: 71 researcher tests (165 total frontend tests passing across 11 suites), 31 backend contract/domain tests passing, and clean `tsc && vite build` production bundle.
+
 ---
 
 ## P0 Marine Data Providers Status Board

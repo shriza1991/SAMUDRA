@@ -14,11 +14,13 @@ import TideTimeSeriesChart from './TideTimeSeriesChart';
 import PFZSpatialMap from './PFZSpatialMap';
 import HazardSpatialMap from './HazardSpatialMap';
 import EOTemporalAnalysisChart from './EOTemporalAnalysisChart';
+import EOGridSpatialMap from './EOGridSpatialMap';
 import DataProvenancePanel from './DataProvenancePanel';
 import {
   deriveMarineTrustMetadata,
   deriveTideTrustMetadata,
   deriveEOTrustMetadata,
+  deriveEOSpatialTrustMetadata,
   derivePFZTrustMetadata,
   deriveHazardTrustMetadata,
 } from '../../utils/provenance';
@@ -48,6 +50,10 @@ export default function OceanDataExplorer() {
     [observations, harborName]
   );
   const eoTrust = useMemo(() => deriveEOTrustMetadata(eoCells), [eoCells]);
+  const eoSpatialTrust = useMemo(
+    () => deriveEOSpatialTrustMetadata(eoCells, '2026-09-12'),
+    [eoCells]
+  );
   const pfzTrust = useMemo(() => derivePFZTrustMetadata(pfzCandidates), [pfzCandidates]);
   const hazardTrust = useMemo(() => deriveHazardTrustMetadata(hazards), [hazards]);
 
@@ -265,6 +271,12 @@ export default function OceanDataExplorer() {
       <section className="researcher-section">
         <EOTemporalAnalysisChart records={eoCells} loading={loading} />
         <DataProvenancePanel metadata={eoTrust} loading={loading} />
+      </section>
+
+      {/* Earth Observation 5×5 Spatial Grid Map */}
+      <section className="researcher-section">
+        <EOGridSpatialMap records={eoCells} loading={loading} />
+        <DataProvenancePanel metadata={eoSpatialTrust} loading={loading} />
       </section>
 
       {/* Two-Column: EO Grid + PFZ */}

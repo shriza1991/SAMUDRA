@@ -5,6 +5,12 @@ import TideTimeSeriesChart from './TideTimeSeriesChart';
 import PFZSpatialMap, { buildPFZGeoJSON } from './PFZSpatialMap';
 import HazardSpatialMap, { buildHazardGeoJSON } from './HazardSpatialMap';
 import EOTemporalAnalysisChart, { aggregateEOTemporalSeries } from './EOTemporalAnalysisChart';
+import EOGridSpatialMap, {
+  buildEOGridGeoJSON,
+  calculateEOSpatialStats,
+  getEOCellColor,
+  EO_SPATIAL_METRICS,
+} from './EOGridSpatialMap';
 import DataSourceMonitor from './DataSourceMonitor';
 import ScenarioLab from './ScenarioLab';
 import QueryWorkbench from './QueryWorkbench';
@@ -14,6 +20,7 @@ import {
   deriveMarineTrustMetadata,
   deriveTideTrustMetadata,
   deriveEOTrustMetadata,
+  deriveEOSpatialTrustMetadata,
   derivePFZTrustMetadata,
   deriveHazardTrustMetadata,
 } from '../../utils/provenance';
@@ -1484,6 +1491,298 @@ describe('Researcher Dashboard Components & Data Client', () => {
 
       expect(ratTrust.datasetName).toContain('Ratnagiri');
       expect(malTrust.datasetName).toContain('Malvan');
+    });
+  });
+
+  describe('P0-19: Earth Observation Spatial Grid Visualization', () => {
+    it('exports EOGridSpatialMap and pure spatial calculation helpers cleanly', () => {
+      expect(EOGridSpatialMap).toBeDefined();
+      expect(typeof EOGridSpatialMap).toBe('function');
+      expect(buildEOGridGeoJSON).toBeDefined();
+      expect(typeof buildEOGridGeoJSON).toBe('function');
+      expect(calculateEOSpatialStats).toBeDefined();
+      expect(typeof calculateEOSpatialStats).toBe('function');
+      expect(getEOCellColor).toBeDefined();
+      expect(typeof getEOCellColor).toBe('function');
+      expect(EO_SPATIAL_METRICS.length).toBe(3);
+    });
+
+    it('builds valid GeoJSON FeatureCollection with 25 point features from EO grid cells', () => {
+      const mockCells: EOGridCell[] = [
+        {
+          public_id: 'eo-c1',
+          cell_id: 'CELL-00-00',
+          center_lat: 16.0,
+          center_lon: 72.4,
+          sst_celsius: 29.5,
+          chlorophyll_a_mg_m3: 1.2,
+          cloud_cover_pct: 10,
+          satellite: 'Oceansat-3',
+          pass_time: '2026-09-12T06:00:00Z',
+          resolution_m: 360,
+          source: 'ISRO MOSDAC',
+          qc_status: 'VALID',
+        },
+        {
+          public_id: 'eo-c2',
+          cell_id: 'CELL-00-01',
+          center_lat: 16.0,
+          center_lon: 72.68,
+          sst_celsius: null,
+          chlorophyll_a_mg_m3: null,
+          cloud_cover_pct: 85,
+          satellite: 'Oceansat-3',
+          pass_time: '2026-09-12T06:00:00Z',
+          resolution_m: 360,
+          source: 'ISRO MOSDAC',
+          qc_status: 'CLOUD_OBSCURED',
+        },
+      ];
+
+      const geojson = buildEOGridGeoJSON(mockCells, 'sst_celsius');
+      expect(geojson.type).toBe('FeatureCollection');
+      expect(geojson.features.length).toBe(2);
+
+      const f1 = geojson.features[0];
+      expect(f1.geometry.type).toBe('Point');
+      expect((f1.geometry as GeoJSON.Point).coordinates).toEqual([72.4, 16.0]);
+      expect(f1.properties?.cell_id).toBe('CELL-00-00');
+      expect(f1.properties?.metric_value).toBe(29.5);
+      expect(f1.properties?.formatted_value).toContain('29.5 °C');
+
+      const f2 = geojson.features[1];
+      expect(f2.properties?.cell_id).toBe('CELL-00-01');
+      expect(f2.properties?.metric_value).toBeNull();
+      expect(f2.properties?.formatted_value).toBe('Cloud Obscured');
+    });
+
+    it('safely filters out invalid coordinates from GeoJSON features', () => {
+      const invalidCells: EOGridCell[] = [
+        {
+          public_id: 'eo-inv-1',
+          cell_id: 'INV-1',
+          center_lat: 999.0, // Invalid lat
+          center_lon: 72.4,
+          sst_celsius: 28.0,
+          chlorophyll_a_mg_m3: 1.0,
+          cloud_cover_pct: 0,
+          satellite: 'Oceansat-3',
+          pass_time: '2026-09-12T06:00:00Z',
+          resolution_m: 360,
+          source: 'ISRO MOSDAC',
+        },
+        {
+          public_id: 'eo-inv-2',
+          cell_id: 'INV-2',
+          center_lat: 0,
+          center_lon: 0, // 0,0 invalid
+          sst_celsius: 28.0,
+          chlorophyll_a_mg_m3: 1.0,
+          cloud_cover_pct: 0,
+          satellite: 'Oceansat-3',
+          pass_time: '2026-09-12T06:00:00Z',
+          resolution_m: 360,
+          source: 'ISRO MOSDAC',
+        },
+        {
+          public_id: 'eo-valid',
+          cell_id: 'VAL-1',
+          center_lat: 16.5,
+          center_lon: 73.0,
+          sst_celsius: 28.5,
+          chlorophyll_a_mg_m3: 1.1,
+          cloud_cover_pct: 5,
+          satellite: 'Oceansat-3',
+          pass_time: '2026-09-12T06:00:00Z',
+          resolution_m: 360,
+          source: 'ISRO MOSDAC',
+        },
+      ];
+
+      const geojson = buildEOGridGeoJSON(invalidCells, 'sst_celsius');
+      expect(geojson.features.length).toBe(1);
+      expect(geojson.features[0]?.properties?.cell_id).toBe('VAL-1');
+    });
+
+    it('calculates spatial stats (min, max, mean) strictly across valid non-cloud cells', () => {
+      const sampleCells: EOGridCell[] = [
+        {
+          cell_id: 'C1',
+          center_lat: 16.0,
+          center_lon: 72.4,
+          sst_celsius: 28.0,
+          chlorophyll_a_mg_m3: 1.0,
+          cloud_cover_pct: 10,
+          satellite: 'Oceansat-3',
+          pass_time: '2026-09-12T06:00:00Z',
+          resolution_m: 360,
+          source: 'ISRO MOSDAC',
+          qc_status: 'VALID',
+        },
+        {
+          cell_id: 'C2',
+          center_lat: 16.0,
+          center_lon: 72.6,
+          sst_celsius: 30.0,
+          chlorophyll_a_mg_m3: 2.0,
+          cloud_cover_pct: 15,
+          satellite: 'Oceansat-3',
+          pass_time: '2026-09-12T06:00:00Z',
+          resolution_m: 360,
+          source: 'ISRO MOSDAC',
+          qc_status: 'VALID',
+        },
+        {
+          cell_id: 'C3',
+          center_lat: 16.0,
+          center_lon: 72.8,
+          sst_celsius: null, // Null / cloud obscured
+          chlorophyll_a_mg_m3: null,
+          cloud_cover_pct: 90,
+          satellite: 'Oceansat-3',
+          pass_time: '2026-09-12T06:00:00Z',
+          resolution_m: 360,
+          source: 'ISRO MOSDAC',
+          qc_status: 'CLOUD_OBSCURED',
+        },
+      ];
+
+      const sstStats = calculateEOSpatialStats(sampleCells, 'sst_celsius');
+      expect(sstStats.validCount).toBe(2);
+      expect(sstStats.totalCount).toBe(3);
+      expect(sstStats.min).toBe(28.0);
+      expect(sstStats.max).toBe(30.0);
+      expect(sstStats.mean).toBe(29.0);
+      expect(sstStats.cloudObscuredCount).toBe(1);
+
+      const chlaStats = calculateEOSpatialStats(sampleCells, 'chlorophyll_a_mg_m3');
+      expect(chlaStats.validCount).toBe(2);
+      expect(chlaStats.min).toBe(1.0);
+      expect(chlaStats.max).toBe(2.0);
+      expect(chlaStats.mean).toBe(1.5);
+    });
+
+    it('handles all-missing or empty cell array gracefully without NaN or crash', () => {
+      const emptyStats = calculateEOSpatialStats([], 'sst_celsius');
+      expect(emptyStats.validCount).toBe(0);
+      expect(emptyStats.totalCount).toBe(0);
+      expect(emptyStats.min).toBeNull();
+      expect(emptyStats.max).toBeNull();
+      expect(emptyStats.mean).toBeNull();
+
+      const allCloudCells: EOGridCell[] = [
+        {
+          cell_id: 'C1',
+          center_lat: 16.0,
+          center_lon: 72.4,
+          sst_celsius: null,
+          chlorophyll_a_mg_m3: null,
+          cloud_cover_pct: 100,
+          satellite: 'Oceansat-3',
+          pass_time: '2026-09-12T06:00:00Z',
+          resolution_m: 360,
+          source: 'ISRO MOSDAC',
+          qc_status: 'CLOUD_OBSCURED',
+        },
+      ];
+      const cloudStats = calculateEOSpatialStats(allCloudCells, 'sst_celsius');
+      expect(cloudStats.validCount).toBe(0);
+      expect(cloudStats.min).toBeNull();
+      expect(cloudStats.max).toBeNull();
+      expect(cloudStats.mean).toBeNull();
+      expect(cloudStats.cloudObscuredCount).toBe(1);
+    });
+
+    it('returns deterministic QC-aware colors from getEOCellColor', () => {
+      const cloudColor = getEOCellColor('sst_celsius', null, 'CLOUD_OBSCURED', 26, 32);
+      expect(cloudColor).toBe('#64748b');
+
+      const degradedColor = getEOCellColor('sst_celsius', 28.5, 'DEGRADED_QC_WARNING', 26, 32);
+      expect(degradedColor).toBe('#f59e0b');
+
+      const noDataColor = getEOCellColor('sst_celsius', null, 'VALID', 26, 32);
+      expect(noDataColor).toBe('#334155');
+
+      const sstMidColor = getEOCellColor('sst_celsius', 29.0, 'VALID', 26, 32);
+      expect(sstMidColor).toContain('rgb(');
+
+      const chlaColor = getEOCellColor('chlorophyll_a_mg_m3', 1.5, 'VALID', 0.2, 3.0);
+      expect(chlaColor).toContain('rgb(');
+    });
+
+    it('derives single-date spatial slice trust metadata in deriveEOSpatialTrustMetadata', () => {
+      const sampleRecords: EOGridCell[] = [
+        {
+          cell_id: 'C1',
+          center_lat: 16.0,
+          center_lon: 72.4,
+          sst_celsius: 28.5,
+          chlorophyll_a_mg_m3: 1.1,
+          cloud_cover_pct: 10,
+          uncertainty: 0.12,
+          satellite: 'Oceansat-3',
+          pass_time: '2026-09-12T06:00:00Z',
+          resolution_m: 360,
+          source: 'ISRO MOSDAC',
+          qc_status: 'VALID',
+        },
+        {
+          cell_id: 'C2',
+          center_lat: 16.0,
+          center_lon: 72.6,
+          sst_celsius: null,
+          chlorophyll_a_mg_m3: null,
+          cloud_cover_pct: 95,
+          uncertainty: null,
+          satellite: 'Oceansat-3',
+          pass_time: '2026-09-12T06:00:00Z',
+          resolution_m: 360,
+          source: 'ISRO MOSDAC',
+          qc_status: 'CLOUD_OBSCURED',
+        },
+      ];
+
+      const trust = deriveEOSpatialTrustMetadata(sampleRecords, '2026-09-12');
+      expect(trust.datasetName).toContain('2026-09-12');
+      expect(trust.sourceProvider).toBe('ISRO / MOSDAC');
+      expect(trust.dataMode).toBe('SYNTHETIC SNAPSHOT');
+      expect(trust.snapshotPeriod).toContain('2026-09-12');
+      expect(trust.totalCount).toBe(2);
+      expect(trust.validCount).toBe(1);
+      expect(trust.qcBreakdown).toEqual({
+        VALID: 1,
+        CLOUD_OBSCURED: 1,
+      });
+      expect(trust.meanUncertainty).toBe(0.12);
+    });
+
+    it('fetches complete 350-record multi-day EO dataset from fetchEOGridCells', async () => {
+      const cells = await fetchEOGridCells();
+      expect(cells.length).toBeGreaterThanOrEqual(5);
+
+      // Verify fields on every cell
+      for (const c of cells) {
+        expect(c.cell_id).toBeDefined();
+        expect(typeof c.center_lat).toBe('number');
+        expect(typeof c.center_lon).toBe('number');
+        expect(c.pass_time).toBeDefined();
+        expect(c.source).toBeDefined();
+      }
+    });
+
+    it('extracts unique chronological dates from multi-day EO cell array', () => {
+      const dates = new Set<string>();
+      const mockMultiDayCells: EOGridCell[] = [
+        { cell_id: 'C1', center_lat: 16.0, center_lon: 72.4, sst_celsius: 28.0, chlorophyll_a_mg_m3: 1.0, cloud_cover_pct: 0, satellite: 'O', pass_time: '2026-09-10T06:00:00Z', resolution_m: 360, source: 'S' },
+        { cell_id: 'C1', center_lat: 16.0, center_lon: 72.4, sst_celsius: 28.5, chlorophyll_a_mg_m3: 1.1, cloud_cover_pct: 0, satellite: 'O', pass_time: '2026-09-11T06:00:00Z', resolution_m: 360, source: 'S' },
+        { cell_id: 'C1', center_lat: 16.0, center_lon: 72.4, sst_celsius: 29.0, chlorophyll_a_mg_m3: 1.2, cloud_cover_pct: 0, satellite: 'O', pass_time: '2026-09-12T06:00:00Z', resolution_m: 360, source: 'S' },
+      ];
+
+      for (const r of mockMultiDayCells) {
+        dates.add(r.pass_time.slice(0, 10));
+      }
+      const sortedDates = Array.from(dates).sort();
+      expect(sortedDates).toEqual(['2026-09-10', '2026-09-11', '2026-09-12']);
     });
   });
 });

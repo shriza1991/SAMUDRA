@@ -101,6 +101,54 @@ export function deriveEOTrustMetadata(records: EOGridCell[]): DatasetTrustMetada
 }
 
 /**
+ * Derives DatasetTrustMetadata for a single spatial slice (date) of EO grid cells.
+ */
+export function deriveEOSpatialTrustMetadata(
+  records: EOGridCell[],
+  selectedDate: string
+): DatasetTrustMetadata {
+  const slice = (records || []).filter(
+    (r) => r && r.pass_time && r.pass_time.startsWith(selectedDate)
+  );
+  const totalCount = slice.length;
+  const qcCounts: Record<string, number> = {};
+  const uncertainties: number[] = [];
+
+  let validCount = 0;
+  for (const cell of slice) {
+    const qc = cell.qc_status || 'VALID';
+    qcCounts[qc] = (qcCounts[qc] || 0) + 1;
+    if (qc === 'VALID' && (cell.sst_celsius !== null || cell.chlorophyll_a_mg_m3 !== null)) {
+      validCount++;
+    }
+    if (typeof cell.uncertainty === 'number' && !isNaN(cell.uncertainty)) {
+      uncertainties.push(cell.uncertainty);
+    }
+  }
+
+  let meanUncertainty: number | null = null;
+  if (uncertainties.length > 0) {
+    meanUncertainty = +(uncertainties.reduce((a, b) => a + b, 0) / uncertainties.length).toFixed(3);
+  }
+
+  return {
+    datasetName: `Earth Observation Spatial Grid (5×5 Cells) · ${selectedDate}`,
+    sourceProvider: 'ISRO / MOSDAC',
+    sourceProduct: 'Oceansat-3 OCM L3 Chlorophyll & INSAT-3D Thermal Infrared SST',
+    dataMode: 'SYNTHETIC SNAPSHOT',
+    snapshotPeriod: `Daily Spatial Slice (${selectedDate})`,
+    referenceTime: `Pass Time: ${slice[0]?.pass_time ? slice[0].pass_time.slice(0, 16).replace('T', ' ') + ' UTC' : selectedDate}`,
+    validCount,
+    totalCount,
+    qcBreakdown: qcCounts,
+    meanUncertainty,
+    semanticsDescription:
+      'Discrete 5×5 spatial grid observation cells for the selected date snapshot. Values reflect individual pixel measurements; cells flagged as CLOUD_OBSCURED or DEGRADED represent real data-quality conditions and are not interpolated.',
+    officialDocUrl: 'https://www.mosdac.gov.in',
+  };
+}
+
+/**
  * Derives DatasetTrustMetadata for PFZ Advisory Candidates.
  */
 export function derivePFZTrustMetadata(candidates: PFZCandidate[]): DatasetTrustMetadata {

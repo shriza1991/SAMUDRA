@@ -8491,4 +8491,629 @@ button.fleet-alert-card.active {
   }
 }
 
+/* ==========================================================================
+   P0-19: Earth Observation 5x5 Spatial Grid Map Styles
+   ========================================================================== */
+
+.eo-spatial-card {
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+  margin-bottom: 24px;
+}
+
+.eo-spatial-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: var(--color-bg-primary);
+  border-bottom: 1px solid var(--color-border);
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.eo-spatial-title-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.eo-spatial-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  letter-spacing: -0.01em;
+}
+
+.eo-spatial-tag {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: var(--radius-full);
+  background: rgba(56, 189, 248, 0.12);
+  color: #38bdf8;
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.eo-spatial-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.eo-spatial-date-control {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 2px 4px;
+}
+
+.eo-date-nav-btn {
+  background: transparent;
+  border: none;
+  color: var(--color-text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.eo-date-nav-btn:hover:not(:disabled) {
+  background: var(--color-bg-hover);
+  color: var(--color-text-primary);
+}
+
+.eo-date-nav-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.eo-date-select-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  position: relative;
+  padding: 0 4px;
+}
+
+.eo-date-icon {
+  color: #38bdf8;
+  pointer-events: none;
+}
+
+.eo-date-select {
+  background: transparent;
+  border: none;
+  color: var(--color-text-primary);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 3px 6px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  outline: none;
+  font-family: inherit;
+}
+
+.eo-date-select:focus {
+  background: var(--color-bg-tertiary);
+}
+
+.eo-metric-tabs {
+  display: flex;
+  align-items: center;
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 2px;
+  gap: 2px;
+}
+
+.eo-metric-tab-btn {
+  background: transparent;
+  border: none;
+  color: var(--color-text-secondary);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.eo-metric-tab-btn:hover {
+  color: var(--color-text-primary);
+}
+
+.eo-metric-tab-btn.active {
+  background: #38bdf8;
+  color: #0f172a;
+  font-weight: 700;
+}
+
+/* Spatial KPI stats strip */
+.eo-spatial-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+  background: var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.eo-spatial-kpi-card {
+  background: var(--color-bg-primary);
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.eo-spatial-kpi-card.highlight {
+  background: rgba(56, 189, 248, 0.04);
+}
+
+.eo-spatial-kpi-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--color-text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.eo-spatial-kpi-val {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+}
+
+.eo-spatial-kpi-val strong {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  font-family: var(--font-mono, monospace);
+}
+
+.eo-spatial-kpi-val small {
+  font-size: 11px;
+  color: var(--color-text-secondary);
+  font-weight: 500;
+}
+
+.eo-spatial-kpi-sub {
+  font-size: 10px;
+  color: var(--color-text-muted);
+}
+
+/* Map wrapper & Inspector layout */
+.eo-spatial-map-wrapper {
+  position: relative;
+  width: 100%;
+  height: 440px;
+  background: #0f172a;
+  display: flex;
+}
+
+.eo-spatial-map-container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+.eo-map-reset-btn {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 5;
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: var(--color-text-primary);
+  border-radius: var(--radius-sm);
+  padding: 4px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.eo-map-reset-btn:hover {
+  background: rgba(30, 41, 59, 0.95);
+  border-color: #38bdf8;
+  color: #38bdf8;
+}
+
+/* Cell Inspector Sidebar Card */
+.eo-cell-inspector-panel {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 280px;
+  max-height: calc(100% - 20px);
+  overflow-y: auto;
+  z-index: 10;
+  background: rgba(15, 23, 42, 0.92);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  border-radius: var(--radius-md);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.45);
+  display: flex;
+  flex-direction: column;
+}
+
+.eo-cell-inspector-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(56, 189, 248, 0.08);
+}
+
+.eo-cell-inspector-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.eo-cell-inspector-close {
+  background: transparent;
+  border: none;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
+  border-radius: var(--radius-sm);
+}
+
+.eo-cell-inspector-close:hover {
+  color: var(--color-text-primary);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.eo-cell-inspector-body {
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.eo-cell-meta-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+  gap: 6px;
+}
+
+.eo-cell-meta-label {
+  color: var(--color-text-muted);
+  font-weight: 500;
+}
+
+.eo-cell-meta-val {
+  color: var(--color-text-primary);
+  font-weight: 600;
+}
+
+.eo-cell-meta-val.mono {
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+}
+
+.eo-cell-qc-badge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: var(--radius-full);
+  text-transform: uppercase;
+}
+
+.eo-cell-qc-badge.valid {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.eo-cell-qc-badge.cloud_obscured {
+  background: rgba(100, 116, 139, 0.2);
+  color: #94a3b8;
+  border: 1px solid rgba(100, 116, 139, 0.4);
+}
+
+.eo-cell-qc-badge.degraded_qc_warning,
+.eo-cell-qc-badge.suspect {
+  background: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.eo-cell-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.eo-cell-metric-box {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-sm);
+  padding: 6px 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 2px;
+}
+
+.eo-cell-metric-box.active {
+  border-color: #38bdf8;
+  background: rgba(56, 189, 248, 0.1);
+}
+
+.eo-cell-metric-box .box-label {
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--color-text-dim);
+  text-transform: uppercase;
+}
+
+.eo-cell-metric-box .box-val {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  font-family: var(--font-mono, monospace);
+}
+
+/* Map Footer & Legends */
+.eo-spatial-footer {
+  padding: 10px 16px;
+  background: var(--color-bg-primary);
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.eo-spatial-legend-section {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 220px;
+}
+
+.eo-legend-title {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--color-text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.eo-legend-bar-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.eo-legend-bound {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  font-family: var(--font-mono, monospace);
+}
+
+.eo-legend-gradient-bar {
+  flex: 1;
+  height: 8px;
+  border-radius: 4px;
+  min-width: 120px;
+}
+
+.eo-qc-legend-section {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.eo-qc-badges-list {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.eo-qc-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  color: var(--color-text-secondary);
+  font-weight: 500;
+}
+
+.eo-qc-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.eo-qc-dot.valid {
+  background: #10b981;
+}
+
+.eo-qc-dot.cloud {
+  background: #64748b;
+}
+
+.eo-qc-dot.degraded {
+  background: #f59e0b;
+}
+
+.eo-qc-dot.nodata {
+  background: #334155;
+}
+
+.eo-spatial-caption {
+  padding: 8px 16px;
+  background: var(--color-bg-secondary);
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--color-text-muted);
+  line-height: 1.4;
+}
+
+/* MapLibre Hover Popup Box for EO */
+.eo-map-popup .maplibregl-popup-content {
+  background: rgba(15, 23, 42, 0.95) !important;
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(56, 189, 248, 0.4) !important;
+  border-radius: var(--radius-md) !important;
+  padding: 0 !important;
+  color: var(--color-text-primary) !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5) !important;
+}
+
+.eo-map-popup .maplibregl-popup-tip {
+  border-top-color: rgba(15, 23, 42, 0.95) !important;
+}
+
+.eo-spatial-popup-box {
+  padding: 10px 12px;
+  min-width: 180px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.eo-spatial-popup-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.eo-spatial-popup-id {
+  font-size: 12px;
+  font-weight: 700;
+  color: #38bdf8;
+  font-family: var(--font-mono, monospace);
+}
+
+.eo-spatial-popup-qc {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: var(--radius-full);
+  text-transform: uppercase;
+}
+
+.eo-spatial-popup-qc.valid {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+}
+
+.eo-spatial-popup-qc.cloud_obscured {
+  background: rgba(100, 116, 139, 0.2);
+  color: #94a3b8;
+}
+
+.eo-spatial-popup-time {
+  font-size: 10px;
+  color: var(--color-text-muted);
+}
+
+.eo-spatial-popup-coords {
+  font-size: 10px;
+  color: var(--color-text-secondary);
+  font-family: var(--font-mono, monospace);
+}
+
+.eo-spatial-popup-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.1);
+  margin: 3px 0;
+}
+
+.eo-spatial-popup-metrics {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 11px;
+}
+
+.eo-spatial-popup-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--color-text-secondary);
+}
+
+.eo-spatial-popup-row.highlight {
+  color: #38bdf8;
+  font-weight: 700;
+}
+
+.eo-spatial-popup-row.uncert {
+  font-size: 10px;
+  color: var(--color-text-muted);
+}
+
+.eo-spatial-popup-footer {
+  font-size: 9px;
+  color: var(--color-text-dim);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding-top: 4px;
+  margin-top: 2px;
+}
+
+@media (max-width: 900px) {
+  .eo-spatial-kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 540px) {
+  .eo-spatial-kpi-grid {
+    grid-template-columns: 1fr;
+  }
+  .eo-spatial-footer {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
 
