@@ -190,9 +190,30 @@
   - **Execution Latency & Trace Steps**: Displays real milliseconds elapsed (`ms`) and node execution step count.
 - **Deep Inspection Cards**:
   - Expandable side-by-side panels detailing Mariner Synthesis answers, backend Decisive Factors, System & Expectation Validation notes, and runtime Warnings.
-- **Synthetic Data Disclosure**:
-  - Persistent `DATA MODE: SYNTHETIC DEMO / SNAPSHOT` footer disclosing deterministic scenario evaluations without live operational claims.
 - **Validation**: 78 researcher tests (172 total frontend tests passing across 11 suites), 31 backend domain/contract tests passing, and clean `tsc && vite build` production bundle.
+
+### P0-21 — Query Workbench Analytical Upgrade in Researcher Lab
+- Upgraded `QueryWorkbench.tsx` into a credible, interactive analytical research workspace over the real `/api/v1/chat` backend without modifying ORCA reasoning or deterministic risk logic.
+- **In-Memory Conversation Session**:
+  - Maintains chronological user queries and assistant reasoning responses with localized client-side interaction timestamps.
+  - Features a visible "New Analysis" / Clear button that cleanly resets conversation messages, spatial map views, and transient errors back to the empty state without altering application state or synthetic fixtures.
+- **Categorized Structured Prompt Shortcuts**:
+  - 7 domain-specific inquiry chips (Ocean Conditions, Departure Safety, PFZ Thermal Gradient, Active Hazards, Evidence Grounding, Data Gaps & Uncertainty, Spatial Vector Layers) mapped to genuine research questions.
+  - Completely excludes unsupported live AIS or imaginary queries.
+- **Comprehensive Analytical Response Layout**:
+  - **KPI Header Strip**: Displays Intent, Recommendation Status (`GO`, `CAUTION`, `NO_GO`, `UNKNOWN`, `INFORMATIONAL`), Confidence level, Evidence count with Grounded badge, and Spatial Layer count.
+  - **Uncertainty & Degraded Data Callouts**: Prominently surfaces `UNKNOWN` confidence, missing sensor inputs, and operational warnings without forcing false binary decisions or scores.
+  - **Recommendation & Directive**: Displays executive summary, next action directive, decisive drivers with bullet icons, non-decisive context, and structured threshold comparisons table.
+  - **Evidence Inspector**: Collapsible table detailing Issuing Authority, Metric, Observed Value, Unit, QC/Quality Flags, and Observation/Validity windows.
+  - **ORCA Reasoning Trace**: Collapsible trace timeline with executed tools tags (e.g. `marine_conditions`, `hazard_context`, `risk_engine`, `route_generation`) and step-by-step node execution status and duration.
+  - **Spatial Context / Map Layers**: Integrated `MapView` rendering the actual `map_layers` returned by the backend with dark matter basemap and legend; shows an explicit "No spatial layers returned" note when `map_layers` is empty.
+  - **Suggested Follow-ups**: Contextual quick-reply chips for continuing exploratory research inquiries.
+- **Resilient Error & Loading Handling**:
+  - Displays "Analyzing marine observations & executing specialist pipeline…" loading state.
+  - Catches API errors into an explicit error card while preserving all prior session history intact.
+- **Synthetic Data Disclosure**:
+  - Persistent `DATA MODE: SYNTHETIC DEMO / SNAPSHOT` badge and input footer disclosure.
+- **Validation**: 85 researcher tests (179 total frontend tests passing across 11 suites), 31 backend domain/contract tests passing, and clean `tsc && vite build` production bundle.
 
 ---
 

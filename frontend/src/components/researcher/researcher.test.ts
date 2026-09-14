@@ -14,7 +14,7 @@ import EOGridSpatialMap, {
 import DataSourceMonitor from './DataSourceMonitor';
 import ScenarioLab from './ScenarioLab';
 import ScenarioComparisonView from './ScenarioComparisonView';
-import QueryWorkbench from './QueryWorkbench';
+import QueryWorkbench, { RESEARCH_PROMPTS, extractExecutedTools } from './QueryWorkbench';
 import ResearcherPage from '../../pages/ResearcherPage';
 import DataProvenancePanel from './DataProvenancePanel';
 import {
@@ -1980,5 +1980,143 @@ describe('Researcher Dashboard Components & Data Client', () => {
       expect(runResult.execution_time_ms).toBe(920);
     });
   });
+
+  describe('P0-21: Query Workbench Analytical Upgrade in Researcher Lab', () => {
+    it('exports QueryWorkbench component and structured research prompts cleanly', () => {
+      expect(QueryWorkbench).toBeDefined();
+      expect(typeof QueryWorkbench).toBe('function');
+      expect(Array.isArray(RESEARCH_PROMPTS)).toBe(true);
+      expect(RESEARCH_PROMPTS.length).toBeGreaterThanOrEqual(6);
+    });
+
+    it('contains research-oriented prompts and avoids unsupported live AIS queries', () => {
+      const labels = RESEARCH_PROMPTS.map(p => p.label);
+      expect(labels).toContain('Ocean Conditions');
+      expect(labels).toContain('Departure Safety');
+      expect(labels).toContain('PFZ Thermal Gradient');
+      expect(labels).toContain('Active Hazards');
+      expect(labels).toContain('Evidence Grounding');
+      expect(labels).toContain('Data Gaps & Uncertainty');
+
+      // Verify no live AIS queries
+      for (const p of RESEARCH_PROMPTS) {
+        expect(p.query.toLowerCase()).not.toContain('live ais');
+        expect(p.query.toLowerCase()).not.toContain('real-time ais');
+      }
+    });
+
+    it('extractExecutedTools extracts tool names accurately from trace steps without fabrication', () => {
+      const trace: any[] = [
+        { step: 1, node: 'supervisor', action: 'Route query', status: 'completed', timestamp: '2026-09-14T10:00:00Z' },
+        { step: 2, node: 'marine_conditions', tool_name: 'marine_conditions', action: 'Fetch wave data', status: 'completed', timestamp: '2026-09-14T10:00:01Z' },
+        { step: 3, node: 'hazard_context', tool_name: 'hazard_context', action: 'Fetch active bulletins', status: 'completed', timestamp: '2026-09-14T10:00:02Z' },
+        { step: 4, node: 'risk_engine', action: 'Evaluate thresholds', status: 'completed', timestamp: '2026-09-14T10:00:03Z' },
+      ];
+
+      const tools = extractExecutedTools(trace);
+      expect(tools).toContain('marine_conditions');
+      expect(tools).toContain('hazard_context');
+      expect(tools).toContain('risk_engine');
+      expect(tools).not.toContain('supervisor');
+    });
+
+    it('handles empty trace safely in extractExecutedTools', () => {
+      expect(extractExecutedTools([])).toEqual([]);
+      expect(extractExecutedTools(undefined)).toEqual([]);
+    });
+
+    it('preserves structured recommendation, decisive factors, and threshold comparisons', () => {
+      const response = {
+        run_id: 'run-123',
+        conversation_id: 'conv-456',
+        language: 'en',
+        intent: 'GO_NO_GO_SAFETY',
+        answer: 'Wave height exceeds safety threshold for motorized craft.',
+        recommendation: {
+          status: 'CAUTION' as const,
+          summary: 'Elevated wave heights forecast.',
+          decisive_factors: ['Wave height: 2.3m', 'Wind speed: 18kn'],
+          non_decisive_factors: ['Visibility: 10nm'],
+          next_action: 'Exercise extreme caution.',
+          threshold_comparisons: [
+            {
+              metric_name: 'significant_wave_height',
+              observed_value: 2.3,
+              threshold_value: 2.0,
+              operator: '>',
+              unit: 'm',
+              exceeded: true,
+              impact: 'Exceeds craft safety threshold',
+              description: 'Wave height exceeds 2.0m limit',
+            },
+          ],
+        },
+        confidence: {
+          level: 'MEDIUM' as const,
+          reasons: ['Deterministic synthetic fixture data.'],
+        },
+        evidence: [
+          {
+            source_name: 'INCOIS OSF',
+            metric_name: 'significant_wave_height',
+            metric_value: 2.3,
+            metric_unit: 'm',
+            quality_flags: ['official_source', 'snapshot_fallback'],
+            retrieved_at: '2026-09-14T10:00:00Z',
+          },
+        ],
+        map_layers: [],
+        trace: [],
+        warnings: ['[SNAPSHOT] Data sourced from synthetic demo fixture.'],
+        suggested_followups: ['When will wave heights decrease?'],
+      };
+
+      expect(response.recommendation.status).toBe('CAUTION');
+      expect(response.recommendation.decisive_factors).toHaveLength(2);
+      expect(response.recommendation.threshold_comparisons[0].exceeded).toBe(true);
+      expect(response.evidence).toHaveLength(1);
+      expect(response.evidence[0].metric_value).toBe(2.3);
+      expect(response.warnings).toHaveLength(1);
+    });
+
+    it('preserves UNKNOWN confidence and uncertainty warnings without forcing binary GO/NO-GO', () => {
+      const unknownResponse = {
+        status: 'UNKNOWN',
+        confidence_level: 'UNKNOWN',
+        reasons: ['Essential sensor feed missing.'],
+        warnings: ['Critical marine data unavailable.'],
+      };
+
+      expect(unknownResponse.confidence_level).toBe('UNKNOWN');
+      expect(unknownResponse.status).toBe('UNKNOWN');
+      expect(unknownResponse.reasons).toContain('Essential sensor feed missing.');
+    });
+
+    it('preserves real map_layers when present and handles empty map_layers without fake geometry', () => {
+      const layerWithGeoJSON = {
+        layer_id: 'hazard_sq_01',
+        name: 'Squall Warning Polygon',
+        layer_type: 'geojson' as const,
+        visible: true,
+        style: { color: '#ef4444' },
+        geojson: {
+          type: 'Feature' as const,
+          geometry: {
+            type: 'Polygon' as const,
+            coordinates: [[[73.1, 16.8], [73.4, 16.8], [73.4, 17.1], [73.1, 17.1], [73.1, 16.8]]],
+          },
+          properties: { severity: 'Severe' },
+        },
+      };
+
+      const respWithLayers = { map_layers: [layerWithGeoJSON] };
+      const respWithoutLayers = { map_layers: [] };
+
+      expect(respWithLayers.map_layers).toHaveLength(1);
+      expect(respWithLayers.map_layers[0].layer_id).toBe('hazard_sq_01');
+      expect(respWithoutLayers.map_layers).toHaveLength(0);
+    });
+  });
 });
+
 

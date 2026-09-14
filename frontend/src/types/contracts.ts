@@ -7,7 +7,7 @@
 
 export type RecommendationStatus = 'GO' | 'CAUTION' | 'NO_GO' | 'UNKNOWN' | 'INFORMATIONAL';
 
-export type ConfidenceLevel = 'HIGH' | 'MEDIUM' | 'LOW';
+export type ConfidenceLevel = 'HIGH' | 'MEDIUM' | 'LOW' | 'UNKNOWN';
 
 export interface UserContext {
   /** Canonical surveillance sector selected in the Authority Command Deck. */
@@ -100,8 +100,13 @@ export interface AgentTraceItem {
   step: number;
   node: string;
   action: string;
-  status: 'started' | 'completed' | 'failed';
+  status: 'started' | 'completed' | 'failed' | string;
   timestamp: string;
+  agent?: string;
+  duration_ms?: number;
+  evidence_ids?: string[];
+  error?: string;
+  tool_name?: string;
 }
 
 export interface ChatResponse {
