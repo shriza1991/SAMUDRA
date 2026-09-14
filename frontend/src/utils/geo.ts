@@ -399,6 +399,7 @@ export async function fetchAndFormatBaseLayers(): Promise<MapLayer[]> {
     return fc.features.map((f: any, idx: number) => {
       const props = f.properties || {};
       const level = props.restriction_level || 'INFORMATIONAL';
+      const isEEZ = props.polygon_type === 'EEZ_BOUNDARY' || (props.name && String(props.name).includes('EEZ'));
       const color =
         level === 'NO_GO'
           ? '#ef4444'
@@ -406,6 +407,8 @@ export async function fetchAndFormatBaseLayers(): Promise<MapLayer[]> {
           ? '#f97316'
           : level === 'ADVISORY_ALERT'
           ? '#eab308'
+          : isEEZ
+          ? '#38bdf8'
           : '#38bdf8';
 
       return {
@@ -415,8 +418,8 @@ export async function fetchAndFormatBaseLayers(): Promise<MapLayer[]> {
         visible: true,
         style: {
           color,
-          opacity: 0.22,
-          line_width: 2,
+          opacity: isEEZ ? 0.06 : 0.22,
+          line_width: isEEZ ? 1.5 : 2,
           layer_category: 'base_geofence',
         },
         geojson: f,
