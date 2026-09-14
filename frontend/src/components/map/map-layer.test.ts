@@ -483,7 +483,7 @@ describe('Map Layer GeoJSON Contract & Semantics', () => {
         name: 'Estimated Trajectory',
         layer_type: 'geojson',
         visible: true,
-        style: { color: '#facc15', line_width: 2.5, line_dasharray: [2, 2], layer_category: 'estimated_trajectory' },
+        style: { color: '#facc15', line_width: 3, line_dasharray: [0, 2], layer_category: 'estimated_trajectory' },
         geojson: { type: 'Feature', geometry: { type: 'LineString', coordinates: [[73.25, 16.97], [73.20, 16.94]] }, properties: {} },
       };
 
@@ -494,7 +494,7 @@ describe('Map Layer GeoJSON Contract & Semantics', () => {
 
       expect(historicalTrackLayer.style?.color).toBe('#06b6d4');
       expect(estimatedTrajectoryLayer.style?.color).toBe('#facc15');
-      expect(estimatedTrajectoryLayer.style?.line_dasharray).toEqual([2, 2]);
+      expect(estimatedTrajectoryLayer.style?.line_dasharray).toEqual([0, 2]);
     });
 
     it('14 & 15: Stale route responses cannot overwrite state and unavailable responses clear route layers', async () => {

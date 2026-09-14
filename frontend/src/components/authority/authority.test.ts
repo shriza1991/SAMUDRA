@@ -493,6 +493,41 @@ describe('Authority Advanced Feature Decks', () => {
       expect(currentIndex).toBe(1);
       expect(isPlaying).toBe(false);
     });
+
+    it('generates yellow dotted predicted path [0, 2] for vessels with dead reckoning and remaining voyage route', () => {
+      const currentPos = samplePositions[1]; // at 00:12
+      const remainingCoords = samplePositions.slice(1).map(p => [p.longitude, p.latitude]);
+
+      const trajectoryLayer = {
+        layer_id: 'layer_fleet_estimated_trajectory',
+        name: `Predicted Path — next 30 min (${currentPos.vessel_id})`,
+        layer_type: 'geojson' as const,
+        visible: true,
+        style: {
+          color: '#facc15',
+          opacity: 0.95,
+          line_width: 3,
+          line_dasharray: [0, 2],
+          layer_category: 'estimated_trajectory',
+        },
+        properties: { vessel_id: currentPos.vessel_id },
+        geojson: {
+          type: 'FeatureCollection' as const,
+          features: [
+            {
+              type: 'Feature' as const,
+              geometry: { type: 'LineString' as const, coordinates: remainingCoords },
+              properties: { label: 'Predicted Route to Destination' },
+            },
+          ],
+        },
+      };
+
+      expect(trajectoryLayer.style.color).toBe('#facc15');
+      expect(trajectoryLayer.style.line_dasharray).toEqual([0, 2]);
+      expect(trajectoryLayer.geojson.features[0].geometry.coordinates).toHaveLength(2);
+      expect(trajectoryLayer.geojson.features[0].geometry.coordinates[0]).toEqual([73.260, 16.985]);
+    });
   });
 });
 

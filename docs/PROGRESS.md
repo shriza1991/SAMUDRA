@@ -72,6 +72,12 @@
 - Upgraded playback controls: Play button restarts from departure when reaching the end, Reset button rewinds and immediately plays, active vessel card click restarts playback, and manual slider scrubbing pauses playback cleanly.
 - Added clean timestamp formatter (`formatTimestamp`) normalizing ISO timestamps into readable `HH:mm` format across UI labels and MapLayer popups.
 
+### P0-8N — Fleet Surveillance Predicted Path Dynamic Yellow Dotted Line
+- Configured vessel predicted path (`layer_fleet_estimated_trajectory`) in yellow dotted line (`color: '#facc15'`, `line_width: 3`, `line_dasharray: [0, 2]`) using round line-cap geometry.
+- Dynamically generates the predicted path directly ahead of the vessel craft on every step of autoplay and manual scrubbing, projecting both the remaining planned voyage route to destination and the 30-minute dead-reckoning trajectory based on instantaneous speed and heading.
+- Updated `MapView.tsx` to compile `line-dasharray` directly into initial line layer paint definitions as well as runtime updates.
+- Synchronized layer lifecycle: clearing predicted path on empty vessel telemetry or sector switch, while maintaining active layer on replay autoplay.
+
 ---
 
 ## P0 Marine Data Providers Status Board

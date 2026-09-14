@@ -46,6 +46,36 @@ function formatTimestamp(ts?: string): string {
   return ts;
 }
 
+function computeDeadReckoningTrajectory(
+  lat: number,
+  lon: number,
+  speedKnots: number,
+  headingDeg: number,
+  horizonMinutes: number = 30,
+  stepMinutes: number = 5,
+): [number, number][] {
+  const points: [number, number][] = [];
+  const earthRadiusM = 6371000.0;
+  for (let offset = 0; offset <= horizonMinutes; offset += stepMinutes) {
+    const distanceM = (speedKnots * 1852.0 * offset) / 60.0;
+    const bearing = (headingDeg * Math.PI) / 180.0;
+    const lat1 = (lat * Math.PI) / 180.0;
+    const lon1 = (lon * Math.PI) / 180.0;
+    const lat2 = Math.asin(
+      Math.sin(lat1) * Math.cos(distanceM / earthRadiusM) +
+        Math.cos(lat1) * Math.sin(distanceM / earthRadiusM) * Math.cos(bearing)
+    );
+    const lon2 =
+      lon1 +
+      Math.atan2(
+        Math.sin(bearing) * Math.sin(distanceM / earthRadiusM) * Math.cos(lat1),
+        Math.cos(distanceM / earthRadiusM) - Math.sin(lat1) * Math.sin(lat2)
+      );
+    points.push([(lon2 * 180.0) / Math.PI, (lat2 * 180.0) / Math.PI]);
+  }
+  return points;
+}
+
 export default function FleetTrackingDeck({
   selectedSector,
   onVesselSelect,
@@ -205,10 +235,18 @@ export default function FleetTrackingDeck({
       });
 
     getDemoEstimatedTrajectory(selectedVesselId).then((trajectory) => {
-      if (isCancelled || trajectory.status !== 'AVAILABLE' || !trajectory.points?.length) { if (!isCancelled) { onTrajectoryUpdate?.(null); setTrajectoryStatus({ available: false, reason: trajectory.reason }); } return; }
+      if (isCancelled || trajectory.status !== 'AVAILABLE' || !trajectory.points?.length) {
+        if (!isCancelled) {
+          setTrajectoryStatus({ available: false, reason: trajectory.reason });
+        }
+        return;
+      }
       setTrajectoryStatus({ available: true });
-      onTrajectoryUpdate?.({ layer_id: 'layer_fleet_estimated_trajectory', name: `Estimated trajectory — next ${trajectory.horizon_minutes} min`, layer_type: 'geojson', visible: true, style: { color: '#facc15', opacity: 0.95, line_width: 2.5, line_dasharray: [2, 2], layer_category: 'estimated_trajectory' }, properties: { vessel_id: trajectory.vessel_id }, geojson: { type: 'Feature', geometry: { type: 'LineString', coordinates: trajectory.points.map((point) => [point.longitude, point.latitude]) }, properties: { label: 'Estimated trajectory — synthetic demonstration estimate', vessel_id: trajectory.vessel_id } } });
-    }).catch(() => { if (!isCancelled) { onTrajectoryUpdate?.(null); setTrajectoryStatus({ available: false }); } });
+    }).catch(() => {
+      if (!isCancelled) {
+        setTrajectoryStatus({ available: false });
+      }
+    });
 
     return () => {
       isCancelled = true;
@@ -248,6 +286,7 @@ export default function FleetTrackingDeck({
     if (!onReplayUpdate) return;
     if (positions.length === 0) {
       onReplayUpdate(null);
+      onTrajectoryUpdate?.(null);
       return;
     }
 
@@ -355,7 +394,93 @@ export default function FleetTrackingDeck({
     };
 
     onReplayUpdate(replayLayer);
-  }, [positions, currentIndex, focusTrigger, onReplayUpdate]);
+
+    // Generate dynamic MapLayer for the vessel predicted path (yellow dotted line)
+    if (onTrajectoryUpdate) {
+      if (trajectoryStatus?.available === false) {
+        onTrajectoryUpdate(null);
+      } else {
+        const trajectoryFeatures: any[] = [];
+
+        // 1. Remaining planned voyage route to destination
+        if (positions.length > currentIndex + 1) {
+          const remainingCoordinates = positions.slice(currentIndex).map((p) => [p.longitude, p.latitude]);
+          if (remainingCoordinates.length >= 2) {
+            trajectoryFeatures.push({
+              type: 'Feature',
+              geometry: {
+                type: 'LineString',
+                coordinates: remainingCoordinates,
+              },
+              properties: {
+                label: `Predicted Route to Destination (${formatTimestamp(positions[positions.length - 1]?.timestamp)})`,
+                vessel_id: currentPos.vessel_id,
+                trajectory_type: 'predicted_route',
+              },
+            });
+          }
+        }
+
+        // 2. Dead-reckoning forward projection (30 min ahead based on speed and heading)
+        if (
+          typeof currentPos.speed_knots === 'number' &&
+          typeof currentPos.heading_deg === 'number' &&
+          !isNaN(currentPos.speed_knots) &&
+          !isNaN(currentPos.heading_deg) &&
+          currentPos.speed_knots > 0
+        ) {
+          const deadReckoningPoints = computeDeadReckoningTrajectory(
+            currentPos.latitude,
+            currentPos.longitude,
+            currentPos.speed_knots,
+            currentPos.heading_deg,
+            30,
+            5,
+          );
+          if (deadReckoningPoints.length >= 2) {
+            trajectoryFeatures.push({
+              type: 'Feature',
+              geometry: {
+                type: 'LineString',
+                coordinates: deadReckoningPoints,
+              },
+              properties: {
+                label: `Predicted Dead Reckoning (Next 30 min @ ${currentPos.speed_knots} kts)`,
+                vessel_id: currentPos.vessel_id,
+                trajectory_type: 'dead_reckoning',
+              },
+            });
+          }
+        }
+
+        if (trajectoryFeatures.length > 0) {
+          const trajectoryLayer: MapLayer = {
+            layer_id: 'layer_fleet_estimated_trajectory',
+            name: `Predicted Path — next 30 min (${currentPos.vessel_id})`,
+            layer_type: 'geojson',
+            visible: true,
+            style: {
+              color: '#facc15',
+              opacity: 0.95,
+              line_width: 3,
+              line_dasharray: [0, 2],
+              layer_category: 'estimated_trajectory',
+            },
+            properties: {
+              vessel_id: currentPos.vessel_id,
+            },
+            geojson: {
+              type: 'FeatureCollection',
+              features: trajectoryFeatures,
+            },
+          };
+          onTrajectoryUpdate(trajectoryLayer);
+        } else {
+          onTrajectoryUpdate(null);
+        }
+      }
+    }
+  }, [positions, currentIndex, focusTrigger, onReplayUpdate, onTrajectoryUpdate, trajectoryStatus]);
 
   const currentPos = positions[currentIndex] || positions[0];
   const selectedVessel = vessels.find((v) => v.public_id === selectedVesselId) || null;

@@ -399,6 +399,7 @@ export default function MapView({ layers, theme = 'light', center, zoom, languag
                 'line-color': color,
                 'line-width': lineWidth,
                 'line-opacity': opacity,
+                ...(lineDasharray ? { 'line-dasharray': lineDasharray } : {}),
               },
               layout: {
                 'line-cap': 'round',
