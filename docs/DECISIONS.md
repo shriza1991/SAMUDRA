@@ -198,6 +198,25 @@ Extends SAMUDRA's user taxonomy into research and analytics while keeping the co
 Owner: Dev 1 / Dev 4 (Researcher persona)
 Date: 2026-09-13
 
+## D021 — Vessel-Anchored Surveillance Route Alternatives and Strict Seaward Clamping
+Status: ACCEPTED
+
+Decision:
+1. Fleet surveillance route alternatives (Safest Inshore, Balanced, Direct Passage) are parameterized by `vessel_id` (`GET /api/v1/demo/routes/alternatives?vessel_id=...`), resolving the vessel's home harbor, voyage start coordinates, and target destination from canonical synthetic seed data.
+2. Route corridors derive waypoints directly from verified maritime track points (`base_waypoints`), extracting authentic in-water courses for Inshore, Balanced (with offshore seaward arc), and Direct paths.
+3. Synthetic fallback waypoints strictly clamp longitudes seaward (west of the harbor mouth into the Arabian Sea) to guarantee zero overland or inland dry ground crossings.
+4. Terminal coordinates (`origin_coordinates` and `destination_coordinates`) are explicitly exposed in `RouteExposurePayload` and rendered dynamically as distinct Start (Emerald `#10b981`) and Destination (Amber `#f59e0b`) waypoint markers on the map, in the Mission Map Brief, and in the Fleet Telemetry scrubber deck.
+5. Invariant layer counts in `createAuthorityRouteLayers` are strictly maintained, delegating terminal markers to dynamic MapView layers to prevent breaking contract assertions.
+
+Reason:
+Artisanal craft and patrol boats require visually clear departure and arrival points on their navigation corridors. Synthetic perpendicular offsets previously swung eastward near Ratnagiri, Malvan, and Veraval, crossing inland onto peninsular land.
+
+Impact:
+Guarantees 100% in-water maritime routing across all 14 fleet surveillance vessels and sectors while surfacing unambiguous start and destination terminals.
+
+Owner: Dev 1 / Dev 4
+Date: 2026-09-14
+
 ## Decision template
 ### D0XX — <title>
 Status: PROPOSED / ACCEPTED / REJECTED
@@ -207,3 +226,4 @@ Alternatives:
 Impact:
 Owner:
 Date:
+
