@@ -60,6 +60,12 @@
 - Preserved `MOCK_SCENARIOS` strictly for offline scenario list metadata fallback, completely disconnected from execution results.
 - Added regression tests verifying zero fake metrics or random calls upon execution failure.
 
+### P0-12 — Persistent DATA MODE Indicator for Researcher Lab
+- Added persistent, clearly visible `DATA MODE: SYNTHETIC DEMO / SNAPSHOT` indicator in the shared top-level command bar of `ResearcherPage.tsx`.
+- Centralized the source-of-truth constants `CANONICAL_DATA_MODE_LABEL` and `CANONICAL_DATA_MODE_TOOLTIP` in `frontend/src/api/researcher-client.ts`.
+- Ensured the indicator persists seamlessly across all 4 Researcher decks (Ocean Data, Data Sources, Scenario Lab, Query Workbench) without layout clipping or tab disruption.
+- Verified absence of conflicting/misleading `LIVE` operational labels.
+
 ---
 
 ## P0 Marine Data Providers Status Board

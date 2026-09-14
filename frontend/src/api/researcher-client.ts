@@ -6,6 +6,10 @@
 
 const API_BASE = '/api/v1';
 
+export const CANONICAL_DATA_MODE_LABEL = 'DATA MODE: SYNTHETIC DEMO / SNAPSHOT';
+export const CANONICAL_DATA_MODE_TOOLTIP =
+  'Deterministic synthetic data modeled on documented marine, meteorological and Earth-observation source semantics. This prototype is not connected to live operational feeds.';
+
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------

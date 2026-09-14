@@ -6,6 +6,7 @@ import OceanDataExplorer from '../components/researcher/OceanDataExplorer';
 import DataSourceMonitor from '../components/researcher/DataSourceMonitor';
 import ScenarioLab from '../components/researcher/ScenarioLab';
 import QueryWorkbench from '../components/researcher/QueryWorkbench';
+import { CANONICAL_DATA_MODE_LABEL, CANONICAL_DATA_MODE_TOOLTIP } from '../api/researcher-client';
 
 type ResearcherDeck = 'ocean' | 'sources' | 'scenarios' | 'query';
 
@@ -81,6 +82,14 @@ export default function ResearcherPage() {
         <div className="researcher-bar-left">
           <Beaker size={16} className="researcher-bar-icon" />
           <span className="researcher-bar-title">Researcher Lab</span>
+          <div
+            className="researcher-data-mode-badge"
+            title={CANONICAL_DATA_MODE_TOOLTIP}
+            aria-label={CANONICAL_DATA_MODE_LABEL}
+          >
+            <Database size={12} />
+            <span>{CANONICAL_DATA_MODE_LABEL}</span>
+          </div>
         </div>
 
         <nav className="researcher-nav-segmented" role="tablist" aria-label="Research deck navigation">

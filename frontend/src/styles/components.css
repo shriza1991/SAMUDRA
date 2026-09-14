@@ -5424,6 +5424,23 @@ button.fleet-alert-card.active {
   color: var(--color-text-primary);
 }
 
+.researcher-data-mode-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 8px;
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  border-radius: var(--radius-full);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #f59e0b;
+  cursor: help;
+  user-select: none;
+  white-space: nowrap;
+}
+
 .researcher-nav-segmented {
   display: flex;
   gap: 2px;

@@ -205,4 +205,11 @@ describe('Researcher Dashboard Components & Data Client', () => {
     expect(imd).toBeDefined();
     expect(imd?.status).toBe('online');
   });
+
+  it('exposes canonical DATA MODE disclosure constants for Researcher Lab', async () => {
+    const { CANONICAL_DATA_MODE_LABEL, CANONICAL_DATA_MODE_TOOLTIP } = await import('../../api/researcher-client');
+    expect(CANONICAL_DATA_MODE_LABEL).toBe('DATA MODE: SYNTHETIC DEMO / SNAPSHOT');
+    expect(CANONICAL_DATA_MODE_TOOLTIP).toContain('Deterministic synthetic data');
+    expect(CANONICAL_DATA_MODE_TOOLTIP).toContain('not connected to live operational feeds');
+  });
 });
