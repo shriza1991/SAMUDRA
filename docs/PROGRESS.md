@@ -46,6 +46,13 @@
 - Refactored `DataService` in SNAPSHOT and SYNTHETIC modes to route through `SnapshotConnector`, eliminating hardcoded dummy payloads and silent dataset fallbacks.
 - Verified single source-of-truth consistency across fixture -> INCOIS adapter -> ObservationBundle -> Risk Engine -> Situation Assessment -> Researcher Demo API with dedicated test suite (`test_marine_source_of_truth.py`).
 
+### P0-10 — PFZ (Potential Fishing Zone) Data Semantics Fix
+- Corrected semantic mapping in Researcher Lab where PFZ thermal gradient (`sst_gradient`) was being converted to a fabricated absolute sea surface temperature (`sst_celsius: 28.0 + p.sst_gradient`) and rendered with `°C`.
+- Updated `PFZCandidate` interface, mock fixture, and mapper in `frontend/src/api/researcher-client.ts` to preserve `sst_gradient: number | null` explicitly without fabricating temperature.
+- Updated `frontend/src/components/researcher/OceanDataExplorer.tsx` to display `SST Gradient: <value>` without `°C` and preserved `depth_m`, `bearing_deg`, `distance_km`, `chlorophyll_a_mg_m3`, and validity fields.
+- Fixed backend `/api/v1/demo/pfz-candidates` fallback `valid_only` filtering to match `qc_status == 'VALID'`.
+- Added end-to-end semantic validation tests (`tests/domain/test_pfz_data_semantics.py` and `researcher.test.ts`).
+
 ---
 
 ## P0 Marine Data Providers Status Board

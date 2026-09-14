@@ -81,13 +81,21 @@ describe('Researcher Dashboard Components & Data Client', () => {
     }
   });
 
-  it('fetches PFZ advisory candidates with ranks and bearings', async () => {
+  it('fetches PFZ advisory candidates with sst_gradient and without fake absolute sst_celsius', async () => {
     const pfz = await fetchPFZCandidates();
     expect(pfz.length).toBeGreaterThan(0);
     const rank1 = pfz.find(p => p.rank === 1);
     expect(rank1).toBeDefined();
     expect(rank1?.distance_km).toBeGreaterThan(0);
     expect(rank1?.bearing_deg).toBeGreaterThanOrEqual(0);
+    // Semantic verification: sst_gradient must be preserved as gradient (< 10.0), never absolute SST (~28°C)
+    for (const p of pfz) {
+      expect((p as any).sst_celsius).toBeUndefined();
+      if (p.sst_gradient !== null) {
+        expect(p.sst_gradient).toBeGreaterThanOrEqual(0);
+        expect(p.sst_gradient).toBeLessThan(10); // Thermal gradient metric is < 10 °C/km or unitless index
+      }
+    }
   });
 
   it('fetches active hazard bulletins', async () => {

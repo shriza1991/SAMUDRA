@@ -1142,7 +1142,7 @@ def get_demo_pfz_candidates(
         logger.debug("Database get_demo_pfz_candidates failed (service offline): %s", exc)
     records = _get_synthetic_records("pfz_candidates", namespace=namespace)
     if valid_only:
-        records = [r for r in records if r.get("status") == "ACTIVE"]
+        records = [r for r in records if r.get("qc_status") == "VALID" or r.get("status") == "ACTIVE"]
     return records
 
 

@@ -53,12 +53,14 @@ export interface PFZCandidate {
   public_id: string;
   latitude: number;
   longitude: number;
-  sst_celsius: number | null;
+  sst_gradient: number | null;
   chlorophyll_a_mg_m3: number | null;
   distance_km: number;
   bearing_deg: number;
   rank: number;
   status: string;
+  confidence?: string;
+  depth_m?: number | null;
   valid_from: string;
   valid_to: string;
   source: string;
@@ -162,9 +164,9 @@ const MOCK_EO_CELLS: EOGridCell[] = [
 ];
 
 const MOCK_PFZ: PFZCandidate[] = [
-  { public_id: 'pfz-mh-01', latitude: 16.82, longitude: 72.95, sst_celsius: 28.4, chlorophyll_a_mg_m3: 1.2, distance_km: 42.6, bearing_deg: 245, rank: 1, status: 'ACTIVE', valid_from: '2026-09-12T00:00:00Z', valid_to: '2026-09-12T23:59:59Z', source: 'INCOIS PFZ Advisory' },
-  { public_id: 'pfz-mh-02', latitude: 16.45, longitude: 72.80, sst_celsius: 27.9, chlorophyll_a_mg_m3: 1.8, distance_km: 78.3, bearing_deg: 225, rank: 2, status: 'ACTIVE', valid_from: '2026-09-12T00:00:00Z', valid_to: '2026-09-12T23:59:59Z', source: 'INCOIS PFZ Advisory' },
-  { public_id: 'pfz-mh-03', latitude: 17.15, longitude: 72.70, sst_celsius: 28.8, chlorophyll_a_mg_m3: 0.9, distance_km: 65.1, bearing_deg: 280, rank: 3, status: 'ACTIVE', valid_from: '2026-09-12T00:00:00Z', valid_to: '2026-09-12T23:59:59Z', source: 'INCOIS PFZ Advisory' },
+  { public_id: 'pfz-mh-01', latitude: 16.82, longitude: 72.95, sst_gradient: 0.9, chlorophyll_a_mg_m3: 1.2, distance_km: 42.6, bearing_deg: 245, rank: 1, status: 'ACTIVE', confidence: 'HIGH', depth_m: 28.0, valid_from: '2026-09-12T00:00:00Z', valid_to: '2026-09-12T23:59:59Z', source: 'INCOIS PFZ Advisory' },
+  { public_id: 'pfz-mh-02', latitude: 16.45, longitude: 72.80, sst_gradient: 1.1, chlorophyll_a_mg_m3: 1.8, distance_km: 78.3, bearing_deg: 225, rank: 2, status: 'ACTIVE', confidence: 'HIGH', depth_m: 35.0, valid_from: '2026-09-12T00:00:00Z', valid_to: '2026-09-12T23:59:59Z', source: 'INCOIS PFZ Advisory' },
+  { public_id: 'pfz-mh-03', latitude: 17.15, longitude: 72.70, sst_gradient: 0.85, chlorophyll_a_mg_m3: 0.9, distance_km: 65.1, bearing_deg: 280, rank: 3, status: 'ACTIVE', confidence: 'HIGH', depth_m: 22.0, valid_from: '2026-09-12T00:00:00Z', valid_to: '2026-09-12T23:59:59Z', source: 'INCOIS PFZ Advisory' },
 ];
 
 const MOCK_HAZARDS: HazardBulletin[] = [
@@ -273,12 +275,14 @@ export async function fetchPFZCandidates(): Promise<PFZCandidate[]> {
     public_id: p.public_id || `pfz-${i}`,
     latitude: typeof p.latitude === 'number' ? p.latitude : 0,
     longitude: typeof p.longitude === 'number' ? p.longitude : 0,
-    sst_celsius: typeof p.sst_celsius === 'number' ? p.sst_celsius : typeof p.sst_gradient === 'number' ? +(28.0 + p.sst_gradient).toFixed(1) : null,
+    sst_gradient: typeof p.sst_gradient === 'number' ? p.sst_gradient : null,
     chlorophyll_a_mg_m3: typeof p.chlorophyll_a_mg_m3 === 'number' ? p.chlorophyll_a_mg_m3 : typeof p.chlorophyll_value === 'number' ? p.chlorophyll_value : null,
     distance_km: typeof p.distance_km === 'number' ? p.distance_km : 0,
     bearing_deg: typeof p.bearing_deg === 'number' ? p.bearing_deg : 0,
     rank: typeof p.rank === 'number' ? p.rank : i + 1,
     status: p.status || p.qc_status || 'ACTIVE',
+    confidence: p.confidence || 'HIGH',
+    depth_m: typeof p.depth_m === 'number' ? p.depth_m : null,
     valid_from: p.valid_from || p.detected_at || new Date().toISOString(),
     valid_to: p.valid_to || new Date().toISOString(),
     source: p.source || 'INCOIS PFZ Advisory',

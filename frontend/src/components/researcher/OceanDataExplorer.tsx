@@ -227,14 +227,14 @@ export default function OceanDataExplorer() {
                 <div className="researcher-pfz-body">
                   <div className="researcher-pfz-id">{pfz.public_id}</div>
                   <div className="researcher-pfz-stats">
-                    <span>{pfz.distance_km != null ? pfz.distance_km.toFixed(1) : '—'} km · {pfz.bearing_deg ?? 0}°</span>
-                    <span>SST {pfz.sst_celsius != null ? `${pfz.sst_celsius}°C` : '—'} · Chl-a {pfz.chlorophyll_a_mg_m3 != null ? `${pfz.chlorophyll_a_mg_m3} mg/m³` : '—'}</span>
+                    <span>{pfz.distance_km != null ? pfz.distance_km.toFixed(1) : '—'} km · {pfz.bearing_deg ?? 0}°{pfz.depth_m != null ? ` · ${pfz.depth_m}m depth` : ''}</span>
+                    <span>SST Gradient: {pfz.sst_gradient != null ? pfz.sst_gradient : '—'} · Chl-a {pfz.chlorophyll_a_mg_m3 != null ? `${pfz.chlorophyll_a_mg_m3} mg/m³` : '—'}</span>
                   </div>
                   <div className="researcher-pfz-validity">
                     Valid: {formatDate(pfz.valid_from)} — {formatDate(pfz.valid_to)}
                   </div>
                 </div>
-                <span className={`researcher-status-badge ${pfz.status === 'ACTIVE' ? 'go' : ''}`}>{pfz.status}</span>
+                <span className={`researcher-status-badge ${pfz.status === 'ACTIVE' || pfz.status === 'VALID' ? 'go' : ''}`}>{pfz.status}</span>
               </div>
             ))}
           </div>
