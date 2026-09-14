@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import {
-  Activity, Database, Wifi, WifiOff, Clock, Shield,
+  Activity, Database, Shield,
   RefreshCw, CheckCircle2, AlertTriangle, XCircle, Calendar,
+  Layers, Info,
 } from 'lucide-react';
 import { fetchHealthStatus, DATA_SOURCES, type HealthStatus, type DataSourceInfo } from '../../api/researcher-client';
 
@@ -12,15 +13,6 @@ function StatusIcon({ status }: { status: DataSourceInfo['status'] }) {
     case 'offline': return <XCircle size={14} style={{ color: '#ef4444' }} />;
     case 'planned': return <Calendar size={14} style={{ color: '#94a3b8' }} />;
   }
-}
-
-function freshnessLabel(hours: number): { text: string; color: string } {
-  if (hours < 0) return { text: 'N/A', color: '#94a3b8' };
-  if (hours <= 1) return { text: `${Math.round(hours * 60)}min`, color: '#22c55e' };
-  if (hours <= 6) return { text: `${hours.toFixed(0)}h`, color: '#22c55e' };
-  if (hours <= 12) return { text: `${hours.toFixed(0)}h`, color: '#eab308' };
-  if (hours <= 24) return { text: `${hours.toFixed(0)}h`, color: '#f97316' };
-  return { text: `${Math.round(hours / 24)}d`, color: '#ef4444' };
 }
 
 export default function DataSourceMonitor() {
@@ -39,8 +31,7 @@ export default function DataSourceMonitor() {
     }
   }
 
-  const onlineCount = DATA_SOURCES.filter(s => s.status === 'online').length;
-  const totalCount = DATA_SOURCES.filter(s => s.status !== 'planned').length;
+  const configuredCount = DATA_SOURCES.filter(s => s.status !== 'planned').length;
 
   return (
     <div className="researcher-source-monitor">
@@ -60,11 +51,11 @@ export default function DataSourceMonitor() {
           </div>
           <div className="researcher-health-stat">
             <Shield size={13} />
-            <span>Mode: {health?.data_mode ?? '—'}</span>
+            <span>Mode: {health?.data_mode ?? 'SNAPSHOT'}</span>
           </div>
           <div className="researcher-health-stat">
-            {health?.status === 'healthy' ? <Wifi size={13} /> : <WifiOff size={13} />}
-            <span>{onlineCount}/{totalCount} sources</span>
+            <Layers size={13} />
+            <span>{configuredCount} configured profiles</span>
           </div>
         </div>
         <button className="researcher-refresh-btn" onClick={loadHealth} aria-label="Refresh health">
@@ -72,12 +63,22 @@ export default function DataSourceMonitor() {
         </button>
       </div>
 
+      {/* Prototype Disclosure Card */}
+      <div className="researcher-prototype-info-card">
+        <Info size={16} className="researcher-prototype-info-icon" />
+        <div className="researcher-prototype-info-content">
+          <strong>Configured Prototype Source Profiles</strong>
+          <p>
+            The profiles below describe the authoritative schema, provider semantics, and update cadences configured for this prototype environment. All observations are deterministic synthetic snapshots modeled on published Indian oceanographic data formats.
+          </p>
+        </div>
+      </div>
+
       {/* Data Source Grid */}
       <section className="researcher-section">
-        <h3 className="researcher-section-title">Data Provider Registry</h3>
+        <h3 className="researcher-section-title">Configured Data Source Profiles</h3>
         <div className="researcher-source-grid">
           {DATA_SOURCES.map(src => {
-            const fresh = freshnessLabel(src.freshness_hours);
             return (
               <div key={src.name} className={`researcher-source-card status-${src.status}`}>
                 <div className="researcher-source-header">
@@ -88,12 +89,9 @@ export default function DataSourceMonitor() {
                 <p className="researcher-source-desc">{src.description}</p>
                 <div className="researcher-source-footer">
                   <span className="researcher-source-provider">{src.provider}</span>
-                  {src.status !== 'planned' && (
-                    <span className="researcher-freshness" style={{ color: fresh.color }}>
-                      <Clock size={11} />
-                      {fresh.text} ago
-                    </span>
-                  )}
+                  <span className="researcher-cadence-badge">
+                    {src.cadence}
+                  </span>
                   <span className={`researcher-status-pill ${src.status}`}>{src.status}</span>
                 </div>
               </div>
@@ -131,7 +129,7 @@ export default function DataSourceMonitor() {
             <span className="researcher-precedence-rank">4</span>
             <div>
               <strong>Open-Meteo Marine</strong>
-              <p>Unauthoritative fallback. Used only when primary sources timeout or are unavailable.</p>
+              <p>Unauthoritative fallback profile. Used only when primary synthetic feeds simulate timeout or unavailability.</p>
             </div>
           </div>
         </div>

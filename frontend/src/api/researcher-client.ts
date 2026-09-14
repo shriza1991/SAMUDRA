@@ -142,6 +142,7 @@ export interface DataSourceInfo {
   status: 'online' | 'degraded' | 'offline' | 'planned';
   last_updated: string;
   freshness_hours: number;
+  cadence: string;
   description: string;
 }
 
@@ -221,14 +222,14 @@ const MOCK_HEALTH: HealthStatus = {
 };
 
 export const DATA_SOURCES: DataSourceInfo[] = [
-  { name: 'INCOIS Ocean State Forecast', provider: 'INCOIS', data_mode: 'HYBRID', status: 'online', last_updated: '2026-09-12T04:00:00Z', freshness_hours: 2, description: 'Wave height, swell, SST, currents from INCOIS OSF bulletins.' },
-  { name: 'INCOIS PFZ Advisory', provider: 'INCOIS', data_mode: 'CACHED_REAL', status: 'online', last_updated: '2026-09-12T00:00:00Z', freshness_hours: 6, description: 'Potential Fishing Zone advisory coordinates and fronts.' },
-  { name: 'INCOIS SVAS', provider: 'INCOIS', data_mode: 'CACHED_REAL', status: 'degraded', last_updated: '2026-09-11T18:00:00Z', freshness_hours: 12, description: 'Small Vessel Advisory Services — capsizing risk indices.' },
-  { name: 'IMD Marine Weather', provider: 'IMD', data_mode: 'HYBRID', status: 'online', last_updated: '2026-09-12T05:30:00Z', freshness_hours: 1, description: 'Coastal sea bulletins, port warnings, wind and visibility forecasts.' },
-  { name: 'IMD Cyclone & Hazard', provider: 'IMD', data_mode: 'HYBRID', status: 'online', last_updated: '2026-09-12T06:00:00Z', freshness_hours: 0.5, description: 'Cyclone bulletins, squall alerts, depression tracks, red alert triggers.' },
-  { name: 'Open-Meteo Marine', provider: 'Open-Meteo', data_mode: 'LIVE', status: 'online', last_updated: '2026-09-12T06:00:00Z', freshness_hours: 0.1, description: 'High-resolution wave, swell, and wind fallback (unauthoritative).' },
-  { name: 'ISRO MOSDAC EO', provider: 'ISRO', data_mode: 'PLANNED', status: 'planned', last_updated: '', freshness_hours: -1, description: 'Satellite SST, Chlorophyll-a rasters from Oceansat and INSAT.' },
-  { name: 'Pilot GIS Restrictions', provider: 'SAMUDRA', data_mode: 'CACHED_REAL', status: 'online', last_updated: '2026-09-01T00:00:00Z', freshness_hours: 264, description: 'Static geofences: MPAs, naval firing ranges, IMBL buffers.' },
+  { name: 'INCOIS Ocean State Forecast', provider: 'INCOIS', data_mode: 'SYNTHETIC_OSF', status: 'online', last_updated: '2026-09-12T04:00:00Z', freshness_hours: 1, cadence: '1-hour observation cadence', description: 'Wave height, swell, SST, and currents modeled on INCOIS OSF parameters.' },
+  { name: 'INCOIS PFZ Advisory', provider: 'INCOIS', data_mode: 'SYNTHETIC_PFZ', status: 'online', last_updated: '2026-09-12T00:00:00Z', freshness_hours: 6, cadence: '6-hour advisory cycle', description: 'Potential Fishing Zone advisory coordinates, SST gradients, and fronts.' },
+  { name: 'INCOIS SVAS', provider: 'INCOIS', data_mode: 'SYNTHETIC_SVAS', status: 'degraded', last_updated: '2026-09-11T18:00:00Z', freshness_hours: 12, cadence: '12-hour advisory cycle', description: 'Small Vessel Advisory Services — capsizing risk indices.' },
+  { name: 'IMD Marine Weather', provider: 'IMD', data_mode: 'SYNTHETIC_BULLETIN', status: 'online', last_updated: '2026-09-12T05:30:00Z', freshness_hours: 1, cadence: '1-hour bulletin cadence', description: 'Coastal sea bulletins, port warnings, wind and visibility forecasts.' },
+  { name: 'IMD Cyclone & Hazard', provider: 'IMD', data_mode: 'SYNTHETIC_BULLETIN', status: 'online', last_updated: '2026-09-12T06:00:00Z', freshness_hours: 0.5, cadence: '30-minute bulletin cadence', description: 'Cyclone bulletins, squall alerts, depression tracks, red alert triggers.' },
+  { name: 'Open-Meteo Marine', provider: 'Open-Meteo', data_mode: 'FALLBACK_PROFILE', status: 'online', last_updated: '2026-09-12T06:00:00Z', freshness_hours: 1, cadence: 'Hourly model profile', description: 'High-resolution wave, swell, and wind fallback profile (unauthoritative).' },
+  { name: 'ISRO MOSDAC EO', provider: 'ISRO', data_mode: 'SYNTHETIC_EO', status: 'online', last_updated: '2026-09-14T00:00:00Z', freshness_hours: 24, cadence: '14-day daily raster snapshot', description: 'Satellite SST and Chlorophyll-a 5x5 grid rasters from Oceansat-3.' },
+  { name: 'Pilot GIS Restrictions', provider: 'SAMUDRA', data_mode: 'STATIC_GIS', status: 'online', last_updated: '2026-09-01T00:00:00Z', freshness_hours: 720, cadence: 'Static geofence registry', description: 'Static geofences: MPAs, naval firing ranges, IMBL buffer boundaries.' },
 ];
 
 // ---------------------------------------------------------------------------

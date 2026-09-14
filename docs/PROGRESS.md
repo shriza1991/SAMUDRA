@@ -119,6 +119,20 @@
 - Compact provenance caption: `MOSDAC/EO-style daily observations · 14-day synthetic snapshot · Spatial mean across valid grid cells`.
 - Validated with 13 automated unit & feature transformation tests (141 total frontend tests passing), full TypeScript typecheck, and clean `tsc && vite build`.
 
+### P0-17 — Unified Data Quality & Provenance UX in Researcher Lab
+- Implemented a lightweight, reusable data quality and provenance presentation layer across all existing synthetic datasets in the Researcher Lab:
+  - Created `DataProvenancePanel.tsx`: compact expandable panel with top-bar summary (provider badge, dataset name, synthetic snapshot mode badge, snapshot period, valid-count pill, and drawer toggle) and detailed trust breakdown (source product lineage, QC classification breakdown, pixel uncertainty, semantics disclosure, and documentation link).
+  - Created `src/utils/provenance.ts`: deterministic metadata derivation helpers for all 4 analytical datasets:
+    - **Marine Weather Observations**: 48-hour hourly snapshot from INCOIS OSF, distinguishing `VALID` vs `SUSPECT` QC records, preserving sensor null gaps without converting to zero.
+    - **Earth Observation Satellite Grid**: 14-day 5×5 grid snapshot from ISRO MOSDAC, distinguishing `VALID`, `CLOUD_OBSCURED`, `DEGRADED_QC_WARNING`, and `NO_DATA` states, exposing mean pixel uncertainty when available.
+    - **PFZ Advisory Candidates**: INCOIS PFZ candidate front analysis, explicitly separating advisory `confidence` (`HIGH`/`MEDIUM`) from data `qc_status` (`VALID`/`SUSPECT`), and maintaining `SST Gradient` semantics (°C/km or unitless anomaly).
+    - **Hazard Advisory Bulletins**: IMD/INCOIS meteorological bulletins, explicitly separating operational validity status (`ACTIVE`/`EXPIRED`/`PLANNED`) from data `qc_status` and event `severity`.
+- Updated `DataSourceMonitor.tsx` to display configured prototype source profiles truthfully:
+  - Replaced misleading "X ago" live freshness timers with explicit "Configured Sync Cadence" badges (e.g. `1-hour observation cadence`, `6-hour advisory cycle`, `14-day daily raster snapshot`, `Static geofence registry`).
+  - Added prototype source registry disclosure card explaining synthetic demo ingestion semantics.
+- Preserved authoritative `DATA MODE: SYNTHETIC DEMO / SNAPSHOT` persistent disclosure across all views.
+- Validated with comprehensive automated test suite (55 researcher tests, 149 total frontend tests passing across 11 test suites), 31 backend contract/domain tests passing, and clean `npm run build` production bundle.
+
 ---
 
 ## P0 Marine Data Providers Status Board

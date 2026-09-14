@@ -13,6 +13,13 @@ import OceanTimeSeriesChart from './OceanTimeSeriesChart';
 import PFZSpatialMap from './PFZSpatialMap';
 import HazardSpatialMap from './HazardSpatialMap';
 import EOTemporalAnalysisChart from './EOTemporalAnalysisChart';
+import DataProvenancePanel from './DataProvenancePanel';
+import {
+  deriveMarineTrustMetadata,
+  deriveEOTrustMetadata,
+  derivePFZTrustMetadata,
+  deriveHazardTrustMetadata,
+} from '../../utils/provenance';
 
 export default function OceanDataExplorer() {
   const [harbors, setHarbors] = useState<HarborData[]>([]);
@@ -27,6 +34,16 @@ export default function OceanDataExplorer() {
   const [obsLoading, setObsLoading] = useState(false);
 
   const latestEoCells = useMemo(() => getLatestEOGridCells(eoCells), [eoCells]);
+
+  const harborName = harbors.find((h) => h.public_id === selectedHarbor)?.name || 'Ratnagiri';
+
+  const marineTrust = useMemo(
+    () => deriveMarineTrustMetadata(observations, harborName),
+    [observations, harborName]
+  );
+  const eoTrust = useMemo(() => deriveEOTrustMetadata(eoCells), [eoCells]);
+  const pfzTrust = useMemo(() => derivePFZTrustMetadata(pfzCandidates), [pfzCandidates]);
+  const hazardTrust = useMemo(() => deriveHazardTrustMetadata(hazards), [hazards]);
 
   useEffect(() => {
     loadInitialData();
@@ -77,7 +94,6 @@ export default function OceanDataExplorer() {
 
   // Determine latest observation by newest timestamp (never by arbitrary array position)
   const latest = sortedObs.length > 0 ? sortedObs[sortedObs.length - 1] : null;
-  const harborName = harbors.find(h => h.public_id === selectedHarbor)?.name ?? '—';
 
   function formatTime(iso: string) {
     try { return new Date(iso).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: false }); } catch { return iso; }
@@ -164,6 +180,7 @@ export default function OceanDataExplorer() {
           harborName={harborName}
           loading={obsLoading}
         />
+        <DataProvenancePanel metadata={marineTrust} loading={obsLoading} />
       </section>
 
       {/* Observation Timeline Table */}
@@ -216,6 +233,7 @@ export default function OceanDataExplorer() {
       {/* 14-Day Earth Observation Temporal Analysis Chart */}
       <section className="researcher-section">
         <EOTemporalAnalysisChart records={eoCells} loading={loading} />
+        <DataProvenancePanel metadata={eoTrust} loading={loading} />
       </section>
 
       {/* Two-Column: EO Grid + PFZ */}
@@ -256,6 +274,7 @@ export default function OceanDataExplorer() {
               </tbody>
             </table>
           </div>
+          <DataProvenancePanel metadata={eoTrust} loading={loading} />
         </section>
 
         {/* PFZ Candidates */}
@@ -304,6 +323,7 @@ export default function OceanDataExplorer() {
               ))}
             </div>
           </div>
+          <DataProvenancePanel metadata={pfzTrust} loading={loading} />
         </section>
       </div>
 
@@ -347,6 +367,7 @@ export default function OceanDataExplorer() {
             ))}
           </div>
         </div>
+        <DataProvenancePanel metadata={hazardTrust} loading={loading} />
       </section>
     </div>
   );

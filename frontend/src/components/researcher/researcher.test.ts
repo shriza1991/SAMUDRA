@@ -8,6 +8,13 @@ import DataSourceMonitor from './DataSourceMonitor';
 import ScenarioLab from './ScenarioLab';
 import QueryWorkbench from './QueryWorkbench';
 import ResearcherPage from '../../pages/ResearcherPage';
+import DataProvenancePanel from './DataProvenancePanel';
+import {
+  deriveMarineTrustMetadata,
+  deriveEOTrustMetadata,
+  derivePFZTrustMetadata,
+  deriveHazardTrustMetadata,
+} from '../../utils/provenance';
 import {
   fetchHarbors,
   fetchMarineObservations,
@@ -1023,8 +1030,279 @@ describe('Researcher Dashboard Components & Data Client', () => {
       }
     });
   });
+
+  describe('P0-17: Unified Data Quality & Provenance UX', () => {
+    it('DataProvenancePanel exports cleanly as a component', () => {
+      expect(DataProvenancePanel).toBeDefined();
+      expect(typeof DataProvenancePanel).toBe('function');
+    });
+
+    describe('Marine Observation Provenance & QC Semantics', () => {
+      it('derives accurate 48-hour marine trust metadata with QC breakdown and synthetic mode', () => {
+        const mockObs: MarineObservation[] = [
+          {
+            public_id: 'obs-1',
+            harbor_id: 'harbor-ratnagiri',
+            observation_time: '2026-09-10T06:00:00Z',
+            wave_height_m: 1.5,
+            sst_celsius: 28.5,
+            wind_speed_kn: 12,
+            wind_direction_deg: 240,
+            current_speed_kn: 0.8,
+            swell_period_s: 8.0,
+            visibility_nm: 10,
+            source: 'INCOIS OSF',
+            data_mode: 'HYBRID',
+            quality_flags: ['verified'],
+            qc_status: 'VALID',
+          },
+          {
+            public_id: 'obs-2',
+            harbor_id: 'harbor-ratnagiri',
+            observation_time: '2026-09-12T05:00:00Z',
+            wave_height_m: 2.1,
+            sst_celsius: null, // missing SST
+            wind_speed_kn: 18,
+            wind_direction_deg: 250,
+            current_speed_kn: null,
+            swell_period_s: 9.0,
+            visibility_nm: 12,
+            source: 'INCOIS OSF',
+            data_mode: 'HYBRID',
+            quality_flags: ['qc_warning'],
+            qc_status: 'SUSPECT',
+          },
+        ];
+
+        const trust = deriveMarineTrustMetadata(mockObs, 'Ratnagiri');
+        expect(trust.sourceProvider).toBe('INCOIS');
+        expect(trust.datasetName).toContain('Marine Weather Observations (Ratnagiri)');
+        expect(trust.dataMode).toBe('SYNTHETIC SNAPSHOT');
+        expect(trust.totalCount).toBe(2);
+        expect(trust.validCount).toBe(1);
+        expect(trust.snapshotPeriod).toContain('48-Hour Snapshot');
+        expect(trust.snapshotPeriod).toContain('2026-09-10 06:00');
+        expect(trust.snapshotPeriod).toContain('2026-09-12 05:00');
+        expect(trust.referenceTime).toContain('2026-09-12 05:00 UTC');
+        expect(trust.qcBreakdown).toEqual({ VALID: 1, SUSPECT: 1 });
+        expect(trust.semanticsDescription).toContain('Sea Surface Temperature in °C');
+      });
+
+      it('handles empty marine observations without assuming healthy', () => {
+        const trust = deriveMarineTrustMetadata([], 'Ratnagiri');
+        expect(trust.validCount).toBe(0);
+        expect(trust.totalCount).toBe(0);
+        expect(trust.snapshotPeriod).toBe('48-Hour Hourly Time-Series');
+      });
+    });
+
+    describe('Earth Observation (EO) Provenance & QC Semantics', () => {
+      it('derives accurate 14-day EO trust metadata with 4 distinct QC categories', () => {
+        const mockEOCells: EOGridCell[] = [
+          {
+            cell_id: 'c1',
+            center_lat: 16.5,
+            center_lon: 73.0,
+            chlorophyll_a_mg_m3: 1.2,
+            sst_celsius: 28.5,
+            cloud_cover_pct: 10,
+            satellite: 'Oceansat-3 OCM',
+            pass_time: '2026-08-30T04:30:00Z',
+            resolution_m: 360,
+            source: 'ISRO MOSDAC',
+            uncertainty: 0.12,
+            qc_status: 'VALID',
+          },
+          {
+            cell_id: 'c2',
+            center_lat: 16.7,
+            center_lon: 73.2,
+            chlorophyll_a_mg_m3: null,
+            sst_celsius: null,
+            cloud_cover_pct: 95,
+            satellite: 'Oceansat-3 OCM',
+            pass_time: '2026-08-30T04:30:00Z',
+            resolution_m: 360,
+            source: 'ISRO MOSDAC',
+            uncertainty: null,
+            qc_status: 'CLOUD_OBSCURED',
+          },
+          {
+            cell_id: 'c3',
+            center_lat: 16.9,
+            center_lon: 73.4,
+            chlorophyll_a_mg_m3: 0.8,
+            sst_celsius: 27.9,
+            cloud_cover_pct: 35,
+            satellite: 'Oceansat-3 OCM',
+            pass_time: '2026-09-12T04:30:00Z',
+            resolution_m: 360,
+            source: 'ISRO MOSDAC',
+            uncertainty: 0.28,
+            qc_status: 'DEGRADED_QC_WARNING',
+          },
+          {
+            cell_id: 'c4',
+            center_lat: 17.1,
+            center_lon: 73.6,
+            chlorophyll_a_mg_m3: null,
+            sst_celsius: null,
+            cloud_cover_pct: null,
+            satellite: 'Oceansat-3 OCM',
+            pass_time: '2026-09-12T04:30:00Z',
+            resolution_m: 360,
+            source: 'ISRO MOSDAC',
+            qc_status: 'NO_DATA',
+          },
+        ];
+
+        const trust = deriveEOTrustMetadata(mockEOCells);
+        expect(trust.sourceProvider).toBe('ISRO / MOSDAC');
+        expect(trust.dataMode).toBe('SYNTHETIC SNAPSHOT');
+        expect(trust.totalCount).toBe(4);
+        expect(trust.validCount).toBe(1);
+        expect(trust.qcBreakdown).toEqual({
+          VALID: 1,
+          CLOUD_OBSCURED: 1,
+          DEGRADED_QC_WARNING: 1,
+          NO_DATA: 1,
+        });
+        // Mean uncertainty: (0.12 + 0.28) / 2 = 0.20
+        expect(trust.meanUncertainty).toBeCloseTo(0.2, 2);
+        expect(trust.semanticsDescription).toContain('absolute SST (°C) from thermal sensors');
+      });
+
+      it('does not fabricate uncertainty when no cell has uncertainty reported', () => {
+        const cells: EOGridCell[] = [
+          {
+            cell_id: 'c1',
+            center_lat: 16.5,
+            center_lon: 73.0,
+            chlorophyll_a_mg_m3: 1.2,
+            sst_celsius: 28.5,
+            cloud_cover_pct: 10,
+            satellite: 'Oceansat-3 OCM',
+            pass_time: '2026-09-12T04:30:00Z',
+            resolution_m: 360,
+            source: 'ISRO MOSDAC',
+            qc_status: 'VALID',
+          },
+        ];
+        const trust = deriveEOTrustMetadata(cells);
+        expect(trust.meanUncertainty).toBeNull();
+      });
+    });
+
+    describe('PFZ Advisory Candidate Semantics', () => {
+      it('separates PFZ advisory confidence score from data quality QC status', () => {
+        const mockPFZ: PFZCandidate[] = [
+          {
+            public_id: 'pfz-1',
+            latitude: 16.8,
+            longitude: 72.9,
+            sst_gradient: 0.95,
+            chlorophyll_a_mg_m3: 1.4,
+            distance_km: 45,
+            bearing_deg: 240,
+            rank: 1,
+            status: 'ACTIVE',
+            confidence: 'HIGH',
+            depth_m: 30,
+            valid_from: '2026-09-12T00:00:00Z',
+            valid_to: '2026-09-12T23:59:59Z',
+            source: 'INCOIS PFZ Advisory',
+            qc_status: 'VALID',
+          },
+          {
+            public_id: 'pfz-2',
+            latitude: 16.5,
+            longitude: 72.7,
+            sst_gradient: 0.6,
+            chlorophyll_a_mg_m3: 0.8,
+            distance_km: 65,
+            bearing_deg: 260,
+            rank: 2,
+            status: 'ACTIVE',
+            confidence: 'MEDIUM',
+            depth_m: 40,
+            valid_from: '2026-09-12T00:00:00Z',
+            valid_to: '2026-09-12T23:59:59Z',
+            source: 'INCOIS PFZ Advisory',
+            qc_status: 'SUSPECT',
+          },
+        ];
+
+        const trust = derivePFZTrustMetadata(mockPFZ);
+        expect(trust.sourceProvider).toBe('INCOIS');
+        expect(trust.datasetName).toContain('Potential Fishing Zone (PFZ) Advisory Candidates');
+        expect(trust.totalCount).toBe(2);
+        // Ensure confidence and QC are distinct
+        expect(trust.qcBreakdown).toEqual({ VALID: 1, SUSPECT: 1 });
+        expect(trust.confidenceBreakdown).toEqual({ HIGH: 1, MEDIUM: 1 });
+        // SST gradient semantics note
+        expect(trust.semanticsDescription).toContain('SST Gradient represents frontal thermal anomaly magnitude');
+      });
+    });
+
+    describe('Hazard Bulletin Semantics', () => {
+      it('distinguishes operational status (ACTIVE/EXPIRED) from QC status and severity', () => {
+        const mockHazards: HazardBulletin[] = [
+          {
+            public_id: 'h1',
+            headline: 'Severe Wave Alert',
+            severity: 'WARNING',
+            status: 'ACTIVE',
+            issued_at: '2026-09-12T03:00:00Z',
+            valid_until: '2026-09-12T18:00:00Z',
+            source: 'IMD Coastal Bulletin',
+            event_type: 'HIGH_WAVE',
+            qc_status: 'VALID',
+          },
+          {
+            public_id: 'h2',
+            headline: 'Past Squall Watch',
+            severity: 'WATCH',
+            status: 'EXPIRED',
+            issued_at: '2026-09-10T06:00:00Z',
+            valid_until: '2026-09-11T06:00:00Z',
+            source: 'IMD Marine Weather',
+            event_type: 'SQUALL',
+            qc_status: 'VALID',
+          },
+          {
+            public_id: 'h3',
+            headline: 'Current Advisory Notice',
+            severity: 'ADVISORY',
+            status: 'ACTIVE',
+            issued_at: '2026-09-12T04:00:00Z',
+            valid_until: '2026-09-12T16:00:00Z',
+            source: 'INCOIS OSF',
+            event_type: 'STRONG_CURRENT',
+            qc_status: 'DEGRADED',
+          },
+        ];
+
+        const trust = deriveHazardTrustMetadata(mockHazards);
+        expect(trust.sourceProvider).toBe('IMD');
+        expect(trust.totalCount).toBe(3);
+        expect(trust.validCount).toBe(2);
+        expect(trust.qcBreakdown).toEqual({ VALID: 2, DEGRADED: 1 });
+        expect(trust.statusBreakdown).toEqual({ ACTIVE: 2, EXPIRED: 1 });
+        expect(trust.semanticsDescription).toContain('ACTIVE status denotes operational advisory applicability, distinct from observation data quality');
+      });
+    });
+
+    describe('DataSourceMonitor Configured Profiles', () => {
+      it('displays configured prototype profiles without fabricating live freshness timers', () => {
+        for (const src of DATA_SOURCES) {
+          expect(src.name).toBeTruthy();
+          expect(src.provider).toBeTruthy();
+          expect(src.cadence).toBeTruthy();
+          // No live feeds claimed
+          expect(src.data_mode).not.toBe('LIVE');
+          expect(src.cadence).not.toContain('ago');
+        }
+      });
+    });
+  });
 });
-
-
-
-
