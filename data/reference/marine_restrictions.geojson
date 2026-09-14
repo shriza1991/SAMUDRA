@@ -1,12 +1,5 @@
 {
   "type": "FeatureCollection",
-  "name": "Indian Marine Restrictions and Geofences",
-  "crs": {
-    "type": "name",
-    "properties": {
-      "name": "urn:ogc:def:crs:OGC:1.3:CRS84"
-    }
-  },
   "features": [
     {
       "type": "Feature",
@@ -15,23 +8,69 @@
         "restriction_id": "REST-NAV-GOA-01",
         "name": "Naval Firing Range Foxtrot (Goa Sector)",
         "type": "NAVAL_FIRING_RANGE",
-        "authority": "Indian Navy / Directorate of Naval Operations",
-        "valid_from": "2026-01-01T00:00:00Z",
-        "valid_to": "2026-12-31T23:59:59Z",
-        "source": "Notice to Mariners (NoTM) & Indian Coast Guard Advisory",
         "restriction_level": "NO_GO",
         "is_hard_restriction": true,
-        "description": "Active artillery and live-fire defense training sector. All civilian vessels and fishing craft strictly prohibited."
+        "authority": "Indian Navy",
+        "valid_from": "2026-01-01T00:00:00Z",
+        "valid_to": "2026-12-31T23:59:59Z",
+        "description": "Active artillery and naval gunfire danger sector. Total civilian exclusion zone."
       },
       "geometry": {
         "type": "Polygon",
         "coordinates": [
           [
-            [73.15, 15.30],
-            [73.35, 15.30],
-            [73.35, 15.55],
-            [73.15, 15.55],
-            [73.15, 15.30]
+            [
+              73.16,
+              15.3
+            ],
+            [
+              73.12,
+              15.36
+            ],
+            [
+              73.1,
+              15.42
+            ],
+            [
+              73.12,
+              15.48
+            ],
+            [
+              73.16,
+              15.53
+            ],
+            [
+              73.22,
+              15.55
+            ],
+            [
+              73.28,
+              15.55
+            ],
+            [
+              73.34,
+              15.52
+            ],
+            [
+              73.36,
+              15.46
+            ],
+            [
+              73.36,
+              15.38
+            ],
+            [
+              73.33,
+              15.32
+            ],
+            [
+              73.25,
+              15.3
+            ],
+            [
+              73.16,
+              15.3
+            ]
           ]
         ]
       }
@@ -43,23 +82,61 @@
         "restriction_id": "REST-MPA-MALVAN-02",
         "name": "Malvan Marine Sanctuary Core Conservation Zone",
         "type": "MPA_SANCTUARY_CORE",
-        "authority": "Ministry of Environment, Forest and Climate Change (MoEFCC)",
-        "valid_from": "2026-01-01T00:00:00Z",
-        "valid_to": "2026-12-31T23:59:59Z",
-        "source": "Maharashtra Gazette Notification Wildlife Protection Act",
         "restriction_level": "NO_GO_TRAWLING",
         "is_hard_restriction": true,
-        "description": "Core coral reef and marine ecosystem sanctuary. Commercial bottom trawling and anchoring barred."
+        "authority": "Forest & Wildlife Department",
+        "valid_from": "2026-01-01T00:00:00Z",
+        "valid_to": "2026-12-31T23:59:59Z",
+        "description": "Strict coral reef conservation zone surrounding Sindhudurg Fort and Padamgad Island. Commercial bottom trawling barred."
       },
       "geometry": {
         "type": "Polygon",
         "coordinates": [
           [
-            [73.40, 16.00],
-            [73.55, 16.00],
-            [73.55, 16.12],
-            [73.40, 16.12],
-            [73.40, 16.00]
+            [
+              73.438,
+              16.015
+            ],
+            [
+              73.455,
+              16.012
+            ],
+            [
+              73.478,
+              16.02
+            ],
+            [
+              73.488,
+              16.038
+            ],
+            [
+              73.482,
+              16.058
+            ],
+            [
+              73.475,
+              16.072
+            ],
+            [
+              73.46,
+              16.078
+            ],
+            [
+              73.442,
+              16.07
+            ],
+            [
+              73.432,
+              16.052
+            ],
+            [
+              73.43,
+              16.032
+            ],
+            [
+              73.438,
+              16.015
+            ]
           ]
         ]
       }
@@ -70,24 +147,86 @@
       "properties": {
         "restriction_id": "REST-IMBL-GUJ-03",
         "name": "Sir Creek / International Maritime Boundary Line Buffer",
-        "type": "INTERNATIONAL_BOUNDARY_BUFFER",
-        "authority": "Border Security Force (Water Wing) / Indian Coast Guard",
+        "type": "IMBL_ADVISORY_BORDER",
+        "restriction_level": "ADVISORY_ALERT",
+        "is_hard_restriction": false,
+        "authority": "Indian Coast Guard",
         "valid_from": "2026-01-01T00:00:00Z",
         "valid_to": "2026-12-31T23:59:59Z",
-        "source": "Ministry of Defence Border Area Guidelines",
-        "restriction_level": "NO_GO",
-        "is_hard_restriction": true,
-        "description": "Sensitive international boundary security zone. Crossing strictly prohibited."
+        "description": "10 NM advisory security corridor along the UNCLOS India-Pakistan median line in the Arabian Sea."
       },
       "geometry": {
         "type": "Polygon",
         "coordinates": [
           [
-            [68.10, 23.40],
-            [68.50, 23.40],
-            [68.50, 23.80],
-            [68.10, 23.80],
-            [68.10, 23.40]
+            [
+              68.758,
+              24.05
+            ],
+            [
+              68.612,
+              23.865
+            ],
+            [
+              68.325,
+              23.51
+            ],
+            [
+              67.89,
+              22.98
+            ],
+            [
+              67.45,
+              22.45
+            ],
+            [
+              66.95,
+              21.85
+            ],
+            [
+              66.298,
+              21.522
+            ],
+            [
+              65.639,
+              20.98
+            ],
+            [
+              65.85,
+              20.85
+            ],
+            [
+              66.5,
+              21.38
+            ],
+            [
+              67.15,
+              21.72
+            ],
+            [
+              67.65,
+              22.3
+            ],
+            [
+              68.08,
+              22.82
+            ],
+            [
+              68.5,
+              23.35
+            ],
+            [
+              68.78,
+              23.72
+            ],
+            [
+              68.92,
+              23.95
+            ],
+            [
+              68.758,
+              24.05
+            ]
           ]
         ]
       }
