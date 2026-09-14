@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import OceanDataExplorer from './OceanDataExplorer';
 import OceanTimeSeriesChart from './OceanTimeSeriesChart';
+import PFZSpatialMap, { buildPFZGeoJSON } from './PFZSpatialMap';
 import DataSourceMonitor from './DataSourceMonitor';
 import ScenarioLab from './ScenarioLab';
 import QueryWorkbench from './QueryWorkbench';
@@ -16,6 +17,7 @@ import {
   fetchHealthStatus,
   DATA_SOURCES,
   type MarineObservation,
+  type PFZCandidate,
 } from '../../api/researcher-client';
 
 describe('Researcher Dashboard Components & Data Client', () => {
@@ -385,5 +387,141 @@ describe('Researcher Dashboard Components & Data Client', () => {
       }
     });
   });
+
+  // =========================================================================
+  // P0-14 PFZ Spatial Map & Feature Transformation Tests
+  // =========================================================================
+
+  describe('P0-14 PFZ Spatial Distribution Visualization', () => {
+    const mockCandidates: PFZCandidate[] = [
+      {
+        public_id: 'pfz-01',
+        latitude: 16.92,
+        longitude: 73.15,
+        confidence: 'HIGH',
+        sst_gradient: 0.9,
+        chlorophyll_a_mg_m3: 1.6,
+        depth_m: 28.0,
+        bearing_deg: 245.0,
+        distance_km: 15.2,
+        status: 'ACTIVE',
+        qc_status: 'VALID',
+        valid_from: '2026-09-12T02:00:00Z',
+        valid_to: '2026-09-13T02:00:00Z',
+        source: 'INCOIS PFZ Advisory',
+        rank: 1,
+      },
+      {
+        public_id: 'pfz-02',
+        latitude: 17.05,
+        longitude: 73.05,
+        confidence: 'MEDIUM',
+        sst_gradient: 1.1,
+        chlorophyll_a_mg_m3: 1.8,
+        depth_m: 35.0,
+        bearing_deg: 290.0,
+        distance_km: 25.8,
+        status: 'VALID',
+        qc_status: 'VALID',
+        valid_from: '2026-09-12T00:00:00Z',
+        valid_to: '2026-09-13T00:00:00Z',
+        source: 'INCOIS PFZ Advisory',
+        rank: 2,
+      },
+      {
+        public_id: 'pfz-missing-conf',
+        latitude: 16.12,
+        longitude: 73.30,
+        confidence: undefined,
+        sst_gradient: 0.75,
+        chlorophyll_a_mg_m3: 1.2,
+        depth_m: 40.0,
+        bearing_deg: 210.0,
+        distance_km: 30.0,
+        status: 'ACTIVE',
+        qc_status: 'SUSPECT',
+        valid_from: '2026-09-12T00:00:00Z',
+        valid_to: '2026-09-13T00:00:00Z',
+        source: 'INCOIS PFZ Advisory',
+        rank: 3,
+      },
+      {
+        public_id: 'pfz-invalid-coords',
+        latitude: 0,
+        longitude: 0,
+        confidence: 'HIGH',
+        sst_gradient: 0.8,
+        chlorophyll_a_mg_m3: 1.0,
+        depth_m: 20.0,
+        bearing_deg: 180.0,
+        distance_km: 10.0,
+        status: 'ACTIVE',
+        qc_status: 'VALID',
+        valid_from: '2026-09-12T00:00:00Z',
+        valid_to: '2026-09-13T00:00:00Z',
+        source: 'INCOIS PFZ Advisory',
+        rank: 4,
+      },
+    ];
+
+    it('exports PFZSpatialMap component cleanly', () => {
+      expect(PFZSpatialMap).toBeDefined();
+      expect(typeof PFZSpatialMap).toBe('function');
+    });
+
+    it('converts valid PFZ candidates into a GeoJSON FeatureCollection with exact coordinates', () => {
+      const geojson = buildPFZGeoJSON(mockCandidates);
+      expect(geojson.type).toBe('FeatureCollection');
+      // 3 valid coordinates, 1 invalid (0,0) filtered out
+      expect(geojson.features).toHaveLength(3);
+
+      const f1 = geojson.features.find((f) => f.properties?.public_id === 'pfz-01');
+      expect(f1).toBeDefined();
+      expect(f1?.geometry.type).toBe('Point');
+      expect((f1?.geometry as GeoJSON.Point).coordinates).toEqual([73.15, 16.92]); // [lon, lat]
+      expect(f1?.properties?.rank).toBe(1);
+      expect(f1?.properties?.confidence).toBe('HIGH');
+      expect(f1?.properties?.sst_gradient).toBe(0.9);
+      expect(f1?.properties?.chlorophyll_a_mg_m3).toBe(1.6);
+      expect(f1?.properties?.qc_status).toBe('VALID');
+    });
+
+    it('preserves sst_gradient without converting to absolute temperature or adding °C', () => {
+      const geojson = buildPFZGeoJSON(mockCandidates);
+      for (const f of geojson.features) {
+        expect(f.properties?.sst_gradient).toBeLessThan(10);
+        expect(f.properties?.sst_celsius).toBeUndefined();
+      }
+    });
+
+    it('handles missing candidate confidence as UNKNOWN rather than zero or false fallback', () => {
+      const geojson = buildPFZGeoJSON(mockCandidates);
+      const missingConf = geojson.features.find((f) => f.properties?.public_id === 'pfz-missing-conf');
+      expect(missingConf?.properties?.confidence).toBe('UNKNOWN');
+    });
+
+    it('preserves suspect QC status on PFZ candidate features', () => {
+      const geojson = buildPFZGeoJSON(mockCandidates);
+      const suspect = geojson.features.find((f) => f.properties?.public_id === 'pfz-missing-conf');
+      expect(suspect?.properties?.qc_status).toBe('SUSPECT');
+    });
+
+    it('gracefully handles empty candidate array without errors', () => {
+      const emptyGeoJSON = buildPFZGeoJSON([]);
+      expect(emptyGeoJSON.type).toBe('FeatureCollection');
+      expect(emptyGeoJSON.features).toEqual([]);
+    });
+
+    it('gracefully filters out invalid coordinates (NaN, 0,0, out-of-range)', () => {
+      const corrupted: any[] = [
+        { public_id: 'bad-1', latitude: NaN, longitude: 73.0 },
+        { public_id: 'bad-2', latitude: 16.0, longitude: null },
+        { public_id: 'bad-3', latitude: 95.0, longitude: 73.0 }, // Out of range
+      ];
+      const geojson = buildPFZGeoJSON(corrupted);
+      expect(geojson.features).toHaveLength(0);
+    });
+  });
 });
+
 

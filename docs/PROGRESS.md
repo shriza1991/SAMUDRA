@@ -77,6 +77,16 @@
 - Harbor selection dynamically loads and renders the 48-hour time series for Ratnagiri vs. Malvan.
 - Verified with 18 automated frontend tests in `researcher.test.ts`, full vitest suite (112 tests passing), and clean `tsc && vite build`.
 
+### P0-14 — PFZ (Potential Fishing Zone) Spatial Map Visualization in Researcher Lab
+- Implemented `PFZSpatialMap.tsx` reusing existing project MapLibre GL conventions with CartoDB dark matter basemap for spatial exploration of PFZ advisory candidates.
+- Plotted genuine candidate coordinates (`latitude`, `longitude`) returned by `GET /api/v1/demo/pfz-candidates?valid_only=true` with rank badges (`#1`, `#2`) and confidence visual indicators.
+- Embedded interactive MapLibre popups and bidirectional selection linking between the spatial map and PFZ candidate cards (highlighting and camera focus).
+- Preserved strict scientific semantics: explicitly displayed `SST Gradient` (never `SST: X °C`), chlorophyll-a, depth, distance, bearing, validity window, and source.
+- Handled backend confidence directly (preserving `HIGH`/`MEDIUM`/`UNKNOWN`, never fabricating or converting missing to 0).
+- Handled edge cases: multi-candidate dynamic bounds auto-fitting, single candidate centering, invalid coordinate filtering, and explicit empty state.
+- Compact map provenance caption: `INCOIS PFZ-style candidate data · synthetic snapshot`.
+- Validated with 7 automated unit & feature transformation tests (119 total frontend tests passing) and clean `tsc && vite build`.
+
 ---
 
 ## P0 Marine Data Providers Status Board
