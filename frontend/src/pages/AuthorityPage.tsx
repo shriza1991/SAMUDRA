@@ -181,11 +181,16 @@ export default function AuthorityPage({
       };
     }
 
-    getDemoRouteAlternatives({ sector_id: activeSector.public_id }, controller.signal)
+    getDemoRouteAlternatives(
+      { sector_id: activeSector.public_id, vessel_id: selectedVesselId },
+      controller.signal,
+    )
       .then((data) => {
         if (!isCurrent) return;
         if (data && data.status === 'AVAILABLE' && Array.isArray(data.routes) && data.routes.length > 0) {
-          setSectorRouteLayers(createAuthorityRouteLayers(data.routes, data.recommended_route_id));
+          setSectorRouteLayers(
+            createAuthorityRouteLayers(data.routes, data.recommended_route_id, data.origin, data.destination),
+          );
         } else {
           setSectorRouteLayers([]);
         }

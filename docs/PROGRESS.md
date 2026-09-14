@@ -57,6 +57,13 @@
 - Excluded informational national boundaries from deterministic restricted zone hazard checks in `geo_restrictions.py`.
 - Added multilingual translation mappings for national water boundary layers in Hindi and Marathi.
 
+### P0-8L — Fleet Surveillance Accurate Route Corridors with Start & Destination Terminals
+- Parameterized route alternatives endpoint (`/api/v1/demo/routes/alternatives`) with `vessel_id` to contextualize navigation corridors directly to the active fleet craft.
+- Updated `MockRouteExposureEngine` to connect authentic multi-waypoint navigation corridors (Safest Inshore, Balanced, Direct) from the vessel's specific home harbor/departure coordinates to its specific trip destination/fishing bank.
+- Dynamically generates start point marker (`layer_route_start_marker`, emerald `#10b981`) and end point marker (`layer_route_end_marker`, amber `#f59e0b`) in `MapView.tsx`.
+- Updated `MissionMapBrief.tsx` to extract and display Departure (Start) and Destination (End) names/coordinates directly under corridor metric pills.
+- Updated `FleetTrackingDeck.tsx` to surface Start and Destination coordinates and harbor labels in the GPS scrubber telemetry deck.
+
 ---
 
 ## P0 Marine Data Providers Status Board

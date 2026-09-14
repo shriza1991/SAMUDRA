@@ -600,7 +600,9 @@ export function filterLayersBySectorPolygon(
  */
 export function createAuthorityRouteLayers(
   routes: EvaluatedRouteItem[],
-  recommendedRouteId?: string | null
+  recommendedRouteId?: string | null,
+  origin?: string,
+  destination?: string,
 ): MapLayer[] {
   if (!routes || routes.length === 0) return [];
   const recId = recommendedRouteId || routes[0]?.route_id;
@@ -639,6 +641,8 @@ export function createAuthorityRouteLayers(
             risk_rating: r.risk_rating,
             exposure_score: r.exposure_score,
             is_recommended: false,
+            origin,
+            destination,
           },
         })),
       },
@@ -672,6 +676,8 @@ export function createAuthorityRouteLayers(
           risk_rating: recommendedRoute.risk_rating,
           exposure_score: recommendedRoute.exposure_score,
           is_recommended: true,
+          origin,
+          destination,
         },
       },
     });

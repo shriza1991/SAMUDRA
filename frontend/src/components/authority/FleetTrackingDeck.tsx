@@ -11,6 +11,7 @@ import {
   Radio,
   MapPin,
   Crosshair,
+  Navigation,
 } from 'lucide-react';
 import {
   getDemoVessels,
@@ -551,6 +552,14 @@ export default function FleetTrackingDeck({
                 <div className="telemetry-pill">
                   <MapPin size={14} />
                   <span>{translateText('Pos:', language)} <strong>{currentPos.latitude.toFixed(3)}°N, {currentPos.longitude.toFixed(3)}°E</strong></span>
+                </div>
+                <div className="telemetry-pill">
+                  <Navigation size={14} style={{ color: '#10b981' }} />
+                  <span>{translateText('Start:', language)} <strong>{selectedVessel?.home_harbor_id ? selectedVessel.home_harbor_id.replace('harbor-', '').replace(/^./, (c) => c.toUpperCase()) : `${positions[0].latitude.toFixed(2)}°N, ${positions[0].longitude.toFixed(2)}°E`}</strong></span>
+                </div>
+                <div className="telemetry-pill">
+                  <MapPin size={14} style={{ color: '#f59e0b' }} />
+                  <span>{translateText('Dest:', language)} <strong>{`${positions[positions.length - 1].latitude.toFixed(2)}°N, ${positions[positions.length - 1].longitude.toFixed(2)}°E`}</strong></span>
                 </div>
               </div>
               <p className="scrubber-eyebrow" style={{ marginTop: '10px' }}>

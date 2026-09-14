@@ -19,6 +19,10 @@ export interface RouteCandidateInfo {
   risk_rating: string;
   exposure_score: number;
   is_recommended: boolean;
+  start_coordinates?: [number, number];
+  end_coordinates?: [number, number];
+  origin?: string;
+  destination?: string;
 }
 
 const ALL_OPERATIONAL_MODES: Array<{
@@ -63,6 +67,10 @@ export function extractRouteCandidates(layers: MapLayer[]): RouteCandidateInfo[]
       const id = String(gj.properties.route_id);
       if (!seen.has(id)) {
         seen.add(id);
+        const coords = gj.geometry && Array.isArray(gj.geometry.coordinates) ? gj.geometry.coordinates : undefined;
+        const startCoord = coords && coords.length >= 2 ? (coords[0] as [number, number]) : undefined;
+        const endCoord = coords && coords.length >= 2 ? (coords[coords.length - 1] as [number, number]) : undefined;
+
         candidates.push({
           route_id: id,
           name: gj.properties.name || id,
@@ -71,6 +79,10 @@ export function extractRouteCandidates(layers: MapLayer[]): RouteCandidateInfo[]
           risk_rating: gj.properties.risk_rating || 'LOW',
           exposure_score: typeof gj.properties.exposure_score === 'number' ? gj.properties.exposure_score : 0,
           is_recommended: Boolean(gj.properties.is_recommended),
+          start_coordinates: startCoord,
+          end_coordinates: endCoord,
+          origin: gj.properties.origin,
+          destination: gj.properties.destination,
         });
       }
     } else if (gj.type === 'FeatureCollection' && Array.isArray(gj.features)) {
@@ -79,6 +91,10 @@ export function extractRouteCandidates(layers: MapLayer[]): RouteCandidateInfo[]
           const id = String(feat.properties.route_id);
           if (!seen.has(id)) {
             seen.add(id);
+            const coords = feat.geometry && Array.isArray(feat.geometry.coordinates) ? feat.geometry.coordinates : undefined;
+            const startCoord = coords && coords.length >= 2 ? (coords[0] as [number, number]) : undefined;
+            const endCoord = coords && coords.length >= 2 ? (coords[coords.length - 1] as [number, number]) : undefined;
+
             candidates.push({
               route_id: id,
               name: feat.properties.name || id,
@@ -87,6 +103,10 @@ export function extractRouteCandidates(layers: MapLayer[]): RouteCandidateInfo[]
               risk_rating: feat.properties.risk_rating || 'LOW',
               exposure_score: typeof feat.properties.exposure_score === 'number' ? feat.properties.exposure_score : 0,
               is_recommended: Boolean(feat.properties.is_recommended),
+              start_coordinates: startCoord,
+              end_coordinates: endCoord,
+              origin: feat.properties.origin,
+              destination: feat.properties.destination,
             });
           }
         }
@@ -222,20 +242,50 @@ export default function MissionMapBrief({
               <div className="map-corridor-info">
                 <small>{translateText(activeStrategy, language)}</small>
                 {activeCandidate ? (
-                  <div className="map-route-metrics-bar" style={{ display: 'flex', gap: '8px', marginTop: '4px', flexWrap: 'wrap' }}>
-                    <span className="map-route-metric">
-                      {translateText('Est. Distance:', language)} <strong>{activeCandidate.distance_km} km</strong>
-                    </span>
-                    <span className="map-route-metric">
-                      {translateText('Max Wave:', language)} <strong>{activeCandidate.max_wave_height_m}m</strong>
-                    </span>
-                    <span className="map-route-metric">
-                      {translateText('Exposure:', language)} <strong>{activeCandidate.exposure_score}</strong>
-                    </span>
-                    <span className="map-route-metric">
-                      {translateText('Risk:', language)} <strong>{activeCandidate.risk_rating}</strong>
-                    </span>
-                  </div>
+                  <>
+                    <div className="map-route-metrics-bar" style={{ display: 'flex', gap: '8px', marginTop: '4px', flexWrap: 'wrap' }}>
+                      <span className="map-route-metric">
+                        {translateText('Est. Distance:', language)} <strong>{activeCandidate.distance_km} km</strong>
+                      </span>
+                      <span className="map-route-metric">
+                        {translateText('Max Wave:', language)} <strong>{activeCandidate.max_wave_height_m}m</strong>
+                      </span>
+                      <span className="map-route-metric">
+                        {translateText('Exposure:', language)} <strong>{activeCandidate.exposure_score}</strong>
+                      </span>
+                      <span className="map-route-metric">
+                        {translateText('Risk:', language)} <strong>{activeCandidate.risk_rating}</strong>
+                      </span>
+                    </div>
+
+                    {(activeCandidate.start_coordinates || activeCandidate.origin) && (
+                      <div
+                        className="map-route-terminals"
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px',
+                          marginTop: '6px',
+                          paddingTop: '6px',
+                          borderTop: '1px solid rgba(255, 255, 255, 0.08)',
+                          fontSize: '11px',
+                          flexWrap: 'wrap',
+                        }}
+                      >
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: '#10b981' }}>
+                          <span style={{ width: '7px', height: '7px', borderRadius: '50%', backgroundColor: '#10b981', boxShadow: '0 0 4px #10b981' }} />
+                          <strong style={{ color: '#e2e8f0' }}>{translateText('Start:', language)}</strong>{' '}
+                          {activeCandidate.origin || (activeCandidate.start_coordinates ? `${activeCandidate.start_coordinates[1].toFixed(2)}°N, ${activeCandidate.start_coordinates[0].toFixed(2)}°E` : 'Departure')}
+                        </span>
+                        <span style={{ color: '#64748b' }}>➔</span>
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: '#f59e0b' }}>
+                          <span style={{ width: '7px', height: '7px', borderRadius: '50%', backgroundColor: '#f59e0b', boxShadow: '0 0 4px #f59e0b' }} />
+                          <strong style={{ color: '#e2e8f0' }}>{translateText('Destination:', language)}</strong>{' '}
+                          {activeCandidate.destination || (activeCandidate.end_coordinates ? `${activeCandidate.end_coordinates[1].toFixed(2)}°N, ${activeCandidate.end_coordinates[0].toFixed(2)}°E` : 'Target Bank')}
+                        </span>
+                      </div>
+                    )}
+                  </>
                 ) : null}
               </div>
             </div>

@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import type { MapLayer } from '../../types/contracts';
 import { MOCK_SAFETY_RESPONSE, MOCK_PFZ_RESPONSE } from '../../api/mock-data';
 import { createAuthorityRouteLayers } from '../../utils/geo';
+import { extractRouteCandidates } from './MissionMapBrief';
 
 describe('Map Layer GeoJSON Contract & Semantics', () => {
   it('validates Point geometry layers (e.g. Harbor departure points)', () => {
@@ -607,6 +608,27 @@ describe('Map Layer GeoJSON Contract & Semantics', () => {
       expect(vesselSelectedLayers.length).toBeGreaterThan(0);
       expect(vesselSelectedLayers.some(l => l.layer_id === 'layer_fleet_vessel_replay')).toBe(true);
       expect(vesselSelectedLayers.some(l => l.layer_id === 'layer_fleet_estimated_trajectory')).toBe(true);
+    });
+
+    it('accurately attaches and exposes start and destination terminals for fleet routes', () => {
+      const routesWithTerminals = createAuthorityRouteLayers(
+        mockRoutes,
+        'ROUTE-A-INSHORE',
+        'Ratnagiri Harbor',
+        'Ratnagiri Outer Bank',
+      );
+
+      const recommended = routesWithTerminals.find((l) => l.layer_id === 'layer_recommended_route');
+      expect((recommended?.geojson as any).properties.origin).toBe('Ratnagiri Harbor');
+      expect((recommended?.geojson as any).properties.destination).toBe('Ratnagiri Outer Bank');
+
+      const candidates = extractRouteCandidates(routesWithTerminals);
+      expect(candidates.length).toBe(3);
+      const inshore = candidates.find((c) => c.route_id === 'ROUTE-A-INSHORE');
+      expect(inshore?.start_coordinates).toEqual([73.28, 16.99]);
+      expect(inshore?.end_coordinates).toEqual([73.20, 16.95]);
+      expect(inshore?.origin).toBe('Ratnagiri Harbor');
+      expect(inshore?.destination).toBe('Ratnagiri Outer Bank');
     });
   });
 });
