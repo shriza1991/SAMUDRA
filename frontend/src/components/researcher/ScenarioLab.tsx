@@ -137,61 +137,106 @@ export default function ScenarioLab() {
             {/* Results */}
             {selectedResult && (
               <div className="researcher-scenario-results">
-                <h4 className="researcher-results-title">
-                  <BarChart3 size={14} />
-                  Execution Results
-                </h4>
-
-                {/* KPI Row */}
-                <div className="researcher-result-kpis">
-                  <div className="researcher-result-kpi">
-                    <span className="researcher-kpi-label">Status</span>
-                    <StatusBadge status={selectedResult?.recommendation_status} />
-                  </div>
-                  <div className="researcher-result-kpi">
-                    <span className="researcher-kpi-label">Confidence</span>
-                    <span className="researcher-kpi-value">{selectedResult?.confidence_level || 'UNKNOWN'}</span>
-                  </div>
-                  <div className="researcher-result-kpi">
-                    <span className="researcher-kpi-label">Evidence</span>
-                    <span className="researcher-kpi-value">{selectedResult?.evidence_count ?? 0} items</span>
-                  </div>
-                  <div className="researcher-result-kpi">
-                    <span className="researcher-kpi-label">Trace</span>
-                    <span className="researcher-kpi-value">{selectedResult?.trace_steps ?? 0} steps</span>
-                  </div>
-                  <div className="researcher-result-kpi">
-                    <span className="researcher-kpi-label">Latency</span>
-                    <span className="researcher-kpi-value">{selectedResult?.execution_time_ms ?? 0}ms</span>
-                  </div>
+                <div style={{ display: 'flex', alignItems: 'center' }}>
+                  <h4 className="researcher-results-title">
+                    <BarChart3 size={14} />
+                    Execution Results
+                  </h4>
+                  {selectedResult.passed !== undefined && (
+                    <span className={`researcher-verdict-badge ${selectedResult.passed ? 'pass' : 'fail'}`}>
+                      {selectedResult.passed ? 'PASS' : 'FAIL'}
+                    </span>
+                  )}
                 </div>
 
-                {/* Answer */}
-                <div className="researcher-result-answer">
-                  <span className="researcher-input-label">Response</span>
-                  <p>{selectedResult?.answer || 'Evaluation completed successfully.'}</p>
-                </div>
-
-                {/* Decisive Factors */}
-                <div className="researcher-result-factors">
-                  <span className="researcher-input-label">Decisive Factors</span>
-                  <ul>
-                    {(selectedResult?.decisive_factors || []).map((f, i) => (
-                      <li key={i}><CheckCircle2 size={12} /> {f}</li>
-                    ))}
-                  </ul>
-                </div>
-
-                {/* Warnings */}
-                {(selectedResult?.warnings || []).length > 0 && (
-                  <div className="researcher-result-warnings">
-                    <span className="researcher-input-label">Warnings</span>
-                    {(selectedResult?.warnings || []).map((w, i) => (
-                      <div key={i} className="researcher-warning-item">
-                        <AlertTriangle size={12} /> {w}
+                {selectedResult.is_error ? (
+                  <div className="researcher-scenario-error-card">
+                    <div className="researcher-scenario-error-header">
+                      <AlertTriangle size={18} />
+                      <div>
+                        <strong>Scenario Execution Unavailable</strong>
+                        <p>{selectedResult.answer}</p>
                       </div>
-                    ))}
+                    </div>
+                    {selectedResult.warnings.length > 0 && (
+                      <div className="researcher-result-warnings">
+                        <span className="researcher-input-label">Error Details</span>
+                        {selectedResult.warnings.map((w, i) => (
+                          <div key={i} className="researcher-warning-item">
+                            <AlertTriangle size={12} /> {w}
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
+                ) : (
+                  <>
+                    {/* KPI Row */}
+                    <div className="researcher-result-kpis">
+                      <div className="researcher-result-kpi">
+                        <span className="researcher-kpi-label">Status</span>
+                        <StatusBadge status={selectedResult?.recommendation_status} />
+                      </div>
+                      <div className="researcher-result-kpi">
+                        <span className="researcher-kpi-label">Confidence</span>
+                        <span className="researcher-kpi-value">{selectedResult?.confidence_level || 'UNKNOWN'}</span>
+                      </div>
+                      <div className="researcher-result-kpi">
+                        <span className="researcher-kpi-label">Evidence</span>
+                        <span className="researcher-kpi-value">{selectedResult?.evidence_count ?? 0} items</span>
+                      </div>
+                      <div className="researcher-result-kpi">
+                        <span className="researcher-kpi-label">Trace</span>
+                        <span className="researcher-kpi-value">{selectedResult?.trace_steps ?? 0} steps</span>
+                      </div>
+                      <div className="researcher-result-kpi">
+                        <span className="researcher-kpi-label">Latency</span>
+                        <span className="researcher-kpi-value">{selectedResult?.execution_time_ms ?? 0}ms</span>
+                      </div>
+                    </div>
+
+                    {/* Answer */}
+                    <div className="researcher-result-answer">
+                      <span className="researcher-input-label">Response</span>
+                      <p>{selectedResult?.answer || 'Evaluation completed successfully.'}</p>
+                    </div>
+
+                    {/* Executed Tools */}
+                    {selectedResult.executed_tools && selectedResult.executed_tools.length > 0 && (
+                      <div className="researcher-result-tools">
+                        <span className="researcher-input-label">Executed Tools ({selectedResult.executed_tools.length})</span>
+                        <div className="researcher-tools-list">
+                          {selectedResult.executed_tools.map((tool, i) => (
+                            <span key={i} className="researcher-tool-tag">{tool}</span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Decisive Factors */}
+                    {selectedResult.decisive_factors && selectedResult.decisive_factors.length > 0 && (
+                      <div className="researcher-result-factors">
+                        <span className="researcher-input-label">Decisive Factors / Validation</span>
+                        <ul>
+                          {selectedResult.decisive_factors.map((f, i) => (
+                            <li key={i}><CheckCircle2 size={12} /> {f}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {/* Warnings */}
+                    {(selectedResult?.warnings || []).length > 0 && (
+                      <div className="researcher-result-warnings">
+                        <span className="researcher-input-label">Warnings</span>
+                        {(selectedResult?.warnings || []).map((w, i) => (
+                          <div key={i} className="researcher-warning-item">
+                            <AlertTriangle size={12} /> {w}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
             )}

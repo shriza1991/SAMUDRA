@@ -99,6 +99,17 @@ export interface ScenarioRunResult {
   warnings: string[];
   decisive_factors: string[];
   confidence_level: string;
+  passed?: boolean;
+  actual_intent?: string;
+  expected_intent?: string;
+  actual_status?: string;
+  expected_status?: string;
+  actual_confidence?: string;
+  expected_confidence?: string;
+  executed_tools?: string[];
+  validation_notes?: string[];
+  is_error?: boolean;
+  error?: string;
 }
 
 export interface HealthStatus {
@@ -336,39 +347,72 @@ export async function runScenario(scenarioId: string): Promise<ScenarioRunResult
       headers: { 'Content-Type': 'application/json' },
       signal: AbortSignal.timeout(15000),
     });
+    const latency = Date.now() - startTime;
     if (res.ok) {
       const raw = await res.json();
-      const latency = Date.now() - startTime;
       return {
         scenario_id: raw.scenario_id || scenarioId,
-        status: raw.passed ? 'passed' : 'completed',
+        status: raw.passed === true ? 'passed' : raw.passed === false ? 'failed' : 'completed',
+        passed: raw.passed,
         recommendation_status: raw.actual_status || raw.recommendation_status || raw.expected_status || 'UNKNOWN',
         answer: raw.response_text || raw.answer || `Scenario ${scenarioId} evaluation completed successfully.`,
         evidence_count: typeof raw.evidence_count === 'number' ? raw.evidence_count : (Array.isArray(raw.evidence) ? raw.evidence.length : 0),
-        trace_steps: typeof raw.trace_steps_count === 'number' ? raw.trace_steps_count : typeof raw.trace_steps === 'number' ? raw.trace_steps : 5,
+        trace_steps: typeof raw.trace_steps_count === 'number' ? raw.trace_steps_count : typeof raw.trace_steps === 'number' ? raw.trace_steps : 0,
         execution_time_ms: typeof raw.execution_time_ms === 'number' ? raw.execution_time_ms : latency,
         warnings: Array.isArray(raw.warnings) ? raw.warnings : [],
         decisive_factors: Array.isArray(raw.validation_notes) ? raw.validation_notes : Array.isArray(raw.decisive_factors) ? raw.decisive_factors : [],
         confidence_level: raw.actual_confidence || raw.confidence_level || 'HIGH',
+        actual_intent: raw.actual_intent,
+        expected_intent: raw.expected_intent,
+        actual_status: raw.actual_status,
+        expected_status: raw.expected_status,
+        actual_confidence: raw.actual_confidence,
+        expected_confidence: raw.expected_confidence,
+        executed_tools: Array.isArray(raw.executed_tools) ? raw.executed_tools : [],
+        validation_notes: Array.isArray(raw.validation_notes) ? raw.validation_notes : [],
+        is_error: false,
       };
     }
-  } catch { /* fall through to mock */ }
-
-  // Mock result
-  const scenario = MOCK_SCENARIOS.find(s => s.id === scenarioId);
-  await new Promise(r => setTimeout(r, 800 + Math.random() * 1200));
-  return {
-    scenario_id: scenarioId,
-    status: 'completed',
-    recommendation_status: scenario?.expected_status ?? 'UNKNOWN',
-    answer: `[MOCK] ${scenario?.description ?? 'Scenario evaluation complete.'}`,
-    evidence_count: 2 + Math.floor(Math.random() * 3),
-    trace_steps: 5 + Math.floor(Math.random() * 3),
-    execution_time_ms: 800 + Math.floor(Math.random() * 1200),
-    warnings: ['[SNAPSHOT] Mock scenario execution — not connected to live pipeline.'],
-    decisive_factors: ['Wave height within operational limits', 'IMD bulletin reviewed'],
-    confidence_level: 'MEDIUM',
-  };
+    const errData = await res.json().catch(() => ({}));
+    const errorMessage = errData.error || errData.detail || `HTTP ${res.status}: Scenario execution failed.`;
+    return {
+      scenario_id: scenarioId,
+      status: 'error',
+      passed: false,
+      recommendation_status: 'UNKNOWN',
+      answer: `Scenario execution unavailable: ${errorMessage}`,
+      evidence_count: 0,
+      trace_steps: 0,
+      execution_time_ms: latency,
+      warnings: [`[UNAVAILABLE] ${errorMessage}`],
+      decisive_factors: [],
+      confidence_level: 'UNKNOWN',
+      is_error: true,
+      error: errorMessage,
+      executed_tools: [],
+      validation_notes: [],
+    };
+  } catch (err: any) {
+    const latency = Date.now() - startTime;
+    const errorMessage = err?.message || 'Network or service timeout.';
+    return {
+      scenario_id: scenarioId,
+      status: 'error',
+      passed: false,
+      recommendation_status: 'UNKNOWN',
+      answer: `Scenario execution unavailable: ${errorMessage}`,
+      evidence_count: 0,
+      trace_steps: 0,
+      execution_time_ms: latency,
+      warnings: [`[UNAVAILABLE] ${errorMessage}`],
+      decisive_factors: [],
+      confidence_level: 'UNKNOWN',
+      is_error: true,
+      error: errorMessage,
+      executed_tools: [],
+      validation_notes: [],
+    };
+  }
 }
 
 export async function fetchHealthStatus(): Promise<HealthStatus> {

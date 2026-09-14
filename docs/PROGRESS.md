@@ -53,6 +53,13 @@
 - Fixed backend `/api/v1/demo/pfz-candidates` fallback `valid_only` filtering to match `qc_status == 'VALID'`.
 - Added end-to-end semantic validation tests (`tests/domain/test_pfz_data_semantics.py` and `researcher.test.ts`).
 
+### P0-11 — Removed Fabricated/Random ScenarioLab Fallback Results
+- Eliminated all `Math.random()` and mock scenario execution fallbacks in `frontend/src/api/researcher-client.ts`.
+- Structured `runScenario` to return genuine results produced by the deterministic `ScenarioRunner` on success, and explicit unavailable/error state (`status: 'error'`, `is_error: true`, `evidence_count: 0`, `trace_steps: 0`, `confidence_level: 'UNKNOWN'`) on network/HTTP failure or timeout.
+- Enhanced `ScenarioLab.tsx` with dedicated error cards for unavailable backend scenarios and detailed verdict badges (`PASS`/`FAIL`), executed tools tags, and decisive factors on successful runs.
+- Preserved `MOCK_SCENARIOS` strictly for offline scenario list metadata fallback, completely disconnected from execution results.
+- Added regression tests verifying zero fake metrics or random calls upon execution failure.
+
 ---
 
 ## P0 Marine Data Providers Status Board

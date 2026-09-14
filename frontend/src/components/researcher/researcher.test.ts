@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import OceanDataExplorer from './OceanDataExplorer';
 import DataSourceMonitor from './DataSourceMonitor';
 import ScenarioLab from './ScenarioLab';
@@ -112,11 +112,87 @@ describe('Researcher Dashboard Components & Data Client', () => {
     expect(scenarios.length).toBeGreaterThanOrEqual(8);
     expect(scenarios.some(s => s.id === 'S1')).toBe(true);
 
-    const result = await runScenario('S1');
-    expect(result.scenario_id).toBe('S1');
-    expect(['GO', 'CAUTION', 'NO_GO', 'UNKNOWN']).toContain(result.recommendation_status);
-    expect(result.evidence_count).toBeGreaterThan(0);
-    expect(result.trace_steps).toBeGreaterThan(0);
+    const originalFetch = globalThis.fetch;
+    try {
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          scenario_id: 'S1',
+          passed: true,
+          actual_status: 'CAUTION',
+          actual_confidence: 'HIGH',
+          evidence_count: 4,
+          trace_steps_count: 6,
+          execution_time_ms: 120,
+          response_text: 'Depart with caution due to wave heights.',
+          executed_tools: ['marine_conditions', 'weather_conditions'],
+          validation_notes: ['Wave threshold within limits'],
+          warnings: [],
+        }),
+      } as any);
+
+      const result = await runScenario('S1');
+      expect(result.scenario_id).toBe('S1');
+      expect(result.is_error).toBeFalsy();
+      expect(result.passed).toBe(true);
+      expect(result.recommendation_status).toBe('CAUTION');
+      expect(result.evidence_count).toBe(4);
+      expect(result.trace_steps).toBe(6);
+      expect(result.executed_tools).toContain('marine_conditions');
+      expect(result.decisive_factors).toContain('Wave threshold within limits');
+      expect(typeof result.execution_time_ms).toBe('number');
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+
+  it('regression: backend scenario failure produces explicit error state without fabricated random results', async () => {
+    const originalFetch = globalThis.fetch;
+    const randomSpy = vi.spyOn(Math, 'random');
+    try {
+      // Mock fetch rejection (backend unavailable)
+      globalThis.fetch = vi.fn().mockRejectedValue(new Error('Connection refused'));
+
+      const result = await runScenario('S1');
+
+      // Must produce explicit error state
+      expect(result.is_error).toBe(true);
+      expect(result.status).toBe('error');
+      expect(result.recommendation_status).toBe('UNKNOWN');
+      expect(result.confidence_level).toBe('UNKNOWN');
+      expect(result.evidence_count).toBe(0);
+      expect(result.trace_steps).toBe(0);
+      expect(result.decisive_factors).toEqual([]);
+      expect(result.answer).toContain('Scenario execution unavailable');
+
+      // Math.random must NOT have been called to invent metrics
+      expect(randomSpy).not.toHaveBeenCalled();
+    } finally {
+      globalThis.fetch = originalFetch;
+      randomSpy.mockRestore();
+    }
+  });
+
+  it('regression: HTTP 500 error produces explicit error state without fake metrics', async () => {
+    const originalFetch = globalThis.fetch;
+    try {
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: false,
+        status: 500,
+        json: async () => ({ error: 'Internal Server Error' }),
+      } as any);
+
+      const result = await runScenario('S2');
+      expect(result.is_error).toBe(true);
+      expect(result.status).toBe('error');
+      expect(result.evidence_count).toBe(0);
+      expect(result.trace_steps).toBe(0);
+      expect(result.confidence_level).toBe('UNKNOWN');
+      expect(result.answer).toContain('Scenario execution unavailable');
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
   });
 
   it('fetches health status and validates authoritative data sources registry', async () => {
