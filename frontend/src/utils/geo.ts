@@ -86,11 +86,16 @@ export const FALLBACK_DEMO_SECTORS: DemoSector[] = [
     center: [73.28, 16.99],
     zoom: 8.8,
     polygon: [
-      [72.6, 16.5],
-      [73.5, 16.5],
-      [73.5, 17.5],
-      [72.6, 17.5],
-      [72.6, 16.5],
+      [72.50, 16.45],
+      [73.35, 16.50],
+      [73.34, 16.70],
+      [73.30, 16.88],
+      [73.30, 17.05],
+      [73.24, 17.32],
+      [73.18, 17.55],
+      [72.55, 17.55],
+      [72.45, 17.00],
+      [72.50, 16.45],
     ],
   },
   {
@@ -102,11 +107,15 @@ export const FALLBACK_DEMO_SECTORS: DemoSector[] = [
     center: [73.47, 16.06],
     zoom: 9.5,
     polygon: [
-      [73.35, 15.95],
-      [73.58, 15.95],
-      [73.58, 16.18],
-      [73.35, 16.18],
-      [73.35, 15.95],
+      [73.25, 15.90],
+      [73.55, 15.90],
+      [73.52, 16.00],
+      [73.49, 16.07],
+      [73.48, 16.16],
+      [73.42, 16.25],
+      [73.20, 16.25],
+      [73.20, 16.05],
+      [73.25, 15.90],
     ],
   },
   {
@@ -118,11 +127,16 @@ export const FALLBACK_DEMO_SECTORS: DemoSector[] = [
     center: [73.83, 15.49],
     zoom: 9.0,
     polygon: [
-      [73.4, 15.15],
-      [74.05, 15.15],
-      [74.05, 15.8],
-      [73.4, 15.8],
-      [73.4, 15.15],
+      [73.35, 15.05],
+      [74.05, 15.05],
+      [73.98, 15.25],
+      [73.83, 15.42],
+      [73.82, 15.52],
+      [73.74, 15.72],
+      [73.68, 15.82],
+      [73.38, 15.82],
+      [73.30, 15.45],
+      [73.35, 15.05],
     ],
   },
   {
@@ -134,11 +148,15 @@ export const FALLBACK_DEMO_SECTORS: DemoSector[] = [
     center: [72.87, 18.92],
     zoom: 8.8,
     polygon: [
-      [72.2, 18.5],
-      [73.15, 18.5],
-      [73.15, 19.35],
-      [72.2, 19.35],
-      [72.2, 18.5],
+      [72.10, 18.45],
+      [72.95, 18.45],
+      [72.90, 18.70],
+      [72.85, 18.95],
+      [72.84, 19.18],
+      [72.80, 19.38],
+      [72.15, 19.38],
+      [72.05, 18.95],
+      [72.10, 18.45],
     ],
   },
   {
@@ -150,11 +168,15 @@ export const FALLBACK_DEMO_SECTORS: DemoSector[] = [
     center: [70.37, 20.90],
     zoom: 8.5,
     polygon: [
-      [69.8, 20.4],
-      [70.9, 20.4],
-      [70.9, 21.3],
-      [69.8, 21.3],
-      [69.8, 20.4],
+      [69.75, 20.60],
+      [70.92, 20.35],
+      [70.95, 20.72],
+      [70.75, 20.80],
+      [70.40, 20.92],
+      [70.12, 21.15],
+      [69.75, 21.32],
+      [69.65, 20.95],
+      [69.75, 20.60],
     ],
   },
 ];
@@ -183,7 +205,7 @@ export function getSectorConfig(sectorName: string): SectorDefinition {
  */
 export function createSectorLayers(
   sectorInput: DemoSector | string,
-  allSectors?: DemoSector[],
+  _allSectors?: DemoSector[],
 ): MapLayer[] {
   let activeSector: DemoSector;
   if (typeof sectorInput === 'string') {
@@ -196,8 +218,8 @@ export function createSectorLayers(
   const layers: MapLayer[] = [];
 
   // 1. Inactive sector boundaries as subtle background context (faint outline only, no active colored operational fill)
-  if (allSectors && allSectors.length > 0) {
-    for (const sec of allSectors) {
+  if (_allSectors && _allSectors.length > 0) {
+    for (const sec of _allSectors) {
       const secId = sec.public_id || sec.name.toLowerCase().replace(/[^a-z0-9]/g, '_');
       if (secId === activeSectorId) continue;
 
@@ -399,6 +421,10 @@ export async function fetchAndFormatBaseLayers(): Promise<MapLayer[]> {
     return fc.features.map((f: any, idx: number) => {
       const props = f.properties || {};
       const level = props.restriction_level || 'INFORMATIONAL';
+      const polyType = (props.polygon_type || '').toUpperCase();
+      const isEEZ = polyType === 'EEZ_BOUNDARY' || (props.name && String(props.name).includes('EEZ'));
+      const isTerritorial = polyType === 'TERRITORIAL_WATERS' || (props.name && String(props.name).includes('Territorial'));
+      const isNational = isEEZ || isTerritorial;
       const color =
         level === 'NO_GO'
           ? '#ef4444'
@@ -406,6 +432,10 @@ export async function fetchAndFormatBaseLayers(): Promise<MapLayer[]> {
           ? '#f97316'
           : level === 'ADVISORY_ALERT'
           ? '#eab308'
+          : isTerritorial
+          ? '#0ea5e9'
+          : isEEZ
+          ? '#38bdf8'
           : '#38bdf8';
 
       return {
@@ -415,9 +445,9 @@ export async function fetchAndFormatBaseLayers(): Promise<MapLayer[]> {
         visible: true,
         style: {
           color,
-          opacity: 0.22,
-          line_width: 2,
-          layer_category: 'base_geofence',
+          opacity: isTerritorial ? 0.08 : isEEZ ? 0.04 : 0.22,
+          line_width: isTerritorial ? 2 : isEEZ ? 1.5 : 2,
+          layer_category: isNational ? 'national_boundary' : 'base_geofence',
         },
         geojson: f,
       };
@@ -428,11 +458,151 @@ export async function fetchAndFormatBaseLayers(): Promise<MapLayer[]> {
 }
 
 /**
+ * Checks whether a MapLayer represents a national maritime boundary (EEZ or territorial sea),
+ * which should remain visible nationwide and not be culled by local harbor/sector bounds.
+ */
+function isNationalMaritimeBoundary(layer: MapLayer): boolean {
+  const id = (layer.layer_id || '').toLowerCase();
+  const name = (layer.name || '').toLowerCase();
+  const category = (layer.style?.layer_category || '').toLowerCase();
+  const polyType = (layer.geojson?.properties?.polygon_type || '').toLowerCase();
+
+  return (
+    id.includes('eez') ||
+    id.includes('territorial') ||
+    id.includes('boundary') ||
+    name.includes('exclusive economic zone') ||
+    name.includes('eez') ||
+    name.includes('territorial') ||
+    name.includes('water boundary') ||
+    category === 'national_boundary' ||
+    category === 'national_eez' ||
+    polyType === 'eez_boundary' ||
+    polyType === 'territorial_waters' ||
+    polyType === 'island_water_boundary'
+  );
+}
+
+/**
+ * Extracts a bounding box from a GeoJSON Feature or FeatureCollection.
+ */
+function extractGeojsonBBox(geojson: any): [number, number, number, number] | null {
+  if (!geojson) return null;
+
+  const coords: [number, number][] = [];
+
+  function collectCoords(obj: any): void {
+    if (!obj) return;
+    if (obj.type === 'FeatureCollection' && Array.isArray(obj.features)) {
+      obj.features.forEach(collectCoords);
+    } else if (obj.type === 'Feature') {
+      collectCoords(obj.geometry);
+    } else if (obj.coordinates) {
+      flattenCoords(obj.coordinates);
+    }
+  }
+
+  function flattenCoords(c: any): void {
+    if (typeof c[0] === 'number' && typeof c[1] === 'number') {
+      coords.push([c[0], c[1]]);
+    } else if (Array.isArray(c)) {
+      c.forEach(flattenCoords);
+    }
+  }
+
+  collectCoords(geojson);
+  if (coords.length === 0) return null;
+
+  let minLng = coords[0][0], maxLng = coords[0][0];
+  let minLat = coords[0][1], maxLat = coords[0][1];
+  for (const [lng, lat] of coords) {
+    if (lng < minLng) minLng = lng;
+    if (lng > maxLng) maxLng = lng;
+    if (lat < minLat) minLat = lat;
+    if (lat > maxLat) maxLat = lat;
+  }
+  return [minLng, minLat, maxLng, maxLat];
+}
+
+/**
+ * Filters MapLayers to only include those whose GeoJSON geometry falls within
+ * a region defined by a center point and a padding (in degrees).
+ *
+ * Used by Fisher and Authority pages to show only region-specific base layers
+ * (IMBL, MPAs, Naval ranges) instead of all global boundaries. Sovereign national
+ * water boundaries (EEZ, Territorial Waters) are preserved across all regions.
+ */
+export function filterLayersByRegion(
+  layers: MapLayer[],
+  regionCenter: [number, number],
+  paddingDeg: number = 2.0,
+): MapLayer[] {
+  const [centerLng, centerLat] = regionCenter;
+  const bbox: [number, number, number, number] = [
+    centerLng - paddingDeg,
+    centerLat - paddingDeg,
+    centerLng + paddingDeg,
+    centerLat + paddingDeg,
+  ];
+
+  return layers.filter((layer) => {
+    if (isNationalMaritimeBoundary(layer)) return true;
+    if (!layer.geojson) return true;
+    const layerBBox = extractGeojsonBBox(layer.geojson);
+    if (!layerBBox) return true;
+    const [lMinLng, lMinLat, lMaxLng, lMaxLat] = layerBBox;
+    return lMinLng <= bbox[2] && lMaxLng >= bbox[0] && lMinLat <= bbox[3] && lMaxLat >= bbox[1];
+  });
+}
+
+/**
+ * Filters MapLayers to only include those whose GeoJSON geometry falls within
+ * a sector's bounding polygon (with padding).
+ *
+ * Sovereign national water boundaries (EEZ, Territorial Waters) are preserved across all sectors.
+ */
+export function filterLayersBySectorPolygon(
+  layers: MapLayer[],
+  polygon: [number, number][],
+  paddingDeg: number = 1.0,
+): MapLayer[] {
+  if (!polygon || polygon.length < 3) return layers;
+
+  // Compute bbox from sector polygon with padding
+  let minLng = polygon[0][0], maxLng = polygon[0][0];
+  let minLat = polygon[0][1], maxLat = polygon[0][1];
+  for (const [lng, lat] of polygon) {
+    if (lng < minLng) minLng = lng;
+    if (lng > maxLng) maxLng = lng;
+    if (lat < minLat) minLat = lat;
+    if (lat > maxLat) maxLat = lat;
+  }
+
+  const bbox: [number, number, number, number] = [
+    minLng - paddingDeg,
+    minLat - paddingDeg,
+    maxLng + paddingDeg,
+    maxLat + paddingDeg,
+  ];
+
+  return layers.filter((layer) => {
+    if (isNationalMaritimeBoundary(layer)) return true;
+    if (!layer.geojson) return true;
+    const layerBBox = extractGeojsonBBox(layer.geojson);
+    if (!layerBBox) return true;
+    const [lMinLng, lMinLat, lMaxLng, lMaxLat] = layerBBox;
+    return lMinLng <= bbox[2] && lMaxLng >= bbox[0] && lMinLat <= bbox[3] && lMaxLat >= bbox[1];
+  });
+}
+
+/**
  * Creates canonical MapLayers for Route Alternatives.
  */
 export function createAuthorityRouteLayers(
   routes: EvaluatedRouteItem[],
-  recommendedRouteId?: string | null
+  recommendedRouteId?: string | null,
+  origin?: string,
+  destination?: string,
 ): MapLayer[] {
   if (!routes || routes.length === 0) return [];
   const recId = recommendedRouteId || routes[0]?.route_id;
@@ -471,6 +641,8 @@ export function createAuthorityRouteLayers(
             risk_rating: r.risk_rating,
             exposure_score: r.exposure_score,
             is_recommended: false,
+            origin,
+            destination,
           },
         })),
       },
@@ -504,6 +676,8 @@ export function createAuthorityRouteLayers(
           risk_rating: recommendedRoute.risk_rating,
           exposure_score: recommendedRoute.exposure_score,
           is_recommended: true,
+          origin,
+          destination,
         },
       },
     });

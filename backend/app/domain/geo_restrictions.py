@@ -81,14 +81,22 @@ class DeterministicGeospatialEngine(GeospatialHazardEngine):
             if not geom_data:
                 continue
             try:
-                geom = shape(geom_data)
                 props = feat.get("properties", {})
+                level = str(props.get("restriction_level", "NO_GO")).upper()
+                poly_type = str(props.get("type") or props.get("polygon_type", "RESTRICTED_ZONE")).upper()
+
+                # Informational national boundaries (EEZ, Territorial Waters) are sovereign base map layers,
+                # NOT hazardous or prohibited restriction zones.
+                if level == "INFORMATIONAL" or poly_type in ("EEZ_BOUNDARY", "TERRITORIAL_WATERS", "NATIONAL_BOUNDARY"):
+                    continue
+
+                geom = shape(geom_data)
                 parsed_polygons.append({
                     "id": feat.get("id") or props.get("restriction_id") or props.get("polygon_id"),
                     "name": props.get("name", "Restricted Sector"),
-                    "type": props.get("type") or props.get("polygon_type", "RESTRICTED_ZONE"),
-                    "restriction_level": props.get("restriction_level", "NO_GO"),
-                    "is_hard_restriction": bool(props.get("is_hard_restriction", False) or props.get("restriction_level") == "NO_GO"),
+                    "type": poly_type,
+                    "restriction_level": level,
+                    "is_hard_restriction": bool(props.get("is_hard_restriction", False) or level == "NO_GO"),
                     "valid_from": props.get("valid_from"),
                     "valid_to": props.get("valid_to"),
                     "geometry": geom,

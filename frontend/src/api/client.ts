@@ -373,6 +373,8 @@ export interface RouteAlternativesResponse {
   status: 'AVAILABLE' | 'NO_ROUTE' | 'UNAVAILABLE';
   origin: string;
   destination: string;
+  origin_coordinates?: [number, number] | null;
+  destination_coordinates?: [number, number] | null;
   recommended_route_id?: string | null;
   routes: EvaluatedRouteItem[];
   message?: string;
@@ -384,6 +386,7 @@ export async function getDemoRouteAlternatives(
     origin_harbor?: string;
     destination?: string;
     craft_profile?: string;
+    vessel_id?: string;
   },
   signal?: AbortSignal,
 ): Promise<RouteAlternativesResponse> {
@@ -392,6 +395,8 @@ export async function getDemoRouteAlternatives(
   if (params?.origin_harbor) query.set('origin_harbor', params.origin_harbor);
   if (params?.destination) query.set('destination', params.destination);
   if (params?.craft_profile) query.set('craft_profile', params.craft_profile);
+  if (params?.vessel_id) query.set('vessel_id', params.vessel_id);
   const qs = query.toString() ? `?${query.toString()}` : '';
   return request<RouteAlternativesResponse>(`/demo/routes/alternatives${qs}`, { signal });
 }
+

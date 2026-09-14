@@ -163,7 +163,17 @@ class DataService:
                 "status": "ACTIVE",
                 "geometry": {
                     "type": "Polygon",
-                    "coordinates": [[[73.1, 16.8], [73.4, 16.8], [73.4, 17.1], [73.1, 17.1], [73.1, 16.8]]],
+                    "coordinates": [
+                        [
+                            [73.12, 16.82],
+                            [73.32, 16.80],
+                            [73.38, 16.95],
+                            [73.36, 17.12],
+                            [73.20, 17.15],
+                            [73.10, 17.02],
+                            [73.12, 16.82],
+                        ]
+                    ],
                 },
             }
             return ImdHazardNormalizer.normalize(raw)

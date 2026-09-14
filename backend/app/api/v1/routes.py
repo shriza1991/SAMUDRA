@@ -619,11 +619,17 @@ async def get_base_layers():
                     "type": "Polygon",
                     "coordinates": [
                         [
-                            [73.15, 15.30],
-                            [73.35, 15.30],
-                            [73.35, 15.55],
-                            [73.15, 15.55],
-                            [73.15, 15.30],
+                            [73.18, 15.30],
+                            [73.35, 15.28],
+                            [73.42, 15.36],
+                            [73.42, 15.48],
+                            [73.38, 15.54],
+                            [73.25, 15.55],
+                            [73.15, 15.52],
+                            [73.08, 15.45],
+                            [73.06, 15.38],
+                            [73.12, 15.32],
+                            [73.18, 15.30],
                         ]
                     ],
                 },
@@ -1193,6 +1199,7 @@ def get_demo_route_alternatives(
     origin_harbor: str | None = None,
     destination: str | None = None,
     craft_profile: str = "motorized_boat",
+    vessel_id: str | None = None,
     namespace: str = "SAMUDRA_DEMO_V1",
 ) -> dict[str, Any]:
     """Retrieve evaluated passage route alternatives computed by RouteExposureEngine."""
@@ -1203,6 +1210,7 @@ def get_demo_route_alternatives(
 
     effective_origin = origin_harbor
     effective_coords = None
+    effective_dest_coords = None
 
     if sector_id:
         sector_ctx = resolve_authority_sector_context(sector_id)
@@ -1214,10 +1222,38 @@ def get_demo_route_alternatives(
         effective_origin = sector_ctx.get("origin_harbor") or effective_origin
         effective_coords = sector_ctx.get("coordinates")
 
+        sector_dest_map = {
+            "sector-ratnagiri": ("Ratnagiri Outer Bank", [72.95, 16.82]),
+            "sector-malvan": ("Malvan Deep Bank", [73.365, 16.03]),
+            "sector-goa": ("Goa Coastal Patrol Zone", [73.66, 15.36]),
+            "sector-mumbai": ("Bombay High Perimeter", [72.56, 19.16]),
+            "sector-veraval": ("Saurashtra Deep Bank", [70.19, 20.73]),
+        }
+        if sector_id in sector_dest_map and not destination:
+            effective_dest, effective_dest_coords = sector_dest_map[sector_id]
+        else:
+            effective_dest = destination or "Outer Bank"
+    else:
+        effective_dest = destination or "Outer Bank"
+
+    v_base_waypoints = None
+    if vessel_id:
+        from backend.app.domain.synthetic.generator import generate_synthetic_demo_dataset
+        ds = generate_synthetic_demo_dataset()
+        vessel = next((v for v in ds.get("vessels", []) if v.get("public_id") == vessel_id), None)
+        if vessel:
+            craft_profile = vessel.get("vessel_type", craft_profile)
+            v_positions = [p for p in ds.get("replay_positions", []) if p.get("vessel_id") == vessel_id]
+            if v_positions:
+                effective_coords = [v_positions[0]["longitude"], v_positions[0]["latitude"]]
+                effective_dest_coords = [v_positions[-1]["longitude"], v_positions[-1]["latitude"]]
+                v_base_waypoints = [[p["longitude"], p["latitude"]] for p in v_positions]
+            trip = next((t for t in ds.get("trips", []) if t.get("vessel_id") == vessel_id), None)
+            if trip and trip.get("destination_name"):
+                effective_dest = trip["destination_name"]
+
     if not effective_origin:
         effective_origin = "Ratnagiri"
-
-    effective_dest = destination or "Outer Bank"
 
     ctx = ToolInvocationContext(
         origin_harbor=effective_origin,
@@ -1235,7 +1271,13 @@ def get_demo_route_alternatives(
 
     try:
         engine = MockRouteExposureEngine()
-        payload = engine.evaluate_routes(ctx, marine, effective_dest)
+        payload = engine.evaluate_routes(
+            ctx,
+            marine,
+            effective_dest,
+            dest_coords=effective_dest_coords,
+            base_waypoints=v_base_waypoints,
+        )
 
         if not payload.routes:
             return {
@@ -1251,6 +1293,8 @@ def get_demo_route_alternatives(
             "status": "AVAILABLE",
             "origin": payload.origin,
             "destination": payload.destination,
+            "origin_coordinates": getattr(payload, "origin_coordinates", None) or effective_coords,
+            "destination_coordinates": getattr(payload, "destination_coordinates", None) or effective_dest_coords,
             "recommended_route_id": payload.recommended_route_id,
             "routes": [r.model_dump() for r in payload.routes],
         }
@@ -1275,6 +1319,7 @@ def get_demo_sector_route_alternatives(
     sector_id: str,
     destination: str | None = None,
     craft_profile: str = "motorized_boat",
+    vessel_id: str | None = None,
     namespace: str = "SAMUDRA_DEMO_V1",
 ) -> dict[str, Any]:
     """Canonical alias for retrieving route alternatives for a specific sector."""
@@ -1282,6 +1327,7 @@ def get_demo_sector_route_alternatives(
         sector_id=sector_id,
         destination=destination,
         craft_profile=craft_profile,
+        vessel_id=vessel_id,
         namespace=namespace,
     )
 

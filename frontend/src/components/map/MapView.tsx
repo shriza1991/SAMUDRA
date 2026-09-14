@@ -54,6 +54,8 @@ export default function MapView({ layers, theme = 'light', center, zoom, languag
         if (l.geojson && (l.geojson as any).type === 'FeatureCollection' && Array.isArray((l.geojson as any).features)) {
           allRouteFeatures.push(...(l.geojson as any).features);
         }
+      } else if (l.layer_id === 'layer_route_start_marker' || l.layer_id === 'layer_route_end_marker') {
+        // Ignored here; cleanly re-generated below for the currently active corridor
       } else {
         nonRouteLayers.push(l);
       }
@@ -94,6 +96,67 @@ export default function MapView({ layers, theme = 'light', center, zoom, languag
         },
       },
     ];
+
+    // Surface accurate Start Point and Destination Point markers on the map
+    const coords = (selectedFeat.geometry as any)?.coordinates;
+    if (Array.isArray(coords) && coords.length >= 2) {
+      const startCoord = coords[0];
+      const endCoord = coords[coords.length - 1];
+      const originName = selectedFeat.properties?.origin || 'Voyage Departure Point';
+      const destName = selectedFeat.properties?.destination || 'Voyage Target / Destination';
+
+      dynamicRouteLayers.push({
+        layer_id: 'layer_route_start_marker',
+        name: `Departure Start: ${originName}`,
+        layer_type: 'geojson',
+        visible: true,
+        style: {
+          color: '#10b981',
+          opacity: 1.0,
+          circle_radius: 9,
+          layer_category: 'navigation_terminal',
+        },
+        geojson: {
+          type: 'Feature',
+          geometry: {
+            type: 'Point',
+            coordinates: startCoord,
+          },
+          properties: {
+            point_type: 'Voyage Start Point',
+            location: originName,
+            coordinates: `${startCoord[1]?.toFixed(4)}°N, ${startCoord[0]?.toFixed(4)}°E`,
+            corridor: selectedFeat.properties?.name || selectedFeat.properties?.route_id || 'Corridor',
+          },
+        },
+      });
+
+      dynamicRouteLayers.push({
+        layer_id: 'layer_route_end_marker',
+        name: `Destination: ${destName}`,
+        layer_type: 'geojson',
+        visible: true,
+        style: {
+          color: '#f59e0b',
+          opacity: 1.0,
+          circle_radius: 9,
+          layer_category: 'navigation_terminal',
+        },
+        geojson: {
+          type: 'Feature',
+          geometry: {
+            type: 'Point',
+            coordinates: endCoord,
+          },
+          properties: {
+            point_type: 'Voyage Destination Point',
+            location: destName,
+            coordinates: `${endCoord[1]?.toFixed(4)}°N, ${endCoord[0]?.toFixed(4)}°E`,
+            corridor: selectedFeat.properties?.name || selectedFeat.properties?.route_id || 'Corridor',
+          },
+        },
+      });
+    }
 
     return [...nonRouteLayers, ...dynamicRouteLayers];
   }, [layers, selectedCorridorMode]);
@@ -336,6 +399,7 @@ export default function MapView({ layers, theme = 'light', center, zoom, languag
                 'line-color': color,
                 'line-width': lineWidth,
                 'line-opacity': opacity,
+                ...(lineDasharray ? { 'line-dasharray': lineDasharray } : {}),
               },
               layout: {
                 'line-cap': 'round',

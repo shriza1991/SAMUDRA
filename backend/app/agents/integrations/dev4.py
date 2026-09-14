@@ -106,6 +106,8 @@ class RouteExposurePayload(BaseModel):
     destination: str = Field(..., description="Destination or target fishing bank")
     recommended_route_id: str = Field(..., description="ID of lowest-risk passage")
     routes: List[EvaluatedRouteItem] = Field(default_factory=list, description="Evaluated passage options")
+    origin_coordinates: Optional[List[float]] = Field(None, description="[lon, lat] departure coordinates")
+    destination_coordinates: Optional[List[float]] = Field(None, description="[lon, lat] destination coordinates")
 
 
 class GeospatialHazardPayload(BaseModel):

@@ -40,6 +40,44 @@
 - Integrated dynamic sector route fetching in `AuthorityPage` with request cancellation and stale-state clearing on sector switch.
 - Stabilized map camera bounds to prevent abrupt jumping/refitting during Safest / Balanced / Direct corridor switching.
 
+### P0-8J — Region-specific map layer filtering on Fisher & Authority views
+- Integrated `filterLayersByRegion` and `filterLayersBySectorPolygon` in `geo.ts` to geographically scope base boundaries and response layers.
+- Scoped Fisher page map layers to the active departure harbor region, preventing out-of-region geofences, routes, and hazards from cluttering the local view.
+- Scoped Authority page map layers to the active surveillance sector polygon, preventing cross-sector geofence and route leakage.
+- Updated `MockRouteExposureEngine` to anchor passage route waypoints dynamically to the active sector or origin harbor coordinates instead of a hardcoded default.
+- Resolved in-memory offline store re-entrancy deadlock (`RLock`).
+
+### P0-8K — Authentic Indian EEZ & Island Maritime Boundaries (Mainland, Andaman & Nicobar, Lakshadweep)
+- Integrated authentic UNCLOS maritime boundaries from Flanders Marine Institute (VLIZ Marine Regions v12):
+  - Mainland & Peninsular EEZ (`POLY-EEZ-IND-MAIN`, 1,659,500 km², MRGID 8480) spanning Arabian Sea and Bay of Bengal down to 8° Channel Maldives treaty line.
+  - Andaman & Nicobar Archipelago EEZ (`POLY-EEZ-IND-ANDAMAN`, 664,448 km², MRGID 8333) with full high-resolution boundary arc and international treaty borders (Indonesia, Thailand, Myanmar).
+  - Lakshadweep Islands Sovereign Territorial Waters 12 NM (`POLY-TERRITORIAL-LAKSHADWEEP`, MRGID 49194 Part 0) enclosing Minicoy, Kalpeni, Kavaratti, Agatti, Androth, Amini, Kadmat, Kiltan, Chetlat, Bitra, and Suheli atolls.
+  - Andaman & Nicobar Sovereign Territorial Waters 12 NM (`POLY-TERRITORIAL-ANDAMAN`, MRGID 49060) enclosing the entire island chain, plus Barren Island and Narcondam Island.
+- Exempted national sovereign maritime boundaries from local sector culling in `frontend/src/utils/geo.ts` so India's complete water boundary is always accurately displayed nationwide while keeping local operational geofences (firing ranges, MPAs) scoped to their region.
+- Excluded informational national boundaries from deterministic restricted zone hazard checks in `geo_restrictions.py`.
+- Added multilingual translation mappings for national water boundary layers in Hindi and Marathi.
+
+### P0-8L — Fleet Surveillance Accurate Route Corridors with Start & Destination Terminals
+- Parameterized route alternatives endpoint (`/api/v1/demo/routes/alternatives`) with `vessel_id` to contextualize navigation corridors directly to the active fleet craft.
+- Updated `MockRouteExposureEngine` to connect authentic multi-waypoint navigation corridors (Safest Inshore, Balanced, Direct) from the vessel's specific home harbor/departure coordinates to its specific trip destination/fishing bank.
+- Dynamically generates start point marker (`layer_route_start_marker`, emerald `#10b981`) and end point marker (`layer_route_end_marker`, amber `#f59e0b`) in `MapView.tsx`.
+- Updated `MissionMapBrief.tsx` to extract and display Departure (Start) and Destination (End) names/coordinates directly under corridor metric pills.
+- Updated `FleetTrackingDeck.tsx` to surface Start and Destination coordinates and harbor labels in the GPS scrubber telemetry deck.
+- Strictly verified and enforced that passage routes never cross inland onto dry land; all alternative corridors (Safest Inshore, Balanced, Direct) across all 14 vessels and general sectors follow authentic, verified in-water channels and clamp coordinates seaward into the Arabian Sea.
+
+### P0-8M — Fleet Surveillance Trajectory Replay Continuous Autoplay & Lifecycle Controls
+- Configured GPS trajectory replay to autoplay automatically upon vessel selection and sector load, starting from departure (`currentIndex = 0`, `isPlaying = true`).
+- Enhanced ticker animation to continuously trace coastal voyages point-by-point (1s intervals), hold for 2s at the voyage destination to display arrival telemetry, and smoothly loop back to departure.
+- Guarded operational alert audits: clicking a vessel hazard alert pauses playback and anchors the camera and vessel marker at the evaluated containment position (`pos.length - 1`).
+- Upgraded playback controls: Play button restarts from departure when reaching the end, Reset button rewinds and immediately plays, active vessel card click restarts playback, and manual slider scrubbing pauses playback cleanly.
+- Added clean timestamp formatter (`formatTimestamp`) normalizing ISO timestamps into readable `HH:mm` format across UI labels and MapLayer popups.
+
+### P0-8N — Fleet Surveillance Predicted Path Dynamic Yellow Dotted Line
+- Configured vessel predicted path (`layer_fleet_estimated_trajectory`) in yellow dotted line (`color: '#facc15'`, `line_width: 3`, `line_dasharray: [0, 2]`) using round line-cap geometry.
+- Dynamically generates the predicted path directly ahead of the vessel craft on every step of autoplay and manual scrubbing, projecting both the remaining planned voyage route to destination and the 30-minute dead-reckoning trajectory based on instantaneous speed and heading.
+- Updated `MapView.tsx` to compile `line-dasharray` directly into initial line layer paint definitions as well as runtime updates.
+- Synchronized layer lifecycle: clearing predicted path on empty vessel telemetry or sector switch, while maintaining active layer on replay autoplay.
+
 ### P0-9 — Authoritative Marine Observation Single Source of Truth
 - Eliminated architectural source-of-truth split between legacy static `marine_dataset.py` and deterministic synthetic OSF time-series fixture (`data/fixtures/synthetic/incois/osf_hourly_observations.json`).
 - Updated `SnapshotConnector` to directly load `osf_hourly_observations.json` and normalize records through `IncoisOSFNormalizer.normalize()`.

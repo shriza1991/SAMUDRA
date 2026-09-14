@@ -344,4 +344,4 @@ def test_offline_mode_does_not_fabricate_safe_weather_values():
     # Observations remain typed and grounded
     assert bundle.marine is not None
     assert bundle.weather is not None
-    assert bundle.hazards is not None
+    assert bundle.hazard is not None

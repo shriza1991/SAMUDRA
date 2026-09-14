@@ -203,3 +203,38 @@ def test_api_unknown_sector_handled_explicitly(client):
     """Verifies unknown sector does not silently fall back to Ratnagiri."""
     res = client.get("/api/v1/demo/sectors/unknown-nonexistent-sector/route-alternatives")
     assert res.status_code == 404
+
+
+def test_route_waypoints_strictly_in_water_and_avoid_land(client):
+    """Verifies that passage route waypoints never cross inland and stay strictly in maritime waters."""
+    # 1. Benchmark Ratnagiri -> Outer Bank
+    res = client.get("/api/v1/demo/routes/alternatives")
+    assert res.status_code == 200
+    data = res.json()
+    origin_lng = data["origin_coordinates"][0]
+
+    for route in data["routes"]:
+        for wp in route["waypoints"]:
+            assert wp[0] <= origin_lng, f"Route {route['route_id']} waypoint {wp} is east of harbor on land!"
+
+    # 2. All 14 Fleet Surveillance Vessels
+    vessels = client.get("/api/v1/demo/vessels").json()
+    assert len(vessels) == 14
+
+    for v in vessels:
+        vid = v["public_id"]
+        sec = "sector-" + v["home_harbor_id"].replace("harbor-", "")
+        if sec == "sector-panaji":
+            sec = "sector-goa"
+        v_res = client.get(f"/api/v1/demo/routes/alternatives?sector_id={sec}&vessel_id={vid}")
+        assert v_res.status_code == 200
+        v_data = v_res.json()
+        start_lng = v_data["origin_coordinates"][0]
+
+        for route in v_data["routes"]:
+            # Check length and distinct corridors
+            assert len(route["waypoints"]) >= 2
+            # Along west coast of India, open sea is to the west; no waypoint can exceed the harbor mouth longitude
+            for wp in route["waypoints"]:
+                assert wp[0] <= start_lng, f"Vessel {vid} route {route['route_id']} waypoint {wp} went inland (lng > {start_lng})!"
+

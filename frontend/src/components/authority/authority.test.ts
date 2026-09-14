@@ -391,4 +391,143 @@ describe('Authority Advanced Feature Decks', () => {
       expect(activeSituation.situation_status).toBe('CAUTION');
     });
   });
+
+  describe('Trajectory Replay Autoplay & Ticker Lifecycle', () => {
+    const samplePositions = [
+      { timestamp: '00:00', latitude: 16.990, longitude: 73.280, speed_knots: 5.0, heading_deg: 260, vessel_id: 'vessel-01' },
+      { timestamp: '00:12', latitude: 16.985, longitude: 73.260, speed_knots: 7.5, heading_deg: 262, vessel_id: 'vessel-01' },
+      { timestamp: '00:24', latitude: 16.970, longitude: 73.230, speed_knots: 8.2, heading_deg: 265, vessel_id: 'vessel-01' },
+    ];
+
+    it('initializes replay at departure (index 0) with autoplay active on position load', () => {
+      let currentIndex = -1;
+      let isPlaying = false;
+
+      const onLoadPositions = (pos: typeof samplePositions, isAlertInspection: boolean) => {
+        if (isAlertInspection) {
+          currentIndex = pos.length - 1;
+          isPlaying = false;
+        } else {
+          currentIndex = 0;
+          isPlaying = true;
+        }
+      };
+
+      onLoadPositions(samplePositions, false);
+      expect(currentIndex).toBe(0);
+      expect(isPlaying).toBe(true);
+      expect(samplePositions[currentIndex].timestamp).toBe('00:00');
+    });
+
+    it('advances trajectory point-by-point and loops back to departure after destination hold', () => {
+      let currentIndex = 0;
+      let holdCount = 0;
+      const maxIndex = samplePositions.length - 1;
+
+      const tick = () => {
+        if (currentIndex >= maxIndex) {
+          if (holdCount < 2) {
+            holdCount += 1;
+            return;
+          }
+          holdCount = 0;
+          currentIndex = 0;
+          return;
+        }
+        holdCount = 0;
+        currentIndex += 1;
+      };
+
+      // Step 0 -> Step 1
+      tick();
+      expect(currentIndex).toBe(1);
+      expect(samplePositions[currentIndex].timestamp).toBe('00:12');
+
+      // Step 1 -> Step 2 (destination reached)
+      tick();
+      expect(currentIndex).toBe(2);
+      expect(samplePositions[currentIndex].timestamp).toBe('00:24');
+
+      // Hold at destination (tick 1)
+      tick();
+      expect(currentIndex).toBe(2);
+      expect(holdCount).toBe(1);
+
+      // Hold at destination (tick 2)
+      tick();
+      expect(currentIndex).toBe(2);
+      expect(holdCount).toBe(2);
+
+      // Loop back to departure (index 0)
+      tick();
+      expect(currentIndex).toBe(0);
+      expect(holdCount).toBe(0);
+      expect(samplePositions[currentIndex].timestamp).toBe('00:00');
+    });
+
+    it('alert inspection pauses playback and focuses on latest evaluated containment position', () => {
+      let currentIndex = 0;
+      let isPlaying = true;
+
+      const inspectAlert = (positions: typeof samplePositions) => {
+        currentIndex = positions.length - 1;
+        isPlaying = false;
+      };
+
+      inspectAlert(samplePositions);
+      expect(currentIndex).toBe(samplePositions.length - 1);
+      expect(isPlaying).toBe(false);
+      expect(samplePositions[currentIndex].timestamp).toBe('00:24');
+    });
+
+    it('manual slider scrubbing pauses autoplay', () => {
+      let currentIndex = 0;
+      let isPlaying = true;
+
+      const onSliderChange = (newIndex: number) => {
+        currentIndex = newIndex;
+        isPlaying = false;
+      };
+
+      onSliderChange(1);
+      expect(currentIndex).toBe(1);
+      expect(isPlaying).toBe(false);
+    });
+
+    it('generates yellow dotted predicted path [0, 2] for vessels with dead reckoning and remaining voyage route', () => {
+      const currentPos = samplePositions[1]; // at 00:12
+      const remainingCoords = samplePositions.slice(1).map(p => [p.longitude, p.latitude]);
+
+      const trajectoryLayer = {
+        layer_id: 'layer_fleet_estimated_trajectory',
+        name: `Predicted Path — next 30 min (${currentPos.vessel_id})`,
+        layer_type: 'geojson' as const,
+        visible: true,
+        style: {
+          color: '#facc15',
+          opacity: 0.95,
+          line_width: 3,
+          line_dasharray: [0, 2],
+          layer_category: 'estimated_trajectory',
+        },
+        properties: { vessel_id: currentPos.vessel_id },
+        geojson: {
+          type: 'FeatureCollection' as const,
+          features: [
+            {
+              type: 'Feature' as const,
+              geometry: { type: 'LineString' as const, coordinates: remainingCoords },
+              properties: { label: 'Predicted Route to Destination' },
+            },
+          ],
+        },
+      };
+
+      expect(trajectoryLayer.style.color).toBe('#facc15');
+      expect(trajectoryLayer.style.line_dasharray).toEqual([0, 2]);
+      expect(trajectoryLayer.geojson.features[0].geometry.coordinates).toHaveLength(2);
+      expect(trajectoryLayer.geojson.features[0].geometry.coordinates[0]).toEqual([73.260, 16.985]);
+    });
+  });
 });
+

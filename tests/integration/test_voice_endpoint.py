@@ -60,16 +60,21 @@ def test_voice_transcribe_missing_key(monkeypatch):
         assert data["error"] == "STT_UNCONFIGURED"
 
 
+import sys
+
 def test_voice_transcribe_success_marathi():
     mock_response = MagicMock()
     mock_response.language_code = "mr-IN"
     mock_response.transcript = "उद्या सकाळी रत्नागिरीहून मासेमारीसाठी जाणे सुरक्षित आहे का?"
 
-    with patch("sarvamai.SarvamAI") as mock_sarvam_cls:
-        mock_client = MagicMock()
-        mock_client.speech_to_text.transcribe.return_value = mock_response
-        mock_sarvam_cls.return_value = mock_client
+    mock_sarvam_mod = MagicMock()
+    mock_sarvam_cls = MagicMock()
+    mock_sarvam_mod.SarvamAI = mock_sarvam_cls
+    mock_client = MagicMock()
+    mock_client.speech_to_text.transcribe.return_value = mock_response
+    mock_sarvam_cls.return_value = mock_client
 
+    with patch.dict(sys.modules, {"sarvamai": mock_sarvam_mod}):
         with patch("backend.app.services.stt_service.settings.SARVAM_API_KEY", "dummy_sarvam_key"):
             client = TestClient(app)
             response = client.post(
@@ -88,11 +93,14 @@ def test_voice_transcribe_success_hindi():
     mock_response.language_code = "hi-IN"
     mock_response.transcript = "क्या कल सुबह रत्नागिरि से निकलना सुरक्षित है?"
 
-    with patch("sarvamai.SarvamAI") as mock_sarvam_cls:
-        mock_client = MagicMock()
-        mock_client.speech_to_text.transcribe.return_value = mock_response
-        mock_sarvam_cls.return_value = mock_client
+    mock_sarvam_mod = MagicMock()
+    mock_sarvam_cls = MagicMock()
+    mock_sarvam_mod.SarvamAI = mock_sarvam_cls
+    mock_client = MagicMock()
+    mock_client.speech_to_text.transcribe.return_value = mock_response
+    mock_sarvam_cls.return_value = mock_client
 
+    with patch.dict(sys.modules, {"sarvamai": mock_sarvam_mod}):
         with patch("backend.app.services.stt_service.settings.SARVAM_API_KEY", "dummy_sarvam_key"):
             client = TestClient(app)
             response = client.post(
@@ -111,11 +119,14 @@ def test_voice_transcribe_success_english():
     mock_response.language_code = "en-IN"
     mock_response.transcript = "Is it safe to leave Ratnagiri tomorrow morning?"
 
-    with patch("sarvamai.SarvamAI") as mock_sarvam_cls:
-        mock_client = MagicMock()
-        mock_client.speech_to_text.transcribe.return_value = mock_response
-        mock_sarvam_cls.return_value = mock_client
+    mock_sarvam_mod = MagicMock()
+    mock_sarvam_cls = MagicMock()
+    mock_sarvam_mod.SarvamAI = mock_sarvam_cls
+    mock_client = MagicMock()
+    mock_client.speech_to_text.transcribe.return_value = mock_response
+    mock_sarvam_cls.return_value = mock_client
 
+    with patch.dict(sys.modules, {"sarvamai": mock_sarvam_mod}):
         with patch("backend.app.services.stt_service.settings.SARVAM_API_KEY", "dummy_sarvam_key"):
             client = TestClient(app)
             response = client.post(

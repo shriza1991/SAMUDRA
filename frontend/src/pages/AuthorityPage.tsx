@@ -35,6 +35,7 @@ import {
   createAuthorityRouteLayers,
   FALLBACK_DEMO_SECTORS,
   fetchAndFormatBaseLayers,
+  filterLayersBySectorPolygon,
 } from '../utils/geo';
 import { translateText } from '../i18n/translations';
 
@@ -180,11 +181,16 @@ export default function AuthorityPage({
       };
     }
 
-    getDemoRouteAlternatives({ sector_id: activeSector.public_id }, controller.signal)
+    getDemoRouteAlternatives(
+      { sector_id: activeSector.public_id, vessel_id: selectedVesselId },
+      controller.signal,
+    )
       .then((data) => {
         if (!isCurrent) return;
         if (data && data.status === 'AVAILABLE' && Array.isArray(data.routes) && data.routes.length > 0) {
-          setSectorRouteLayers(createAuthorityRouteLayers(data.routes, data.recommended_route_id));
+          setSectorRouteLayers(
+            createAuthorityRouteLayers(data.routes, data.recommended_route_id, data.origin, data.destination),
+          );
         } else {
           setSectorRouteLayers([]);
         }
@@ -211,16 +217,20 @@ export default function AuthorityPage({
       (l) => l.layer_id === 'layer_recommended_route' || l.layer_id === 'layer_candidate_routes'
     );
     const routeLayersToInclude = (hasResponseRoutes || !selectedVesselId) ? [] : sectorRouteLayers;
+    // Filter base layers to only show geofences/restrictions near the active sector
+    const regionBaseLayers = filterLayersBySectorPolygon(baseLayers, activeSector.polygon, 1.0);
+    // Filter response layers to only show those inside or near the active sector
+    const regionResponseLayers = filterLayersBySectorPolygon(responseLayers, activeSector.polygon, 1.0);
 
     return [
-      ...baseLayers,
+      ...regionBaseLayers,
       ...sectorLayers,
       ...hazardLayers,
       ...associationLayers,
       ...routeLayersToInclude,
       ...activeReplay,
       ...activeTrajectory,
-      ...responseLayers,
+      ...regionResponseLayers,
     ];
   }, [
     baseLayers,

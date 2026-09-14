@@ -31,7 +31,7 @@ class OfflinePersistenceStore:
     """Thread-safe in-memory store for runs, conversations, evidence, and map layers."""
 
     def __init__(self) -> None:
-        self._lock = threading.Lock()
+        self._lock = threading.RLock()
         self._runs: Dict[str, Dict[str, Any]] = {}
         self._threads: Dict[str, List[str]] = {}  # thread_id -> list of run_ids
         self._evidence: Dict[str, List[Dict[str, Any]]] = {}  # run_id -> list of evidence dicts
