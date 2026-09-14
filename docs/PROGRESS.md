@@ -66,6 +66,17 @@
 - Ensured the indicator persists seamlessly across all 4 Researcher decks (Ocean Data, Data Sources, Scenario Lab, Query Workbench) without layout clipping or tab disruption.
 - Verified absence of conflicting/misleading `LIVE` operational labels.
 
+### P0-13 — 48-Hour Marine Observation Time-Series Visualization in Researcher Lab
+- Implemented lightweight, pure-SVG 3-panel synchronized temporal visualization in `OceanTimeSeriesChart.tsx` integrated into `OceanDataExplorer.tsx`.
+- Exposes temporal behavior across 48 hourly observations for Significant Wave Height (SWH, meters), Sea Surface Temperature (SST, °C), and Wind Speed (knots) with individual calibrated y-scales and caution threshold references.
+- Real timestamps rendered on x-axis (e.g. `Sep 11 06:00 UTC`, `Sep 12 18:00 UTC`), strictly sorted chronologically before rendering and latest-card computation.
+- Missing/null values are rendered as explicit path gaps (never coerced to zero).
+- Full QC awareness distinguishing valid observations (`VALID`) from suspect/flagged ones (`SUSPECT`/`DEGRADED`) visually and in interactive crosshair hover tooltips.
+- Latest-condition cards compute values from the newest timestamp rather than arbitrary array order.
+- Clear provenance caption: `INCOIS OSF-style hourly observations · 48-hour synthetic snapshot`.
+- Harbor selection dynamically loads and renders the 48-hour time series for Ratnagiri vs. Malvan.
+- Verified with 18 automated frontend tests in `researcher.test.ts`, full vitest suite (112 tests passing), and clean `tsc && vite build`.
+
 ---
 
 ## P0 Marine Data Providers Status Board

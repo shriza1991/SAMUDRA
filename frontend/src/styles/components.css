@@ -5714,6 +5714,233 @@ button.fleet-alert-card.active {
   color: #eab308;
 }
 
+/* 48-Hour Marine Observation Time Series Chart */
+.ocean-time-series-container {
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-md) var(--space-lg);
+  position: relative;
+  margin-bottom: var(--space-lg);
+}
+
+.ocean-chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-sm);
+}
+
+.ocean-chart-title-area {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ocean-chart-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.ocean-chart-icon {
+  color: #06b6d4;
+}
+
+.ocean-chart-coverage {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  color: var(--color-text-muted);
+}
+
+.ocean-chart-legend {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  font-size: 11px;
+  color: var(--color-text-muted);
+}
+
+.ocean-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.ocean-legend-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.ocean-legend-dot.valid {
+  background: #06b6d4;
+}
+
+.ocean-legend-dot.suspect {
+  background: #f59e0b;
+}
+
+.ocean-legend-line.gap {
+  display: inline-block;
+  width: 10px;
+  height: 2px;
+  background: #ef4444;
+}
+
+.ocean-svg-wrapper {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+}
+
+.ocean-timeseries-svg {
+  width: 100%;
+  height: auto;
+  display: block;
+  user-select: none;
+}
+
+.ocean-panel-title {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  font-family: inherit;
+}
+
+.ocean-axis-label {
+  font-size: 10px;
+  fill: var(--color-text-dim, #64748b);
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+.ocean-x-label {
+  font-size: 10px;
+  fill: var(--color-text-muted, #94a3b8);
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+.ocean-caution-label {
+  font-size: 9px;
+  font-weight: 600;
+  font-family: inherit;
+}
+
+.ocean-chart-tooltip {
+  position: absolute;
+  top: 15px;
+  z-index: 25;
+  pointer-events: none;
+  background: rgba(15, 23, 42, 0.95);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(51, 65, 85, 0.8);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  font-size: 12px;
+  white-space: nowrap;
+  transition: transform 0.06s ease-out;
+}
+
+.ocean-tooltip-header {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #cbd5e1;
+  margin-bottom: 6px;
+  border-bottom: 1px solid rgba(51, 65, 85, 0.6);
+  padding-bottom: 4px;
+}
+
+.ocean-tooltip-content {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.ocean-tooltip-metric {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 11px;
+}
+
+.ocean-tooltip-name {
+  color: var(--color-text-secondary, #94a3b8);
+}
+
+.ocean-tooltip-value {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 600;
+}
+
+.ocean-tooltip-qc {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 4px;
+  border-radius: 2px;
+  text-transform: uppercase;
+  margin-left: 4px;
+}
+
+.ocean-tooltip-qc.valid {
+  background: rgba(16, 185, 129, 0.18);
+  color: #10b981;
+}
+
+.ocean-tooltip-qc.suspect {
+  background: rgba(245, 158, 11, 0.18);
+  color: #f59e0b;
+}
+
+.ocean-tooltip-sub {
+  font-size: 10px;
+  color: var(--color-text-muted, #94a3b8);
+  margin-top: 3px;
+  padding-top: 3px;
+  border-top: 1px dashed rgba(51, 65, 85, 0.4);
+}
+
+.ocean-chart-footer {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--color-text-dim, #64748b);
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid var(--color-border, rgba(51, 65, 85, 0.3));
+}
+
+.ocean-footer-icon {
+  color: var(--color-text-muted);
+}
+
+.ocean-chart-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 40px 20px;
+  background: var(--color-bg-secondary);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text-muted);
+  font-size: 13px;
+}
+
 /* Two Column Layout */
 .researcher-two-col {
   display: grid;

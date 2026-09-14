@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   Waves, Thermometer, Wind, Navigation, Satellite, Fish,
   AlertTriangle, RefreshCw, ChevronDown,
@@ -9,6 +9,7 @@ import {
   type HarborData, type MarineObservation, type EOGridCell,
   type PFZCandidate, type HazardBulletin,
 } from '../../api/researcher-client';
+import OceanTimeSeriesChart from './OceanTimeSeriesChart';
 
 export default function OceanDataExplorer() {
   const [harbors, setHarbors] = useState<HarborData[]>([]);
@@ -18,6 +19,7 @@ export default function OceanDataExplorer() {
   const [pfzCandidates, setPfzCandidates] = useState<PFZCandidate[]>([]);
   const [hazards, setHazards] = useState<HazardBulletin[]>([]);
   const [loading, setLoading] = useState(true);
+  const [obsLoading, setObsLoading] = useState(false);
 
   useEffect(() => {
     loadInitialData();
@@ -48,11 +50,26 @@ export default function OceanDataExplorer() {
   }
 
   async function loadObservations(harborId: string) {
-    const obs = await fetchMarineObservations(harborId);
-    setObservations(obs);
+    setObsLoading(true);
+    try {
+      const obs = await fetchMarineObservations(harborId);
+      setObservations(obs);
+    } finally {
+      setObsLoading(false);
+    }
   }
 
-  const latest = observations.length > 0 ? observations[observations.length - 1] : null;
+  // Explicitly sort chronologically by observation_time ascending
+  const sortedObs = useMemo(() => {
+    return [...observations].sort((a, b) => {
+      const ta = new Date(a.observation_time).getTime();
+      const tb = new Date(b.observation_time).getTime();
+      return ta - tb;
+    });
+  }, [observations]);
+
+  // Determine latest observation by newest timestamp (never by arbitrary array position)
+  const latest = sortedObs.length > 0 ? sortedObs[sortedObs.length - 1] : null;
   const harborName = harbors.find(h => h.public_id === selectedHarbor)?.name ?? '—';
 
   function formatTime(iso: string) {
@@ -133,24 +150,34 @@ export default function OceanDataExplorer() {
         </div>
       </section>
 
-      {/* Observation Timeline */}
+      {/* 48-Hour Marine Observation Time Series Chart */}
+      <section className="researcher-section">
+        <OceanTimeSeriesChart
+          observations={sortedObs}
+          harborName={harborName}
+          loading={obsLoading}
+        />
+      </section>
+
+      {/* Observation Timeline Table */}
       <section className="researcher-section">
         <h3 className="researcher-section-title">Observation Timeline</h3>
         <div className="researcher-table-wrap">
           <table className="researcher-table">
             <thead>
               <tr>
-                <th>Time</th>
+                <th>Time (UTC)</th>
                 <th>Wave (m)</th>
                 <th>SST (°C)</th>
                 <th>Wind (kn)</th>
                 <th>Swell (s)</th>
+                <th>QC Status</th>
                 <th>Source</th>
-                <th>Quality</th>
+                <th>Flags</th>
               </tr>
             </thead>
             <tbody>
-              {observations.map(obs => (
+              {sortedObs.map(obs => (
                 <tr key={obs.public_id}>
                   <td className="researcher-cell-mono">{formatTime(obs.observation_time)}</td>
                   <td className={(obs.wave_height_m ?? 0) > 2.5 ? 'researcher-cell-danger' : (obs.wave_height_m ?? 0) > 1.8 ? 'researcher-cell-warning' : ''}>
@@ -161,6 +188,11 @@ export default function OceanDataExplorer() {
                     {obs.wind_speed_kn ?? '—'}
                   </td>
                   <td>{obs.swell_period_s != null ? obs.swell_period_s.toFixed(1) : '—'}</td>
+                  <td>
+                    <span className={`ocean-tooltip-qc ${obs.qc_status === 'VALID' || !obs.qc_status ? 'valid' : 'suspect'}`}>
+                      {obs.qc_status || 'VALID'}
+                    </span>
+                  </td>
                   <td><span className="researcher-source-badge">{obs.source}</span></td>
                   <td>
                     {(obs.quality_flags || []).map(f => (

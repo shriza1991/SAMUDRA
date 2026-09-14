@@ -37,6 +37,7 @@ export interface MarineObservation {
   source: string;
   data_mode: string;
   quality_flags: string[];
+  qc_status?: string;
 }
 
 export interface EOGridCell {
@@ -143,7 +144,7 @@ async function fetchOrMock<T>(url: string, mockData: T): Promise<T> {
   try {
     const res = await fetch(`${API_BASE}${url}`, {
       headers: { 'Content-Type': 'application/json' },
-      signal: AbortSignal.timeout(3000),
+      signal: AbortSignal.timeout(5000),
     });
     if (res.ok) return res.json();
     return mockData;
@@ -255,6 +256,7 @@ export async function fetchMarineObservations(harborId?: string): Promise<Marine
     source: o.source || (o.provenance_json?.intended_provider ? `${o.provenance_json.intended_provider} OSF` : 'INCOIS OSF'),
     data_mode: o.data_mode || 'HYBRID',
     quality_flags: Array.isArray(o.quality_flags) ? o.quality_flags : o.qc_status ? [o.qc_status.toLowerCase()] : ['verified'],
+    qc_status: o.qc_status || (o.qc_flag === 0 ? 'VALID' : typeof o.qc_flag === 'number' ? 'SUSPECT' : 'VALID'),
   }));
 }
 
