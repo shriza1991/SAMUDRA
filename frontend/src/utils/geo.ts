@@ -399,7 +399,10 @@ export async function fetchAndFormatBaseLayers(): Promise<MapLayer[]> {
     return fc.features.map((f: any, idx: number) => {
       const props = f.properties || {};
       const level = props.restriction_level || 'INFORMATIONAL';
-      const isEEZ = props.polygon_type === 'EEZ_BOUNDARY' || (props.name && String(props.name).includes('EEZ'));
+      const polyType = (props.polygon_type || '').toUpperCase();
+      const isEEZ = polyType === 'EEZ_BOUNDARY' || (props.name && String(props.name).includes('EEZ'));
+      const isTerritorial = polyType === 'TERRITORIAL_WATERS' || (props.name && String(props.name).includes('Territorial'));
+      const isNational = isEEZ || isTerritorial;
       const color =
         level === 'NO_GO'
           ? '#ef4444'
@@ -407,6 +410,8 @@ export async function fetchAndFormatBaseLayers(): Promise<MapLayer[]> {
           ? '#f97316'
           : level === 'ADVISORY_ALERT'
           ? '#eab308'
+          : isTerritorial
+          ? '#0ea5e9'
           : isEEZ
           ? '#38bdf8'
           : '#38bdf8';
@@ -418,9 +423,9 @@ export async function fetchAndFormatBaseLayers(): Promise<MapLayer[]> {
         visible: true,
         style: {
           color,
-          opacity: isEEZ ? 0.06 : 0.22,
-          line_width: isEEZ ? 1.5 : 2,
-          layer_category: 'base_geofence',
+          opacity: isTerritorial ? 0.08 : isEEZ ? 0.04 : 0.22,
+          line_width: isTerritorial ? 2 : isEEZ ? 1.5 : 2,
+          layer_category: isNational ? 'national_boundary' : 'base_geofence',
         },
         geojson: f,
       };
@@ -428,6 +433,32 @@ export async function fetchAndFormatBaseLayers(): Promise<MapLayer[]> {
   } catch {
     return [];
   }
+}
+
+/**
+ * Checks whether a MapLayer represents a national maritime boundary (EEZ or territorial sea),
+ * which should remain visible nationwide and not be culled by local harbor/sector bounds.
+ */
+function isNationalMaritimeBoundary(layer: MapLayer): boolean {
+  const id = (layer.layer_id || '').toLowerCase();
+  const name = (layer.name || '').toLowerCase();
+  const category = (layer.style?.layer_category || '').toLowerCase();
+  const polyType = (layer.geojson?.properties?.polygon_type || '').toLowerCase();
+
+  return (
+    id.includes('eez') ||
+    id.includes('territorial') ||
+    id.includes('boundary') ||
+    name.includes('exclusive economic zone') ||
+    name.includes('eez') ||
+    name.includes('territorial') ||
+    name.includes('water boundary') ||
+    category === 'national_boundary' ||
+    category === 'national_eez' ||
+    polyType === 'eez_boundary' ||
+    polyType === 'territorial_waters' ||
+    polyType === 'island_water_boundary'
+  );
 }
 
 /**
@@ -476,7 +507,8 @@ function extractGeojsonBBox(geojson: any): [number, number, number, number] | nu
  * a region defined by a center point and a padding (in degrees).
  *
  * Used by Fisher and Authority pages to show only region-specific base layers
- * (IMBL, MPAs, Naval ranges) instead of all global boundaries.
+ * (IMBL, MPAs, Naval ranges) instead of all global boundaries. Sovereign national
+ * water boundaries (EEZ, Territorial Waters) are preserved across all regions.
  */
 export function filterLayersByRegion(
   layers: MapLayer[],
@@ -492,6 +524,7 @@ export function filterLayersByRegion(
   ];
 
   return layers.filter((layer) => {
+    if (isNationalMaritimeBoundary(layer)) return true;
     if (!layer.geojson) return true;
     const layerBBox = extractGeojsonBBox(layer.geojson);
     if (!layerBBox) return true;
@@ -503,6 +536,8 @@ export function filterLayersByRegion(
 /**
  * Filters MapLayers to only include those whose GeoJSON geometry falls within
  * a sector's bounding polygon (with padding).
+ *
+ * Sovereign national water boundaries (EEZ, Territorial Waters) are preserved across all sectors.
  */
 export function filterLayersBySectorPolygon(
   layers: MapLayer[],
@@ -529,6 +564,7 @@ export function filterLayersBySectorPolygon(
   ];
 
   return layers.filter((layer) => {
+    if (isNationalMaritimeBoundary(layer)) return true;
     if (!layer.geojson) return true;
     const layerBBox = extractGeojsonBBox(layer.geojson);
     if (!layerBBox) return true;

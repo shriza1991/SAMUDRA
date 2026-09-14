@@ -47,6 +47,16 @@
 - Updated `MockRouteExposureEngine` to anchor passage route waypoints dynamically to the active sector or origin harbor coordinates instead of a hardcoded default.
 - Resolved in-memory offline store re-entrancy deadlock (`RLock`).
 
+### P0-8K — Authentic Indian EEZ & Island Maritime Boundaries (Mainland, Andaman & Nicobar, Lakshadweep)
+- Integrated authentic UNCLOS maritime boundaries from Flanders Marine Institute (VLIZ Marine Regions v12):
+  - Mainland & Peninsular EEZ (`POLY-EEZ-IND-MAIN`, 1,659,500 km², MRGID 8480) spanning Arabian Sea and Bay of Bengal down to 8° Channel Maldives treaty line.
+  - Andaman & Nicobar Archipelago EEZ (`POLY-EEZ-IND-ANDAMAN`, 664,448 km², MRGID 8333) with full high-resolution boundary arc and international treaty borders (Indonesia, Thailand, Myanmar).
+  - Lakshadweep Islands Sovereign Territorial Waters 12 NM (`POLY-TERRITORIAL-LAKSHADWEEP`, MRGID 49194 Part 0) enclosing Minicoy, Kalpeni, Kavaratti, Agatti, Androth, Amini, Kadmat, Kiltan, Chetlat, Bitra, and Suheli atolls.
+  - Andaman & Nicobar Sovereign Territorial Waters 12 NM (`POLY-TERRITORIAL-ANDAMAN`, MRGID 49060) enclosing the entire island chain, plus Barren Island and Narcondam Island.
+- Exempted national sovereign maritime boundaries from local sector culling in `frontend/src/utils/geo.ts` so India's complete water boundary is always accurately displayed nationwide while keeping local operational geofences (firing ranges, MPAs) scoped to their region.
+- Excluded informational national boundaries from deterministic restricted zone hazard checks in `geo_restrictions.py`.
+- Added multilingual translation mappings for national water boundary layers in Hindi and Marathi.
+
 ---
 
 ## P0 Marine Data Providers Status Board

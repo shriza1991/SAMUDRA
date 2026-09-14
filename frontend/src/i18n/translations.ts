@@ -1537,6 +1537,31 @@ export const CANONICAL_TRANSLATION_MAP: TranslationEntry[] = [
     hi: 'अनुमानित दूरी:',
     mr: 'अंदाजे अंतर:',
   },
+  {
+    en: 'Indian Exclusive Economic Zone (Mainland & Arabian Sea / Bay of Bengal)',
+    hi: 'भारतीय विशेष आर्थिक क्षेत्र (मुख्य भूमि, अरब सागर एवं बंगाल की खाड़ी)',
+    mr: 'भारतीय विशेष आर्थिक क्षेत्र (मुख्य भूमी, अरबी समुद्र व बंगालचा उपसागर)',
+  },
+  {
+    en: 'Indian Exclusive Economic Zone (Andaman & Nicobar Islands)',
+    hi: 'भारतीय विशेष आर्थिक क्षेत्र (अंडमान और निकोबार द्वीप समूह)',
+    mr: 'भारतीय विशेष आर्थिक क्षेत्र (अंदमान आणि निकोबार बेटे)',
+  },
+  {
+    en: 'Lakshadweep Islands Sovereign Territorial Waters (12 NM)',
+    hi: 'लक्षद्वीप द्वीप समूह संप्रभु प्रादेशिक जलसीमा (12 समुद्री मील)',
+    mr: 'लक्षद्वीप बेटे सार्वभौम सागरी सीमा (12 समुद्री मैल)',
+  },
+  {
+    en: 'Andaman & Nicobar Islands Sovereign Territorial Waters (12 NM)',
+    hi: 'अंडमान और निकोबार संप्रभु प्रादेशिक जलसीमा (12 समुद्री मील)',
+    mr: 'अंदमान आणि निकोबार सार्वभौम सागरी सीमा (12 समुद्री मैल)',
+  },
+  {
+    en: 'Indian Exclusive Economic Zone (West Coast)',
+    hi: 'भारतीय विशेष आर्थिक क्षेत्र (पश्चिमी तट)',
+    mr: 'भारतीय विशेष आर्थिक क्षेत्र (पश्चिम किनारपट्टी)',
+  },
 ];
 
 const CRAFT_TRANSLATIONS: Record<string, { hi: string; mr: string }> = {

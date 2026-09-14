@@ -7,7 +7,10 @@ import {
   getSectorConfig,
   createSectorLayers,
   createAuthorityHazardLayers,
+  filterLayersByRegion,
+  filterLayersBySectorPolygon,
 } from './geo';
+import type { MapLayer } from '../types/contracts';
 
 describe('Geospatial Utilities & Baseline Situational Layers', () => {
   it('maps only supplied canonical Authority hazards and clears old-sector layers', () => {
@@ -73,5 +76,72 @@ describe('Geospatial Utilities & Baseline Situational Layers', () => {
     expect(stationLayer.geojson.type).toBe('Feature');
     expect(stationLayer.geojson.geometry.type).toBe('Point');
     expect(stationLayer.geojson.geometry.coordinates).toEqual([73.83, 15.49]);
+  });
+
+  it('filters local geofences by region while preserving national maritime boundaries (EEZ and island waters)', () => {
+    const mockLayers: MapLayer[] = [
+      {
+        layer_id: 'base_POLY-NAV-GOA-01',
+        name: 'Naval Firing Range Foxtrot (Goa Sector)',
+        layer_type: 'geojson',
+        visible: true,
+        geojson: {
+          type: 'Feature',
+          geometry: {
+            type: 'Polygon',
+            coordinates: [[[73.15, 15.30], [73.35, 15.30], [73.35, 15.55], [73.15, 15.55], [73.15, 15.30]]],
+          },
+          properties: { polygon_id: 'POLY-NAV-GOA-01', polygon_type: 'NAVAL_FIRING_RANGE' },
+        },
+      },
+      {
+        layer_id: 'base_POLY-EEZ-IND-ANDAMAN',
+        name: 'Indian Exclusive Economic Zone (Andaman & Nicobar Islands)',
+        layer_type: 'geojson',
+        visible: true,
+        geojson: {
+          type: 'Feature',
+          geometry: {
+            type: 'Polygon',
+            coordinates: [[[88.80, 3.84], [95.70, 3.84], [95.70, 15.72], [88.80, 15.72], [88.80, 3.84]]],
+          },
+          properties: { polygon_id: 'POLY-EEZ-IND-ANDAMAN', polygon_type: 'EEZ_BOUNDARY' },
+        },
+      },
+      {
+        layer_id: 'base_POLY-TERRITORIAL-LAKSHADWEEP',
+        name: 'Lakshadweep Islands Sovereign Territorial Waters (12 NM)',
+        layer_type: 'geojson',
+        visible: true,
+        geojson: {
+          type: 'Feature',
+          geometry: {
+            type: 'Polygon',
+            coordinates: [[[71.52, 8.06], [73.91, 8.06], [73.91, 12.60], [71.52, 12.60], [71.52, 8.06]]],
+          },
+          properties: { polygon_id: 'POLY-TERRITORIAL-LAKSHADWEEP', polygon_type: 'TERRITORIAL_WATERS' },
+        },
+      },
+    ];
+
+    // Filter by Ratnagiri region (center: [73.28, 16.99], padding: 1.0 deg)
+    // Goa firing range (lat ~15.4) is outside 1.0 deg padding from Ratnagiri (lat 16.99)
+    const filtered = filterLayersByRegion(mockLayers, [73.28, 16.99], 1.0);
+
+    // Local Goa range should be filtered out
+    expect(filtered.some((l) => l.layer_id === 'base_POLY-NAV-GOA-01')).toBe(false);
+
+    // Sovereign Andaman & Nicobar and Lakshadweep boundaries MUST be preserved
+    expect(filtered.some((l) => l.layer_id === 'base_POLY-EEZ-IND-ANDAMAN')).toBe(true);
+    expect(filtered.some((l) => l.layer_id === 'base_POLY-TERRITORIAL-LAKSHADWEEP')).toBe(true);
+
+    // Also test filterLayersBySectorPolygon with a tight Ratnagiri sector polygon
+    const ratnagiriPoly: [number, number][] = [
+      [72.5, 16.5], [73.5, 16.5], [73.5, 17.5], [72.5, 17.5], [72.5, 16.5]
+    ];
+    const sectorFiltered = filterLayersBySectorPolygon(mockLayers, ratnagiriPoly, 0.5);
+    expect(sectorFiltered.some((l) => l.layer_id === 'base_POLY-NAV-GOA-01')).toBe(false);
+    expect(sectorFiltered.some((l) => l.layer_id === 'base_POLY-EEZ-IND-ANDAMAN')).toBe(true);
+    expect(sectorFiltered.some((l) => l.layer_id === 'base_POLY-TERRITORIAL-LAKSHADWEEP')).toBe(true);
   });
 });
