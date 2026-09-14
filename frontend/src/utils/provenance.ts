@@ -179,3 +179,53 @@ export function deriveHazardTrustMetadata(hazards: HazardBulletin[]): DatasetTru
     officialDocUrl: 'https://rsmcnewdelhi.imd.gov.in',
   };
 }
+
+/**
+ * Derives DatasetTrustMetadata for Tide Temporal Analysis (48-hour hourly snapshot).
+ */
+export function deriveTideTrustMetadata(
+  observations: MarineObservation[],
+  harborName: string = 'Ratnagiri'
+): DatasetTrustMetadata {
+  const totalCount = observations?.length || 0;
+  const qcCounts: Record<string, number> = {};
+  const phaseCounts: Record<string, number> = {};
+
+  let validCount = 0;
+  for (const obs of observations || []) {
+    const qc = obs.qc_status || 'VALID';
+    qcCounts[qc] = (qcCounts[qc] || 0) + 1;
+    if (qc === 'VALID' && typeof obs.tide_level_m === 'number') {
+      validCount++;
+    }
+    const phase = obs.tide_phase || 'UNKNOWN';
+    phaseCounts[phase] = (phaseCounts[phase] || 0) + 1;
+  }
+
+  let referenceTime: string | undefined;
+  let snapshotPeriod = '48-Hour Hourly Tide Snapshot';
+  if (totalCount > 0) {
+    const times = observations.map((o) => o.observation_time).sort();
+    const earliest = times[0]?.slice(0, 16).replace('T', ' ');
+    const latest = times[times.length - 1]?.slice(0, 16).replace('T', ' ');
+    referenceTime = `Latest: ${latest} UTC`;
+    snapshotPeriod = `48-Hour Snapshot (${earliest} → ${latest} UTC)`;
+  }
+
+  return {
+    datasetName: `Tide Level & Phase Observations (${harborName})`,
+    sourceProvider: 'INCOIS',
+    sourceProduct: 'INCOIS Ocean State Forecast (OSF) Hourly Station Series — Tide Gauge / Model',
+    dataMode: 'SYNTHETIC SNAPSHOT',
+    snapshotPeriod,
+    referenceTime,
+    validCount,
+    totalCount,
+    qcBreakdown: qcCounts,
+    confidenceBreakdown: phaseCounts,
+    semanticsDescription:
+      'Station-centric tidal water level in meters referenced to Lowest Astronomical Tide (LAT) and observed tidal flow phase (FLOOD, EBB, HIGH, LOW). Observations reflect recorded snapshot values; no astronomical tide forecast is generated.',
+    officialDocUrl: 'https://incois.gov.in/portal/osf/osf.jsp',
+  };
+}
+

@@ -133,6 +133,21 @@
 - Preserved authoritative `DATA MODE: SYNTHETIC DEMO / SNAPSHOT` persistent disclosure across all views.
 - Validated with comprehensive automated test suite (55 researcher tests, 149 total frontend tests passing across 11 test suites), 31 backend contract/domain tests passing, and clean `npm run build` production bundle.
 
+### P0-18 — Tide Temporal Analysis in Researcher Lab
+- Implemented dedicated, lightweight pure-SVG 48-hour tide temporal visualization (`TideTimeSeriesChart.tsx`) integrated into `OceanDataExplorer.tsx` beneath the existing P0-13 3-panel marine chart.
+- Preserved existing `OceanTimeSeriesChart.tsx` (3-panel SWH, SST, Wind Speed) completely intact without modification or clutter.
+- **Primary Metric**: Tide Level in meters above Chart Datum (`LAT` - Lowest Astronomical Tide), directly sourced from the synthetic INCOIS OSF dataset (`tide_level_m`, `units_json.tide_level`).
+- **Secondary Information**: Tide Phase (`tide_phase`), preserved strictly as categorical values (`FLOOD`, `EBB`, `HIGH`, `LOW`). Never coerced to numerical values or inferred from curve slope.
+- **Data Quality & Missing Values**:
+  - Missing tide levels remain explicit gaps in SVG paths (null ≠ 0).
+  - Suspect/degraded QC observations flagged with warning indicators and distinct stroke styling.
+  - Zero tide forecasting or fabricated future tide predictions; scientific disclosure explicitly clarifies snapshot boundaries.
+- **Tide Provenance & Trust Integration**:
+  - Added `deriveTideTrustMetadata` in `src/utils/provenance.ts` integrating the reusable `DataProvenancePanel.tsx`.
+  - Exposes provider (INCOIS OSF), 48-hour temporal coverage, valid observation count (e.g. `48 / 48 observations`), QC breakdown, and Chart Datum semantics (`LAT`).
+- **Harbor Switching**: Dynamically updates tide observations, SVG curve, phase distribution, and provenance when switching between Ratnagiri and Malvan, with explicit empty/degraded states if unavailable.
+- **Validation**: 62 researcher tests (156 total frontend tests passing across 11 suites), 31 backend contract/domain tests passing, and clean `tsc && vite build` bundle.
+
 ---
 
 ## P0 Marine Data Providers Status Board

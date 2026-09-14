@@ -10,12 +10,14 @@ import {
   type PFZCandidate, type HazardBulletin,
 } from '../../api/researcher-client';
 import OceanTimeSeriesChart from './OceanTimeSeriesChart';
+import TideTimeSeriesChart from './TideTimeSeriesChart';
 import PFZSpatialMap from './PFZSpatialMap';
 import HazardSpatialMap from './HazardSpatialMap';
 import EOTemporalAnalysisChart from './EOTemporalAnalysisChart';
 import DataProvenancePanel from './DataProvenancePanel';
 import {
   deriveMarineTrustMetadata,
+  deriveTideTrustMetadata,
   deriveEOTrustMetadata,
   derivePFZTrustMetadata,
   deriveHazardTrustMetadata,
@@ -39,6 +41,10 @@ export default function OceanDataExplorer() {
 
   const marineTrust = useMemo(
     () => deriveMarineTrustMetadata(observations, harborName),
+    [observations, harborName]
+  );
+  const tideTrust = useMemo(
+    () => deriveTideTrustMetadata(observations, harborName),
     [observations, harborName]
   );
   const eoTrust = useMemo(() => deriveEOTrustMetadata(eoCells), [eoCells]);
@@ -183,6 +189,16 @@ export default function OceanDataExplorer() {
         <DataProvenancePanel metadata={marineTrust} loading={obsLoading} />
       </section>
 
+      {/* 48-Hour Tide Level & Phase Temporal Analysis Chart */}
+      <section className="researcher-section">
+        <TideTimeSeriesChart
+          observations={sortedObs}
+          harborName={harborName}
+          loading={obsLoading}
+        />
+        <DataProvenancePanel metadata={tideTrust} loading={obsLoading} />
+      </section>
+
       {/* Observation Timeline Table */}
       <section className="researcher-section">
         <h3 className="researcher-section-title">Observation Timeline</h3>
@@ -195,6 +211,8 @@ export default function OceanDataExplorer() {
                 <th>SST (°C)</th>
                 <th>Wind (kn)</th>
                 <th>Swell (s)</th>
+                <th>Tide (m)</th>
+                <th>Phase</th>
                 <th>QC Status</th>
                 <th>Source</th>
                 <th>Flags</th>
@@ -212,6 +230,19 @@ export default function OceanDataExplorer() {
                     {obs.wind_speed_kn ?? '—'}
                   </td>
                   <td>{obs.swell_period_s != null ? obs.swell_period_s.toFixed(1) : '—'}</td>
+                  <td style={{ color: '#0284c7', fontWeight: 600 }}>
+                    {obs.tide_level_m != null ? obs.tide_level_m.toFixed(2) : '—'}
+                  </td>
+                  <td>
+                    {obs.tide_phase ? (
+                      <span className="tide-mini-phase-badge" style={{
+                        background: obs.tide_phase === 'FLOOD' ? 'rgba(2, 132, 199, 0.12)' : obs.tide_phase === 'EBB' ? 'rgba(245, 158, 11, 0.12)' : 'rgba(16, 185, 129, 0.12)',
+                        color: obs.tide_phase === 'FLOOD' ? '#0284c7' : obs.tide_phase === 'EBB' ? '#d97706' : '#059669'
+                      }}>
+                        {obs.tide_phase}
+                      </span>
+                    ) : '—'}
+                  </td>
                   <td>
                     <span className={`ocean-tooltip-qc ${obs.qc_status === 'VALID' || !obs.qc_status ? 'valid' : 'suspect'}`}>
                       {obs.qc_status || 'VALID'}

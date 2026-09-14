@@ -8295,3 +8295,200 @@ button.fleet-alert-card.active {
   border: 1px solid var(--color-border);
 }
 
+/* ==========================================================================
+   P0-18: Tide Temporal Analysis UX
+   ========================================================================== */
+
+.tide-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-sm);
+  padding: 12px 14px 10px;
+  background: var(--color-bg-primary);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.tide-kpi-card {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 6px 10px;
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.tide-kpi-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--color-text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.tide-kpi-value-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tide-kpi-value {
+  font-size: 17px;
+  font-weight: 700;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--color-text-primary);
+}
+
+.tide-kpi-value small {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-text-muted);
+}
+
+.tide-kpi-sub {
+  font-size: 10px;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tide-phase-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: var(--radius-full);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.tide-kpi-phase-breakdown {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.tide-mini-phase-badge {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 3px;
+  letter-spacing: 0.02em;
+}
+
+.tide-tooltip-box {
+  padding: 8px 12px;
+  background: var(--color-bg-primary);
+  border-top: 1px dashed var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  animation: fadeIn 0.12s ease-in-out;
+}
+
+.tide-tooltip-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tide-tooltip-time {
+  font-family: monospace;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.tide-tooltip-metrics {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.tide-tooltip-metric {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+}
+
+.tide-tooltip-metric-label {
+  color: var(--color-text-dim);
+  font-weight: 500;
+}
+
+.tide-tooltip-metric-value {
+  font-weight: 700;
+  font-family: monospace;
+  color: #0284c7;
+}
+
+.tide-tooltip-phase-badge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: var(--radius-sm);
+  text-transform: uppercase;
+}
+
+.tide-chart-footer {
+  padding: 8px 14px 10px;
+  background: var(--color-bg-secondary);
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.tide-phase-legend {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  font-size: 11px;
+  color: var(--color-text-secondary);
+}
+
+.tide-legend-title {
+  font-weight: 600;
+  color: var(--color-text-dim);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.tide-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.tide-legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+@media (max-width: 900px) {
+  .tide-kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 540px) {
+  .tide-kpi-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+

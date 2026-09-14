@@ -34,6 +34,9 @@ export interface MarineObservation {
   current_speed_kn: number | null;
   swell_period_s: number | null;
   visibility_nm: number | null;
+  tide_level_m?: number | null;
+  tide_phase?: string | null;
+  tide_datum?: string | null;
   source: string;
   data_mode: string;
   quality_flags: string[];
@@ -173,12 +176,12 @@ const MOCK_HARBORS: HarborData[] = [
 ];
 
 const MOCK_MARINE_OBS: MarineObservation[] = [
-  { public_id: 'obs-rat-01', harbor_id: 'harbor-ratnagiri', observation_time: '2026-09-12T06:00:00Z', wave_height_m: 2.1, sst_celsius: 28.6, wind_speed_kn: 18, wind_direction_deg: 225, current_speed_kn: 1.2, swell_period_s: 8.5, visibility_nm: 12, source: 'INCOIS OSF', data_mode: 'HYBRID', quality_flags: ['fresh', 'official_source'] },
-  { public_id: 'obs-rat-02', harbor_id: 'harbor-ratnagiri', observation_time: '2026-09-12T12:00:00Z', wave_height_m: 2.4, sst_celsius: 29.1, wind_speed_kn: 22, wind_direction_deg: 240, current_speed_kn: 1.5, swell_period_s: 9.0, visibility_nm: 10, source: 'INCOIS OSF', data_mode: 'HYBRID', quality_flags: ['fresh'] },
-  { public_id: 'obs-rat-03', harbor_id: 'harbor-ratnagiri', observation_time: '2026-09-12T18:00:00Z', wave_height_m: 1.8, sst_celsius: 28.3, wind_speed_kn: 14, wind_direction_deg: 210, current_speed_kn: 0.9, swell_period_s: 7.5, visibility_nm: 15, source: 'Open-Meteo', data_mode: 'LIVE', quality_flags: ['fresh', 'fallback'] },
-  { public_id: 'obs-mal-01', harbor_id: 'harbor-malvan', observation_time: '2026-09-12T06:00:00Z', wave_height_m: 1.6, sst_celsius: 28.2, wind_speed_kn: 15, wind_direction_deg: 200, current_speed_kn: 0.8, swell_period_s: 7.0, visibility_nm: 18, source: 'INCOIS OSF', data_mode: 'HYBRID', quality_flags: ['fresh', 'official_source'] },
-  { public_id: 'obs-mal-02', harbor_id: 'harbor-malvan', observation_time: '2026-09-12T12:00:00Z', wave_height_m: 1.9, sst_celsius: 28.8, wind_speed_kn: 19, wind_direction_deg: 215, current_speed_kn: 1.1, swell_period_s: 8.0, visibility_nm: 14, source: 'INCOIS OSF', data_mode: 'HYBRID', quality_flags: ['fresh'] },
-  { public_id: 'obs-mal-03', harbor_id: 'harbor-malvan', observation_time: '2026-09-12T18:00:00Z', wave_height_m: 1.4, sst_celsius: 27.9, wind_speed_kn: 11, wind_direction_deg: 190, current_speed_kn: 0.6, swell_period_s: 6.5, visibility_nm: 20, source: 'Open-Meteo', data_mode: 'LIVE', quality_flags: ['fresh', 'fallback'] },
+  { public_id: 'obs-rat-01', harbor_id: 'harbor-ratnagiri', observation_time: '2026-09-12T06:00:00Z', wave_height_m: 2.1, sst_celsius: 28.6, wind_speed_kn: 18, wind_direction_deg: 225, current_speed_kn: 1.2, swell_period_s: 8.5, visibility_nm: 12, tide_level_m: 0.8, tide_phase: 'FLOOD', tide_datum: 'LAT', source: 'INCOIS OSF', data_mode: 'HYBRID', quality_flags: ['fresh', 'official_source'], qc_status: 'VALID' },
+  { public_id: 'obs-rat-02', harbor_id: 'harbor-ratnagiri', observation_time: '2026-09-12T12:00:00Z', wave_height_m: 2.4, sst_celsius: 29.1, wind_speed_kn: 22, wind_direction_deg: 240, current_speed_kn: 1.5, swell_period_s: 9.0, visibility_nm: 10, tide_level_m: 1.6, tide_phase: 'HIGH', tide_datum: 'LAT', source: 'INCOIS OSF', data_mode: 'HYBRID', quality_flags: ['fresh'], qc_status: 'VALID' },
+  { public_id: 'obs-rat-03', harbor_id: 'harbor-ratnagiri', observation_time: '2026-09-12T18:00:00Z', wave_height_m: 1.8, sst_celsius: 28.3, wind_speed_kn: 14, wind_direction_deg: 210, current_speed_kn: 0.9, swell_period_s: 7.5, visibility_nm: 15, tide_level_m: 0.5, tide_phase: 'EBB', tide_datum: 'LAT', source: 'Open-Meteo', data_mode: 'LIVE', quality_flags: ['fresh', 'fallback'], qc_status: 'VALID' },
+  { public_id: 'obs-mal-01', harbor_id: 'harbor-malvan', observation_time: '2026-09-12T06:00:00Z', wave_height_m: 1.6, sst_celsius: 28.2, wind_speed_kn: 15, wind_direction_deg: 200, current_speed_kn: 0.8, swell_period_s: 7.0, visibility_nm: 18, tide_level_m: 0.6, tide_phase: 'FLOOD', tide_datum: 'LAT', source: 'INCOIS OSF', data_mode: 'HYBRID', quality_flags: ['fresh', 'official_source'], qc_status: 'VALID' },
+  { public_id: 'obs-mal-02', harbor_id: 'harbor-malvan', observation_time: '2026-09-12T12:00:00Z', wave_height_m: 1.9, sst_celsius: 28.8, wind_speed_kn: 19, wind_direction_deg: 215, current_speed_kn: 1.1, swell_period_s: 8.0, visibility_nm: 14, tide_level_m: 1.4, tide_phase: 'HIGH', tide_datum: 'LAT', source: 'INCOIS OSF', data_mode: 'HYBRID', quality_flags: ['fresh'], qc_status: 'VALID' },
+  { public_id: 'obs-mal-03', harbor_id: 'harbor-malvan', observation_time: '2026-09-12T18:00:00Z', wave_height_m: 1.4, sst_celsius: 27.9, wind_speed_kn: 11, wind_direction_deg: 190, current_speed_kn: 0.6, swell_period_s: 6.5, visibility_nm: 20, tide_level_m: 0.4, tide_phase: 'EBB', tide_datum: 'LAT', source: 'Open-Meteo', data_mode: 'LIVE', quality_flags: ['fresh', 'fallback'], qc_status: 'VALID' },
 ];
 
 const MOCK_EO_CELLS: EOGridCell[] = [
@@ -263,6 +266,9 @@ export async function fetchMarineObservations(harborId?: string): Promise<Marine
     current_speed_kn: typeof o.current_speed_kn === 'number' ? o.current_speed_kn : typeof o.current_speed_knots === 'number' ? o.current_speed_knots : typeof o.current_speed === 'number' ? o.current_speed : null,
     swell_period_s: typeof o.swell_period_s === 'number' ? o.swell_period_s : typeof o.wave_period_sec === 'number' ? o.wave_period_sec : typeof o.swell_period === 'number' ? o.swell_period : null,
     visibility_nm: typeof o.visibility_nm === 'number' ? o.visibility_nm : typeof o.visibility_km === 'number' ? +(o.visibility_km * 0.54).toFixed(1) : 10,
+    tide_level_m: typeof o.tide_level_m === 'number' ? o.tide_level_m : typeof o.tide_level === 'number' ? o.tide_level : null,
+    tide_phase: o.tide_phase || null,
+    tide_datum: o.tide_datum || (o.units_json?.tide_datum || 'LAT'),
     source: o.source || (o.provenance_json?.intended_provider ? `${o.provenance_json.intended_provider} OSF` : 'INCOIS OSF'),
     data_mode: o.data_mode || 'HYBRID',
     quality_flags: Array.isArray(o.quality_flags) ? o.quality_flags : o.qc_status ? [o.qc_status.toLowerCase()] : ['verified'],

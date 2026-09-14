@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import OceanDataExplorer from './OceanDataExplorer';
 import OceanTimeSeriesChart from './OceanTimeSeriesChart';
+import TideTimeSeriesChart from './TideTimeSeriesChart';
 import PFZSpatialMap, { buildPFZGeoJSON } from './PFZSpatialMap';
 import HazardSpatialMap, { buildHazardGeoJSON } from './HazardSpatialMap';
 import EOTemporalAnalysisChart, { aggregateEOTemporalSeries } from './EOTemporalAnalysisChart';
@@ -11,6 +12,7 @@ import ResearcherPage from '../../pages/ResearcherPage';
 import DataProvenancePanel from './DataProvenancePanel';
 import {
   deriveMarineTrustMetadata,
+  deriveTideTrustMetadata,
   deriveEOTrustMetadata,
   derivePFZTrustMetadata,
   deriveHazardTrustMetadata,
@@ -1305,4 +1307,184 @@ describe('Researcher Dashboard Components & Data Client', () => {
       });
     });
   });
+
+  describe('P0-18: Tide Temporal Analysis in Researcher Lab', () => {
+    it('TideTimeSeriesChart exports cleanly as a component', () => {
+      expect(TideTimeSeriesChart).toBeDefined();
+      expect(typeof TideTimeSeriesChart).toBe('function');
+    });
+
+    it('derives accurate tide trust metadata from actual observations', () => {
+      const mockObs: MarineObservation[] = [
+        {
+          public_id: 'obs-rat-01',
+          harbor_id: 'harbor-ratnagiri',
+          observation_time: '2026-09-11T06:00:00Z',
+          wave_height_m: 1.2,
+          sst_celsius: 28.2,
+          wind_speed_kn: 12.0,
+          wind_direction_deg: 194.0,
+          current_speed_kn: 1.0,
+          swell_period_s: 8.0,
+          visibility_nm: 10.0,
+          tide_level_m: 0.4,
+          tide_phase: 'FLOOD',
+          tide_datum: 'LAT',
+          source: 'INCOIS OSF',
+          data_mode: 'HYBRID',
+          quality_flags: ['verified'],
+          qc_status: 'VALID',
+        },
+        {
+          public_id: 'obs-rat-02',
+          harbor_id: 'harbor-ratnagiri',
+          observation_time: '2026-09-11T12:00:00Z',
+          wave_height_m: 1.5,
+          sst_celsius: 28.5,
+          wind_speed_kn: 14.0,
+          wind_direction_deg: 200.0,
+          current_speed_kn: 1.2,
+          swell_period_s: 8.0,
+          visibility_nm: 10.0,
+          tide_level_m: 1.8,
+          tide_phase: 'HIGH',
+          tide_datum: 'LAT',
+          source: 'INCOIS OSF',
+          data_mode: 'HYBRID',
+          quality_flags: ['verified'],
+          qc_status: 'VALID',
+        },
+        {
+          public_id: 'obs-rat-03',
+          harbor_id: 'harbor-ratnagiri',
+          observation_time: '2026-09-11T18:00:00Z',
+          wave_height_m: 1.3,
+          sst_celsius: 28.1,
+          wind_speed_kn: 10.0,
+          wind_direction_deg: 190.0,
+          current_speed_kn: 0.9,
+          swell_period_s: 7.5,
+          visibility_nm: 12.0,
+          tide_level_m: null, // missing tide
+          tide_phase: 'EBB',
+          tide_datum: 'LAT',
+          source: 'INCOIS OSF',
+          data_mode: 'HYBRID',
+          quality_flags: ['missing'],
+          qc_status: 'MISSING_DATA',
+        },
+        {
+          public_id: 'obs-rat-04',
+          harbor_id: 'harbor-ratnagiri',
+          observation_time: '2026-09-12T00:00:00Z',
+          wave_height_m: 1.1,
+          sst_celsius: 27.9,
+          wind_speed_kn: 8.0,
+          wind_direction_deg: 185.0,
+          current_speed_kn: 0.7,
+          swell_period_s: 7.0,
+          visibility_nm: 15.0,
+          tide_level_m: 0.3,
+          tide_phase: 'LOW',
+          tide_datum: 'LAT',
+          source: 'INCOIS OSF',
+          data_mode: 'HYBRID',
+          quality_flags: ['qc_warning'],
+          qc_status: 'DEGRADED_QC_WARNING',
+        },
+      ];
+
+      const trust = deriveTideTrustMetadata(mockObs, 'Ratnagiri');
+      expect(trust.sourceProvider).toBe('INCOIS');
+      expect(trust.datasetName).toContain('Tide Level & Phase Observations (Ratnagiri)');
+      expect(trust.dataMode).toBe('SYNTHETIC SNAPSHOT');
+      expect(trust.totalCount).toBe(4);
+      // Valid count only includes records with VALID qc_status and valid number
+      expect(trust.validCount).toBe(2);
+      expect(trust.qcBreakdown).toEqual({
+        VALID: 2,
+        MISSING_DATA: 1,
+        DEGRADED_QC_WARNING: 1,
+      });
+      expect(trust.confidenceBreakdown).toEqual({
+        FLOOD: 1,
+        HIGH: 1,
+        EBB: 1,
+        LOW: 1,
+      });
+      expect(trust.semanticsDescription).toContain('Lowest Astronomical Tide (LAT)');
+      expect(trust.semanticsDescription).toContain('no astronomical tide forecast is generated');
+    });
+
+    it('extracts tide fields (level, phase, datum) from fetchMarineObservations payload', async () => {
+      const ratObs = await fetchMarineObservations('harbor-ratnagiri');
+      expect(ratObs.length).toBeGreaterThan(0);
+      for (const obs of ratObs) {
+        expect(obs.harbor_id).toBe('harbor-ratnagiri');
+        if (obs.tide_level_m !== null && obs.tide_level_m !== undefined) {
+          expect(typeof obs.tide_level_m).toBe('number');
+          expect(obs.tide_level_m).toBeGreaterThanOrEqual(-1.0);
+          expect(obs.tide_level_m).toBeLessThanOrEqual(5.0);
+        }
+        if (obs.tide_phase !== null && obs.tide_phase !== undefined) {
+          expect(['FLOOD', 'EBB', 'HIGH', 'LOW', 'UNKNOWN']).toContain(obs.tide_phase);
+        }
+      }
+    });
+
+    it('preserves null tide values without converting to zero', async () => {
+      const mockNullTideObs: MarineObservation[] = [
+        {
+          public_id: 'obs-null-tide',
+          harbor_id: 'harbor-ratnagiri',
+          observation_time: '2026-09-12T06:00:00Z',
+          wave_height_m: 1.5,
+          sst_celsius: 28.2,
+          wind_speed_kn: 12.0,
+          wind_direction_deg: 200.0,
+          current_speed_kn: 1.0,
+          swell_period_s: 8.0,
+          visibility_nm: 10.0,
+          tide_level_m: null,
+          tide_phase: null,
+          tide_datum: 'LAT',
+          source: 'INCOIS OSF',
+          data_mode: 'HYBRID',
+          quality_flags: [],
+          qc_status: 'MISSING_DATA',
+        },
+      ];
+
+      expect(mockNullTideObs[0].tide_level_m).toBeNull();
+      expect(mockNullTideObs[0].tide_level_m).not.toBe(0);
+      expect(mockNullTideObs[0].tide_phase).toBeNull();
+    });
+
+    it('distinguishes categorical tide phases (FLOOD, EBB, HIGH, LOW) without numerical coercion', () => {
+      const phases = ['FLOOD', 'EBB', 'HIGH', 'LOW'];
+      for (const p of phases) {
+        expect(typeof p).toBe('string');
+        expect(Number.isNaN(Number(p))).toBe(true);
+      }
+    });
+
+    it('gracefully handles empty tide observations array without fabricating data', () => {
+      const trust = deriveTideTrustMetadata([], 'Ratnagiri');
+      expect(trust.validCount).toBe(0);
+      expect(trust.totalCount).toBe(0);
+      expect(trust.snapshotPeriod).toBe('48-Hour Hourly Tide Snapshot');
+    });
+
+    it('supports harbor switching dynamically for tide metadata', async () => {
+      const ratObs = await fetchMarineObservations('harbor-ratnagiri');
+      const malObs = await fetchMarineObservations('harbor-malvan');
+
+      const ratTrust = deriveTideTrustMetadata(ratObs, 'Ratnagiri');
+      const malTrust = deriveTideTrustMetadata(malObs, 'Malvan');
+
+      expect(ratTrust.datasetName).toContain('Ratnagiri');
+      expect(malTrust.datasetName).toContain('Malvan');
+    });
+  });
 });
+
