@@ -22,9 +22,27 @@ interface MapViewProps {
   center?: [number, number];
   zoom?: number;
   language?: SupportedLanguage;
+  customPopupRenderer?: (feature: any, layer: MapLayer) => string | null;
+  onResetView?: () => void;
+  resetViewTrigger?: number;
+  layerAvailability?: {
+    pfz?: 'AVAILABLE' | 'UNAVAILABLE' | 'EMPTY';
+    routes?: 'AVAILABLE' | 'UNAVAILABLE' | 'EMPTY';
+    hazards?: 'AVAILABLE' | 'UNAVAILABLE' | 'EMPTY';
+  };
 }
 
-export default function MapView({ layers, theme = 'light', center, zoom, language = 'en' }: MapViewProps) {
+export default function MapView({
+  layers,
+  theme = 'light',
+  center,
+  zoom,
+  language = 'en',
+  customPopupRenderer,
+  onResetView,
+  resetViewTrigger,
+  layerAvailability,
+}: MapViewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const activeLayersRef = useRef<{ layers: string[]; sources: string[] }>({ layers: [], sources: [] });
@@ -34,6 +52,8 @@ export default function MapView({ layers, theme = 'light', center, zoom, languag
 
   const activeStyle = theme === 'dark' ? MAP_STYLE_DARK : MAP_STYLE_LIGHT;
   const currentStyleRef = useRef(activeStyle);
+  const customPopupRendererRef = useRef(customPopupRenderer);
+  customPopupRendererRef.current = customPopupRenderer;
 
   // Dynamically compute effective render layers based on selected operational corridor
   const effectiveRenderLayers = useMemo(() => {
@@ -469,23 +489,36 @@ export default function MapView({ layers, theme = 'light', center, zoom, languag
 
             activePopupRef.current?.remove();
 
-            const ignoredKeys = new Set([
-              'polygon_id', 'id', 'polygon_type', 'is_hard_restriction', 'objectid', 'object_id',
-              'layer_id', 'layer_type', 'source', 'type', 'geometry_type', 'home_harbor_id'
-            ]);
+            let html: string | null = null;
+            if (customPopupRendererRef.current) {
+              try {
+                html = customPopupRendererRef.current(feature, layer);
+              } catch {
+                html = null;
+              }
+            }
 
-            const entries = Object.entries(props).filter(([k]) => !ignoredKeys.has(k.toLowerCase()));
+            if (!html) {
+              const ignoredKeys = new Set([
+                'polygon_id', 'id', 'polygon_type', 'is_hard_restriction', 'objectid', 'object_id',
+                'layer_id', 'layer_type', 'source', 'type', 'geometry_type', 'home_harbor_id'
+              ]);
 
-            const html = entries.length > 0
-              ? entries
-                  .slice(0, 6)
-                  .map(([k, v]) => `<div style="margin-bottom:2px"><strong>${k.replace(/_/g, ' ')}:</strong> ${formatPropValue(v)}</div>`)
-                  .join('')
-              : `<div><em>${layer.name}</em></div>`;
+              const entries = Object.entries(props).filter(([k]) => !ignoredKeys.has(k.toLowerCase()));
+
+              const content = entries.length > 0
+                ? entries
+                    .slice(0, 6)
+                    .map(([k, v]) => `<div style="margin-bottom:2px"><strong>${k.replace(/_/g, ' ')}:</strong> ${formatPropValue(v)}</div>`)
+                    .join('')
+                : `<div><em>${layer.name}</em></div>`;
+
+              html = `<div class="map-popup"><h5 style="margin:0 0 6px;color:#0284c7;font-size:12px;font-weight:700">${layer.name}</h5>${content}</div>`;
+            }
 
             const popup = new maplibregl.Popup({ closeButton: true, maxWidth: '280px', offset: 10 })
               .setLngLat(e.lngLat)
-              .setHTML(`<div class="map-popup"><h5 style="margin:0 0 6px;color:#0284c7;font-size:12px;font-weight:700">${layer.name}</h5>${html}</div>`)
+              .setHTML(html)
               .addTo(map);
 
             activePopupRef.current = popup;
@@ -643,6 +676,46 @@ export default function MapView({ layers, theme = 'light', center, zoom, languag
     });
   }, []);
 
+  const handleResetView = useCallback(() => {
+    const map = mapRef.current;
+    if (!map) return;
+
+    const operationalLayers = effectiveRenderLayers.filter(
+      (l) =>
+        l.visible &&
+        !l.layer_id.startsWith('base_') &&
+        !l.layer_id.startsWith('sector_') &&
+        l.style?.layer_category !== 'base_geofence' &&
+        l.style?.layer_category !== 'surveillance' &&
+        l.style?.layer_category !== 'background' &&
+        !l.layer_id.toLowerCase().includes('eez')
+    );
+
+    const bounds = new maplibregl.LngLatBounds();
+    let hasOperationalCoords = false;
+    for (const l of operationalLayers) {
+      collectBounds(l.geojson, bounds, () => {
+        hasOperationalCoords = true;
+      });
+    }
+
+    if (hasOperationalCoords && !bounds.isEmpty()) {
+      try {
+        map.fitBounds(bounds, { padding: 70, maxZoom: 12, duration: 900 });
+      } catch {
+        if (center) map.flyTo({ center, zoom: zoom ?? 9.5, duration: 900 });
+      }
+    } else if (center) {
+      map.flyTo({ center, zoom: zoom ?? 9.5, duration: 900 });
+    }
+  }, [effectiveRenderLayers, center, zoom]);
+
+  useEffect(() => {
+    if (resetViewTrigger !== undefined) {
+      handleResetView();
+    }
+  }, [resetViewTrigger, handleResetView]);
+
   return (
     <section className="map-view" aria-label="Geospatial map viewport">
       <div ref={containerRef} className="map-container" />
@@ -652,6 +725,8 @@ export default function MapView({ layers, theme = 'light', center, zoom, languag
         selectedMode={selectedCorridorMode}
         onModeChange={setSelectedCorridorMode}
         language={language}
+        onResetView={onResetView || handleResetView}
+        layerAvailability={layerAvailability}
       />
 
       {layers.length > 0 && (

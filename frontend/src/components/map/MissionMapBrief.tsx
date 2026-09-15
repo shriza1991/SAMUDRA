@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { AlertTriangle, ChevronDown, ChevronUp, Compass, Fish, MapPinned, Route, ShieldCheck, Zap } from 'lucide-react';
+import { AlertTriangle, ChevronDown, ChevronUp, Compass, Fish, Focus, MapPinned, Route, ShieldCheck, Zap } from 'lucide-react';
 import type { MapLayer } from '../../types/contracts';
 import type { OperationalMode } from '../../types/mission';
 import { translateText, type SupportedLanguage } from '../../i18n/translations';
@@ -9,6 +9,12 @@ interface MissionMapBriefProps {
   selectedMode?: OperationalMode;
   onModeChange?: (mode: OperationalMode) => void;
   language?: SupportedLanguage;
+  onResetView?: () => void;
+  layerAvailability?: {
+    pfz?: 'AVAILABLE' | 'UNAVAILABLE' | 'EMPTY';
+    routes?: 'AVAILABLE' | 'UNAVAILABLE' | 'EMPTY';
+    hazards?: 'AVAILABLE' | 'UNAVAILABLE' | 'EMPTY';
+  };
 }
 
 export interface RouteCandidateInfo {
@@ -150,6 +156,8 @@ export default function MissionMapBrief({
   selectedMode: controlledMode,
   onModeChange,
   language = 'en',
+  onResetView,
+  layerAvailability,
 }: MissionMapBriefProps) {
   const [internalMode, setInternalMode] = useState<OperationalMode>('safest');
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -193,15 +201,39 @@ export default function MissionMapBrief({
           <MapPinned size={15} />
           <span>{translateText('Mission map & corridors', language)}</span>
         </div>
-        <button
-          type="button"
-          className="map-brief-toggle-btn"
-          onClick={() => setIsCollapsed(!isCollapsed)}
-          title={isCollapsed ? 'Expand mission brief' : 'Collapse mission brief'}
-          aria-label={isCollapsed ? 'Expand mission brief' : 'Collapse mission brief'}
-        >
-          {isCollapsed ? <ChevronDown size={14} /> : <ChevronUp size={14} />}
-        </button>
+        <div className="map-brief-heading-actions" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+          {onResetView && (
+            <button
+              type="button"
+              className="map-brief-reset-btn"
+              onClick={onResetView}
+              title={translateText('Fit / Reset Map View', language)}
+              aria-label={translateText('Fit / Reset Map View', language)}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: '#94a3b8',
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '3px 5px',
+                borderRadius: '4px',
+              }}
+            >
+              <Focus size={13} />
+            </button>
+          )}
+          <button
+            type="button"
+            className="map-brief-toggle-btn"
+            onClick={() => setIsCollapsed(!isCollapsed)}
+            title={isCollapsed ? 'Expand mission brief' : 'Collapse mission brief'}
+            aria-label={isCollapsed ? 'Expand mission brief' : 'Collapse mission brief'}
+          >
+            {isCollapsed ? <ChevronDown size={14} /> : <ChevronUp size={14} />}
+          </button>
+        </div>
       </div>
 
       {isCollapsed ? (
@@ -213,9 +245,28 @@ export default function MissionMapBrief({
       ) : (
         <>
           <div className="map-brief-stats">
-            <BriefStat icon={<Fish size={14} />} label={translateText('PFZ', language)} count={pfzLayers.length} active={pfzLayers.length > 0} />
-            <BriefStat icon={<Route size={14} />} label={translateText('Routes', language)} count={routeCandidates.length || routeLayers.length} active={routeLayers.length > 0} />
-            <BriefStat icon={<AlertTriangle size={14} />} label={translateText('Hazards', language)} count={hazardLayers.length} active={hazardLayers.length > 0} critical />
+            <BriefStat
+              icon={<Fish size={14} />}
+              label={translateText('PFZ', language)}
+              count={pfzLayers.length}
+              active={pfzLayers.length > 0}
+              unavailable={layerAvailability?.pfz === 'UNAVAILABLE'}
+            />
+            <BriefStat
+              icon={<Route size={14} />}
+              label={translateText('Routes', language)}
+              count={routeCandidates.length || routeLayers.length}
+              active={routeLayers.length > 0}
+              unavailable={layerAvailability?.routes === 'UNAVAILABLE'}
+            />
+            <BriefStat
+              icon={<AlertTriangle size={14} />}
+              label={translateText('Hazards', language)}
+              count={hazardLayers.length}
+              active={hazardLayers.length > 0}
+              critical
+              unavailable={layerAvailability?.hazards === 'UNAVAILABLE'}
+            />
           </div>
 
           {/* Operational corridor strategy selector when routes or PFZ exist */}
@@ -302,16 +353,25 @@ function BriefStat({
   count,
   active,
   critical = false,
+  unavailable = false,
 }: {
   icon: React.ReactNode;
   label: string;
   count: number;
   active: boolean;
   critical?: boolean;
+  unavailable?: boolean;
 }) {
   return (
-    <div className={`map-brief-stat ${active ? 'active' : ''} ${critical && active ? 'critical' : ''}`}>
-      {icon}<strong>{count}</strong><span>{label}</span>
+    <div
+      className={`map-brief-stat ${active ? 'active' : ''} ${critical && active ? 'critical' : ''} ${
+        unavailable ? 'unavailable' : ''
+      }`}
+      style={unavailable ? { opacity: 0.6, fontStyle: 'italic' } : undefined}
+    >
+      {icon}
+      <strong>{unavailable ? '—' : count}</strong>
+      <span>{label}</span>
     </div>
   );
 }

@@ -269,6 +269,26 @@
   - Persistent canonical `DATA MODE: SYNTHETIC DEMO / SNAPSHOT` badge in the decision topbar reusing shared constants.
 - **Validation**: 16 dedicated unit/integration tests in `fisher-decision.test.ts` (202 total frontend tests passing across 12 suites), 101 backend domain/contract tests passing, and clean `tsc && vite build` bundle.
 
+### P0-23 — Fisherman Interactive Decision Map
+- Upgraded the Fisherman Dashboard map from a passive viewport into a simple, interactive operational decision map answering: *"Where am I, what areas should I be aware of, what route/area is recommended, and what hazards should I avoid?"*
+- **Architecture & Shared MapView Integrity**:
+  - Maintained generic `MapView.tsx` backward compatibility across Fisherman, Authority, and Researcher dashboards without hardcoded persona-specific popups or logic.
+  - Added extensible `customPopupRenderer`, `onResetView`, `resetViewTrigger`, and `layerAvailability` props.
+- **Data Transformation & Layer Utilities Reuse**:
+  - Reused existing pure transformers `buildPFZGeoJSON` (from `PFZSpatialMap.tsx`) and `buildHazardGeoJSON` (from `HazardSpatialMap.tsx`), preventing duplicate GeoJSON logic.
+  - Preserved numerical SST gradient for PFZ without fabricating absolute `°C` temperature.
+  - Preserved backend-provided active/expired status for marine hazards without independent client timestamp evaluation.
+- **Strict Layer De-duplication & Merging**:
+  - Implemented `mergeFisherLayers` in `frontend/src/utils/fisher-map.ts`. When chat responses supply authoritative route, PFZ, hazard, or origin layers, they cleanly override baseline layers without array concatenation duplication.
+- **Independent Baseline Fetches & Partial Failure Resilience**:
+  - Scoped `FisherPage.tsx` baseline fetches for routes (`getDemoRouteAlternatives`), PFZ (`fetchPFZCandidates`), and hazards (`fetchHazards`) with independent error boundaries.
+  - Failure in one layer (e.g., routes) preserves full availability of other layers (PFZ, hazards, base boundaries) and surfaces honest unavailable status in `MissionMapBrief`.
+  - Never fabricates vessel IDs or default vessel selection for routes.
+- **Mariner-Focused Popups & Controls**:
+  - Formatted concise, high-contrast HTML popup cards for departure station, PFZ candidate, marine hazard, and recommended route without researcher-style QC/provenance/diagnostics.
+  - Added camera reset / fit bounds action button (`Focus` icon) in `MissionMapBrief`.
+- **Validation**: 5 dedicated tests in `fisher-map.test.ts` (207 total frontend tests passing across 13 suites), 101 backend domain/contract tests passing, and clean `tsc && vite build` bundle.
+
 ---
 
 ## P0 Marine Data Providers Status Board
