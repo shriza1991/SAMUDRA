@@ -253,6 +253,22 @@
   - Persistent `DATA MODE: SYNTHETIC DEMO / SNAPSHOT` badge and input footer disclosure.
 - **Validation**: 85 researcher tests (179 total frontend tests passing across 11 suites), 31 backend domain/contract tests passing, and clean `tsc && vite build` production bundle.
 
+### P0-22 — Fisherman Decision Surface
+- Upgraded the Fisherman Dashboard from a pure chat experience into a focused decision-support surface answering immediately: *"Can I go right now, and why?"*
+- **Primary Decision Section**:
+  - Prominent status card supporting four normalized states: `SAFE TO GO` (mapped from backend `GO`), `CAUTION` (mapped from `CAUTION`), `DO NOT GO` (mapped from `NO_GO`), and `UNKNOWN` (mapped from `UNKNOWN`/initial/error).
+  - Explicit initial state before a valid backend response is strictly **`UNKNOWN`** with neutral slate styling, eliminating previous GO default.
+  - One-sentence mariner explanation derived directly from backend recommendation summary or decisive factors without client-side risk calculation.
+- **Essential Local Conditions Strip**:
+  - Compact 4-tile condition strip immediately beneath the primary decision: **Waves** (significant wave height + units), **Wind** (sustained wind speed + units), **Visibility** (visibility + units), and **Hazard** (active hazard/squall alert status).
+  - Preserves strict safety semantics: missing values are rendered as `—` (never coerced to 0). Excludes complex researcher-only metrics (SST, chlorophyll, EO grid, QC breakdown, provenance tables).
+- **Harbor Marker & Map Neutrality**:
+  - Scoped departure harbor layer `createHarborLayer` to default to `UNKNOWN` neutral slate (`#64748b`) until a valid recommendation is returned, preventing the map from falsely communicating GO before assessment.
+- **What-If & Data Mode Integration**:
+  - What-If simulations cleanly flag hypothetical scenario diffs with dedicated pill badges.
+  - Persistent canonical `DATA MODE: SYNTHETIC DEMO / SNAPSHOT` badge in the decision topbar reusing shared constants.
+- **Validation**: 16 dedicated unit/integration tests in `fisher-decision.test.ts` (202 total frontend tests passing across 12 suites), 101 backend domain/contract tests passing, and clean `tsc && vite build` bundle.
+
 ---
 
 ## P0 Marine Data Providers Status Board

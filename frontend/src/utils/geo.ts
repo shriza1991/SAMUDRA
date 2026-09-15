@@ -26,10 +26,10 @@ export function getHarborCoordinates(harborName?: string): [number, number] {
 /**
  * Creates a baseline GeoJSON MapLayer representing the selected Departure Harbor.
  */
-export function createHarborLayer(harborName: string, status: string = 'GO'): MapLayer {
+export function createHarborLayer(harborName: string, status: string = 'UNKNOWN'): MapLayer {
   const [lon, lat] = getHarborCoordinates(harborName);
   const color =
-    status === 'NO_GO' ? '#ef4444' : status === 'CAUTION' ? '#eab308' : '#0ea5e9';
+    status === 'NO_GO' ? '#ef4444' : status === 'CAUTION' ? '#eab308' : status === 'GO' ? '#0ea5e9' : '#64748b';
 
   return {
     layer_id: `layer_harbor_${harborName.toLowerCase().replace(/\s+/g, '_')}`,

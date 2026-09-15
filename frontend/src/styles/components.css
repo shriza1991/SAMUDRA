@@ -10716,3 +10716,253 @@ button.fleet-alert-card.active {
   font-size: 11px;
   color: var(--color-text-dim);
 }
+
+
+/* ==========================================================================
+   P0-22: Fisherman Primary Decision Surface & Essential Conditions
+   ========================================================================== */
+.fisher-decision-surface {
+  padding: 10px 12px 10px;
+  background: var(--color-bg-secondary);
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.fisher-decision-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--color-text-muted);
+  gap: 6px;
+  min-width: 0;
+}
+
+.fisher-topbar-location {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  min-width: 0;
+}
+
+.fisher-harbor-label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fisher-change-context-btn {
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-tertiary);
+  border-radius: var(--radius-sm);
+  padding: 2px 5px;
+  cursor: pointer;
+  color: var(--color-text-muted);
+  display: inline-flex;
+  align-items: center;
+  transition: all var(--transition-fast);
+}
+
+.fisher-change-context-btn:hover {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+.fisher-data-mode-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  background: rgba(56, 189, 248, 0.1);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  color: #0284c7;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex-shrink: 0;
+}
+
+[data-theme='dark'] .fisher-data-mode-chip {
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.15);
+  border-color: rgba(56, 189, 248, 0.35);
+}
+
+.fisher-decision-card {
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+  border: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  transition: all var(--transition-fast);
+}
+
+.fisher-decision-card.decision-safe {
+  background: rgba(16, 185, 129, 0.09);
+  border-color: rgba(16, 185, 129, 0.35);
+}
+
+.fisher-decision-card.decision-safe .decision-badge {
+  color: #059669;
+}
+
+[data-theme='dark'] .fisher-decision-card.decision-safe .decision-badge {
+  color: #34d399;
+}
+
+.fisher-decision-card.decision-caution {
+  background: rgba(245, 158, 11, 0.09);
+  border-color: rgba(245, 158, 11, 0.35);
+}
+
+.fisher-decision-card.decision-caution .decision-badge {
+  color: #d97706;
+}
+
+[data-theme='dark'] .fisher-decision-card.decision-caution .decision-badge {
+  color: #fbbf24;
+}
+
+.fisher-decision-card.decision-nogo {
+  background: rgba(239, 68, 68, 0.09);
+  border-color: rgba(239, 68, 68, 0.35);
+}
+
+.fisher-decision-card.decision-nogo .decision-badge {
+  color: #dc2626;
+}
+
+[data-theme='dark'] .fisher-decision-card.decision-nogo .decision-badge {
+  color: #f87171;
+}
+
+.fisher-decision-card.decision-unknown,
+.fisher-decision-card.decision-loading {
+  background: var(--color-bg-tertiary);
+  border-color: var(--color-border);
+}
+
+.fisher-decision-card.decision-unknown .decision-badge {
+  color: var(--color-text-secondary);
+}
+
+.fisher-decision-card.decision-loading .decision-badge {
+  color: var(--color-accent);
+}
+
+.decision-card-badge-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.decision-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.decision-icon {
+  flex-shrink: 0;
+}
+
+.decision-status-text {
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.decision-whatif-pill {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: var(--radius-sm);
+  background: rgba(147, 51, 234, 0.12);
+  border: 1px solid rgba(147, 51, 234, 0.3);
+  color: #9333ea;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+[data-theme='dark'] .decision-whatif-pill {
+  color: #c084fc;
+  background: rgba(147, 51, 234, 0.2);
+  border-color: rgba(147, 51, 234, 0.4);
+}
+
+.decision-explanation-text {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.45;
+  font-weight: 500;
+  color: var(--color-text-primary);
+}
+
+.fisher-conditions-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+
+.condition-tile {
+  background: var(--color-bg-primary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 6px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.condition-tile-header {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--color-text-muted);
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.condition-icon {
+  color: var(--color-text-dim);
+  flex-shrink: 0;
+}
+
+.condition-value {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.condition-hazard-text.hazard-warning {
+  color: #ef4444;
+}
+
+.spin-icon {
+  animation: spin 1s linear infinite;
+}
+
+@container sidebar (max-width: 360px) {
+  .fisher-conditions-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

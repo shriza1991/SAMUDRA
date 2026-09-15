@@ -3,6 +3,7 @@ import { MessageSquare, SlidersHorizontal, Anchor } from 'lucide-react';
 import ChatPanel from '../components/chat/ChatPanel';
 import MapView from '../components/map/MapView';
 import MissionContextPanel from '../components/mission/MissionContextPanel';
+import FisherDecisionSurface from '../components/fisher/FisherDecisionSurface';
 import type { useChat } from '../hooks/useChat';
 import type { MapLayer } from '../types/contracts';
 import { createHarborLayer, getHarborCoordinates, fetchAndFormatBaseLayers, filterLayersByRegion } from '../utils/geo';
@@ -27,7 +28,8 @@ function formatCraft(profile: string | undefined, lang: any): string {
  * Fisher / Skipper Mission Page
  *
  * Tailored for vessel skippers, boat operators, and artisanal fishers.
- * Uncluttered layout: spacious Advisory Chat by default with quick toggle to Voyage Context & What-If.
+ * Primary Decision Surface answering "Can I go right now, and why?" sits prominently at top.
+ * Spacious Advisory Chat & Voyage Context tabs remain below.
  */
 export default function FisherPage({
   chat,
@@ -39,9 +41,13 @@ export default function FisherPage({
 }: FisherPageProps) {
   const originHarbor = chat.missionContext.origin_harbor || 'Ratnagiri';
   const harborCoords = useMemo(() => getHarborCoordinates(originHarbor), [originHarbor]);
-  const status = chat.activeResponse?.recommendation.status ?? 'GO';
+  const status = chat.activeResponse?.recommendation.status ?? 'UNKNOWN';
   const [baseLayers, setBaseLayers] = useState<MapLayer[]>([]);
   const [sidebarTab, setSidebarTab] = useState<'chat' | 'voyage'>('chat');
+
+  // Extract any transient error on the latest message
+  const lastMsg = chat.messages[chat.messages.length - 1];
+  const chatError = lastMsg?.role === 'assistant' && lastMsg.error ? lastMsg.error : null;
 
   useEffect(() => {
     fetchAndFormatBaseLayers().then(setBaseLayers);
@@ -65,6 +71,17 @@ export default function FisherPage({
   return (
     <main className={`app-main fisher-page view-${mobileView}`} role="main">
       <div className="mission-workspace">
+        {/* P0-22: Primary Fisherman Decision Surface & Essential Conditions */}
+        <FisherDecisionSurface
+          activeResponse={chat.activeResponse}
+          isLoading={chat.isLoading}
+          error={chatError}
+          activeDiff={chat.activeDiff}
+          missionContext={chat.missionContext}
+          language={chat.language}
+          onOpenVoyageSettings={() => setSidebarTab('voyage')}
+        />
+
         {/* Sleek, minimal sidebar view switcher */}
         <div className="fisher-sidebar-header">
           <div className="fisher-tab-switch" role="tablist" aria-label="Fisher console views">
